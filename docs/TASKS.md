@@ -13,14 +13,14 @@ Rules:
 ## Queue
 
 ### F-001: Scaffold Vite + React + TypeScript + Tailwind
-- **Status:** doing
+- **Status:** review
 - **Steps:**
   1. Create the app in the repo root (do not touch `legacy/` or `docs/`). TypeScript strict.
   2. Add Tailwind, React Router, TanStack Query, Zustand, i18next, date-fns, Framer Motion.
   3. Add ESLint, Prettier, Vitest + Testing Library. One passing smoke test.
   4. Add `.env.example` with `VITE_API_URL=`.
 - **Done when:**
-  - [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` all pass
+  - [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` all pass
 - **Files:** `package.json`, `vite.config.ts`, `tsconfig.json`, `src/main.tsx`
 
 ### F-002: GitHub Actions CI
