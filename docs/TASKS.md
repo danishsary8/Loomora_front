@@ -24,12 +24,12 @@ Rules:
 - **Files:** `package.json`, `vite.config.ts`, `tsconfig.json`, `src/main.tsx`
 
 ### F-002: GitHub Actions CI
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Add `.github/workflows/ci.yml`: Node 22, npm ci (cached), lint, typecheck, test, build.
   2. Run on pull requests and pushes to `main` and `v2-rebuild`.
 - **Done when:**
-  - [ ] The workflow runs green on the PR
+  - [x] The workflow runs green on the PR
 - **Files:** `.github/workflows/ci.yml`
 
 ### F-003: Design tokens and neo-brutalism base components
