@@ -24,7 +24,7 @@ Rules:
 - **Files:** `package.json`, `vite.config.ts`, `tsconfig.json`, `src/main.tsx`
 
 ### F-002: GitHub Actions CI
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Add `.github/workflows/ci.yml`: Node 22, npm ci (cached), lint, typecheck, test, build.
   2. Run on pull requests and pushes to `main` and `v2-rebuild`.
