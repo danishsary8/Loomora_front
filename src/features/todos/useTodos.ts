@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { streakKeys } from '@/features/streak/useStreak'
 import { useTodoRepository } from '@/lib/storage'
 import type { CreateTodoInput, LocalDate, TodayTodo } from './types'
 
@@ -48,6 +49,7 @@ export function useSetTodoDone(date: LocalDate) {
     // Keep the checked row on screen until the next load: re-reading now would drop an
     // undated to-do the moment it is checked (docs/08 rule 1; see Q3 in docs/PROGRESS.md).
     onSuccess: (saved) => {
+      void queryClient.invalidateQueries({ queryKey: streakKeys.all })
       queryClient.setQueryData<TodayTodo[]>(key, (list) =>
         list?.map((t) => (t.id === saved.id ? { ...t, ...saved } : t)),
       )

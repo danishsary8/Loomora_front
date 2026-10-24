@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
 import { FloatingAddButton, ProgressRing } from '@/components/ui'
+import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
@@ -21,6 +22,7 @@ export function TodayPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
   const [daySheetOpen, setDaySheetOpen] = useState(false)
+  const streak = useStreak(today).data
   const now = useNow()
   const schedule = useScheduleDay(today).data ?? []
   const { now: nowItem, next: nextItem } = nowAndNext(schedule, format(now, 'HH:mm'))
@@ -39,11 +41,14 @@ export function TodayPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <PageHeading>{t('pages.today.title')}</PageHeading>
-        <p className="font-semibold text-muted">
-          {formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <PageHeading>{t('pages.today.title')}</PageHeading>
+          <p className="font-semibold text-muted">
+            {formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </div>
+        {streak && <StreakBadge {...streak} />}
       </header>
 
       {schedule.length > 0 && (

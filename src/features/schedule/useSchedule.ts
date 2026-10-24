@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { LocalDate } from '@/features/todos/types'
+import { streakKeys } from '@/features/streak/useStreak'
 import { useScheduleRepository } from '@/lib/storage'
 import type { CreateScheduleItemInput, ExceptionInput, UpdateScheduleItemInput } from './types'
 
@@ -56,10 +57,14 @@ export function useSetScheduleException() {
 /** Mark an occurrence done or undo it (docs/08 rule 7). */
 export function useSetScheduleCheckin() {
   const repo = useScheduleRepository()
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateSchedule()
   return useMutation({
     mutationFn: ({ id, date, done }: { id: string; date: LocalDate; done: boolean }) =>
       repo.setCheckin(id, date, done),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+      return invalidate()
+    },
   })
 }

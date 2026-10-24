@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toLocalDate } from '@/lib/date'
-import type { GuestTodoRepository } from '@/lib/storage'
+import { GuestTodoRepository } from '@/lib/storage'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 
 let repo: GuestTodoRepository
@@ -181,5 +181,37 @@ describe('Today screen', () => {
       'Something went wrong',
     )
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+  })
+})
+
+describe('streak badge', () => {
+  it('shows 0 at first, then lights up with 1 on the first check-off of the day', async () => {
+    await repo.create({ title: 'Read', due_date: today })
+    await openToday()
+    const badge = await screen.findByTestId('streak-badge')
+    expect(badge).toHaveAttribute('data-today-counted', 'false')
+    expect(badge).toHaveTextContent('0')
+
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Mark “Read” done' }))
+
+    await waitFor(() => expect(badge).toHaveAttribute('data-today-counted', 'true'))
+    expect(badge).toHaveTextContent('1')
+    expect(badge).toHaveAttribute('data-celebrating', 'true')
+  })
+
+  it('keeps yesterday’s streak while today is not counted yet', async () => {
+    const noonYesterday = new Date()
+    noonYesterday.setDate(noonYesterday.getDate() - 1)
+    noonYesterday.setHours(12, 0, 0, 0)
+    const { db, repo: past } = createTestRepository({ now: () => noonYesterday })
+    const old = await past.create({ title: 'Old', due_date: daysAgo(1) })
+    await past.setDone(old.id, true)
+    repo = new GuestTodoRepository({ db })
+    await repo.create({ title: 'Now', due_date: today })
+
+    await openToday()
+    const badge = await screen.findByTestId('streak-badge')
+    await waitFor(() => expect(badge).toHaveTextContent('1'))
+    expect(badge).toHaveAttribute('data-today-counted', 'false')
   })
 })

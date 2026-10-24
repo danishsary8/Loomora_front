@@ -6,6 +6,10 @@ import type { TodoRepository } from './TodoRepository'
  * every method rejects so it cannot be used by mistake.
  */
 export class ServerTodoRepository implements TodoRepository {
+  listAll(): Promise<Todo[]> {
+    return notYet('listAll')
+  }
+
   listForDate(): Promise<TodayTodo[]> {
     return notYet('listForDate')
   }

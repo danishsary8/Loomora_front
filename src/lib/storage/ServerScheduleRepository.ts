@@ -1,4 +1,9 @@
-import type { Occurrence, ScheduleException, ScheduleItem } from '@/features/schedule/types'
+import type {
+  Occurrence,
+  ScheduleCheckin,
+  ScheduleException,
+  ScheduleItem,
+} from '@/features/schedule/types'
 import type { ScheduleRepository } from './ScheduleRepository'
 
 /**
@@ -8,6 +13,14 @@ import type { ScheduleRepository } from './ScheduleRepository'
 export class ServerScheduleRepository implements ScheduleRepository {
   listItems(): Promise<ScheduleItem[]> {
     return notYet('listItems')
+  }
+
+  listExceptions(): Promise<ScheduleException[]> {
+    return notYet('listExceptions')
+  }
+
+  listCheckins(): Promise<ScheduleCheckin[]> {
+    return notYet('listCheckins')
   }
 
   listForDate(): Promise<Occurrence[]> {

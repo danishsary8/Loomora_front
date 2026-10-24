@@ -5,6 +5,7 @@ import {
   type CreateScheduleItemInput,
   type ExceptionInput,
   type Occurrence,
+  type ScheduleCheckin,
   type ScheduleException,
   type ScheduleItem,
   type UpdateScheduleItemInput,
@@ -46,6 +47,14 @@ export class GuestScheduleRepository implements ScheduleRepository {
 
   listItems(): Promise<ScheduleItem[]> {
     return this.db.schedule_items.toArray()
+  }
+
+  listExceptions(): Promise<ScheduleException[]> {
+    return this.db.schedule_exceptions.toArray()
+  }
+
+  listCheckins(): Promise<ScheduleCheckin[]> {
+    return this.db.schedule_checkins.toArray()
   }
 
   async listForDate(date: LocalDate): Promise<Occurrence[]> {

@@ -96,3 +96,20 @@ export function ProfileIcon(props: SVGProps<SVGSVGElement>) {
     </NavIcon>
   )
 }
+
+export function StreakIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 3-6 1 1 1 2 2 2 1-2 1-5 1-8Z" />
+    </svg>
+  )
+}

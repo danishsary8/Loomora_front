@@ -2,6 +2,7 @@ import type {
   CreateScheduleItemInput,
   ExceptionInput,
   Occurrence,
+  ScheduleCheckin,
   ScheduleException,
   ScheduleItem,
   UpdateScheduleItemInput,
@@ -15,6 +16,10 @@ import type { LocalDate } from '@/features/todos/types'
 export interface ScheduleRepository {
   /** The repeat definitions. */
   listItems(): Promise<ScheduleItem[]>
+  /** Every one-day change (used by the streak). */
+  listExceptions(): Promise<ScheduleException[]>
+  /** Every check-in (used by the streak). */
+  listCheckins(): Promise<ScheduleCheckin[]>
   /** Occurrences on `date`, exceptions applied, with check-in state (docs/08 rules 4, 5, 7). */
   listForDate(date: LocalDate): Promise<Occurrence[]>
   create(input: CreateScheduleItemInput): Promise<ScheduleItem>

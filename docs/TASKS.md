@@ -119,12 +119,12 @@ Rules:
 - **Files:** `src/features/today/*`
 
 ### F-011: Streak (guest) and header badge
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Compute the streak locally from guest data with the same rules as docs/08 rule 8 (pure function, unit tests, time zone aware).
   2. Header badge with count and a "today counted" state; small celebration on the first check-off of the day.
 - **Done when:**
-  - [ ] Unit tests for every rule; lint, typecheck, test, build pass
+  - [x] Unit tests for every rule; lint, typecheck, test, build pass
 - **Files:** `src/features/streak/*`
 
 ### F-012: Landing page, legal pages, Profile (guest)
