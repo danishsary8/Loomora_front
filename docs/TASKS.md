@@ -128,13 +128,13 @@ Rules:
 - **Files:** `src/features/streak/*`
 
 ### F-012: Landing page, legal pages, Profile (guest)
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Landing (S1): promise, "Try it now", Sign in, 3 feature highlights, neo-brutalism style, footer with Privacy and Terms.
   2. Write simple Privacy and Terms pages (plain English, no legal claims beyond what the app really does).
   3. Profile (S9) for guests: streak, "Data lives on this device only", "Save your plan" button (disabled until auth), feedback sheet UI.
 - **Done when:**
-  - [ ] Tests, lint, typecheck, build pass; screenshots at 375 and 1280 px
+  - [x] Tests, lint, typecheck, build pass; screenshots at 375 and 1280 px
 - **Files:** `src/features/landing/*`, `src/features/profile/*`, `src/i18n/en.json`
 
 ### F-013: PWA install and offline shell

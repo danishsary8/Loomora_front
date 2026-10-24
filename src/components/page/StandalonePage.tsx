@@ -1,12 +1,25 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 
 /** Pages outside the app shell (landing, auth, legal, 404): no nav, centered column. */
-export function StandalonePage({ children }: { children: ReactNode }) {
+export function StandalonePage({
+  children,
+  wide = false,
+}: {
+  children: ReactNode
+  /** Room for a multi-column layout on wide screens (the landing page). */
+  wide?: boolean
+}) {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pb-8 pt-6">
+    <div
+      className={cn(
+        'mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-6',
+        wide ? 'max-w-4xl' : 'max-w-lg',
+      )}
+    >
       <main
         id="main"
         tabIndex={-1}

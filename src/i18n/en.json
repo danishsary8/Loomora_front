@@ -71,7 +71,22 @@
   "landing": {
     "tryItNow": "Try it now",
     "signIn": "Sign in",
-    "noSignup": "No signup needed."
+    "noSignup": "No signup needed.",
+    "highlightsLabel": "What you get",
+    "highlights": {
+      "plan": {
+        "title": "Plan your day",
+        "body": "Add to-dos and a weekly schedule that repeats, in a few taps."
+      },
+      "now": {
+        "title": "Know what is next",
+        "body": "See what is happening now and what comes after it."
+      },
+      "streak": {
+        "title": "Keep your streak",
+        "body": "Check things off and build a streak, one day at a time."
+      }
+    }
   },
   "pages": {
     "today": {
@@ -223,5 +238,72 @@
     "open_other": "Streak: {{count}} days. Not counted yet today.",
     "counted_one": "Streak: {{count}} day. Today counted.",
     "counted_other": "Streak: {{count}} days. Today counted."
+  },
+  "legal": {
+    "updated": "Last updated: 24 October 2026",
+    "privacy": {
+      "intro": "This page says, in plain words, what happens to your information in Loomora.",
+      "s1": {
+        "title": "Where your data lives",
+        "body": "Everything you add (to-dos, schedule items, check-offs and your streak) is saved on your own device, in your browser’s storage. Loomora does not send it to us or to anyone else."
+      },
+      "s2": {
+        "title": "What we do not collect",
+        "body": "You do not need a name or an email to use Loomora. There are no ads, no trackers and no analytics, and we do not sell anything about you."
+      },
+      "s3": {
+        "title": "Hosting",
+        "body": "The website is delivered by a hosting provider. Like most hosts, it may keep ordinary server logs, such as the time of a visit and the visitor’s IP address."
+      },
+      "s4": {
+        "title": "Removing your data",
+        "body": "Clear this site’s data in your browser settings and Loomora forgets everything. We cannot restore it, because we never had it."
+      },
+      "s5": {
+        "title": "Accounts later",
+        "body": "Accounts are not available yet. Before you are ever asked to save your plan online, this page will be updated to say what is stored and why."
+      }
+    },
+    "terms": {
+      "intro": "These are the simple rules for using Loomora.",
+      "s1": {
+        "title": "Using Loomora",
+        "body": "Loomora is a free planner for your own to-dos and schedule. Use it for yourself and be kind to others."
+      },
+      "s2": {
+        "title": "Your data",
+        "body": "Your plan is saved on your device only. If you clear your browser data, switch browsers or lose the device, your plan is gone, so keep that in mind."
+      },
+      "s3": {
+        "title": "No promises",
+        "body": "Loomora is early software, provided as it is. It may have bugs or change, and we cannot promise it will always work or never lose data."
+      },
+      "s4": {
+        "title": "Fair use",
+        "body": "Please do not try to break Loomora or use it to harm others."
+      },
+      "s5": {
+        "title": "Changes",
+        "body": "These terms may change as Loomora grows. The date at the top shows the latest update."
+      }
+    }
+  },
+  "profile": {
+    "streakTitle": "Your streak",
+    "streakDays_one": "{{count}} day",
+    "streakDays_other": "{{count}} days",
+    "streakTodayCounted": "Today counted.",
+    "streakTodayOpen": "Check off one item today to keep it going.",
+    "deviceTitle": "Your data",
+    "deviceOnly": "Data lives on this device only.",
+    "deviceWarning": "If you clear your browser data or lose this device, your plan is gone.",
+    "savePlan": "Save your plan",
+    "savePlanSoon": "Accounts are coming soon.",
+    "feedback": "Send feedback",
+    "feedbackTitle": "Send feedback",
+    "feedbackMessage": "Your message",
+    "feedbackHint": "Tell us what went wrong or what would help.",
+    "feedbackSend": "Send",
+    "feedbackSoon": "Sending feedback is not connected yet."
   }
 }
