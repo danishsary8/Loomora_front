@@ -6,5 +6,7 @@ export const pressMd = `shadow-hard-md ${pressBase} enabled:active:translate-x-p
 
 export const pressSm = `shadow-hard-sm ${pressBase} enabled:active:translate-x-press-sm enabled:active:translate-y-press-sm enabled:active:shadow-none`
 
-/** For non-form elements (no :enabled state). */
+/** For links and other non-form elements (no :enabled state). */
 export const pressMdAny = `shadow-hard-md ${pressBase} active:translate-x-press-md active:translate-y-press-md active:shadow-none`
+
+export const pressSmAny = `shadow-hard-sm ${pressBase} active:translate-x-press-sm active:translate-y-press-sm active:shadow-none`

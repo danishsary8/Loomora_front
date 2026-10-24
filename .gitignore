@@ -36,3 +36,7 @@ Thumbs.db
 
 # Scratch capture files from audit/probe runs (dot-prefixed .txt at the root).
 .*.txt
+
+# Playwright
+playwright-report
+test-results

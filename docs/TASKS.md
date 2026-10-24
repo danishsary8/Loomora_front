@@ -47,7 +47,7 @@ Rules:
 - **Files:** `tailwind.config.ts`, `src/components/ui/*`, `src/styles/*`, `src/features/styleguide/*`
 
 ### F-004: App shell, routing, i18n
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Router with routes from docs/05-screen-map.md: Landing, Today, Week, Focus (coming soon), Insights (coming soon), Profile, Sign in/up, legal, 404.
   2. Bottom nav on phones (Today, Week, Focus, Insights) and sidebar on wide screens.
