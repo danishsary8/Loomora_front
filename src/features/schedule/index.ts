@@ -1,2 +1,6 @@
 export { nowAndNext, occursOn, occurrencesForDate, weekdayOf } from './occurrences'
 export * from './types'
+export { ScheduleItemSheet, type ScheduleTarget } from './ScheduleItemSheet'
+export { UndoDeleteToast } from './UndoDeleteToast'
+export { useUndoableDelete, UNDO_DELAY_MS, type DeleteRequest } from './useUndoableDelete'
+export { scheduleKeys, useScheduleDay } from './useSchedule'

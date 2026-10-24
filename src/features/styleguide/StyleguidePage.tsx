@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Card, Checkbox, Chip, Input, ProgressRing, Sheet } from '@/components/ui'
+import { ScheduleItemSheet } from '@/features/schedule/ScheduleItemSheet'
 import { CATEGORIES, colors, type Category } from '@/styles/tokens'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -27,6 +28,7 @@ export function StyleguidePage() {
   const { t } = useTranslation()
   const [picked, setPicked] = useState<Category>('study')
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
 
   return (
     <main className="mx-auto flex w-full max-w-[375px] flex-col gap-10 px-4 py-8">
@@ -166,6 +168,17 @@ export function StyleguidePage() {
             </Button>
           </div>
         </Sheet>
+      </Section>
+
+      <Section title={t('styleguide.scheduleSheet')}>
+        <Button variant="secondary" onClick={() => setScheduleSheetOpen(true)}>
+          {t('styleguide.openScheduleSheet')}
+        </Button>
+        <ScheduleItemSheet
+          open={scheduleSheetOpen}
+          onClose={() => setScheduleSheetOpen(false)}
+          target={{ type: 'create' }}
+        />
       </Section>
     </main>
   )
