@@ -59,13 +59,13 @@ Rules:
 - **Files:** `src/app/*`, `src/i18n/en.json`
 
 ### F-005: Storage adapter and guest to-dos
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Define a `TodoRepository` interface (list for date, create, update, setDone, delete) and the types from docs/08.
   2. Implement `GuestTodoRepository` with Dexie (IndexedDB), UUIDs generated on the client. Implement the Today list rules (due today, undated, overdue) in a pure function with unit tests.
   3. Leave a `ServerTodoRepository` stub for later.
 - **Done when:**
-  - [ ] Unit tests cover every Today-list rule and pass
+  - [x] Unit tests cover every Today-list rule and pass
 - **Files:** `src/lib/storage/*`, `src/features/todos/*`
 
 ### F-006: Today screen v1 (guest, to-dos only)
