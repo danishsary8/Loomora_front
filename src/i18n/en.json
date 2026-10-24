@@ -120,7 +120,6 @@
   "today": {
     "addTodo": "Add a to-do",
     "addToSchedule": "Add to my schedule",
-    "scheduleSoon": "Schedule comes next.",
     "emptyTitle": "What do you have to do today?",
     "emptyMessage": "Start with one thing.",
     "list": "To-dos",
@@ -208,5 +207,15 @@
     "submit": "Copy",
     "copying": "Copying…",
     "error": "Could not copy. Please try again."
+  },
+  "nowNext": {
+    "now": "Now",
+    "next": "Next",
+    "free": "Free",
+    "nothingMore": "Nothing more today",
+    "range": "{{start}} to {{end}}",
+    "openDay": "Open today’s schedule",
+    "daySheetTitle": "Today’s schedule",
+    "markDone": "Mark “{{title}}” done"
   }
 }

@@ -34,7 +34,7 @@ export function DayColumn({ day, items, className, onOpenItem, onCopy }: DayColu
                 })}
                 className="block w-full text-left"
               >
-                <Card tone={item.category} className="p-3">
+                <Card tone={item.category} compact>
                   <span className="block text-sm font-semibold">
                     {t('week.timeRange', { start: item.start_time, end: item.end_time })}
                   </span>

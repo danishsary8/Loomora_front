@@ -2,7 +2,12 @@ import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
 
 /** S2: first action, two buttons with equal weight (D26). */
-export function TodayEmpty({ onAddTodo }: { onAddTodo: () => void }) {
+export interface TodayEmptyProps {
+  onAddTodo: () => void
+  onAddSchedule: () => void
+}
+
+export function TodayEmpty({ onAddTodo, onAddSchedule }: TodayEmptyProps) {
   const { t } = useTranslation()
   return (
     <Card className="flex flex-col gap-4 py-6">
@@ -14,13 +19,9 @@ export function TodayEmpty({ onAddTodo }: { onAddTodo: () => void }) {
         <Button size="lg" fullWidth onClick={onAddTodo}>
           {t('today.addTodo')}
         </Button>
-        {/* Schedule arrives in the schedule tasks (P6); disabled for now per F-006. */}
-        <Button size="lg" variant="secondary" fullWidth disabled aria-describedby="schedule-soon">
+        <Button size="lg" variant="secondary" fullWidth onClick={onAddSchedule}>
           {t('today.addToSchedule')}
         </Button>
-        <p id="schedule-soon" className="text-center text-sm text-muted">
-          {t('today.scheduleSoon')}
-        </p>
       </div>
     </Card>
   )

@@ -1,19 +1,29 @@
+import { format } from 'date-fns'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
 import { FloatingAddButton, ProgressRing } from '@/components/ui'
+import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
 import { AddTodoSheet } from './AddTodoSheet'
+import { DaySheet } from './DaySheet'
+import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
 import { TodoRow } from './TodoRow'
+import { useNow } from './useNow'
 
 /** S2/S3 Today, v1: guest to-dos only (F-006). */
 export function TodayPage() {
   const { t, i18n } = useTranslation()
   const [today] = useState(() => toLocalDate())
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
+  const [daySheetOpen, setDaySheetOpen] = useState(false)
+  const now = useNow()
+  const schedule = useScheduleDay(today).data ?? []
+  const { now: nowItem, next: nextItem } = nowAndNext(schedule, format(now, 'HH:mm'))
   const todos = useTodayTodos(today)
   const setDone = useSetTodoDone(today)
 
@@ -36,12 +46,16 @@ export function TodayPage() {
         </p>
       </header>
 
+      {schedule.length > 0 && (
+        <NowNextStrip now={nowItem} next={nextItem} onOpen={() => setDaySheetOpen(true)} />
+      )}
+
       {todos.isPending ? (
         <LoadingState />
       ) : todos.isError ? (
         <ErrorState onRetry={() => void todos.refetch()} />
       ) : list.length === 0 ? (
-        <TodayEmpty onAddTodo={openSheet} />
+        <TodayEmpty onAddTodo={openSheet} onAddSchedule={() => setScheduleSheetOpen(true)} />
       ) : (
         <>
           <div className="flex justify-center">
@@ -76,6 +90,17 @@ export function TodayPage() {
         </>
       )}
 
+      <DaySheet
+        open={daySheetOpen}
+        onClose={() => setDaySheetOpen(false)}
+        date={today}
+        occurrences={schedule}
+      />
+      <ScheduleItemSheet
+        open={scheduleSheetOpen}
+        onClose={() => setScheduleSheetOpen(false)}
+        target={{ type: 'create' }}
+      />
       <AddTodoSheet open={sheetOpen} onClose={() => setSheetOpen(false)} today={today} />
     </div>
   )

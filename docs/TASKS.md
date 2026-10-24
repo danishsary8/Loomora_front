@@ -109,13 +109,13 @@ Rules:
 - **Files:** `src/features/schedule/week/*`, `e2e/week.spec.ts`
 
 ### F-010: Now/Next strip and "Add to my schedule" on Today
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Strip above the to-do list: NOW and NEXT cards (Free / Nothing more today states), updates every minute; tapping opens the full-day sheet (S5).
   2. Enable the second empty-state button to open the schedule sheet. Check-off of schedule items from the day sheet.
   3. Tests for each state with a fake clock.
 - **Done when:**
-  - [ ] Tests, lint, typecheck, build pass; screenshot saved
+  - [x] Tests, lint, typecheck, build pass; screenshot saved
 - **Files:** `src/features/today/*`
 
 ### F-011: Streak (guest) and header badge

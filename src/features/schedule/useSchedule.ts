@@ -52,3 +52,14 @@ export function useSetScheduleException() {
     onSuccess: invalidate,
   })
 }
+
+/** Mark an occurrence done or undo it (docs/08 rule 7). */
+export function useSetScheduleCheckin() {
+  const repo = useScheduleRepository()
+  const invalidate = useInvalidateSchedule()
+  return useMutation({
+    mutationFn: ({ id, date, done }: { id: string; date: LocalDate; done: boolean }) =>
+      repo.setCheckin(id, date, done),
+    onSuccess: invalidate,
+  })
+}

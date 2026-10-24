@@ -25,11 +25,11 @@ async function openToday() {
 
 describe('Today screen', () => {
   describe('empty (S2, US-1.2)', () => {
-    it('shows two equal buttons, with "Add to my schedule" disabled for now', async () => {
+    it('shows two equal buttons', async () => {
       await openToday()
       const addTodo = await screen.findByRole('button', { name: 'Add a to-do' })
       const addSchedule = screen.getByRole('button', { name: 'Add to my schedule' })
-      expect(addSchedule).toBeDisabled()
+      expect(addSchedule).toBeEnabled()
       // Equal weight (D26): same size classes.
       expect(addTodo.className).toContain('min-h-[52px]')
       expect(addSchedule.className).toContain('min-h-[52px]')
