@@ -8,7 +8,7 @@ export const TodayPage = lazy(() =>
   import('@/features/today/TodayPage').then((m) => ({ default: m.TodayPage })),
 )
 export const WeekPage = lazy(() =>
-  import('@/features/schedule/WeekPage').then((m) => ({ default: m.WeekPage })),
+  import('@/features/schedule/week/WeekPage').then((m) => ({ default: m.WeekPage })),
 )
 export const FocusPage = lazy(() =>
   import('@/features/focus/FocusPage').then((m) => ({ default: m.FocusPage })),

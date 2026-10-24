@@ -5,6 +5,7 @@ import type { CreateScheduleItemInput, ExceptionInput, UpdateScheduleItemInput }
 
 export const scheduleKeys = {
   all: ['schedule'] as const,
+  items: ['schedule', 'items'] as const,
   day: (date: LocalDate) => ['schedule', 'day', date] as const,
 }
 

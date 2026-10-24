@@ -2,10 +2,9 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
-import { ProgressRing } from '@/components/ui'
+import { FloatingAddButton, ProgressRing } from '@/components/ui'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
-import { AddButton } from './AddButton'
 import { AddTodoSheet } from './AddTodoSheet'
 import { TodayEmpty } from './TodayEmpty'
 import { TodoRow } from './TodoRow'
@@ -73,7 +72,7 @@ export function TodayPage() {
               </p>
             )}
           </section>
-          <AddButton onClick={openSheet} />
+          <FloatingAddButton onClick={openSheet} label={t('today.addTodo')} />
         </>
       )}
 
