@@ -69,14 +69,14 @@ Rules:
 - **Files:** `src/lib/storage/*`, `src/features/todos/*`
 
 ### F-006: Today screen v1 (guest, to-dos only)
-- **Status:** doing
+- **Status:** review
 - **Steps:**
   1. Build Today per docs/04-user-flows.md: header with date, to-do list (Overdue first), floating + opening a bottom sheet to add a to-do, check-off with a stamp animation, progress ring, empty state with two equal buttons ("Add a to-do", "Add to my schedule" disabled for now).
   2. Use the guest repository. Persist across reloads.
   3. Playwright test: add a to-do, check it off, reload, it is still there.
 - **Done when:**
-  - [ ] Playwright test passes at 375 px
-  - [ ] Lint, typecheck, unit tests, build pass; screenshot saved to `docs/screenshots/`
+  - [x] Playwright test passes at 375 px
+  - [x] Lint, typecheck, unit tests, build pass; screenshot saved to `docs/screenshots/`
 - **Files:** `src/features/today/*`, `e2e/today.spec.ts`
 
 ## Done

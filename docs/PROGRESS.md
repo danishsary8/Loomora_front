@@ -17,6 +17,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Q1 (stacked branches):** F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
 - **Q3 (undated + done, docs/08 rule 1):** Undated to-dos show only while not done. Taken literally, checking off an undated to-do makes it vanish at once, while a dated one stays checked. Should undated items checked off today stay visible until midnight? Implemented as written for now (F-005).
 - **Q4 (default category):** docs/03 says category is optional; docs/08 has no null category. The guest repository defaults to `other`. OK?
+- **Q5 (e2e in CI):** `npm run e2e` (Playwright, 375 and 1280 px) runs locally but not in CI. Adding it needs `npx playwright install --with-deps chromium` in the workflow. Add it?
+- **Q6 (floating + in empty state):** Hidden there, so the two equal buttons are the only actions (D26). OK?
+- **Q7 (midnight):** Today's date is fixed when the screen opens; a screen left open past midnight shows the old day until reopened. Follow-up task?
 - **Q2 (default branch):** `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
 
 ## Log
@@ -50,3 +53,14 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm test` 15 files / 105 tests passed, run 3 times in a row. 18 Today-list tests cover every rule-1/2 case, incl. month, year and DST boundaries. 15 guest repo tests on fake-indexeddb, incl. data surviving a DB reopen and the 500 cap. lint, format:check, typecheck, build exit 0; e2e 27 passed / 1 skipped.
 - **Problems:** Fixed two bugs found by the tests: (1) Dexie rewraps errors named like its own (`NotFoundError`) when thrown inside a transaction, so errors are now thrown outside; (2) same-millisecond to-dos came back in random order, so ties now fall back to id.
 - **Questions:** Q3 and Q4 above. Rule 3 (default due date today) is left to the Today screen (F-006).
+
+### 2026-10-24: F-006 Today screen v1 (guest, to-dos only)
+- **Changed:** Today screen: date header, progress ring, list with Overdue first (Overdue / Old badges, category chip), check-off with a spring "Done!" stamp (fade under reduced motion), floating + opening the Add sheet (title focused, due date defaults to today per rule 3, optional category, inline validation). Empty state with two equal buttons ("Add to my schedule" disabled). `AppProviders` with TanStack Query + `TodoRepository` context; optimistic check-off with rollback. `Sheet.initialFocusRef`. PR: https://github.com/danishsary8/Loomora_front/pull/6 (stacked on #5).
+- **Verified:** `npm test` 16 files / 117 tests passed (11 Today tests). `npm run e2e` 33 passed / 1 skipped on phone-375 and desktop-1280, incl. `e2e/today.spec.ts` add, check off, reload, still there, with 0 console errors. lint, format:check, typecheck, build exit 0. Screenshots: `docs/screenshots/today-*.png`.
+- **Problems:** The floating + covered the last row even when scrolled down. Fixed with space below the list; a new e2e check fails without the fix (700 px vs 652 px) and passes with it.
+- **Questions:** Q3, Q5, Q6, Q7 above.
+
+### 2026-10-24: Session end
+- **Finished (all in `review`):** F-001 #1, F-002 #2, F-003 #3, F-004 #4, F-005 #5, F-006 #6. The PRs are stacked; merge in order #1 to #6.
+- **Blocked:** none.
+- **Queue:** no `todo` tasks left. The planner needs to add the next tasks.
