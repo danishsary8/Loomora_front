@@ -33,7 +33,7 @@ Rules:
 - **Files:** `.github/workflows/ci.yml`
 
 ### F-003: Design tokens and neo-brutalism base components
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Use the `ui-ux-pro-max` skill. Before coding, write a short style proposal in `docs/DECISIONS.md` comparing neo-brutalism with a neo-skeuomorphic / retro-digital variant; implement neo-brutalism on cream #F5EDE6 unless it clearly fails (note from docs/07, S18).
   2. Define tokens in Tailwind: colors (cream, black, 6 category colors, success, danger), border width, hard offset shadows, radii, spacing scale, a script heading font and a clean body font, press-down states.
@@ -41,9 +41,9 @@ Rules:
   4. Add a `/styleguide` route showing every component and state at 375 px.
   5. Check contrast (4.5:1 for text), 44 px touch targets, `prefers-reduced-motion`.
 - **Done when:**
-  - [ ] `/styleguide` renders all components with no console errors
-  - [ ] Component unit tests pass; lint, typecheck, build pass
-  - [ ] A screenshot of `/styleguide` at 375 px is saved to `docs/screenshots/`
+  - [x] `/styleguide` renders all components with no console errors
+  - [x] Component unit tests pass; lint, typecheck, build pass
+  - [x] A screenshot of `/styleguide` at 375 px is saved to `docs/screenshots/`
 - **Files:** `tailwind.config.ts`, `src/components/ui/*`, `src/styles/*`, `src/features/styleguide/*`
 
 ### F-004: App shell, routing, i18n

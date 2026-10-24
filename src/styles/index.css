@@ -1,3 +1,43 @@
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/caveat';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-cream font-body text-ink antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply min-h-dvh text-base leading-normal;
+  }
+
+  :focus-visible {
+    @apply outline outline-[3px] outline-offset-2 outline-ink;
+  }
+}
+
+@layer components {
+  /* Press-down: the element moves into its hard shadow. */
+  .press-md {
+    @apply shadow-hard-md transition-[transform,box-shadow] duration-100 ease-out active:translate-x-press-md active:translate-y-press-md active:shadow-none;
+  }
+
+  .press-sm {
+    @apply shadow-hard-sm transition-[transform,box-shadow] duration-100 ease-out active:translate-x-press-sm active:translate-y-press-sm active:shadow-none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
