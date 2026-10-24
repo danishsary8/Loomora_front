@@ -13,7 +13,7 @@ Rules:
 ## Queue
 
 ### F-001: Scaffold Vite + React + TypeScript + Tailwind
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Create the app in the repo root (do not touch `legacy/` or `docs/`). TypeScript strict.
   2. Add Tailwind, React Router, TanStack Query, Zustand, i18next, date-fns, Framer Motion.
