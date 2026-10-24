@@ -1,6 +1,12 @@
 {
   "common": {
-    "close": "Close"
+    "close": "Close",
+    "appName": "Loomora",
+    "promise": "Plan your day, focus on it, and see how it really went.",
+    "skipToContent": "Skip to content",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "comingSoon": "Coming soon"
   },
   "categories": {
     "study": "Study",
@@ -50,5 +56,62 @@
     "sheetTitle": "Add a to-do",
     "sheetBody": "Sheets slide up from the bottom. Press Escape or tap outside to close.",
     "progressRing": "Progress ring"
+  },
+  "nav": {
+    "label": "Main",
+    "today": "Today",
+    "week": "Week",
+    "focus": "Focus",
+    "insights": "Insights",
+    "profile": "Profile"
+  },
+  "landing": {
+    "tryItNow": "Try it now",
+    "signIn": "Sign in",
+    "noSignup": "No signup needed."
+  },
+  "pages": {
+    "today": {
+      "title": "Today"
+    },
+    "week": {
+      "title": "Week"
+    },
+    "focus": {
+      "title": "Focus",
+      "comingSoon": "Focus timer, countdown and stopwatch are on the way."
+    },
+    "insights": {
+      "title": "Insights",
+      "comingSoon": "Analytics, weekly recap and notes are on the way."
+    },
+    "profile": {
+      "title": "Profile"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "switch": "New here? Create an account"
+    },
+    "signUp": {
+      "title": "Create an account",
+      "switch": "Already have an account? Sign in"
+    },
+    "privacy": {
+      "title": "Privacy"
+    },
+    "terms": {
+      "title": "Terms"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "message": "This page does not exist.",
+      "home": "Go to Today"
+    }
+  },
+  "states": {
+    "emptyTitle": "Nothing here yet",
+    "emptyMessage": "This screen fills up as you use Loomora.",
+    "errorTitle": "Something went wrong",
+    "errorMessage": "Please try again."
   }
 }

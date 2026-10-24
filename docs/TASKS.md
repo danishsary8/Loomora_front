@@ -47,15 +47,15 @@ Rules:
 - **Files:** `tailwind.config.ts`, `src/components/ui/*`, `src/styles/*`, `src/features/styleguide/*`
 
 ### F-004: App shell, routing, i18n
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Router with routes from docs/05-screen-map.md: Landing, Today, Week, Focus (coming soon), Insights (coming soon), Profile, Sign in/up, legal, 404.
   2. Bottom nav on phones (Today, Week, Focus, Insights) and sidebar on wide screens.
   3. i18n set up with `src/i18n/en.json`; no hard-coded UI text.
   4. Loading, empty, error states as shared components.
 - **Done when:**
-  - [ ] Every route renders at 375 px and 1280 px
-  - [ ] Tests, lint, typecheck, build pass
+  - [x] Every route renders at 375 px and 1280 px
+  - [x] Tests, lint, typecheck, build pass
 - **Files:** `src/app/*`, `src/i18n/en.json`
 
 ### F-005: Storage adapter and guest to-dos

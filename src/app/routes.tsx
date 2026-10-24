@@ -1,8 +1,45 @@
 import type { RouteObject } from 'react-router-dom'
-import { StyleguidePage } from '@/features/styleguide/StyleguidePage'
+import { AppLayout } from './layout/AppLayout'
+import { RootLayout } from './layout/RootLayout'
+import { RouteError } from './layout/RouteError'
+import { NotFoundPage } from './NotFoundPage'
+import {
+  FocusPage,
+  InsightsPage,
+  LandingPage,
+  PrivacyPage,
+  ProfilePage,
+  SignInPage,
+  SignUpPage,
+  StyleguidePage,
+  TermsPage,
+  TodayPage,
+  WeekPage,
+} from './pages'
 
-// Minimal routes for F-003. The full route map from docs/05 arrives in F-004.
+// Route map from docs/05-screen-map.md (R1).
 export const routes: RouteObject[] = [
-  { path: '/', element: <main data-testid="app-root" /> },
-  { path: '/styleguide', element: <StyleguidePage /> },
+  {
+    element: <RootLayout />,
+    errorElement: <RouteError />,
+    children: [
+      { path: '/', element: <LandingPage /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/today', element: <TodayPage /> },
+          { path: '/week', element: <WeekPage /> },
+          { path: '/focus', element: <FocusPage /> },
+          { path: '/insights', element: <InsightsPage /> },
+          { path: '/profile', element: <ProfilePage /> },
+        ],
+      },
+      { path: '/sign-in', element: <SignInPage /> },
+      { path: '/sign-up', element: <SignUpPage /> },
+      { path: '/privacy', element: <PrivacyPage /> },
+      { path: '/terms', element: <TermsPage /> },
+      { path: '/styleguide', element: <StyleguidePage /> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ]
