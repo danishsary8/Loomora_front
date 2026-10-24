@@ -147,7 +147,7 @@ Rules:
 - **Files:** `vite.config.ts`, `public/*`, `src/app/*`
 
 ### F-014: Playwright end-to-end in CI
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Run Playwright specs (today, week) in CI at a 375 px viewport.
   2. Add a short "How to run tests" section to README.
