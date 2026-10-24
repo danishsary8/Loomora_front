@@ -15,6 +15,8 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 ## Open questions
 
 - **Q1 (stacked branches):** F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
+- **Q3 (undated + done, docs/08 rule 1):** Undated to-dos show only while not done. Taken literally, checking off an undated to-do makes it vanish at once, while a dated one stays checked. Should undated items checked off today stay visible until midnight? Implemented as written for now (F-005).
+- **Q4 (default category):** docs/03 says category is optional; docs/08 has no null category. The guest repository defaults to `other`. OK?
 - **Q2 (default branch):** `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
 
 ## Log
@@ -42,3 +44,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** lint, format:check, typecheck, build exit 0. `npm test`: 11 files / 67 tests passed. `npm run e2e`: 27 passed, 1 skipped (phone-only check on desktop): every route at 375 and 1280 px shows its h1, 0 console errors or warnings, no horizontal scroll, the right nav per width. Screenshots in `docs/screenshots/`.
 - **Problems:** None open.
 - **Questions:** (1) Add `npm run e2e` to CI (needs `npx playwright install --with-deps chromium`)? (2) Confirm the URL paths. (3) The offline state from docs/05 is left for the PWA task (P8). (4) Vercel needs an SPA rewrite for deep links.
+
+### 2026-10-24: F-005 Storage adapter and guest to-dos
+- **Changed:** `Todo` types in the API's snake_case shape (A8-5). Pure `buildTodayList` for docs/08 rules 1 and 2 (Overdue computed and first, Old after 30 days, ties broken by id). `TodoRepository` interface, `GuestTodoRepository` on Dexie (client UUIDs, rule 11 validation, injectable clock), `ServerTodoRepository` stub. `toLocalDate` / `isLocalDate` / `newId` helpers. PR: https://github.com/danishsary8/Loomora_front/pull/5 (stacked on #4).
+- **Verified:** `npm test` 15 files / 105 tests passed, run 3 times in a row. 18 Today-list tests cover every rule-1/2 case, incl. month, year and DST boundaries. 15 guest repo tests on fake-indexeddb, incl. data surviving a DB reopen and the 500 cap. lint, format:check, typecheck, build exit 0; e2e 27 passed / 1 skipped.
+- **Problems:** Fixed two bugs found by the tests: (1) Dexie rewraps errors named like its own (`NotFoundError`) when thrown inside a transaction, so errors are now thrown outside; (2) same-millisecond to-dos came back in random order, so ties now fall back to id.
+- **Questions:** Q3 and Q4 above. Rule 3 (default due date today) is left to the Today screen (F-006).
