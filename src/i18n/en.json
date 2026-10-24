@@ -113,5 +113,29 @@
     "emptyMessage": "This screen fills up as you use Loomora.",
     "errorTitle": "Something went wrong",
     "errorMessage": "Please try again."
+  },
+  "today": {
+    "addTodo": "Add a to-do",
+    "addToSchedule": "Add to my schedule",
+    "scheduleSoon": "Schedule comes next.",
+    "emptyTitle": "What do you have to do today?",
+    "emptyMessage": "Start with one thing.",
+    "list": "To-dos",
+    "overdue": "Overdue",
+    "old": "Old",
+    "dueOn": "Due {{date}}",
+    "doneStamp": "Done!",
+    "markDone": "Mark “{{title}}” done",
+    "saveError": "Could not save. Please try again."
+  },
+  "todoForm": {
+    "title": "Title",
+    "titlePlaceholder": "What do you need to do?",
+    "titleRequired": "Please enter a title.",
+    "dueDate": "Due date (optional)",
+    "clearDueDate": "No due date",
+    "category": "Category (optional)",
+    "submit": "Add",
+    "submitting": "Adding…"
   }
 }

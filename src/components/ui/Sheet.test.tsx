@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Sheet } from './Sheet'
 
 function Harness() {
@@ -15,7 +15,22 @@ function Harness() {
   )
 }
 
+function FocusHarness() {
+  const ref = useRef<HTMLInputElement>(null)
+  return (
+    <Sheet open onClose={() => {}} title="Focus" initialFocusRef={ref}>
+      <button>First</button>
+      <input ref={ref} aria-label="Target" />
+    </Sheet>
+  )
+}
+
 describe('Sheet', () => {
+  it('focuses initialFocusRef instead of the first focusable element', () => {
+    render(<FocusHarness />)
+    expect(screen.getByLabelText('Target')).toHaveFocus()
+  })
+
   it('opens as a labelled modal dialog and moves focus inside', async () => {
     render(<Harness />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

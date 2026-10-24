@@ -69,7 +69,7 @@ Rules:
 - **Files:** `src/lib/storage/*`, `src/features/todos/*`
 
 ### F-006: Today screen v1 (guest, to-dos only)
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Build Today per docs/04-user-flows.md: header with date, to-do list (Overdue first), floating + opening a bottom sheet to add a to-do, check-off with a stamp animation, progress ring, empty state with two equal buttons ("Add a to-do", "Add to my schedule" disabled for now).
   2. Use the guest repository. Persist across reloads.
