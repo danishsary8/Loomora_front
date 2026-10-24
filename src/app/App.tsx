@@ -1,4 +1,8 @@
-// Placeholder root. The real shell, router and i18n arrive in F-004.
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { routes } from './routes'
+
+const router = createBrowserRouter(routes)
+
 export function App() {
-  return <main data-testid="app-root" />
+  return <RouterProvider router={router} />
 }

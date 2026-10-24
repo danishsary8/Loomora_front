@@ -1,0 +1,54 @@
+{
+  "common": {
+    "close": "Close"
+  },
+  "categories": {
+    "study": "Study",
+    "work": "Work",
+    "health": "Health",
+    "life": "Life",
+    "rest": "Rest",
+    "other": "Other"
+  },
+  "progress": {
+    "doneOfTotal": "{{done}} of {{total}} done"
+  },
+  "styleguide": {
+    "title": "Style guide",
+    "intro": "Every base component and state, at phone width.",
+    "colors": "Colors",
+    "typography": "Typography",
+    "scriptSample": "Plan your day",
+    "bodySample": "Plan your day, focus on it, and see how it really went.",
+    "buttons": "Buttons",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "danger": "Danger",
+    "ghost": "Ghost",
+    "large": "Large",
+    "disabled": "Disabled",
+    "cards": "Cards",
+    "cardTitle": "A card",
+    "cardBody": "Paper card with a thick border and a hard shadow.",
+    "cardPressable": "Pressable card",
+    "chips": "Chips",
+    "chipsStatic": "Labels",
+    "chipsPicker": "Picker",
+    "checkboxes": "Checkboxes",
+    "checkboxUnchecked": "Read chapter 3",
+    "checkboxChecked": "Gym at 6 pm",
+    "checkboxDisabled": "Disabled item",
+    "inputs": "Inputs",
+    "inputLabel": "Title",
+    "inputPlaceholder": "What do you need to do?",
+    "inputHint": "Up to 200 characters.",
+    "inputErrorLabel": "Title with error",
+    "inputError": "Please enter a title.",
+    "inputDisabled": "Disabled input",
+    "sheet": "Bottom sheet",
+    "openSheet": "Open sheet",
+    "sheetTitle": "Add a to-do",
+    "sheetBody": "Sheets slide up from the bottom. Press Escape or tap outside to close.",
+    "progressRing": "Progress ring"
+  }
+}

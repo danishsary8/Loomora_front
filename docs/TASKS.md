@@ -33,7 +33,7 @@ Rules:
 - **Files:** `.github/workflows/ci.yml`
 
 ### F-003: Design tokens and neo-brutalism base components
-- **Status:** todo
+- **Status:** doing
 - **Steps:**
   1. Use the `ui-ux-pro-max` skill. Before coding, write a short style proposal in `docs/DECISIONS.md` comparing neo-brutalism with a neo-skeuomorphic / retro-digital variant; implement neo-brutalism on cream #F5EDE6 unless it clearly fails (note from docs/07, S18).
   2. Define tokens in Tailwind: colors (cream, black, 6 category colors, success, danger), border width, hard offset shadows, radii, spacing scale, a script heading font and a clean body font, press-down states.
