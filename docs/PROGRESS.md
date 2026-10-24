@@ -110,3 +110,14 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm run build` ok (PWA precache 39 entries, ~957 KiB); `npm test` 30 files / 261 tests; lint, format:check, typecheck exit 0; e2e 42 passed incl. Chrome `Page.getInstallabilityErrors` is empty, and after one visit the app reloads offline on `/today` with the banner. **Lighthouse** 11.7.1 PWA category on `vite preview` of the build: score 1.0, with `installable-manifest`, `splash-screen`, `themed-omnibox`, `content-width`, `viewport` and `maskable-icon` all passing. (Lighthouse 12 removed the PWA category, so 11.7.1 was used.)
 - **Problems:** The first Today e2e test (add, check off, reload) sometimes fails on a cold full `npm run e2e` run and passes on every re-run (seen before this task too, on phone-375 and desktop-1280); not diagnosed yet.
 - **Questions:** (Q20) `vite preview` and Vercel need no extra config for the service worker, but Vercel must serve `sw.js` and `manifest.webmanifest` with the SPA rewrite excluding them; check when deploying. (Q21) Should an "Update available" prompt replace silent auto-update? Silent update can reload the page under someone typing.
+
+### 2026-10-24: F-014 Playwright end-to-end in CI
+- **Changed:** New `e2e` job in `.github/workflows/ci.yml` (Node 22, `npm ci`, `npx playwright install --with-deps chromium`, `npm run e2e -- --project=phone-375`, traces uploaded when a test fails). README has a "How to run tests" section. This answers Q5.
+- **Verified:** Locally the phone-375 project passes (22 tests). On PR #14 both CI jobs succeeded: "End-to-end (375 px)" in 54 s (https://github.com/danishsary8/Loomora_front/actions/runs/40142974551/job/121018390135) and "Lint, typecheck, test, build".
+- **Problems:** None open.
+- **Questions:** Playwright already retries once in CI. Keep that, given the occasional cold-run flake of the first Today spec?
+
+### 2026-10-24: Session end
+- **Finished (all in `review`):** F-007 #7, F-008 #8, F-009 #9, F-010 #10, F-011 #11, F-012 #12, F-013 #13, F-014 #14. The PRs are stacked; merge in order #7 to #14.
+- **Blocked:** none.
+- **Queue:** no `todo` tasks left. The planner needs to add the next tasks.

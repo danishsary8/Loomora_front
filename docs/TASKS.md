@@ -147,12 +147,12 @@ Rules:
 - **Files:** `vite.config.ts`, `public/*`, `src/app/*`
 
 ### F-014: Playwright end-to-end in CI
-- **Status:** doing
+- **Status:** review
 - **Steps:**
   1. Run Playwright specs (today, week) in CI at a 375 px viewport.
   2. Add a short "How to run tests" section to README.
 - **Done when:**
-  - [ ] CI runs the e2e job green
+  - [x] CI runs the e2e job green
 - **Files:** `.github/workflows/ci.yml`, `e2e/*`, `README.md`
 
 ## Done
