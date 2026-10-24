@@ -1,4 +1,23 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+/** How many to-dos are saved as done in the guest database. */
+function countDoneTodos(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve, reject) => {
+        const open = indexedDB.open('loomora-guest')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const read = open.result.transaction('todos').objectStore('todos').getAll()
+          read.onerror = () => reject(read.error)
+          read.onsuccess = () => {
+            open.result.close()
+            resolve((read.result as { done_at: string | null }[]).filter((t) => t.done_at).length)
+          }
+        }
+      }),
+  )
+}
 
 // F-006 done-when: add a to-do, check it off, reload, it is still there (guest, IndexedDB).
 test('guest adds a to-do, checks it off, and it survives a reload', async ({ page }) => {
@@ -34,12 +53,15 @@ test('guest adds a to-do, checks it off, and it survives a reload', async ({ pag
   await expect(page.getByRole('progressbar', { name: '1 of 1 done' })).toBeVisible()
 
   // Reload: still there and still done (US-1.1 data stays on the device).
+  await expect.poll(() => countDoneTodos(page)).toBe(1)
   await page.reload()
   await expect(page.getByRole('checkbox', { name: 'Mark “Read chapter 3” done' })).toBeChecked()
   await expect(page.getByRole('progressbar', { name: '1 of 1 done' })).toBeVisible()
 
-  // Un-check survives a reload too.
+  // Un-check survives a reload too. The row updates at once, so wait until the change is
+  // saved in IndexedDB before reloading.
   await page.getByText('Read chapter 3').click()
+  await expect.poll(() => countDoneTodos(page)).toBe(0)
   await page.reload()
   await expect(page.getByRole('checkbox', { name: 'Mark “Read chapter 3” done' })).not.toBeChecked()
 

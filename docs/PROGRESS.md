@@ -117,6 +117,10 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Problems:** None open.
 - **Questions:** Playwright already retries once in CI. Keep that, given the occasional cold-run flake of the first Today spec?
 
+### 2026-10-24: Flaky Today e2e fixed (root cause)
+- **Found:** CI on PR #14 failed `e2e/today.spec.ts` twice (retry too). The test un-checked a to-do and reloaded at once, before the change was saved in IndexedDB, so the reload showed it still done. This was the "first Today test fails on a cold run" flake noted in F-008, F-010, F-013 and F-014; it was a race in the test, not in the app.
+- **Fixed:** The spec now waits until IndexedDB shows the saved state before each reload. Verified with 18 runs in a row (3 repeats at 375 and 1280 px) and the full phone-375 project.
+
 ### 2026-10-24: Session end
 - **Finished (all in `review`):** F-007 #7, F-008 #8, F-009 #9, F-010 #10, F-011 #11, F-012 #12, F-013 #13, F-014 #14. The PRs are stacked; merge in order #7 to #14.
 - **Blocked:** none.
