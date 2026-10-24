@@ -1,8 +1,13 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { AppProviders } from './AppProviders'
 import { routes } from './routes'
 
 const router = createBrowserRouter(routes)
 
 export function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  )
 }

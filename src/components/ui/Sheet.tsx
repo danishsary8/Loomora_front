@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { CloseIcon } from './icons'
@@ -10,13 +10,15 @@ export interface SheetProps {
   onClose: () => void
   title: string
   children: ReactNode
+  /** Element to focus on open (e.g. a title field). Defaults to the first focusable element. */
+  initialFocusRef?: RefObject<HTMLElement | null>
 }
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /** Bottom sheet dialog: Escape and backdrop close it, focus stays inside while open. */
-export function Sheet({ open, onClose, title, children }: SheetProps) {
+export function Sheet({ open, onClose, title, children, initialFocusRef }: SheetProps) {
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
   const titleId = useId()
@@ -34,7 +36,7 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
     document.body.style.overflow = 'hidden'
 
     const panel = panelRef.current
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE)
+    const first = initialFocusRef?.current ?? panel?.querySelector<HTMLElement>(FOCUSABLE)
     ;(first ?? panel)?.focus()
 
     function onKeyDown(event: KeyboardEvent) {
@@ -63,7 +65,7 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
       document.body.style.overflow = previousOverflow
       previouslyFocused?.focus()
     }
-  }, [open])
+  }, [open, initialFocusRef])
 
   const panelMotion = reduceMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
