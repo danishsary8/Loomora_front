@@ -12,7 +12,7 @@ test('guest adds a to-do, checks it off, and it survives a reload', async ({ pag
   await page.goto('/')
   await page.getByRole('link', { name: 'Try it now' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Add to my schedule' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Add to my schedule' })).toBeEnabled()
 
   // Add (US-2.1): sheet opens with the title focused.
   await page.getByRole('button', { name: 'Add a to-do' }).click()

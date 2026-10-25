@@ -5,6 +5,8 @@ import type { Category } from '@/styles/tokens'
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Background: plain paper or a flat category color. */
   tone?: 'paper' | Category
+  /** Tighter padding for dense lists. */
+  compact?: boolean
 }
 
 const toneClasses: Record<NonNullable<CardProps['tone']>, string> = {
@@ -17,11 +19,12 @@ const toneClasses: Record<NonNullable<CardProps['tone']>, string> = {
   other: 'bg-category-other',
 }
 
-export function Card({ tone = 'paper', className, ...rest }: CardProps) {
+export function Card({ tone = 'paper', compact = false, className, ...rest }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-lg border-thick border-ink p-4 text-ink shadow-hard-md',
+        'rounded-lg border-thick border-ink text-ink shadow-hard-md',
+        compact ? 'p-3' : 'p-4',
         toneClasses[tone],
         className,
       )}
