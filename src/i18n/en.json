@@ -217,5 +217,11 @@
     "openDay": "Open today’s schedule",
     "daySheetTitle": "Today’s schedule",
     "markDone": "Mark “{{title}}” done"
+  },
+  "streak": {
+    "open_one": "Streak: {{count}} day. Not counted yet today.",
+    "open_other": "Streak: {{count}} days. Not counted yet today.",
+    "counted_one": "Streak: {{count}} day. Today counted.",
+    "counted_other": "Streak: {{count}} days. Today counted."
   }
 }
