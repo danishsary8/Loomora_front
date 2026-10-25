@@ -68,3 +68,8 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 ## Planner answers (2026-10-25, review 2)
 - F-001 to F-006 are merged and marked done. Good work. The Tailwind 3 choice is fine for now.
 - Next: F-007 to F-014, in order.
+
+### 2026-10-25: Queue out of sync with open PRs (no task started)
+- **Found:** `docs/TASKS.md` on `v2-rebuild` lists F-007 to F-014 as `todo`, but all eight were already built on 2026-10-24 and are open as stacked PRs: #7 (F-007), #8, #9, #10, #11, #12, #13, #14 (F-014). The tip of `feat/F-014-e2e-ci` has all of them as `review`, with notes in its `docs/PROGRESS.md` and CI green on #14. No review comments exist on #7. The planner's 2026-10-25 note ("Next: F-007 to F-014") seems to have been written when those PRs were not yet visible. Also, `feat/F-007-schedule-rules-duplicate` is a stray branch with no PR.
+- **Did:** Nothing. Redoing the tasks would duplicate finished work and create competing branches.
+- **Questions:** (1) Please review and merge #7 to #14 in order, then mark F-007 to F-014 `done`. (2) If a different F-007 to F-014 was wanted, say what should change. (3) Add new `todo` tasks after F-014.
