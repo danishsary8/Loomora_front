@@ -6,7 +6,8 @@
     "skipToContent": "Skip to content",
     "loading": "Loading…",
     "retry": "Try again",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "cancel": "Cancel"
   },
   "categories": {
     "study": "Study",
@@ -55,7 +56,9 @@
     "openSheet": "Open sheet",
     "sheetTitle": "Add a to-do",
     "sheetBody": "Sheets slide up from the bottom. Press Escape or tap outside to close.",
-    "progressRing": "Progress ring"
+    "progressRing": "Progress ring",
+    "scheduleSheet": "Schedule item sheet",
+    "openScheduleSheet": "Open the schedule sheet"
   },
   "nav": {
     "label": "Main",
@@ -137,5 +140,52 @@
     "category": "Category (optional)",
     "submit": "Add",
     "submitting": "Adding…"
+  },
+  "weekdays": {
+    "short": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "long": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    }
+  },
+  "scheduleForm": {
+    "addTitle": "Add to my schedule",
+    "editTitle": "Edit schedule item",
+    "title": "Title",
+    "titlePlaceholder": "What happens?",
+    "titleRequired": "Please enter a title.",
+    "titleInvalid": "Title must be 1 to 200 characters.",
+    "start": "Starts",
+    "end": "Ends",
+    "timeRequired": "Please set a start and end time.",
+    "endAfterStart": "End time must be after start time.",
+    "repeat": "Repeat on",
+    "daysRequired": "Pick at least one day.",
+    "add": "Add",
+    "save": "Save",
+    "saving": "Saving…",
+    "saveError": "Could not save. Please try again.",
+    "delete": "Delete",
+    "deleted": "Deleted “{{title}}”",
+    "undo": "Undo"
+  },
+  "scheduleScope": {
+    "editQuestion": "What do you want to change?",
+    "deleteQuestion": "What do you want to delete?",
+    "onlyToday": "Only today",
+    "allRepeats": "All repeats"
   }
 }

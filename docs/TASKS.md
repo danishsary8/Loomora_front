@@ -89,13 +89,13 @@ Rules:
 - **Files:** `src/features/schedule/*`, `src/lib/storage/*`
 
 ### F-008: Add and edit schedule item sheet
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Bottom sheet: title, start, end, repeat days (Mon to Sun chips, several at once), category. Validation messages through i18n.
   2. Edit from Week (all repeats) and from Today (choose "Only today" or "All repeats"); delete with the same choice and 5-second undo.
   3. Component tests for each path.
 - **Done when:**
-  - [ ] Tests, lint, typecheck, build pass; screenshot at 375 px in `docs/screenshots/`
+  - [x] Tests, lint, typecheck, build pass; screenshot at 375 px in `docs/screenshots/`
 - **Files:** `src/features/schedule/*`
 
 ### F-009: Week screen

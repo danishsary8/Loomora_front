@@ -10,3 +10,4 @@ export {
 } from './GuestScheduleRepository'
 export { ServerScheduleRepository } from './ServerScheduleRepository'
 export type { ScheduleRepository } from './ScheduleRepository'
+export { ScheduleRepositoryContext, useScheduleRepository } from './scheduleContext'
