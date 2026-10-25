@@ -80,7 +80,7 @@ Rules:
 - **Files:** `src/features/today/*`, `e2e/today.spec.ts`
 
 ### F-007: Schedule types, rules and guest repository
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Types from docs/08 (ScheduleItem, Exception, Checkin). Pure functions with unit tests: occurrences for a date (docs/08 rule 4), skip/override, Now/Next (rule 6).
   2. `ScheduleRepository` interface and `GuestScheduleRepository` (Dexie, client UUIDs, validation per rule 11). Server version is a stub.
@@ -89,7 +89,7 @@ Rules:
 - **Files:** `src/features/schedule/*`, `src/lib/storage/*`
 
 ### F-008: Add and edit schedule item sheet
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Bottom sheet: title, start, end, repeat days (Mon to Sun chips, several at once), category. Validation messages through i18n.
   2. Edit from Week (all repeats) and from Today (choose "Only today" or "All repeats"); delete with the same choice and 5-second undo.
@@ -99,7 +99,7 @@ Rules:
 - **Files:** `src/features/schedule/*`
 
 ### F-009: Week screen
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Phone: day strip (Mon to Sun) with one day at a time and a week overview toggle. 768 px and up: 7 columns (docs/04 Flow 4, D8).
   2. + button opens the sheet from F-008; "Copy day to..." sheet. Empty state.
@@ -109,7 +109,7 @@ Rules:
 - **Files:** `src/features/schedule/week/*`, `e2e/week.spec.ts`
 
 ### F-010: Now/Next strip and "Add to my schedule" on Today
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Strip above the to-do list: NOW and NEXT cards (Free / Nothing more today states), updates every minute; tapping opens the full-day sheet (S5).
   2. Enable the second empty-state button to open the schedule sheet. Check-off of schedule items from the day sheet.
@@ -119,7 +119,7 @@ Rules:
 - **Files:** `src/features/today/*`
 
 ### F-011: Streak (guest) and header badge
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Compute the streak locally from guest data with the same rules as docs/08 rule 8 (pure function, unit tests, time zone aware).
   2. Header badge with count and a "today counted" state; small celebration on the first check-off of the day.
@@ -128,7 +128,7 @@ Rules:
 - **Files:** `src/features/streak/*`
 
 ### F-012: Landing page, legal pages, Profile (guest)
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Landing (S1): promise, "Try it now", Sign in, 3 feature highlights, neo-brutalism style, footer with Privacy and Terms.
   2. Write simple Privacy and Terms pages (plain English, no legal claims beyond what the app really does).
@@ -138,7 +138,7 @@ Rules:
 - **Files:** `src/features/landing/*`, `src/features/profile/*`, `src/i18n/en.json`
 
 ### F-013: PWA install and offline shell
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. vite-plugin-pwa: manifest (name Loomora, cream background, icons generated from a simple neo-brutalism "L" mark), service worker caching the app shell, offline banner.
   2. Lighthouse PWA check documented in `docs/PROGRESS.md`.
@@ -147,13 +147,52 @@ Rules:
 - **Files:** `vite.config.ts`, `public/*`, `src/app/*`
 
 ### F-014: Playwright end-to-end in CI
-- **Status:** review
+- **Status:** done
 - **Steps:**
   1. Run Playwright specs (today, week) in CI at a 375 px viewport.
   2. Add a short "How to run tests" section to README.
 - **Done when:**
   - [x] CI runs the e2e job green
 - **Files:** `.github/workflows/ci.yml`, `e2e/*`, `README.md`
+
+### F-015: API client and auth screens (against the OpenAPI contract)
+- **Status:** todo
+- **Steps:**
+  1. Typed API client in `src/lib/api/` from `docs/openapi.yaml` (base URL from `VITE_API_URL`, bearer token, JSON error shape, 401 handling). Use MSW to mock the API in tests.
+  2. Screens S10: Sign in and Sign up (email + password, "Sign in with Google" and "Sign up with Google" buttons using `intent`), the skippable sign-up survey (display name, biggest goal, how you heard), errors `account_not_found` and `account_already_exists`, forgot and reset password pages, email verification page.
+  3. Token stored with expiry; auth state in a small store; protected routes.
+- **Done when:**
+  - [ ] Unit and component tests with MSW pass; lint, typecheck, build pass; screenshots at 375 px
+- **Files:** `src/lib/api/*`, `src/features/auth/*`
+
+### F-016: Server repositories and "Save your plan" (guest to account)
+- **Status:** todo
+- **Steps:**
+  1. Implement `ServerTodoRepository` and `ServerScheduleRepository` over the API client. The app picks guest or server storage by auth state, with the same UI.
+  2. "Save your plan" sheet (docs/04 Flow 3): shown after 3 check-offs or the first full day, dismissible, always in Profile. On success call `POST /import`, then clear guest data; on failure keep guest data and offer retry.
+  3. Tests with MSW: success, failure keeps guest data, idempotent retry.
+- **Done when:**
+  - [ ] Tests, lint, typecheck, build pass
+- **Files:** `src/lib/storage/*`, `src/features/auth/*`, `src/features/profile/*`
+
+### F-017: Profile for accounts, feedback and delete account
+- **Status:** todo
+- **Steps:**
+  1. Profile (S9) for signed-in users: name, streak, sign out, feedback sheet (POST /feedback), delete account with confirmation (password or Google re-auth message).
+  2. Time zone detection sent at sign-up and editable.
+- **Done when:**
+  - [ ] Tests, lint, typecheck, build pass
+- **Files:** `src/features/profile/*`
+
+### F-018: Accessibility, performance and cleanup pass
+- **Status:** todo
+- **Steps:**
+  1. Run axe checks (jest-axe or Playwright axe) on every screen; fix issues. Check focus order, contrast, touch targets.
+  2. Run Lighthouse (mobile) and record scores in `docs/PROGRESS.md`; target 90+ for Performance, Accessibility, Best practices.
+  3. Add a knip (or similar) unused-code check, fix everything it reports, and add it to CI.
+- **Done when:**
+  - [ ] CI green with the unused-code check; scores recorded
+- **Files:** `package.json`, `.github/workflows/ci.yml`, various
 
 ## Done
 

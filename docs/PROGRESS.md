@@ -125,3 +125,7 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Finished (all in `review`):** F-007 #7, F-008 #8, F-009 #9, F-010 #10, F-011 #11, F-012 #12, F-013 #13, F-014 #14. The PRs are stacked; merge in order #7 to #14.
 - **Blocked:** none.
 - **Queue:** no `todo` tasks left. The planner needs to add the next tasks.
+
+## Planner review (2026-10-25)
+- F-007 to F-014 reviewed and merged: lint clean, tests pass, PWA build works. PR #15 closed (obsolete). Great work.
+- Next: F-015 to F-018. The backend is not deployed yet, so use MSW against `docs/openapi.yaml`.
