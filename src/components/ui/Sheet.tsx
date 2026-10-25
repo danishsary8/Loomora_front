@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -75,7 +75,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <motion.div
+          <m.div
             data-testid="sheet-backdrop"
             className="absolute inset-0 bg-ink/40"
             initial={{ opacity: 0 }}
@@ -84,7 +84,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
             transition={{ duration: 0.15 }}
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
@@ -109,7 +109,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
               </button>
             </div>
             {children}
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>,
