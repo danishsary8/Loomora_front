@@ -138,12 +138,12 @@ Rules:
 - **Files:** `src/features/landing/*`, `src/features/profile/*`, `src/i18n/en.json`
 
 ### F-013: PWA install and offline shell
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. vite-plugin-pwa: manifest (name Loomora, cream background, icons generated from a simple neo-brutalism "L" mark), service worker caching the app shell, offline banner.
   2. Lighthouse PWA check documented in `docs/PROGRESS.md`.
 - **Done when:**
-  - [ ] Build passes; Lighthouse installable check passes; the app opens offline after one visit
+  - [x] Build passes; Lighthouse installable check passes; the app opens offline after one visit
 - **Files:** `vite.config.ts`, `public/*`, `src/app/*`
 
 ### F-014: Playwright end-to-end in CI

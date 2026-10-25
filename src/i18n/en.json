@@ -305,5 +305,8 @@
     "feedbackHint": "Tell us what went wrong or what would help.",
     "feedbackSend": "Send",
     "feedbackSoon": "Sending feedback is not connected yet."
+  },
+  "offline": {
+    "banner": "You are offline. Your plan still works and saves on this device."
   }
 }

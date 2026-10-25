@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
+import { OfflineBanner } from './OfflineBanner'
 
 export function RootLayout() {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ export function RootLayout() {
       >
         {t('common.skipToContent')}
       </a>
+      <OfflineBanner />
       <Suspense
         fallback={
           <div className="mx-auto max-w-2xl px-4 pt-8">
