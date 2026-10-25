@@ -68,3 +68,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 ## Planner answers (2026-10-25, review 2)
 - F-001 to F-006 are merged and marked done. Good work. The Tailwind 3 choice is fine for now.
 - Next: F-007 to F-014, in order.
+
+### 2026-10-24: F-007 Schedule types, rules and guest repository
+- **Changed:** `ScheduleItem`, `ScheduleException`, `ScheduleCheckin`, `Occurrence` types (snake_case like the API, times as `HH:mm`, weekday 0 = Monday). Pure `occursOn`, `occurrencesForDate` (rules 4, 5, 7; sorted by start, end, id) and `nowAndNext` (rule 6) in `src/features/schedule/occurrences.ts`. `ScheduleRepository` interface, `GuestScheduleRepository` on Dexie (Dexie schema v2 adds three stores with unique item+date indexes; client UUIDs; rule 11 validation; 100-item cap; delete removes exceptions and check-ins; check-in and exception writes are idempotent), `ServerScheduleRepository` stub.
+- **Verified:** `npm test` 18 files / 183 tests passed; `npm run lint`, `format:check`, `typecheck`, `build` exit 0; `npm run e2e` 33 passed / 1 skipped (Dexie upgrade does not break Today).
+- **Problems:** Fixed a missing plain `date` index found by the tests.
+- **Questions:** (Q8) Overlapping items: Now is the earliest-starting one, Next is the first that starts later. OK? (Q9) Exceptions and check-ins are only accepted on dates where the item occurs; a check-in on a skipped day is still accepted. OK? (Q10) `/schedule/copy-day` and week listing are left out of the repository; F-009 adds them if needed.
