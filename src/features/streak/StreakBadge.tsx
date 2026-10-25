@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StreakIcon } from '@/components/ui/icons'
@@ -26,7 +26,8 @@ export function StreakBadge({ count, todayCounted }: Streak) {
   }, [todayCounted])
 
   return (
-    <motion.p
+    <m.p
+      role="status"
       data-testid="streak-badge"
       data-today-counted={todayCounted}
       data-celebrating={celebrating}
@@ -40,6 +41,6 @@ export function StreakBadge({ count, todayCounted }: Streak) {
     >
       <StreakIcon className="size-5" />
       <span aria-hidden="true">{count}</span>
-    </motion.p>
+    </m.p>
   )
 }

@@ -1,3 +1,3 @@
-export { EmptyState, type EmptyStateProps } from './EmptyState'
-export { ErrorState, type ErrorStateProps } from './ErrorState'
+export { EmptyState } from './EmptyState'
+export { ErrorState } from './ErrorState'
 export { LoadingState } from './LoadingState'

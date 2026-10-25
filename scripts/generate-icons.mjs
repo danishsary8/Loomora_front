@@ -1,7 +1,7 @@
 // Renders the PWA icons from public/icon.svg and scripts/icon-maskable.svg.
 // Run with `npm run icons` after changing either SVG.
 import { readFile } from 'node:fs/promises'
-import { chromium } from 'playwright'
+import { chromium } from '@playwright/test'
 
 const ICONS = [
   { source: '../public/icon.svg', file: 'icon-192.png', size: 192 },

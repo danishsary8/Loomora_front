@@ -1,4 +1,5 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
+import { LazyMotion } from 'framer-motion'
 import { useState, type ReactNode } from 'react'
 import {
   GuestScheduleRepository,
@@ -9,6 +10,9 @@ import {
   type TodoRepository,
 } from '@/lib/storage'
 import { createQueryClient } from './queryClient'
+
+// Animation features load after first paint, keeping them out of the entry chunk.
+const loadMotionFeatures = () => import('./motionFeatures').then((mod) => mod.default)
 
 export interface AppProvidersProps {
   children: ReactNode
@@ -28,12 +32,14 @@ export function AppProviders({
   const [repo] = useState(() => todoRepository ?? new GuestTodoRepository())
   const [schedule] = useState(() => scheduleRepository ?? new GuestScheduleRepository())
   return (
-    <QueryClientProvider client={client}>
-      <TodoRepositoryContext.Provider value={repo}>
-        <ScheduleRepositoryContext.Provider value={schedule}>
-          {children}
-        </ScheduleRepositoryContext.Provider>
-      </TodoRepositoryContext.Provider>
-    </QueryClientProvider>
+    <LazyMotion features={loadMotionFeatures} strict>
+      <QueryClientProvider client={client}>
+        <TodoRepositoryContext.Provider value={repo}>
+          <ScheduleRepositoryContext.Provider value={schedule}>
+            {children}
+          </ScheduleRepositoryContext.Provider>
+        </TodoRepositoryContext.Provider>
+      </QueryClientProvider>
+    </LazyMotion>
   )
 }

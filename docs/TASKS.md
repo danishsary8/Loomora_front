@@ -185,7 +185,7 @@ Rules:
 - **Files:** `src/features/profile/*`
 
 ### F-018: Accessibility, performance and cleanup pass
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Run axe checks (jest-axe or Playwright axe) on every screen; fix issues. Check focus order, contrast, touch targets.
   2. Run Lighthouse (mobile) and record scores in `docs/PROGRESS.md`; target 90+ for Performance, Accessibility, Best practices.
