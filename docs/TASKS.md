@@ -99,13 +99,13 @@ Rules:
 - **Files:** `src/features/schedule/*`
 
 ### F-009: Week screen
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Phone: day strip (Mon to Sun) with one day at a time and a week overview toggle. 768 px and up: 7 columns (docs/04 Flow 4, D8).
   2. + button opens the sheet from F-008; "Copy day to..." sheet. Empty state.
   3. Playwright test: add an item for Mon to Fri, see it on each day.
 - **Done when:**
-  - [ ] Tests pass at 375 and 1280 px; screenshots saved
+  - [x] Tests pass at 375 and 1280 px; screenshots saved
 - **Files:** `src/features/schedule/week/*`, `e2e/week.spec.ts`
 
 ### F-010: Now/Next strip and "Add to my schedule" on Today

@@ -1,14 +1,12 @@
-import { useTranslation } from 'react-i18next'
-import { pressMd } from '@/components/ui/press'
+import { pressMd } from './press'
 
 /** Floating + (docs/04): bottom right, above the phone bottom nav. */
-export function AddButton({ onClick }: { onClick: () => void }) {
-  const { t } = useTranslation()
+export function FloatingAddButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={t('today.addTodo')}
+      aria-label={label}
       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-30 grid size-16 place-items-center rounded-full border-thick border-ink bg-accent md:bottom-8 md:right-8 ${pressMd}`}
     >
       <svg

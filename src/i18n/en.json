@@ -187,5 +187,26 @@
     "deleteQuestion": "What do you want to delete?",
     "onlyToday": "Only today",
     "allRepeats": "All repeats"
+  },
+  "week": {
+    "overview": "Week overview",
+    "singleDay": "Single day",
+    "addItem": "Add to my schedule",
+    "dayStrip": "Days of the week",
+    "nothingPlanned": "Nothing planned.",
+    "emptyTitle": "Build your week",
+    "emptyMessage": "Add what repeats: classes, work, workouts.",
+    "timeRange": "{{start}} to {{end}}",
+    "editItem": "Edit {{title}}, {{start}} to {{end}}"
+  },
+  "copyDay": {
+    "button": "Copy day to…",
+    "open": "Copy {{day}} to…",
+    "title": "Copy {{day}} to…",
+    "hint": "Pick the days that get the same items.",
+    "targets": "Copy to",
+    "submit": "Copy",
+    "copying": "Copying…",
+    "error": "Could not copy. Please try again."
   }
 }
