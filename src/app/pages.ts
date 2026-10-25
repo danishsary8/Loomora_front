@@ -25,6 +25,21 @@ export const SignInPage = lazy(() =>
 export const SignUpPage = lazy(() =>
   import('@/features/auth/AuthPage').then((m) => ({ default: m.SignUpPage })),
 )
+export const SurveyPage = lazy(() =>
+  import('@/features/auth/SurveyPage').then((m) => ({ default: m.SurveyPage })),
+)
+export const GoogleCallbackPage = lazy(() =>
+  import('@/features/auth/GoogleCallbackPage').then((m) => ({ default: m.GoogleCallbackPage })),
+)
+export const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })),
+)
+export const ResetPasswordPage = lazy(() =>
+  import('@/features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })),
+)
+export const VerifyEmailPage = lazy(() =>
+  import('@/features/auth/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })),
+)
 export const PrivacyPage = lazy(() =>
   import('@/features/legal/LegalPage').then((m) => ({ default: m.PrivacyPage })),
 )
