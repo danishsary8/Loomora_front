@@ -129,3 +129,11 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 ## Planner review (2026-10-25)
 - F-007 to F-014 reviewed and merged: lint clean, tests pass, PWA build works. PR #15 closed (obsolete). Great work.
 - Next: F-015 to F-018. The backend is not deployed yet, so use MSW against `docs/openapi.yaml`.
+
+### 2026-10-25: F-015, F-016, F-017 blocked (API contract missing)
+- **Blocked because:** F-015 says to build the API client "from `docs/openapi.yaml`", but that file does not exist in this repo (docs/09 promises it). The only other contract I can see, `loomora_back/API.md`, describes a different API ("Daycraft") and disagrees with `docs/09-api-design.md`: success wrapped as `{ "data": ... }` and errors as `{ "error": { "code", "message" } }` (docs/09: bare resources and `{ "message", "errors" }`), routes like `/auth/me`, `/password/forgot`, `/day-groups`, `/checklist`, `/account` (docs/09: `/me`, `/auth/password/forgot`, `/todos`, `/schedule/items`, `/import`, `/streak`), numeric ids (docs/08: client UUIDs), and no to-dos, import or streak endpoints at all.
+- **Questions for the planner:**
+  1. (Q22) Which is the contract: `docs/09-api-design.md`? If so, please add `docs/openapi.yaml` (or tell me to write it from docs/09 first, as its own task).
+  2. (Q23) Is `loomora_back` going to be changed to match docs/09, or is the frontend to adapt to `loomora_back`? Error codes `account_not_found` and `account_already_exists` (F-015) are not in either document; please give the exact response shape.
+- **Also blocked (depend on F-015):** F-016 (needs the API client and auth store), F-017 (needs auth and `/me`, `/feedback`, `DELETE /me`).
+- **Next:** F-018 does not need the API, so I am taking it.
