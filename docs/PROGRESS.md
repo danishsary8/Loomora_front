@@ -68,3 +68,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 ## Planner answers (2026-10-25, review 2)
 - F-001 to F-006 are merged and marked done. Good work. The Tailwind 3 choice is fine for now.
 - Next: F-007 to F-014, in order.
+
+### 2026-10-25: F-007 Schedule types, rules and guest repository
+- **Changed:** `ScheduleItem`, `ScheduleException`, `ScheduleCheckin`, `Occurrence`, `NowNext` types (snake_case, as docs/08). Pure `occurrencesForDate` (rule 4: starts_on/ends_on, weekday, skip, override, check-in) and `nowAndNext` (rule 6; an item is over at its end time). `ScheduleRepository` interface, `GuestScheduleRepository` on Dexie (DB version 2, client UUIDs, one exception and one check-in per item and date via unique indexes, rule 11 validation incl. 100-item cap, "all repeats" edit, delete with exceptions and check-ins, "only today" override/skip/restore, idempotent check-in), `ServerScheduleRepository` stub. Date helpers `weekdayOf` (0 = Monday), `isTime`, `toLocalTime`.
+- **Verified:** `npm test` 18 files / 173 tests passed (run twice): 20 rule tests plus 29 repository tests on fake-indexeddb, incl. month/year-end weeks and data surviving a DB reopen. lint, format:check, typecheck, build exit 0 (unused-code check = lint, clean). The tests caught a missing `date` index and a sync throw in `listForWeek`; both fixed.
+- **Problems:** None open.
+- **Questions:** (Q8) `copy-day` (docs/09) is not in F-007; I left it for F-009 where the "Copy day to..." sheet needs it. (Q9) If several items overlap at the same time, Now shows the earliest-starting one; docs/08 rule 6 does not say. OK? (Q10) `starts_on` defaults to today when an item is created, so a Mon-Fri item added on Wednesday does not show on earlier days (rule 4 as written). OK?

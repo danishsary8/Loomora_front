@@ -1,4 +1,4 @@
-import { isLocalDate, toLocalDate } from './date'
+import { isLocalDate, isTime, toLocalDate, toLocalTime, weekdayOf } from './date'
 
 describe('date helpers', () => {
   it('formats the device-local calendar date', () => {
@@ -13,5 +13,26 @@ describe('date helpers', () => {
     expect(isLocalDate('2026-13-01')).toBe(false)
     expect(isLocalDate('2026-1-01')).toBe(false)
     expect(isLocalDate('')).toBe(false)
+  })
+
+  it('formats the device-local time of day', () => {
+    expect(toLocalTime(new Date(2026, 9, 24, 7, 5))).toBe('07:05')
+    expect(toLocalTime(new Date(2026, 9, 24, 23, 59))).toBe('23:59')
+  })
+
+  it('accepts only 24-hour HH:MM times', () => {
+    expect(isTime('00:00')).toBe(true)
+    expect(isTime('23:59')).toBe(true)
+    expect(isTime('24:00')).toBe(false)
+    expect(isTime('9:30')).toBe(false)
+    expect(isTime('09:60')).toBe(false)
+    expect(isTime('')).toBe(false)
+  })
+
+  it('numbers weekdays from Monday = 0', () => {
+    expect(weekdayOf('2026-10-19')).toBe(0)
+    expect(weekdayOf('2026-10-24')).toBe(5)
+    expect(weekdayOf('2026-10-25')).toBe(6)
+    expect(weekdayOf('2026-10-26')).toBe(0)
   })
 })

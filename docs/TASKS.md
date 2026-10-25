@@ -80,12 +80,12 @@ Rules:
 - **Files:** `src/features/today/*`, `e2e/today.spec.ts`
 
 ### F-007: Schedule types, rules and guest repository
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Types from docs/08 (ScheduleItem, Exception, Checkin). Pure functions with unit tests: occurrences for a date (docs/08 rule 4), skip/override, Now/Next (rule 6).
   2. `ScheduleRepository` interface and `GuestScheduleRepository` (Dexie, client UUIDs, validation per rule 11). Server version is a stub.
 - **Done when:**
-  - [ ] Unit tests cover every rule; lint, typecheck, test, build pass
+  - [x] Unit tests cover every rule; lint, typecheck, test, build pass
 - **Files:** `src/features/schedule/*`, `src/lib/storage/*`
 
 ### F-008: Add and edit schedule item sheet
