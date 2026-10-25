@@ -98,3 +98,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm test` 25 files / 246 tests (18 streak rule tests incl. time zones and month/year boundaries, badge and Today tests); lint, format:check, typecheck, build exit 0; e2e 39 passed.
 - **Problems:** None open.
 - **Questions:** (Q16) A to-do counts as "planned" only on its own due date; undated and overdue to-dos do not make a day planned. OK? (Q17) Only the current streak is computed; longest streak waits for the account and Insights tasks.
+
+### 2026-10-24: F-012 Landing page, legal pages, Profile (guest)
+- **Changed:** Landing (S1): promise, Try it now, Sign in, three highlight cards, Privacy and Terms in the footer; wider layout on desktop (`StandalonePage wide`). Privacy and Terms written in plain English and limited to what the app does today (data stays on the device, no accounts, no analytics, hosting logs mentioned). Profile (S9) for guests: streak card with the badge, "Data lives on this device only.", disabled "Save your plan" with "Accounts are coming soon.", and a Send feedback sheet (S12, UI only, Send disabled). New `Textarea`; `Input` and `Textarea` share `Field` and `fieldClasses`. Screenshots `docs/screenshots/landing-375.png`, `landing-1280.png`, `profile-375.png`, `profile-1280.png`. Stacked on F-011 (PR #11).
+- **Verified:** `npm test` 29 files / 259 tests (landing, legal, profile, Textarea); lint, format:check, typecheck, build exit 0; e2e 39 passed (routes at 375 and 1280 px still render).
+- **Problems:** None open.
+- **Questions:** (Q18) The feedback Send button is disabled because there is no API yet (docs/09 `POST /feedback`); should it instead save locally? (Q19) The legal text is plain information, not legal advice; Danish should read it and add a contact address before launch.

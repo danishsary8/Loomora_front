@@ -1,14 +1,24 @@
 import { useTranslation } from 'react-i18next'
 import { PageHeading, StandalonePage } from '@/components/page'
-import { EmptyState } from '@/components/states'
 
-// S13 legal pages. The legal text itself is not written yet (docs/07 S11).
+const SECTION_IDS = ['s1', 's2', 's3', 's4', 's5'] as const
+
+// S13 legal pages: plain English, and only what the app really does today.
 function LegalPage({ page }: { page: 'privacy' | 'terms' }) {
   const { t } = useTranslation()
   return (
     <StandalonePage>
-      <PageHeading>{t(`pages.${page}.title`)}</PageHeading>
-      <EmptyState title={t('common.comingSoon')} />
+      <header className="flex flex-col gap-2">
+        <PageHeading>{t(`pages.${page}.title`)}</PageHeading>
+        <p className="text-sm text-muted">{t('legal.updated')}</p>
+      </header>
+      <p className="text-lg">{t(`legal.${page}.intro`)}</p>
+      {SECTION_IDS.map((id) => (
+        <section key={id} className="flex flex-col gap-1">
+          <h2 className="text-xl font-bold">{t(`legal.${page}.${id}.title`)}</h2>
+          <p>{t(`legal.${page}.${id}.body`)}</p>
+        </section>
+      ))}
     </StandalonePage>
   )
 }
