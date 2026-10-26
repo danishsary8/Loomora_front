@@ -176,7 +176,7 @@ Rules:
 - **Files:** `src/lib/storage/*`, `src/features/auth/*`, `src/features/profile/*`
 
 ### F-017: Profile for accounts, feedback and delete account
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Profile (S9) for signed-in users: name, streak, sign out, feedback sheet (POST /feedback), delete account with confirmation (password or Google re-auth message).
   2. Time zone detection sent at sign-up and editable.
