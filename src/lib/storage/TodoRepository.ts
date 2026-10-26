@@ -11,8 +11,6 @@ import type {
  * whether data lives on the device (guest) or on the server (account).
  */
 export interface TodoRepository {
-  /** Every to-do (used by the streak). */
-  listAll(): Promise<Todo[]>
   /** The Today list for `date` (docs/08 rules 1 and 2). */
   listForDate(date: LocalDate): Promise<TodayTodo[]>
   create(input: CreateTodoInput): Promise<Todo>

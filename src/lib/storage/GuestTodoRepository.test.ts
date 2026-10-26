@@ -3,7 +3,6 @@ import { MAX_TODOS, TITLE_MAX_LENGTH, type Todo } from '@/features/todos/types'
 import { GuestDatabase } from './db'
 import { NotFoundError, ValidationError } from './errors'
 import { GuestTodoRepository } from './GuestTodoRepository'
-import { ServerTodoRepository } from './ServerTodoRepository'
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 
@@ -168,16 +167,5 @@ describe('GuestTodoRepository', () => {
       await expectInvalid(repo.create({ title: 'One too many' }), 'title')
       expect(await db.todos.count()).toBe(MAX_TODOS)
     })
-  })
-})
-
-describe('ServerTodoRepository (stub)', () => {
-  it('rejects every call until it is built', async () => {
-    const server = new ServerTodoRepository()
-    await expect(server.listForDate()).rejects.toThrow(/not implemented/)
-    await expect(server.create()).rejects.toThrow(/not implemented/)
-    await expect(server.update()).rejects.toThrow(/not implemented/)
-    await expect(server.setDone()).rejects.toThrow(/not implemented/)
-    await expect(server.delete()).rejects.toThrow(/not implemented/)
   })
 })

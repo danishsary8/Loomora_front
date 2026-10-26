@@ -1,13 +1,19 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { LazyMotion } from 'framer-motion'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { accountDataApi, scheduleApi, todosApi, useSession } from '@/lib/api'
 import {
   GuestScheduleRepository,
+  GuestStorageContext,
+  GuestStreakRepository,
   GuestTodoRepository,
   ScheduleRepositoryContext,
+  ServerScheduleRepository,
+  ServerStreakRepository,
+  ServerTodoRepository,
+  StreakRepositoryContext,
   TodoRepositoryContext,
-  type ScheduleRepository,
-  type TodoRepository,
+  type GuestStorage,
 } from '@/lib/storage'
 import { createQueryClient } from './queryClient'
 
@@ -16,12 +22,13 @@ const loadMotionFeatures = () => import('./motionFeatures').then((mod) => mod.de
 
 export interface AppProvidersProps {
   children: ReactNode
-  /** Tests pass their own; the app uses guest storage (R1 guest mode). */
-  todoRepository?: TodoRepository
-  scheduleRepository?: ScheduleRepository
+  /** Tests pass their own guest repositories (on a throwaway database). */
+  todoRepository?: GuestTodoRepository
+  scheduleRepository?: GuestScheduleRepository
   queryClient?: QueryClient
 }
 
+/** Signed out: the plan lives on this device. Signed in: it lives on the server (A8-5). */
 export function AppProviders({
   children,
   todoRepository,
@@ -29,16 +36,42 @@ export function AppProviders({
   queryClient,
 }: AppProvidersProps) {
   const [client] = useState(() => queryClient ?? createQueryClient())
-  const [repo] = useState(() => todoRepository ?? new GuestTodoRepository())
-  const [schedule] = useState(() => scheduleRepository ?? new GuestScheduleRepository())
+  const [guest] = useState<GuestStorage>(() => ({
+    todos: todoRepository ?? new GuestTodoRepository(),
+    schedule: scheduleRepository ?? new GuestScheduleRepository(),
+  }))
+  const [guestStreak] = useState(() => new GuestStreakRepository(guest.todos, guest.schedule))
+  const [server] = useState(() => ({
+    todos: new ServerTodoRepository(todosApi),
+    schedule: new ServerScheduleRepository(scheduleApi),
+    streak: new ServerStreakRepository(accountDataApi),
+  }))
+
+  const signedIn = useSession((s) => s.token !== null)
+  const previous = useRef(signedIn)
+  useEffect(() => {
+    if (previous.current === signedIn) return
+    previous.current = signedIn
+    // Lists read from the other storage now: drop what the old one cached and load again.
+    void client.resetQueries()
+  }, [signedIn, client])
+
+  const active = signedIn
+    ? server
+    : { todos: guest.todos, schedule: guest.schedule, streak: guestStreak }
+
   return (
     <LazyMotion features={loadMotionFeatures} strict>
       <QueryClientProvider client={client}>
-        <TodoRepositoryContext.Provider value={repo}>
-          <ScheduleRepositoryContext.Provider value={schedule}>
-            {children}
-          </ScheduleRepositoryContext.Provider>
-        </TodoRepositoryContext.Provider>
+        <GuestStorageContext.Provider value={guest}>
+          <TodoRepositoryContext.Provider value={active.todos}>
+            <ScheduleRepositoryContext.Provider value={active.schedule}>
+              <StreakRepositoryContext.Provider value={active.streak}>
+                {children}
+              </StreakRepositoryContext.Provider>
+            </ScheduleRepositoryContext.Provider>
+          </TodoRepositoryContext.Provider>
+        </GuestStorageContext.Provider>
       </QueryClientProvider>
     </LazyMotion>
   )

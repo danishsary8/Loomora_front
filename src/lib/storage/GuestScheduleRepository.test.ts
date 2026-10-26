@@ -3,7 +3,6 @@ import { MAX_SCHEDULE_ITEMS, type CreateScheduleItemInput } from '@/features/sch
 import { GuestDatabase } from './db'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { NotFoundError, ValidationError } from './errors'
-import { ServerScheduleRepository } from './ServerScheduleRepository'
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 // 2026-10-26 is a Monday.
@@ -301,19 +300,5 @@ describe('GuestScheduleRepository listForDate', () => {
   it('does not touch the to-do store', async () => {
     await repo.create(input())
     expect(await db.todos.count()).toBe(0)
-  })
-})
-
-describe('ServerScheduleRepository stub', () => {
-  it('rejects every method until the account tasks', async () => {
-    const server = new ServerScheduleRepository()
-    await expect(server.listItems()).rejects.toThrow('not implemented')
-    await expect(server.listForDate()).rejects.toThrow('not implemented')
-    await expect(server.create()).rejects.toThrow('not implemented')
-    await expect(server.update()).rejects.toThrow('not implemented')
-    await expect(server.delete()).rejects.toThrow('not implemented')
-    await expect(server.setException()).rejects.toThrow('not implemented')
-    await expect(server.removeException()).rejects.toThrow('not implemented')
-    await expect(server.setCheckin()).rejects.toThrow('not implemented')
   })
 })

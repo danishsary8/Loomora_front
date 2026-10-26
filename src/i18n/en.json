@@ -298,13 +298,27 @@
     "deviceOnly": "Data lives on this device only.",
     "deviceWarning": "If you clear your browser data or lose this device, your plan is gone.",
     "savePlan": "Save your plan",
-    "savePlanSoon": "Accounts are coming soon.",
+    "savePlanLeft": "Your plan is still on this device. Save it to your account so you do not lose it.",
     "feedback": "Send feedback",
     "feedbackTitle": "Send feedback",
     "feedbackMessage": "Your message",
     "feedbackHint": "Tell us what went wrong or what would help.",
     "feedbackSend": "Send",
     "feedbackSoon": "Sending feedback is not connected yet."
+  },
+  "savePlan": {
+    "title": "Save your plan",
+    "intro": "Make an account so your plan is safe.",
+    "benefitDevice": "Keep your plan if you lose this device.",
+    "benefitSync": "Open it on any phone or laptop.",
+    "benefitStreak": "Keep your streak going.",
+    "create": "Create an account",
+    "notNow": "Not now",
+    "saving": "Saving your plan…",
+    "saved": "Your plan is saved",
+    "failedTitle": "We could not save your plan",
+    "failedBody": "Your plan is still on this device. Check your connection and try again.",
+    "retry": "Try again"
   },
   "offline": {
     "banner": "You are offline. Your plan still works and saves on this device."

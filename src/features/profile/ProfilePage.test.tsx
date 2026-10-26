@@ -30,11 +30,14 @@ describe('Profile for guests (S9)', () => {
     expect(screen.getByText('Today counted.')).toBeInTheDocument()
   })
 
-  it('keeps "Save your plan" disabled until accounts exist', async () => {
+  it('opens the Save your plan sheet and goes on to Sign up', async () => {
     await openProfile()
-    const save = screen.getByRole('button', { name: 'Save your plan' })
-    expect(save).toBeDisabled()
-    expect(save).toHaveAccessibleDescription('Accounts are coming soon.')
+    await userEvent.click(screen.getByRole('button', { name: 'Save your plan' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Save your plan' })
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Create an account' }))
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Create an account' }),
+    ).toBeInTheDocument()
   })
 
   it('opens and closes the feedback sheet', async () => {
