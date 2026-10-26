@@ -1,16 +1,39 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeading, StandalonePage } from '@/components/page'
-import { EmptyState } from '@/components/states'
+import { FormError } from './FormError'
+import { GoogleButton } from './GoogleButton'
+import { SignInForm } from './SignInForm'
+import { SignUpForm } from './SignUpForm'
 
-// S10 Sign in / Sign up. The forms arrive with the account tasks (P4).
-export function AuthPage({ mode }: { mode: 'signIn' | 'signUp' }) {
+const GOOGLE_ERRORS = [
+  'account_not_found',
+  'account_already_exists',
+  'email_not_verified',
+  'google_failed',
+] as const
+
+/** The message for the `?error=` the Google callback page sends back, if any. */
+function useGoogleError(): string | undefined {
   const { t } = useTranslation()
+  const code = useSearchParams()[0].get('error')
+  if (!code) return undefined
+  const known = GOOGLE_ERRORS.find((e) => e === code) ?? 'google_failed'
+  return t(`auth.googleErrors.${known}`)
+}
+
+// S10 Sign in / Sign up.
+function AuthPage({ mode }: { mode: 'signIn' | 'signUp' }) {
+  const { t } = useTranslation()
+  const googleError = useGoogleError()
   const other = mode === 'signIn' ? '/sign-up' : '/sign-in'
   return (
     <StandalonePage>
       <PageHeading>{t(`pages.${mode}.title`)}</PageHeading>
-      <EmptyState title={t('states.emptyTitle')} message={t('states.emptyMessage')} />
+      <FormError message={googleError} />
+      <GoogleButton intent={mode === 'signIn' ? 'sign_in' : 'sign_up'} />
+      <p className="text-center text-sm font-semibold text-muted">{t('auth.or')}</p>
+      {mode === 'signIn' ? <SignInForm /> : <SignUpForm />}
       <Link to={other} className="inline-flex min-h-touch items-center font-semibold underline">
         {t(`pages.${mode}.switch`)}
       </Link>

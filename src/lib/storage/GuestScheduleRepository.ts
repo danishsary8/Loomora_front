@@ -57,6 +57,14 @@ export class GuestScheduleRepository implements ScheduleRepository {
     return this.db.schedule_checkins.toArray()
   }
 
+  /** Remove every guest schedule row (after a successful import, docs/08 rule 9). */
+  async clear(): Promise<void> {
+    const { schedule_items, schedule_exceptions, schedule_checkins } = this.db
+    await this.db.transaction('rw', schedule_items, schedule_exceptions, schedule_checkins, () =>
+      Promise.all([schedule_items.clear(), schedule_exceptions.clear(), schedule_checkins.clear()]),
+    )
+  }
+
   async listForDate(date: LocalDate): Promise<Occurrence[]> {
     const [items, exceptions, checkins] = await Promise.all([
       this.db.schedule_items.toArray(),

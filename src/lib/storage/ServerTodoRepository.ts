@@ -1,36 +1,39 @@
-import type { TodayTodo, Todo } from '@/features/todos/types'
+import type {
+  CreateTodoInput,
+  LocalDate,
+  TodayTodo,
+  Todo,
+  UpdateTodoInput,
+} from '@/features/todos/types'
+import type { TodosApi } from '@/lib/api'
+import { asValidation, toTodayTodo, toTodo } from './serverMapping'
 import type { TodoRepository } from './TodoRepository'
 
-/**
- * Account to-dos via the API (docs/09 `/todos`). Stub until the account tasks (P4/P5);
- * every method rejects so it cannot be used by mistake.
- */
+/** Account to-dos via the API (docs/09 `/todos`). */
 export class ServerTodoRepository implements TodoRepository {
-  listAll(): Promise<Todo[]> {
-    return notYet('listAll')
+  private readonly api: TodosApi
+
+  constructor(api: TodosApi) {
+    this.api = api
   }
 
-  listForDate(): Promise<TodayTodo[]> {
-    return notYet('listForDate')
+  async listForDate(date: LocalDate): Promise<TodayTodo[]> {
+    return (await this.api.list(date)).map(toTodayTodo)
   }
 
-  create(): Promise<Todo> {
-    return notYet('create')
+  async create(input: CreateTodoInput): Promise<Todo> {
+    return toTodo(await asValidation(this.api.create(input)))
   }
 
-  update(): Promise<Todo> {
-    return notYet('update')
+  async update(id: string, patch: UpdateTodoInput): Promise<Todo> {
+    return toTodo(await asValidation(this.api.update(id, patch)))
   }
 
-  setDone(): Promise<Todo> {
-    return notYet('setDone')
+  async setDone(id: string, done: boolean): Promise<Todo> {
+    return toTodo(await (done ? this.api.setDone(id) : this.api.clearDone(id)))
   }
 
-  delete(): Promise<void> {
-    return notYet('delete')
+  delete(id: string): Promise<void> {
+    return this.api.remove(id)
   }
-}
-
-function notYet(method: string): Promise<never> {
-  return Promise.reject(new Error(`ServerTodoRepository.${method} is not implemented yet`))
 }

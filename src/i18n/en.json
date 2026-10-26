@@ -298,7 +298,7 @@
     "deviceOnly": "Data lives on this device only.",
     "deviceWarning": "If you clear your browser data or lose this device, your plan is gone.",
     "savePlan": "Save your plan",
-    "savePlanSoon": "Accounts are coming soon.",
+    "savePlanLeft": "Your plan is still on this device. Save it to your account so you do not lose it.",
     "feedback": "Send feedback",
     "feedbackTitle": "Send feedback",
     "feedbackMessage": "Your message",
@@ -306,7 +306,87 @@
     "feedbackSend": "Send",
     "feedbackSoon": "Sending feedback is not connected yet."
   },
+  "savePlan": {
+    "title": "Save your plan",
+    "intro": "Make an account so your plan is safe.",
+    "benefitDevice": "Keep your plan if you lose this device.",
+    "benefitSync": "Open it on any phone or laptop.",
+    "benefitStreak": "Keep your streak going.",
+    "create": "Create an account",
+    "notNow": "Not now",
+    "saving": "Saving your plan…",
+    "saved": "Your plan is saved",
+    "failedTitle": "We could not save your plan",
+    "failedBody": "Your plan is still on this device. Check your connection and try again.",
+    "retry": "Try again"
+  },
   "offline": {
     "banner": "You are offline. Your plan still works and saves on this device."
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least {{count}} characters.",
+    "or": "or",
+    "googleSignIn": "Sign in with Google",
+    "googleSignUp": "Sign up with Google",
+    "googleWorking": "Signing you in with Google…",
+    "signInSubmit": "Sign in",
+    "signingIn": "Signing in…",
+    "signUpSubmit": "Create account",
+    "signingUp": "Creating account…",
+    "forgotLink": "Forgot your password?",
+    "backToSignIn": "Back to sign in",
+    "errors": {
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Enter your password.",
+      "passwordShort": "Use at least {{count}} characters.",
+      "wrongCredentials": "Wrong email or password.",
+      "network": "Could not reach Loomora. Check your connection and try again.",
+      "rateLimited": "Too many tries. Wait a minute and try again.",
+      "unexpected": "Something went wrong. Please try again."
+    },
+    "googleErrors": {
+      "account_not_found": "We could not find an account for that Google address. Create one below.",
+      "account_already_exists": "That Google address already has an account. Sign in instead.",
+      "email_not_verified": "Google says that email is not verified. Verify it with Google and try again.",
+      "google_failed": "Google sign-in did not work. Please try again."
+    },
+    "survey": {
+      "title": "Welcome!",
+      "intro": "Two quick questions. You can skip them.",
+      "verifyNote": "We sent a confirmation link to {{email}}.",
+      "name": "What should we call you?",
+      "goal": "Your biggest goal",
+      "goals": {
+        "be_consistent": "Be consistent",
+        "manage_time": "Manage my time",
+        "finish_tasks": "Finish my tasks",
+        "other": "Something else"
+      },
+      "heardFrom": "How did you hear about Loomora?",
+      "continue": "Continue",
+      "skip": "Skip for now"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "intro": "Enter your email and we will send a reset link.",
+      "submit": "Send reset link",
+      "sent": "If an account exists for that email, we sent a reset link. It works for 60 minutes."
+    },
+    "reset": {
+      "title": "New password",
+      "newPassword": "New password",
+      "submit": "Save password",
+      "done": "Your password is changed. Sign in with the new one.",
+      "invalidLink": "This reset link is not valid or has expired.",
+      "requestNew": "Get a new link"
+    },
+    "verify": {
+      "title": "Confirm email",
+      "done": "Your email is confirmed.",
+      "failed": "This confirmation link is not valid or has expired.",
+      "toToday": "Go to Today"
+    }
   }
 }
