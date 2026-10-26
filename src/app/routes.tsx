@@ -1,19 +1,25 @@
 import type { RouteObject } from 'react-router-dom'
 import { AppLayout } from './layout/AppLayout'
 import { RootLayout } from './layout/RootLayout'
+import { RedirectIfSignedIn, RequireAuth } from '@/features/auth/RouteGuards'
 import { RouteError } from './layout/RouteError'
 import { NotFoundPage } from './NotFoundPage'
 import {
   FocusPage,
+  ForgotPasswordPage,
+  GoogleCallbackPage,
   InsightsPage,
   LandingPage,
   PrivacyPage,
   ProfilePage,
+  ResetPasswordPage,
   SignInPage,
   SignUpPage,
   StyleguidePage,
+  SurveyPage,
   TermsPage,
   TodayPage,
+  VerifyEmailPage,
   WeekPage,
 } from './pages'
 
@@ -34,8 +40,21 @@ export const routes: RouteObject[] = [
           { path: '/profile', element: <ProfilePage /> },
         ],
       },
-      { path: '/sign-in', element: <SignInPage /> },
-      { path: '/sign-up', element: <SignUpPage /> },
+      {
+        element: <RedirectIfSignedIn />,
+        children: [
+          { path: '/sign-in', element: <SignInPage /> },
+          { path: '/sign-up', element: <SignUpPage /> },
+        ],
+      },
+      {
+        element: <RequireAuth />,
+        children: [{ path: '/sign-up/survey', element: <SurveyPage /> }],
+      },
+      { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
+      { path: '/verify-email', element: <VerifyEmailPage /> },
       { path: '/privacy', element: <PrivacyPage /> },
       { path: '/terms', element: <TermsPage /> },
       { path: '/styleguide', element: <StyleguidePage /> },

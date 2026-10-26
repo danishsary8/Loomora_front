@@ -3,13 +3,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AppProviders } from '@/app/AppProviders'
 import { createQueryClient } from '@/app/queryClient'
 import { routes } from '@/app/routes'
-import {
-  GuestDatabase,
-  GuestScheduleRepository,
-  GuestTodoRepository,
-  type ScheduleRepository,
-  type TodoRepository,
-} from '@/lib/storage'
+import { GuestDatabase, GuestScheduleRepository, GuestTodoRepository } from '@/lib/storage'
 
 /** A guest repository on its own throwaway IndexedDB (fake-indexeddb in tests). */
 export function createTestRepository(options: { now?: () => Date } = {}) {
@@ -20,8 +14,8 @@ export function createTestRepository(options: { now?: () => Date } = {}) {
 /** Render the real route table at a path, with fresh providers. */
 export function renderRoute(
   path: string,
-  todoRepository?: TodoRepository,
-  scheduleRepository?: ScheduleRepository,
+  todoRepository?: GuestTodoRepository,
+  scheduleRepository?: GuestScheduleRepository,
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   const { db, repo: defaultTodos } = createTestRepository()

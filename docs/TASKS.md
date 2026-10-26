@@ -156,7 +156,7 @@ Rules:
 - **Files:** `.github/workflows/ci.yml`, `e2e/*`, `README.md`
 
 ### F-015: API client and auth screens (against the OpenAPI contract)
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Typed API client in `src/lib/api/` from `docs/openapi.yaml` (base URL from `VITE_API_URL`, bearer token, JSON error shape, 401 handling). Use MSW to mock the API in tests.
   2. Screens S10: Sign in and Sign up (email + password, "Sign in with Google" and "Sign up with Google" buttons using `intent`), the skippable sign-up survey (display name, biggest goal, how you heard), errors `account_not_found` and `account_already_exists`, forgot and reset password pages, email verification page.
@@ -166,7 +166,7 @@ Rules:
 - **Files:** `src/lib/api/*`, `src/features/auth/*`
 
 ### F-016: Server repositories and "Save your plan" (guest to account)
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Implement `ServerTodoRepository` and `ServerScheduleRepository` over the API client. The app picks guest or server storage by auth state, with the same UI.
   2. "Save your plan" sheet (docs/04 Flow 3): shown after 3 check-offs or the first full day, dismissible, always in Profile. On success call `POST /import`, then clear guest data; on failure keep guest data and offer retry.
@@ -176,7 +176,7 @@ Rules:
 - **Files:** `src/lib/storage/*`, `src/features/auth/*`, `src/features/profile/*`
 
 ### F-017: Profile for accounts, feedback and delete account
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Profile (S9) for signed-in users: name, streak, sign out, feedback sheet (POST /feedback), delete account with confirmation (password or Google re-auth message).
   2. Time zone detection sent at sign-up and editable.
