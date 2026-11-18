@@ -2,3 +2,8 @@
 export function deviceTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 }
+
+/** Every IANA zone the browser knows, plus `extra` zones it does not list (such as "UTC"). */
+export function timeZoneOptions(...extra: string[]): string[] {
+  return [...new Set([...extra, ...Intl.supportedValuesOf('timeZone')])]
+}

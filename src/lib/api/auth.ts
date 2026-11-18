@@ -39,6 +39,9 @@ export function createAuthApi(client: ApiClient) {
       request<Message>('POST', '/auth/password/forgot', { body: { email }, auth: false }),
     resetPassword: (input: ResetPasswordInput) =>
       request<Message>('POST', '/auth/password/reset', { body: input, auth: false }),
+    logout: () => request<undefined>('POST', '/auth/logout'),
+    /** Deletes the account and everything in it. Needs the current password. */
+    deleteMe: (password: string) => request<undefined>('DELETE', '/me', { body: { password } }),
     getMe: () => request<{ data: User }>('GET', '/me').then((r) => r.data),
     updateMe: (input: UpdateMeInput) =>
       request<{ data: User }>('PATCH', '/me', { body: input }).then((r) => r.data),
