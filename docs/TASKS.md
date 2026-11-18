@@ -223,12 +223,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/*/saveGuestPlan*`, tests
 
 ### F-021: Resend verification email
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Add a Resend link on the verify-email screen and the Profile account card for unverified accounts, calling `POST /auth/email/resend`. Show success, the 429 wait time (`retryAfter`) and other errors with `t()` text.
 - **Done when:**
-  - [ ] Vitest with MSW: success, 429 with retry time, network error
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest with MSW: success, 429 with retry time, network error
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/features/auth/*`, `src/features/profile/*`, `src/lib/api/*`, `src/i18n/locales/en.json`
 
 ### F-022: Undo toast for deletes
