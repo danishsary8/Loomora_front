@@ -166,7 +166,7 @@ Rules:
 - **Files:** `src/lib/api/*`, `src/features/auth/*`
 
 ### F-016: Server repositories and "Save your plan" (guest to account)
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Implement `ServerTodoRepository` and `ServerScheduleRepository` over the API client. The app picks guest or server storage by auth state, with the same UI.
   2. "Save your plan" sheet (docs/04 Flow 3): shown after 3 check-offs or the first full day, dismissible, always in Profile. On success call `POST /import`, then clear guest data; on failure keep guest data and offer retry.

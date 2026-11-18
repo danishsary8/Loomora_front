@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
 import { FloatingAddButton, ProgressRing } from '@/components/ui'
+import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
@@ -106,6 +107,7 @@ export function TodayPage() {
         onClose={() => setScheduleSheetOpen(false)}
         target={{ type: 'create' }}
       />
+      <SavePlanPrompt today={today} />
       <AddTodoSheet open={sheetOpen} onClose={() => setSheetOpen(false)} today={today} />
     </div>
   )

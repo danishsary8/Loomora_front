@@ -1,11 +1,17 @@
 import { createAuthApi } from './auth'
+import { createAccountDataApi } from './account'
 import { createApiClient } from './client'
+import { createScheduleApi } from './schedule'
 import { useSession } from './session'
+import { createTodosApi } from './todos'
 
 export { ApiError, type FieldErrors } from './errors'
 export { useSession } from './session'
 export type { GoogleIntent } from './auth'
-export type { Goal, User } from './types'
+export type { AccountDataApi } from './account'
+export type { ScheduleApi } from './schedule'
+export type { TodosApi } from './todos'
+export type { Goal, ImportBody, User } from './types'
 
 const DEFAULT_API_URL = 'http://localhost:8000/api/v1'
 
@@ -17,3 +23,6 @@ const client = createApiClient({
 })
 
 export const authApi = createAuthApi(client)
+export const todosApi = createTodosApi(client)
+export const scheduleApi = createScheduleApi(client)
+export const accountDataApi = createAccountDataApi(client)

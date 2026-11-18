@@ -37,6 +37,11 @@ export class GuestTodoRepository implements TodoRepository {
     return this.db.todos.toArray()
   }
 
+  /** Remove every guest to-do (after a successful import, docs/08 rule 9). */
+  async clear(): Promise<void> {
+    await this.db.todos.clear()
+  }
+
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
     // R1 caps guests at 500 to-dos, so filtering in memory is fine.
     return buildTodayList(await this.db.todos.toArray(), date)
