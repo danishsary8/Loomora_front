@@ -202,15 +202,15 @@ _None yet._
 Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-task-prompts.md` (behaviour reference only; never copy Daycraft code or visuals). Every new to-do field must work the same for guests (Dexie) and accounts, with the same rules and the same tests. Tasks that need a changed API wait for the planner to refresh `docs/openapi.yaml` from the backend repo; if it is not refreshed yet, mark the task `blocked` and move on.
 
 ### F-019: Error, offline and not-found states
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Audit what exists (route error boundary, 404 page, offline banner, error mapping). Add only what is missing.
   2. Route-level error boundary with `t()` text, Try again and Go to Today. Map API errors to user text (network, 401 sign out, 422 field errors, 429, 5xx); never show raw `error.message`.
   3. Account mode only: when a request fails with a network error or 5xx show a top banner with Retry and poll `GET /health` every 30 s until it recovers. The banner text must not promise offline sync (no outbox yet). Guest mode never calls the API.
 - **Done when:**
-  - [ ] Playwright: with `/api/**` aborted in account mode the banner appears, and after un-abort plus Retry it disappears; an unknown URL shows the 404 page
-  - [ ] Vitest covers the error mapping table
-  - [ ] `npm run lint`, `typecheck`, `test`, `build` and the cleanup check pass
+  - [x] Playwright: with `/api/**` aborted in account mode the banner appears, and after un-abort plus Retry it disappears; an unknown URL shows the 404 page
+  - [x] Vitest covers the error mapping table
+  - [x] `npm run lint`, `typecheck`, `test`, `build` and the cleanup check pass
 - **Files:** `src/app/*`, `src/lib/api/*`, `src/components/*`, `src/i18n/locales/en.json`, `e2e/backend-down.spec.ts`
 
 ### F-020: Import in chunks under the API limits

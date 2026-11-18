@@ -1,12 +1,15 @@
 import { createAuthApi } from './auth'
 import { createAccountDataApi } from './account'
 import { createApiClient } from './client'
+import { createHealthApi, useServiceStatus } from './health'
 import { createScheduleApi } from './schedule'
 import { useSession } from './session'
 import { createTodosApi } from './todos'
 
 export { ApiError, type FieldErrors } from './errors'
 export { useSession } from './session'
+export { useServiceStatus } from './health'
+export { errorMessageKey } from './errorMessages'
 export type { GoogleIntent } from './auth'
 export type { AccountDataApi } from './account'
 export type { ScheduleApi } from './schedule'
@@ -20,9 +23,11 @@ const client = createApiClient({
   baseUrl: import.meta.env.VITE_API_URL || DEFAULT_API_URL,
   getToken: () => useSession.getState().token,
   onUnauthorized: () => useSession.getState().signOut(),
+  onServiceFailure: () => useServiceStatus.getState().markDown(),
 })
 
 export const authApi = createAuthApi(client)
 export const todosApi = createTodosApi(client)
 export const scheduleApi = createScheduleApi(client)
 export const accountDataApi = createAccountDataApi(client)
+export const healthApi = createHealthApi(client)

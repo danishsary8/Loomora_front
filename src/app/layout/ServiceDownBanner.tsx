@@ -1,0 +1,49 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { healthApi, useServiceStatus, useSession } from '@/lib/api'
+import { Button } from '@/components/ui'
+
+const POLL_MS = 30_000
+
+/**
+ * Account mode only: shown after a request failed with a network error or a 5xx. Retry and a
+ * 30 s poll ask `GET /health`; once it answers, the banner goes and the screens reload.
+ * Guests never call the API, so they never see it.
+ */
+export function ServiceDownBanner() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const signedIn = useSession((s) => s.token !== null)
+  const down = useServiceStatus((s) => s.down)
+  const visible = signedIn && down
+
+  const check = useCallback(async () => {
+    try {
+      await healthApi.check()
+    } catch {
+      return
+    }
+    useServiceStatus.getState().markUp()
+    await queryClient.invalidateQueries()
+  }, [queryClient])
+
+  useEffect(() => {
+    if (!visible) return
+    const id = window.setInterval(() => void check(), POLL_MS)
+    return () => window.clearInterval(id)
+  }, [visible, check])
+
+  return (
+    <div role="status" aria-live="polite">
+      {visible && (
+        <div className="flex flex-wrap items-center justify-center gap-3 border-b-thick border-ink bg-category-work px-4 py-2 text-sm font-bold">
+          <p>{t('serviceDown.banner')}</p>
+          <Button variant="secondary" onClick={() => void check()}>
+            {t('serviceDown.retry')}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

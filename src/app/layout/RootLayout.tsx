@@ -4,6 +4,7 @@ import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
 import { SavePlanImport } from '@/features/auth/SavePlanImport'
 import { OfflineBanner } from './OfflineBanner'
+import { ServiceDownBanner } from './ServiceDownBanner'
 
 export function RootLayout() {
   const { t } = useTranslation()
@@ -16,6 +17,7 @@ export function RootLayout() {
         {t('common.skipToContent')}
       </a>
       <OfflineBanner />
+      <ServiceDownBanner />
       <SavePlanImport />
       <Suspense
         fallback={

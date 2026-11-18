@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ApiError, type FieldErrors } from '@/lib/api'
+import { ApiError, errorMessageKey, type FieldErrors } from '@/lib/api'
 
 /**
  * Runs a form's request and turns a failure into text for the form: field errors from a 422,
@@ -12,14 +12,6 @@ export function useFormAction() {
   const [formError, setFormError] = useState<string | undefined>()
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
-  function failureMessage(error: unknown): string {
-    if (error instanceof ApiError) {
-      if (error.isNetwork) return t('auth.errors.network')
-      if (error.isRateLimited) return t('auth.errors.rateLimited')
-    }
-    return t('auth.errors.unexpected')
-  }
-
   async function run(action: () => Promise<void>): Promise<void> {
     setPending(true)
     setFormError(undefined)
@@ -28,7 +20,7 @@ export function useFormAction() {
       await action()
     } catch (error) {
       if (error instanceof ApiError && error.status === 422) setFieldErrors(error.fieldErrors)
-      else setFormError(failureMessage(error))
+      else setFormError(t(errorMessageKey(error)))
     } finally {
       setPending(false)
     }
