@@ -53,3 +53,18 @@ Khmer language, accessibility and performance polish, push notifications, quick-
 
 ## Out of scope
 Multiple themes (one neo-brutalism identity), teams/sharing, native mobile apps.
+
+## Added 2026-11-19 (from the Daycraft analysis, docs/research/)
+| Feature | Priority | Release |
+|---|---|---|
+| Undo after deleting a to-do (5 s) | Should | R1 |
+| Time format (12 h / 24 h) and week start settings | Should | R1 |
+| Daily intention (one line per day) | Should | R1 |
+| Error, offline and not-found states on every screen | Must | R1 |
+| Focus cycles with short and long breaks, end early keeps time, timer survives page changes and reloads | Must | R3 |
+| Sound picker, volume and play mode for the timer alarm | Should | R3 |
+| Focus presets, full-screen focus view | Should | R3 |
+| History filters, search and delete with undo | Should | R3 |
+| Notes: tags, pin, color, search | Should | R4 |
+| Today insight sentence | Later | R4 |
+| Server-side achievements, avatar, custom alarm sound | Later | After R4 |

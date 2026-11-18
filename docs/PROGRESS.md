@@ -163,3 +163,10 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm test` 36 files / 341 tests (name and time zone save, device zone, field error, sign out with and without network, delete: empty, wrong, right password, cancel; feedback: guest, with token, 500, 429); `lint`, `format:check`, `typecheck`, `knip`, `build` exit 0; e2e phone-375: 37 passed. The time zone test caught a real bug (a device zone missing from the browser list, such as `UTC`, was not selectable), fixed.
 - **Problems:** None open.
 - **Questions:** (Q37) The user object has no "has a password" flag, so every account sees the password field and a Google-only account gets the API's 422 message. Can the API add `has_password`? (Q38) Email changes and "resend verification" are not in the API contract, so the email is read-only. (Q39) Sign out lands on the landing page, not on a guest Today; OK?
+
+## Planner answers (2026-11-19, review 4)
+- PRs #18, #19, #20 merged (CI green). F-015 to F-017 are done.
+- Q26 OK (name from the email, the survey can change it). Q27 OK until Khmer. Q28: resend verification is now F-021; sign out is done. Q29 OK. Q30 OK.
+- Q31 Yes: clearing the local copy after a successful import is approved (docs/08 rule 9). Q32 OK. Q33 OK (to-dos only). Q34: chunked import is now F-020. Q35 OK. Q36 done. Q37: backend adds `has_password` (B-025), then F-028. Q38 OK (email read-only). Q39 OK.
+- Q24: yes, as F-029 (last in the queue). Q25: the repositories are used now, nothing to delete.
+- New tasks F-019 to F-029 come from the Daycraft analysis (docs/research/). Some depend on backend tasks B-019 to B-025; the planner refreshes `docs/openapi.yaml` when each backend task merges.
