@@ -170,3 +170,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - Q31 Yes: clearing the local copy after a successful import is approved (docs/08 rule 9). Q32 OK. Q33 OK (to-dos only). Q34: chunked import is now F-020. Q35 OK. Q36 done. Q37: backend adds `has_password` (B-025), then F-028. Q38 OK (email read-only). Q39 OK.
 - Q24: yes, as F-029 (last in the queue). Q25: the repositories are used now, nothing to delete.
 - New tasks F-019 to F-029 come from the Daycraft analysis (docs/research/). Some depend on backend tasks B-019 to B-025; the planner refreshes `docs/openapi.yaml` when each backend task merges.
+
+### 2026-11-18: F-020 Import in chunks under the API limits
+- **Plan:** (1) split the import body into calls under the per-call caps (5000 exceptions, 10000 check-ins); (2) to-dos and items (totals per user) go in the first call; (3) call in order, clear the device only after every call succeeds; (4) Vitest.
+- **Changed:** `chunkImportBody` in `src/lib/storage/saveGuestPlan.ts`; `saveGuestPlan` sends the chunks one after another. Branched from `v2-rebuild` (not stacked on F-019); `docs/PROGRESS.md` and `TASKS.md` may conflict on merge, keep both notes.
+- **Verified:** 12000 check-ins send 2 calls (10000 + 2000, items only in the first); a failure on call 2 keeps all 12000 check-ins and the items; the retry succeeds and clears the device (ids are identical, so the server skips repeats). Full run below.
+- **Questions:** (Q43) Task Files says `src/features/*/saveGuestPlan*`; the file is `src/lib/storage/saveGuestPlan.ts`.
