@@ -170,3 +170,8 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - Q31 Yes: clearing the local copy after a successful import is approved (docs/08 rule 9). Q32 OK. Q33 OK (to-dos only). Q34: chunked import is now F-020. Q35 OK. Q36 done. Q37: backend adds `has_password` (B-025), then F-028. Q38 OK (email read-only). Q39 OK.
 - Q24: yes, as F-029 (last in the queue). Q25: the repositories are used now, nothing to delete.
 - New tasks F-019 to F-029 come from the Daycraft analysis (docs/research/). Some depend on backend tasks B-019 to B-025; the planner refreshes `docs/openapi.yaml` when each backend task merges.
+
+### 2026-11-18: F-022 to F-028 blocked (openapi not refreshed)
+- **Finding:** `docs/openapi.yaml` in this repo has none of the endpoints or fields these tasks need: no `POST /todos/{id}/restore` (F-022, B-022), no subtasks, priority or notes (F-023, B-019), no `repeat_rule` (F-024, B-020), no `/reminders/due` or `remind_at` (F-025, B-021), no `time_format` or `week_start` on `/me` (F-026, B-023), no daily intention (F-027, B-024), no `has_password` (F-028, B-025). I checked by searching the file.
+- **Question for the planner:** Please refresh `docs/openapi.yaml` from the backend repo when B-019 to B-025 are merged, then set each of F-022 to F-028 back to `todo`. If some backend tasks are merged already, tell me which and I will take those first.
+- **Status:** F-022 to F-028 set to `blocked`. Moving on to F-029, which needs no backend change.

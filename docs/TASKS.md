@@ -232,7 +232,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/auth/*`, `src/features/profile/*`, `src/lib/api/*`, `src/i18n/locales/en.json`
 
 ### F-022: Undo toast for deletes
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-022 and a refreshed `docs/openapi.yaml`. Add `restore` to the to-do repositories (Dexie: clear `deleted_at`; server: `POST /todos/{id}/restore`).
   2. A reusable `useUndoableDelete`: remove from the cache at once, call remove, show a 5 s toast with Undo (focusable, `aria-live=polite`). Undo restores; a remove error rolls back and shows an error toast. Use it for to-dos.
@@ -243,7 +243,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/components/*`, `src/features/todos/*`, repositories, `src/i18n/locales/en.json`
 
 ### F-023: Subtasks, priority and notes UI
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-019. Add notes (textarea), priority (low, normal, high with a text label, not only color) and subtasks (add, check, delete; one level) to the to-do sheet and rows. Show a subtask count like 2/3 on the row. Checking a parent marks its open subtasks done.
   2. Guest repository enforces the same rules (depth 1, parent check-off marks subtasks done). Bump the Dexie version with a migration and include the new fields in the import payload.
@@ -254,7 +254,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/subtasks.spec.ts`
 
 ### F-024: Repeating to-dos UI
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-020. In the to-do sheet add Repeat: None, Daily, Weekly with weekday chips. It requires a due date (show the message under the field).
   2. Guest repository creates the next occurrence on the first check-off with the same rules as B-020 (use the user's time zone helper). Add a small repeat icon and label on the row. Bump Dexie if needed and include `repeat_rule` in the import payload.
@@ -265,7 +265,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/repeat.spec.ts`
 
 ### F-025: In-app reminders UI
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-021. Add a Remind me field (date and time in the user's time zone) to the to-do sheet.
   2. A root watcher checks every 30 s and on tab focus. Accounts call `GET /reminders/due`; guests compare `remind_at` in Dexie. Show a banner or toast with the title and Done, Snooze (5, 10, 30, 60 min) and Dismiss. No sound (audio comes with Focus) and no push.
@@ -277,7 +277,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/reminders/*`, `src/features/todos/*`, `src/lib/db/*`, `src/i18n/locales/en.json`, `e2e/reminders.spec.ts`
 
 ### F-026: Time format and week start settings
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-023. In Profile add a 12 h or 24 h toggle and a week-starts-on picker (Monday or Sunday). Guests keep them in Dexie `meta`; accounts use `PATCH /me`.
   2. Use them in every place that shows a time (schedule, Now/Next, reminders) and in the Week view column order. Add `src/lib/time` tests that read `local-date-cases.json` (copy of the backend fixture).
@@ -288,7 +288,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/profile/*`, `src/lib/time/*`, schedule and week components, `src/i18n/locales/en.json`
 
 ### F-027: Daily intention on Today
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-024. A one-line field under the Today header (max 200 characters, placeholder via `t()`), saved 600 ms after typing stops and on blur, with a small Saved hint. It is per local date: another day shows its own text and a new day starts empty.
   2. Guest: Dexie `dailyIntentions`; account: the API. Include it in the import payload.
@@ -298,7 +298,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/today/DailyIntention.tsx`, repositories, `src/lib/db/*`, `src/i18n/locales/en.json`
 
 ### F-028: Delete-account password field uses `has_password`
-- **Status:** todo
+- **Status:** blocked
 - **Steps:**
   1. Needs B-025. In the delete-account sheet, hide the password field for accounts where `has_password` is false and explain the confirmation step the API requires (read the contract). Answers Q37.
 - **Done when:**
