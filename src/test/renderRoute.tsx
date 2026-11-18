@@ -3,7 +3,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AppProviders } from '@/app/AppProviders'
 import { createQueryClient } from '@/app/queryClient'
 import { routes } from '@/app/routes'
-import { GuestDatabase, GuestScheduleRepository, GuestTodoRepository } from '@/lib/storage'
+import { GuestDatabase } from '@/lib/storage/db'
+import { GuestScheduleRepository, GuestTodoRepository } from '@/lib/storage'
 
 /** A guest repository on its own throwaway IndexedDB (fake-indexeddb in tests). */
 export function createTestRepository(options: { now?: () => Date } = {}) {

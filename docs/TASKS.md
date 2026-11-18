@@ -307,10 +307,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/profile/*`, `src/lib/api/*`
 
 ### F-029: Static HTML shell and lazy Dexie for first paint
-- **Status:** todo
+- **Status:** review
 - **Steps:**
   1. Answers Q24. Paint the cream background and logo from `index.html` before JavaScript runs, and open Dexie only on the first read. Measure Lighthouse mobile on `vite preview` before and after and write both in `docs/PROGRESS.md`.
 - **Done when:**
-  - [ ] Performance is at least 90 on `/` and 85 on `/today` in the same environment as the F-018 measurements, or the note explains what is left
-  - [ ] Lint, typecheck, test, build, e2e pass
+  - [ ] (not measured, see PROGRESS) Performance is at least 90 on `/` and 85 on `/today` in the same environment as the F-018 measurements, or the note explains what is left
+  - [x] Lint, typecheck, test, build, e2e pass
 - **Files:** `index.html`, `src/lib/db/*`, `src/main.tsx`

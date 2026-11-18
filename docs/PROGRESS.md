@@ -170,3 +170,11 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - Q31 Yes: clearing the local copy after a successful import is approved (docs/08 rule 9). Q32 OK. Q33 OK (to-dos only). Q34: chunked import is now F-020. Q35 OK. Q36 done. Q37: backend adds `has_password` (B-025), then F-028. Q38 OK (email read-only). Q39 OK.
 - Q24: yes, as F-029 (last in the queue). Q25: the repositories are used now, nothing to delete.
 - New tasks F-019 to F-029 come from the Daycraft analysis (docs/research/). Some depend on backend tasks B-019 to B-025; the planner refreshes `docs/openapi.yaml` when each backend task merges.
+
+### 2026-11-18: F-029 Static HTML shell and lazy Dexie for first paint
+- **Plan:** (1) static cream page and logo in `index.html`, painted before JS; (2) Dexie loaded by a dynamic import on the first read; (3) measure.
+- **Changed:** `index.html` has an inline style and a logo inside `#root`; React replaces it on first render. `openGuestDatabase` (`src/lib/storage/openGuestDatabase.ts`) imports `./db` (Dexie) on first use and shares one instance; `GuestTodoRepository` and `GuestScheduleRepository` open it per call (a `db` option still lets tests pass their own). `GuestDatabase` is no longer re-exported from `@/lib/storage` (it would pull Dexie back into the entry chunk); tests import it from `@/lib/storage/db`.
+- **Measured:** entry chunk `index-*.js` 176.66 kB to 142.99 kB gzip (-34 kB) from `npm run build`.
+- **Not measured:** the Lighthouse scores. Lighthouse is not installed in this environment and the install (`npx lighthouse`) was refused by the sandbox permission check, so I did not work around it. The done-when item (90 on `/`, 85 on `/today`) is **not checked**. Please run `npx lighthouse@11.7.1 http://localhost:4173/today --preset=perf --form-factor=mobile` on `vite preview` before and after, or allow me to install it, and I will record both.
+- **Verified:** `npm test` 36 files / 341 tests; lint, format:check, typecheck, knip, build exit 0; e2e phone-375: 37 passed.
+- **Questions:** (Q45) Is a bundle-size drop acceptable as evidence until Lighthouse can run, or should this stay in review?

@@ -9,8 +9,9 @@ import {
   type UpdateTodoInput,
 } from '@/features/todos/types'
 import { newId } from '@/lib/id'
-import { GuestDatabase } from './db'
+import type { GuestDatabase } from './db'
 import { NotFoundError, ValidationError } from './errors'
+import { openGuestDatabase } from './openGuestDatabase'
 import type { TodoRepository } from './TodoRepository'
 import { checkTodoFields, cleanTitle } from './validation'
 
@@ -22,29 +23,26 @@ export interface GuestTodoRepositoryOptions {
 
 /** To-dos for guests, stored on this device in IndexedDB. */
 export class GuestTodoRepository implements TodoRepository {
-  private readonly db: GuestDatabase
+  private readonly open: () => Promise<GuestDatabase>
   private readonly now: () => Date
 
-  constructor({
-    db = new GuestDatabase(),
-    now = () => new Date(),
-  }: GuestTodoRepositoryOptions = {}) {
-    this.db = db
+  constructor({ db, now = () => new Date() }: GuestTodoRepositoryOptions = {}) {
+    this.open = db ? () => Promise.resolve(db) : openGuestDatabase
     this.now = now
   }
 
-  listAll(): Promise<Todo[]> {
-    return this.db.todos.toArray()
+  async listAll(): Promise<Todo[]> {
+    return (await this.open()).todos.toArray()
   }
 
   /** Remove every guest to-do (after a successful import, docs/08 rule 9). */
   async clear(): Promise<void> {
-    await this.db.todos.clear()
+    await (await this.open()).todos.clear()
   }
 
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
     // R1 caps guests at 500 to-dos, so filtering in memory is fine.
-    return buildTodayList(await this.db.todos.toArray(), date)
+    return buildTodayList(await (await this.open()).todos.toArray(), date)
   }
 
   async create(input: CreateTodoInput): Promise<Todo> {
@@ -62,9 +60,10 @@ export class GuestTodoRepository implements TodoRepository {
     }
     // Errors are thrown outside Dexie transactions: Dexie rewraps errors whose names
     // match its own (e.g. NotFoundError), so callers would get a DexieError instead.
-    const added = await this.db.transaction('rw', this.db.todos, async () => {
-      if ((await this.db.todos.count()) >= MAX_TODOS) return false
-      await this.db.todos.add(todo)
+    const db = await this.open()
+    const added = await db.transaction('rw', db.todos, async () => {
+      if ((await db.todos.count()) >= MAX_TODOS) return false
+      await db.todos.add(todo)
       return true
     })
     if (!added) throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
@@ -86,15 +85,16 @@ export class GuestTodoRepository implements TodoRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.todos.delete(id)
+    await (await this.open()).todos.delete(id)
   }
 
   private async write(id: string, changes: Partial<Todo>): Promise<Todo> {
-    const next = await this.db.transaction('rw', this.db.todos, async () => {
-      const current = await this.db.todos.get(id)
+    const db = await this.open()
+    const next = await db.transaction('rw', db.todos, async () => {
+      const current = await db.todos.get(id)
       if (!current) return undefined
       const updated: Todo = { ...current, ...changes }
-      await this.db.todos.put(updated)
+      await db.todos.put(updated)
       return updated
     })
     if (!next) throw new NotFoundError('Todo', id)
