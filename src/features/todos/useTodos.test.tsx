@@ -20,6 +20,8 @@ it('settles parent completion before a queued child check and retains its saved 
     category: 'work',
     priority: 'normal',
     notes: null,
+    repeat_rule: null,
+    next_todo_id: null,
     created_at: stamp,
     updated_at: stamp,
     due_date: null,
@@ -53,7 +55,13 @@ it('settles parent completion before a queued child check and retains its saved 
       requestArrived()
       await response
       return HttpResponse.json({
-        data: { ...parent, done_at: stamp, subtasks: [{ ...child, done_at: stamp }] },
+        data: {
+          ...parent,
+          done_at: stamp,
+          repeat_rule: { type: 'daily' },
+          next_todo_id: 'next',
+          subtasks: [{ ...child, done_at: stamp }],
+        },
       })
     }),
     http.post(`${API}/todos/child/done`, () =>
@@ -82,6 +90,10 @@ it('settles parent completion before a queued child check and retains its saved 
   }
 
   const [saved] = client.getQueryData<TodayTodo[]>(key) ?? []
-  expect(saved?.done_at).toBe(stamp)
+  expect(saved).toMatchObject({
+    done_at: stamp,
+    repeat_rule: { type: 'daily' },
+    next_todo_id: 'next',
+  })
   expect(saved?.subtasks[0]?.done_at).toBe(stamp)
 })

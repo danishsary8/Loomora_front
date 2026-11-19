@@ -88,6 +88,65 @@ describe('Today screen', () => {
       expect(saved).toMatchObject({ title: 'Gym', due_date: today, category: 'health' })
     })
 
+    it('defaults Repeat to None and requires an accessible due date when repeating', async () => {
+      await openToday()
+      await userEvent.click(await screen.findByRole('button', { name: 'Add a to-do' }))
+      const dialog = within(screen.getByRole('dialog'))
+      const repeat = dialog.getByRole('combobox', { name: 'Repeat' })
+      expect(repeat).toHaveDisplayValue('None')
+      await userEvent.type(dialog.getByLabelText('Title'), 'Gym')
+      await userEvent.selectOptions(repeat, 'daily')
+      await userEvent.click(dialog.getByRole('button', { name: 'No due date' }))
+      await userEvent.click(dialog.getByRole('button', { name: 'Add' }))
+      const due = dialog.getByLabelText('Due date')
+      expect(due).toHaveAccessibleDescription('Choose a due date for a repeating to-do.')
+      expect(due).toHaveFocus()
+      expect(await repo.listAll()).toEqual([])
+    })
+
+    it('edits a daily rule to selected weekdays and can remove it', async () => {
+      const todo = await repo.create({
+        title: 'Gym',
+        due_date: today,
+        repeat_rule: { type: 'daily' },
+      })
+      await openToday()
+      expect(await screen.findByText('Repeats daily')).toBeVisible()
+      const edit = screen.getByRole('button', { name: /Edit.*Gym/ })
+      await userEvent.click(edit)
+      const dialog = within(screen.getByRole('dialog'))
+      const repeat = dialog.getByRole('combobox', { name: 'Repeat' })
+      expect(repeat).toHaveDisplayValue('Daily')
+      await userEvent.selectOptions(repeat, 'weekly')
+      await userEvent.click(dialog.getByRole('button', { name: 'Save' }))
+      expect(dialog.getByText('Choose at least one weekday.')).toBeVisible()
+      await userEvent.click(dialog.getByRole('button', { name: 'Sunday' }))
+      await userEvent.click(dialog.getByRole('button', { name: 'Monday' }))
+      await userEvent.click(dialog.getByRole('button', { name: 'Save' }))
+      expect(await screen.findByText('Repeats weekly: Mon, Sun')).toBeVisible()
+      expect((await repo.listAll())[0]).toMatchObject({
+        id: todo.id,
+        repeat_rule: { type: 'weekly', days: [0, 6] },
+      })
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      await userEvent.click(edit)
+      const editDialog = within(screen.getByRole('dialog'))
+      expect(editDialog.getByRole('button', { name: 'Monday' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      await userEvent.selectOptions(editDialog.getByRole('combobox', { name: 'Repeat' }), 'none')
+      await userEvent.click(editDialog.getByRole('button', { name: 'Save' }))
+      await waitFor(() =>
+        expect(screen.queryByText('Repeats weekly: Mon, Sun')).not.toBeInTheDocument(),
+      )
+      expect((await repo.listAll())[0]?.repeat_rule).toBeNull()
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      await userEvent.click(screen.getByRole('button', { name: /Add subtask to.*Gym/ }))
+      const subtaskDialog = within(screen.getByRole('dialog', { name: 'Add subtask' }))
+      expect(subtaskDialog.queryByRole('combobox', { name: 'Repeat' })).not.toBeInTheDocument()
+    })
+
     it('can add a to-do with no due date', async () => {
       await openToday()
       await userEvent.click(await screen.findByRole('button', { name: 'Add a to-do' }))

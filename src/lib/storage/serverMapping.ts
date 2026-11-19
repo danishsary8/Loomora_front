@@ -27,6 +27,8 @@ export function toTodayTodo(todo: ApiTodo): TodayTodo {
     priority: todo.priority ?? DEFAULT_PRIORITY,
     notes: todo.notes ?? null,
     parent_id: todo.parent_id ?? null,
+    repeat_rule: todo.repeat_rule ?? null,
+    next_todo_id: todo.next_todo_id ?? null,
     subtasks: todo.subtasks?.map(toTodayTodo) ?? [],
   }
 }

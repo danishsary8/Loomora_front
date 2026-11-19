@@ -1,3 +1,4 @@
+import type { Weekday } from '@/features/schedule/types'
 import type { Category } from '@/styles/tokens'
 
 /** Calendar date in the user's time zone, `YYYY-MM-DD`. */
@@ -7,6 +8,8 @@ export const PRIORITIES = ['low', 'normal', 'high'] as const
 export type Priority = (typeof PRIORITIES)[number]
 export const DEFAULT_PRIORITY: Priority = 'normal'
 export const NOTES_MAX_LENGTH = 2000
+
+export type RepeatRule = { type: 'daily' } | { type: 'weekly'; days: Weekday[] }
 
 /**
  * A to-do (docs/08 `todos`). Same shape for guest and server data (A8-5),
@@ -19,6 +22,8 @@ export interface Todo {
   priority: Priority
   notes: string | null
   parent_id: string | null
+  repeat_rule: RepeatRule | null
+  next_todo_id: string | null
   due_date: LocalDate | null
   /** ISO 8601 UTC timestamp, or null when not done. */
   done_at: string | null
@@ -31,7 +36,7 @@ export interface Todo {
 }
 
 export type UpdateTodoInput = Partial<
-  Pick<Todo, 'title' | 'category' | 'due_date' | 'priority' | 'notes'>
+  Pick<Todo, 'title' | 'category' | 'due_date' | 'priority' | 'notes' | 'repeat_rule'>
 >
 
 export interface CreateTodoInput extends UpdateTodoInput {

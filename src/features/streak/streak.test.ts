@@ -13,6 +13,8 @@ function todo(id: string, patch: Partial<Todo> = {}): Todo {
     category: 'other',
     priority: 'normal',
     notes: null,
+    repeat_rule: null,
+    next_todo_id: null,
     parent_id: null,
     due_date: null,
     done_at: null,

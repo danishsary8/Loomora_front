@@ -35,5 +35,9 @@ export class GuestDatabase extends Dexie {
           parent_id: null,
         }),
       )
+    // Repeat fields are stored but do not need indexes.
+    this.version(5).upgrade((tx) =>
+      tx.table<Todo>('todos').toCollection().modify({ repeat_rule: null, next_todo_id: null }),
+    )
   }
 }

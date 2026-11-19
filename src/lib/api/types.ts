@@ -1,4 +1,4 @@
-import type { Priority } from '@/features/todos/types'
+import type { Priority, RepeatRule } from '@/features/todos/types'
 
 // Shapes from docs/openapi.yaml (snake_case, as the API sends them).
 
@@ -69,6 +69,8 @@ export interface ApiTodo {
   priority: Priority
   notes: string | null
   parent_id: string | null
+  repeat_rule: RepeatRule | null
+  next_todo_id: string | null
   subtasks: ApiTodo[]
   due_date: string | null
   done_at: string | null
@@ -83,6 +85,7 @@ export interface TodoBody {
   due_date?: string | null
   priority?: Priority
   notes?: string | null
+  repeat_rule?: RepeatRule | null
 }
 
 export interface ApiScheduleItem {
@@ -149,6 +152,8 @@ export interface ImportBody {
     priority: Priority
     notes: string | null
     parent_id: string | null
+    repeat_rule: RepeatRule | null
+    next_todo_id: string | null
     done_at: string | null
     created_at: string
   }>

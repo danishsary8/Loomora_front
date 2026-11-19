@@ -196,6 +196,16 @@ describe('saveGuestPlan in chunks', () => {
 
   it('keeps all local data when the second call fails, and a retry sends no duplicates', async () => {
     await fillManyCheckins(12000)
+    const parent = await guest.todos.create({
+      title: 'Daily',
+      due_date: '2026-10-26',
+      repeat_rule: { type: 'daily' },
+    })
+    const child = await guest.todos.create({ title: 'Child', parent_id: parent.id })
+    const completed = await guest.todos.setDone(parent.id, true)
+    const nextId = completed.next_todo_id
+    expect(nextId).toBeTruthy()
+    const seenTodos: ImportBody['todos'][] = []
     const sent = new Set<string>()
     let calls = 0
     server.use(
@@ -203,6 +213,7 @@ describe('saveGuestPlan in chunks', () => {
         calls += 1
         if (calls === 2) return HttpResponse.json({ message: 'Boom' }, { status: 500 })
         const body = (await request.json()) as ImportBody
+        seenTodos.push(body.todos)
         body.checkins.forEach((c) => sent.add(c.id))
         return HttpResponse.json({ data: RESULT })
       }),
@@ -211,10 +222,25 @@ describe('saveGuestPlan in chunks', () => {
     await expect(saveGuestPlan(guest, accountDataApi)).rejects.toBeDefined()
     expect(await db.schedule_checkins.count()).toBe(12000)
     expect((await readGuestPlan(guest)).items).toHaveLength(1)
+    expect((await readGuestPlan(guest)).todos).toHaveLength(4)
+    expect(seenTodos[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: parent.id,
+          repeat_rule: { type: 'daily' },
+          next_todo_id: nextId,
+        }),
+        expect.objectContaining({ id: nextId, repeat_rule: { type: 'daily' }, next_todo_id: null }),
+        expect.objectContaining({ id: child.id, parent_id: parent.id }),
+        expect.objectContaining({ parent_id: nextId, done_at: null }),
+      ]),
+    )
 
     expect(await saveGuestPlan(guest, accountDataApi)).toBe(true)
     // The server skips ids it has; every id reached it, and none is outside the plan.
     expect(sent.size).toBe(12000)
+    expect(seenTodos[1]).toEqual(seenTodos[0])
+    expect(await guest.todos.listAll()).toEqual([])
     expect(await db.schedule_checkins.count()).toBe(0)
   })
 })

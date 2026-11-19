@@ -106,6 +106,64 @@ describe('ServerTodoRepository', () => {
     await expect(repo.delete('child')).resolves.toBeUndefined()
   })
 
+  it('sends B-020 rules and maps the authoritative next ID and nested subtasks', async () => {
+    const rule = { type: 'weekly', days: [0, 6] } as const
+    const bodyRule = { ...rule, days: [...rule.days] }
+    const doneAt = '2026-10-26T02:00:00Z'
+    const next = crypto.randomUUID()
+    const parent = { ...apiTodo, repeat_rule: rule, next_todo_id: null }
+    const bodies: unknown[] = []
+    server.use(
+      http.get(`${API}/todos`, () => HttpResponse.json({ data: [parent] })),
+      http.post(`${API}/todos`, async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ data: parent }, { status: 201 })
+      }),
+      http.patch(`${API}/todos/${ID}`, async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ data: { ...parent, repeat_rule: null } })
+      }),
+      http.post(`${API}/todos/${ID}/done`, () =>
+        HttpResponse.json({
+          data: {
+            ...parent,
+            done_at: doneAt,
+            next_todo_id: next,
+            subtasks: [
+              {
+                ...apiTodo,
+                id: 'child',
+                parent_id: ID,
+                done_at: doneAt,
+                due_date: null,
+                repeat_rule: null,
+                next_todo_id: null,
+              },
+            ],
+          },
+        }),
+      ),
+    )
+    const input = { title: 'Read', due_date: '2026-10-26', repeat_rule: bodyRule }
+    expect((await repo.listForDate(input.due_date))[0]?.repeat_rule).toEqual(rule)
+    await expect(repo.create(input)).resolves.toMatchObject({
+      repeat_rule: rule,
+      next_todo_id: null,
+    })
+    await expect(repo.update(ID, { repeat_rule: null })).resolves.toMatchObject({
+      repeat_rule: null,
+    })
+    expect(bodies).toEqual([input, { repeat_rule: null }])
+    await expect(repo.setDone(ID, true)).resolves.toMatchObject({
+      repeat_rule: rule,
+      next_todo_id: next,
+      done_at: doneAt,
+      subtasks: [
+        { id: 'child', parent_id: ID, done_at: doneAt, repeat_rule: null, next_todo_id: null },
+      ],
+    })
+  })
+
   it.each([404, 422])('handles subtask creation errors (%i)', async (status) => {
     server.use(
       http.post(`${API}/todos`, () =>

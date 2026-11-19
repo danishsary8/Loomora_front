@@ -28,6 +28,8 @@ describe('GuestTodoRepository', () => {
       priority: 'normal',
       notes: null,
       parent_id: null,
+      repeat_rule: null,
+      next_todo_id: null,
       id: expect.stringMatching(UUID_V4),
       title: 'Read chapter 3',
       category: 'other',
@@ -262,8 +264,149 @@ describe('GuestTodoRepository', () => {
       priority: 'normal',
       notes: null,
       parent_id: null,
+      repeat_rule: null,
+      next_todo_id: null,
     })
     expect(await repo.listAll()).toEqual([])
+  })
+
+  describe('repeating to-dos', () => {
+    const daily = { type: 'daily' } as const
+
+    it.each([
+      ['daily after the original due date', '2026-10-27', daily, '2026-10-28'],
+      ['weekly across Sunday', '2026-10-24', { type: 'weekly', days: [0] } as const, '2026-10-26'],
+      ['daily after midnight in Phnom Penh', '2026-10-24', daily, '2026-10-26'],
+    ] as const)('advances %s', async (_, due_date, rule, expected) => {
+      clock = new Date('2026-10-24T17:01:00Z')
+      repo = new GuestTodoRepository({ db, now: () => clock, timeZone: 'Asia/Phnom_Penh' })
+      const repeat_rule = rule.type === 'daily' ? rule : { ...rule, days: [...rule.days] }
+      const parent = await repo.create({ title: 'Repeat', due_date, repeat_rule })
+      const saved = await repo.setDone(parent.id, true)
+      expect(saved.next_todo_id).toMatch(UUID_V4)
+      expect((await repo.listAll()).find(({ id }) => id === saved.next_todo_id)).toMatchObject({
+        due_date: expected,
+        repeat_rule,
+      })
+    })
+
+    it('validates the effective date and rule, and can remove both in one update', async () => {
+      await expect(repo.create({ title: 'Repeat', repeat_rule: daily })).rejects.toMatchObject({
+        field: 'due_date',
+      })
+      const parent = await repo.create({
+        title: 'Repeat',
+        due_date: '2026-10-24',
+        repeat_rule: daily,
+      })
+      await expect(repo.update(parent.id, { due_date: null })).rejects.toMatchObject({
+        field: 'due_date',
+      })
+      await expect(
+        repo.update(parent.id, { repeat_rule: { type: 'weekly', days: [] } }),
+      ).rejects.toMatchObject({ field: 'repeat_rule' })
+      await expect(
+        repo.update(parent.id, { due_date: null, repeat_rule: null }),
+      ).resolves.toMatchObject({ due_date: null, repeat_rule: null })
+    })
+
+    it('copies active subtasks with new IDs, preserves their order and reuses the next ID', async () => {
+      const parent = await repo.create({
+        title: 'Repeat',
+        category: 'work',
+        due_date: '2026-10-24',
+        priority: 'high',
+        notes: 'Parent notes',
+        repeat_rule: daily,
+      })
+      const child = await repo.create({
+        title: 'First',
+        parent_id: parent.id,
+        priority: 'low',
+        notes: 'Child notes',
+      })
+      clock = new Date('2026-10-24T09:00:00Z')
+      const second = await repo.create({ title: 'Second', parent_id: parent.id })
+      const deleted = await repo.create({ title: 'Deleted', parent_id: parent.id })
+      await repo.delete(deleted.id)
+      await repo.setDone(child.id, true)
+      const [firstSave, concurrentSave] = await Promise.all([
+        repo.setDone(parent.id, true),
+        repo.setDone(parent.id, true),
+      ])
+      const nextId = firstSave.next_todo_id
+      expect(nextId).toMatch(UUID_V4)
+      expect(concurrentSave.next_todo_id).toBe(nextId)
+      await repo.setDone(parent.id, false)
+      expect((await repo.setDone(parent.id, true)).next_todo_id).toBe(nextId)
+      expect(await db.todos.count()).toBe(7)
+      const [next] = await repo.listForDate('2026-10-25')
+      expect(next).toMatchObject({
+        id: nextId,
+        title: parent.title,
+        category: parent.category,
+        priority: 'high',
+        notes: 'Parent notes',
+        repeat_rule: daily,
+        done_at: null,
+        next_todo_id: null,
+        subtasks: [
+          {
+            title: child.title,
+            category: child.category,
+            priority: 'low',
+            notes: 'Child notes',
+            done_at: null,
+            parent_id: nextId,
+          },
+          { title: second.title, done_at: null, parent_id: nextId },
+        ],
+      })
+      expect(next?.subtasks[0]?.id).not.toBe(child.id)
+      expect(next?.subtasks[1]?.id).not.toBe(second.id)
+    })
+
+    it('rolls back the parent and subtask completion when the full copy would exceed the limit', async () => {
+      const parent = await repo.create({
+        title: 'Repeat',
+        repeat_rule: daily,
+        due_date: '2026-10-24',
+      })
+      const child = await repo.create({ title: 'Child', parent_id: parent.id })
+      await db.todos.bulkAdd(
+        Array.from({ length: MAX_TODOS - 3 }, (_, i) => ({
+          ...child,
+          id: `seed-${i}`,
+          parent_id: null,
+        })),
+      )
+      await expect(repo.setDone(parent.id, true)).rejects.toBeInstanceOf(ValidationError)
+      expect(await db.todos.get(parent.id)).toEqual(parent)
+      expect(await db.todos.get(child.id)).toEqual(child)
+      expect(await db.todos.count()).toBe(MAX_TODOS - 1)
+    })
+
+    it('migrates a v4 soft-deleted child in place, preserving parent, notes and priority', async () => {
+      const old = new Dexie(db.name)
+      old.version(4).stores({
+        todos: 'id, due_date, created_at, deleted_at, parent_id',
+        schedule_items: 'id',
+        schedule_exceptions: 'id, schedule_item_id, date, &[schedule_item_id+date]',
+        schedule_checkins: 'id, schedule_item_id, date, &[schedule_item_id+date]',
+      })
+      const row = {
+        id: crypto.randomUUID(),
+        parent_id: crypto.randomUUID(),
+        title: 'Existing',
+        priority: 'low',
+        notes: 'saved',
+        deleted_at: clock.toISOString(),
+        deleted_with_parent: true,
+      }
+      await old.table('todos').add(row)
+      old.close()
+      expect(await db.todos.get(row.id)).toEqual({ ...row, repeat_rule: null, next_todo_id: null })
+    })
   })
 
   describe('validation (docs/08 rule 11)', () => {
@@ -303,6 +446,8 @@ describe('GuestTodoRepository', () => {
         priority: 'normal',
         notes: null,
         parent_id: null,
+        repeat_rule: null,
+        next_todo_id: null,
         due_date: null,
         done_at: null,
         created_at: stamp,
