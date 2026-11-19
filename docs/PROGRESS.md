@@ -183,3 +183,10 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Changed:** `chunkImportBody` in `src/lib/storage/saveGuestPlan.ts`; `saveGuestPlan` sends the chunks one after another. Branched from `v2-rebuild` (not stacked on F-019); `docs/PROGRESS.md` and `TASKS.md` may conflict on merge, keep both notes.
 - **Verified:** 12000 check-ins send 2 calls (10000 + 2000, items only in the first); a failure on call 2 keeps all 12000 check-ins and the items; the retry succeeds and clears the device (ids are identical, so the server skips repeats). Full run below.
 - **Questions:** (Q43) Task Files says `src/features/*/saveGuestPlan*`; the file is `src/lib/storage/saveGuestPlan.ts`.
+
+### 2026-11-18: F-021 Resend verification email
+- **Note on order:** stacked on F-019 (PR #21) because it uses the error-mapping table. Merge #21 first.
+- **Plan:** (1) `authApi.resendVerification` (`POST /auth/email/resend`, with token); (2) shared `ResendVerification` button with success, 429 wait time and error text; (3) show it on the Profile account card for unverified accounts and on the verify-email screen for a signed-in, unverified user (when the link failed); (4) MSW tests.
+- **Changed:** as planned. The 429 text uses `Retry-After` rounded up to minutes ("Try again in 2 minutes."); without a retry time it falls back to the shared rate-limit text; other failures use `errors.*`. Signed-out visitors on the verify screen do not see it (the endpoint needs a token).
+- **Verified:** `npm test` all pass incl. new tests (success sends the bearer token, 429 with and without retry time, network error, Profile verified vs unverified, verify page signed in vs out); lint, format:check, typecheck, knip, build, e2e results in the PR.
+- **Questions:** (Q44) Should the verify screen also show Resend right after a successful sign-up, before any link is opened? Not in the steps; left out.

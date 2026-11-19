@@ -323,7 +323,8 @@
     "deleteGoogleNote": "Signed up with Google? Deleting a Google account is not available yet.",
     "deletePassword": "Your password",
     "deleteConfirm": "Delete everything",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "emailNotConfirmed": "Your email is not confirmed yet."
   },
   "savePlan": {
     "title": "Save your plan",
@@ -404,6 +405,13 @@
       "done": "Your email is confirmed.",
       "failed": "This confirmation link is not valid or has expired.",
       "toToday": "Go to Today"
+    },
+    "resend": {
+      "action": "Send the confirmation email again",
+      "sending": "Sending…",
+      "sent": "We sent a new confirmation email. Check your inbox.",
+      "wait_one": "Too many tries. Try again in {{count}} minute.",
+      "wait_other": "Too many tries. Try again in {{count}} minutes."
     }
   },
   "errors": {
