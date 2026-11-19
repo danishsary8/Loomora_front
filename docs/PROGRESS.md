@@ -197,3 +197,9 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Changed:** as planned. The 429 text uses `Retry-After` rounded up to minutes ("Try again in 2 minutes."); without a retry time it falls back to the shared rate-limit text; other failures use `errors.*`. Signed-out visitors on the verify screen do not see it (the endpoint needs a token).
 - **Verified:** `npm test` all pass incl. new tests (success sends the bearer token, 429 with and without retry time, network error, Profile verified vs unverified, verify page signed in vs out); lint, format:check, typecheck, knip, build, e2e results in the PR.
 - **Questions:** (Q44) Should the verify screen also show Resend right after a successful sign-up, before any link is opened? Not in the steps; left out.
+
+### Planner note (2026-11-19, review 6)
+- F-019, F-020, F-021 and F-029 are merged and marked done.
+- `docs/openapi.yaml` is refreshed from the backend (B-019 to B-025 merged: subtasks/priority/notes, repeat_rule, reminders, soft delete and restore, time_format/week_starts_on, daily intention, has_password). F-022 to F-028 are unblocked (their earlier `blocked` PR was closed and replaced by this one).
+- Backend B-026 (repeat keeps its reminder time) and B-027 (local-date helper) are still to come. They do not change any endpoint shape, so F-024 and F-025 can start now.
+
