@@ -1,4 +1,3 @@
-export { GuestDatabase } from './db'
 export { ValidationError } from './errors'
 export { GuestTodoRepository } from './GuestTodoRepository'
 export { TodoRepositoryContext, useTodoRepository } from './context'

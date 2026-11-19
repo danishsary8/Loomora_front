@@ -13,7 +13,8 @@ import {
 import type { LocalDate } from '@/features/todos/types'
 import { toLocalDate } from '@/lib/date'
 import { newId } from '@/lib/id'
-import { GuestDatabase } from './db'
+import type { GuestDatabase } from './db'
+import { openGuestDatabase } from './openGuestDatabase'
 import { NotFoundError, ValidationError } from './errors'
 import type { ScheduleRepository } from './ScheduleRepository'
 import {
@@ -34,42 +35,41 @@ export interface GuestScheduleRepositoryOptions {
 
 /** Schedule for guests, stored on this device in IndexedDB. */
 export class GuestScheduleRepository implements ScheduleRepository {
-  private readonly db: GuestDatabase
+  private readonly open: () => Promise<GuestDatabase>
   private readonly now: () => Date
 
-  constructor({
-    db = new GuestDatabase(),
-    now = () => new Date(),
-  }: GuestScheduleRepositoryOptions = {}) {
-    this.db = db
+  constructor({ db, now = () => new Date() }: GuestScheduleRepositoryOptions = {}) {
+    this.open = db ? () => Promise.resolve(db) : openGuestDatabase
     this.now = now
   }
 
-  listItems(): Promise<ScheduleItem[]> {
-    return this.db.schedule_items.toArray()
+  async listItems(): Promise<ScheduleItem[]> {
+    return (await this.open()).schedule_items.toArray()
   }
 
-  listExceptions(): Promise<ScheduleException[]> {
-    return this.db.schedule_exceptions.toArray()
+  async listExceptions(): Promise<ScheduleException[]> {
+    return (await this.open()).schedule_exceptions.toArray()
   }
 
-  listCheckins(): Promise<ScheduleCheckin[]> {
-    return this.db.schedule_checkins.toArray()
+  async listCheckins(): Promise<ScheduleCheckin[]> {
+    return (await this.open()).schedule_checkins.toArray()
   }
 
   /** Remove every guest schedule row (after a successful import, docs/08 rule 9). */
   async clear(): Promise<void> {
-    const { schedule_items, schedule_exceptions, schedule_checkins } = this.db
-    await this.db.transaction('rw', schedule_items, schedule_exceptions, schedule_checkins, () =>
+    const db = await this.open()
+    const { schedule_items, schedule_exceptions, schedule_checkins } = db
+    await db.transaction('rw', schedule_items, schedule_exceptions, schedule_checkins, () =>
       Promise.all([schedule_items.clear(), schedule_exceptions.clear(), schedule_checkins.clear()]),
     )
   }
 
   async listForDate(date: LocalDate): Promise<Occurrence[]> {
+    const db = await this.open()
     const [items, exceptions, checkins] = await Promise.all([
-      this.db.schedule_items.toArray(),
-      this.db.schedule_exceptions.where('date').equals(date).toArray(),
-      this.db.schedule_checkins.where('date').equals(date).toArray(),
+      db.schedule_items.toArray(),
+      db.schedule_exceptions.where('date').equals(date).toArray(),
+      db.schedule_checkins.where('date').equals(date).toArray(),
     ])
     return occurrencesForDate(items, exceptions, checkins, date)
   }
@@ -99,9 +99,10 @@ export class GuestScheduleRepository implements ScheduleRepository {
       updated_at: stamp,
     }
     // Errors are thrown outside Dexie transactions (see GuestTodoRepository.create).
-    const added = await this.db.transaction('rw', this.db.schedule_items, async () => {
-      if ((await this.db.schedule_items.count()) >= MAX_SCHEDULE_ITEMS) return false
-      await this.db.schedule_items.add(item)
+    const db = await this.open()
+    const added = await db.transaction('rw', db.schedule_items, async () => {
+      if ((await db.schedule_items.count()) >= MAX_SCHEDULE_ITEMS) return false
+      await db.schedule_items.add(item)
       return true
     })
     if (!added)
@@ -128,13 +129,14 @@ export class GuestScheduleRepository implements ScheduleRepository {
     checkTimeRange(next.start_time, next.end_time)
     checkDays(next.days)
     checkEndsOn(next.starts_on, next.ends_on)
-    await this.db.schedule_items.put(next)
+    await (await this.open()).schedule_items.put(next)
     return next
   }
 
   async delete(id: string): Promise<void> {
-    const { schedule_items: items, schedule_exceptions, schedule_checkins } = this.db
-    await this.db.transaction('rw', items, schedule_exceptions, schedule_checkins, async () => {
+    const db = await this.open()
+    const { schedule_items: items, schedule_exceptions, schedule_checkins } = db
+    await db.transaction('rw', items, schedule_exceptions, schedule_checkins, async () => {
       await schedule_exceptions.where('schedule_item_id').equals(id).delete()
       await schedule_checkins.where('schedule_item_id').equals(id).delete()
       await items.delete(id)
@@ -148,32 +150,35 @@ export class GuestScheduleRepository implements ScheduleRepository {
   ): Promise<ScheduleException> {
     const item = await this.requireOccurringItem(id, date)
     const exception = this.buildException(item, date, input)
-    const stored = await this.db.transaction('rw', this.db.schedule_exceptions, async () => {
+    const db = await this.open()
+    const stored = await db.transaction('rw', db.schedule_exceptions, async () => {
       const existing = await this.findException(id, date)
       const row = existing ? { ...exception, id: existing.id } : exception
-      await this.db.schedule_exceptions.put(row)
+      await db.schedule_exceptions.put(row)
       return row
     })
     return stored
   }
 
   async removeException(id: string, date: LocalDate): Promise<void> {
-    await this.db.schedule_exceptions.where('[schedule_item_id+date]').equals([id, date]).delete()
+    const db = await this.open()
+    await db.schedule_exceptions.where('[schedule_item_id+date]').equals([id, date]).delete()
   }
 
   async setCheckin(id: string, date: LocalDate, done: boolean): Promise<void> {
+    const db = await this.open()
     if (!done) {
-      await this.db.schedule_checkins.where('[schedule_item_id+date]').equals([id, date]).delete()
+      await db.schedule_checkins.where('[schedule_item_id+date]').equals([id, date]).delete()
       return
     }
     await this.requireOccurringItem(id, date)
-    await this.db.transaction('rw', this.db.schedule_checkins, async () => {
-      const existing = await this.db.schedule_checkins
+    await db.transaction('rw', db.schedule_checkins, async () => {
+      const existing = await db.schedule_checkins
         .where('[schedule_item_id+date]')
         .equals([id, date])
         .first()
       if (existing) return
-      await this.db.schedule_checkins.add({
+      await db.schedule_checkins.add({
         id: newId(),
         schedule_item_id: id,
         date,
@@ -201,12 +206,15 @@ export class GuestScheduleRepository implements ScheduleRepository {
     } as const
   }
 
-  private findException(id: string, date: LocalDate) {
-    return this.db.schedule_exceptions.where('[schedule_item_id+date]').equals([id, date]).first()
+  private async findException(id: string, date: LocalDate) {
+    return (await this.open()).schedule_exceptions
+      .where('[schedule_item_id+date]')
+      .equals([id, date])
+      .first()
   }
 
   private async requireItem(id: string): Promise<ScheduleItem> {
-    const item = await this.db.schedule_items.get(id)
+    const item = await (await this.open()).schedule_items.get(id)
     if (!item) throw new NotFoundError('Schedule item', id)
     return item
   }
