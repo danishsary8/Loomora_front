@@ -246,3 +246,20 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** TDD failures reproduced before implementation. Lint, typecheck, Knip and production build exited 0. Vitest passed 391 tests in 42 files with two workers on Windows after the initial concurrent run timed out on five route-render checks. Playwright passed 42 tests at 375 px. Axe found zero violations in the route scans, populated Today list and edit sheet. The new phone test also passed persistence, overflow, keyboard, notes validation and nested Undo checks. Redocly validated OpenAPI with four existing warnings.
 - **Formatting:** The exact repo-wide command flags 187 untouched files with CRLF working-tree line endings. The changed files pass Prettier and the whole tree passes with `--end-of-line auto`. No unrelated files were reformatted.
 - **Documentation question:** The account OpenAPI puts due date ahead of creation time. The existing guest Today list sorts its non-overdue rows by creation time. Should a separate change align these orders? F-023 preserves the existing top-level ordering in each mode.
+
+### 2026-11-19: F-024 Repeating to-dos UI
+
+- Exercise the repeat sheet, guest repository, account endpoints, guest import and 375 px flow with failing tests before implementing.
+- Use the existing sheet and weekday chips for parent recurrence and show the rule on Today rows.
+- Store repeat fields in Dexie v5 and create the next parent and undone subtasks in the completion transaction, applying the 500-row limit to the entire write.
+- Map B-020 responses to the Today cache and import recurrence links alongside client UUIDs, preserving local data on any failed batch.
+- Verify the required commands and open the F-024 PR against `v2-rebuild`.
+
+**Contract question:** OpenAPI `POST /todos/{id}/done` says the next occurrence carries the reminder offset unless dismissed. The backend checkout's `RepeatTodoService::createNext` excludes both reminder fields. Is the offset behavior deployed by B-026? Guest v4 has no reminder fields, so F-024 carries no guest reminder data and uses the account response as returned by the server.
+
+- **Implemented:** The add/edit sheet has None, Daily, Weekly and translated weekday chips for parent to-dos. The due-date error is linked to the field, and Today rows show a repeat icon and label.
+- **Guest storage:** Dexie v5 adds nullable repeat fields and preserves existing records and UUIDs. Check-off uses the device's local calendar date and writes the next parent, its undone subtasks and the original completion in one transaction. If the new rows would exceed 500 stored to-dos, the original parent and subtasks keep their previous completion state.
+- **Account and import:** The existing B-020 routes carry the repeat rule and return the authoritative next ID. Import sends repeat fields with the original UUIDs and parent IDs. When a next occurrence is soft-deleted and excluded from import, its outgoing link is sent as null so the server can validate the batch. Guest data is cleared only after every batch succeeds.
+- **Verification:** Lint, typecheck, knip and build exited 0. Vitest passed 401 tests across 42 files with one worker after intermittent Windows test timeouts. Eleven focused assertions failed before the implementation. Playwright phone-375 passed 43 tests after a standalone preview avoided the Windows startup timeout. The repeat flow passed keyboard, reload persistence, overflow and console checks, with zero axe violations in the sheet and on Today. Redocly passed with four existing OpenAPI warnings.
+- **Windows formatting:** The repository-wide command flags 195 untouched files checked out as CRLF by `core.autocrlf=true`. All changed files pass Prettier, and the repository-wide check with automatic line-ending detection passes. The PR's Linux workflow runs the default command.
+- **Browser fix:** Axe flagged visible weekday abbreviations against full accessible names. The repeat picker now uses full weekday names for both and wraps the chips at phone width. The rerun reported zero violations.

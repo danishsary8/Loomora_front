@@ -1,3 +1,4 @@
+import { nextRepeatDate } from '@/features/todos/repeat'
 import { buildTodayList, byCreated, toTodaySubtask } from '@/features/todos/todayList'
 import {
   DEFAULT_CATEGORY,
@@ -9,17 +10,19 @@ import {
   type Todo,
   type UpdateTodoInput,
 } from '@/features/todos/types'
+import { localDateIn } from '@/lib/date'
 import { newId } from '@/lib/id'
 import type { GuestDatabase } from './db'
 import { NotFoundError, ValidationError } from './errors'
 import { openGuestDatabase } from './openGuestDatabase'
 import type { SavedTodo, TodoRepository } from './TodoRepository'
-import { checkSubtaskFields, checkTodoFields, cleanTitle } from './validation'
+import { checkSubtaskFields, checkTodoFields, cleanTitle, normalizeRepeatRule } from './validation'
 
 export interface GuestTodoRepositoryOptions {
   db?: GuestDatabase
   /** Clock for timestamps; tests pass a fixed one. */
   now?: () => Date
+  timeZone?: string
 }
 
 /** To-dos for guests, stored on this device in IndexedDB. */
@@ -27,9 +30,12 @@ export class GuestTodoRepository implements TodoRepository {
   private readonly open: () => Promise<GuestDatabase>
   private readonly now: () => Date
 
-  constructor({ db, now = () => new Date() }: GuestTodoRepositoryOptions = {}) {
+  private readonly timeZone: string | undefined
+
+  constructor({ db, now = () => new Date(), timeZone }: GuestTodoRepositoryOptions = {}) {
     this.open = db ? () => Promise.resolve(db) : openGuestDatabase
     this.now = now
+    this.timeZone = timeZone
   }
 
   async listAll(): Promise<Todo[]> {
@@ -59,8 +65,7 @@ export class GuestTodoRepository implements TodoRepository {
       if (parent?.parent_id)
         throw new ValidationError('parent_id', 'Subtasks cannot have subtasks.')
       if (parent) checkSubtaskFields(input)
-      if ((await db.todos.count()) >= MAX_TODOS)
-        throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
+      await this.checkCapacity(db, 1)
 
       const row: Todo = {
         id: newId(),
@@ -70,6 +75,8 @@ export class GuestTodoRepository implements TodoRepository {
         notes: input.notes?.trim() || null,
         parent_id: parent?.id ?? null,
         due_date: input.due_date ?? null,
+        repeat_rule: normalizeRepeatRule(input.repeat_rule ?? null, input.due_date ?? null),
+        next_todo_id: null,
         done_at: null,
         created_at: stamp,
         updated_at: stamp,
@@ -95,6 +102,10 @@ export class GuestTodoRepository implements TodoRepository {
       if (patch.priority !== undefined) changes.priority = patch.priority
       if (patch.notes !== undefined) changes.notes = patch.notes?.trim() || null
       const updated = { ...current, ...changes }
+      updated.repeat_rule = normalizeRepeatRule(
+        patch.repeat_rule === undefined ? current.repeat_rule : patch.repeat_rule,
+        updated.due_date,
+      )
       await db.todos.put(updated)
       return updated
     })
@@ -105,14 +116,32 @@ export class GuestTodoRepository implements TodoRepository {
       const stamp = this.now().toISOString()
       const doneAt = done ? (current.done_at ?? stamp) : null
       const updated = { ...current, done_at: doneAt, updated_at: stamp }
-      await db.todos.put(updated)
       if (!current.parent_id && doneAt) {
-        await db.todos
-          .where('parent_id')
-          .equals(id)
-          .filter((row) => !row.deleted_at && !row.done_at)
-          .modify({ done_at: doneAt, updated_at: stamp })
+        const subtasks = await this.activeSubtasks(db, id)
+        if (current.repeat_rule && current.due_date && !current.next_todo_id) {
+          updated.next_todo_id = await this.createNext(
+            db,
+            current,
+            nextRepeatDate(
+              current.repeat_rule,
+              current.due_date,
+              localDateIn(stamp, this.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
+            ),
+            stamp,
+            subtasks,
+          )
+        }
+        await db.todos.bulkPut(
+          subtasks
+            .filter((row) => !row.done_at)
+            .map((row) => ({
+              ...row,
+              done_at: doneAt,
+              updated_at: stamp,
+            })),
+        )
       }
+      await db.todos.put(updated)
       return this.withSubtasks(db, updated)
     })
   }
@@ -158,14 +187,53 @@ export class GuestTodoRepository implements TodoRepository {
     })
   }
 
+  private async checkCapacity(db: GuestDatabase, added: number): Promise<void> {
+    if ((await db.todos.count()) + added > MAX_TODOS)
+      throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
+  }
+
+  private async createNext(
+    db: GuestDatabase,
+    parent: Todo,
+    dueDate: LocalDate,
+    stamp: string,
+    subtasks: Todo[],
+  ): Promise<string> {
+    // Check capacity for the whole occurrence inside the completion transaction.
+    await this.checkCapacity(db, 1 + subtasks.length)
+    const id = newId()
+    const next = {
+      ...parent,
+      id,
+      due_date: dueDate,
+      done_at: null,
+      next_todo_id: null,
+      created_at: stamp,
+      updated_at: stamp,
+    }
+    await db.todos.bulkAdd([
+      next,
+      ...subtasks.map((row) => ({
+        ...row,
+        id: newId(),
+        parent_id: id,
+        done_at: null,
+        updated_at: stamp,
+      })),
+    ])
+    return id
+  }
+
+  private activeSubtasks(db: GuestDatabase, id: string): Promise<Todo[]> {
+    return db.todos
+      .where('parent_id')
+      .equals(id)
+      .filter((row) => !row.deleted_at)
+      .toArray()
+  }
+
   private async withSubtasks(db: GuestDatabase, todo: Todo): Promise<SavedTodo> {
-    const rows = todo.parent_id
-      ? []
-      : await db.todos
-          .where('parent_id')
-          .equals(todo.id)
-          .filter((row) => !row.deleted_at)
-          .toArray()
+    const rows = todo.parent_id ? [] : await this.activeSubtasks(db, todo.id)
     return {
       ...todo,
       subtasks: rows.sort(byCreated).map(toTodaySubtask),

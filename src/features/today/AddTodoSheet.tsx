@@ -1,6 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input, Sheet } from '@/components/ui'
+import { DayToggle } from '@/features/schedule/DayToggle'
+import type { Weekday } from '@/features/schedule/types'
+import { WEEKDAYS } from '@/features/schedule/week/weekPlan'
 import { Field } from '@/components/ui/Field'
 import { fieldClasses } from '@/components/ui/fieldClasses'
 import {
@@ -11,6 +14,7 @@ import {
   TITLE_MAX_LENGTH,
   type LocalDate,
   type Priority,
+  type RepeatRule,
   type Todo,
 } from '@/features/todos/types'
 import { useCreateTodo, useUpdateTodo } from '@/features/todos/useTodos'
@@ -32,6 +36,8 @@ interface AddTodoSheetProps {
 export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps) {
   const { t } = useTranslation()
   const titleRef = useRef<HTMLInputElement>(null)
+  const dueDateRef = useRef<HTMLInputElement>(null)
+  const repeatRef = useRef<HTMLSelectElement>(null)
   const notesRef = useRef<HTMLTextAreaElement>(null)
   const create = useCreateTodo()
   const update = useUpdateTodo()
@@ -39,6 +45,14 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
   const subtask = target.type === 'subtask' || Boolean(existing?.parent_id)
   const [title, setTitle] = useState(existing?.title ?? '')
   const [dueDate, setDueDate] = useState<LocalDate>(existing ? (existing.due_date ?? '') : today)
+  const [repeatMode, setRepeatMode] = useState<RepeatRule['type'] | 'none'>(
+    existing?.repeat_rule?.type ?? 'none',
+  )
+  const [repeatDays, setRepeatDays] = useState<Weekday[]>(
+    existing?.repeat_rule?.type === 'weekly' ? existing.repeat_rule.days : [],
+  )
+  const [dueDateError, setDueDateError] = useState(false)
+  const [repeatError, setRepeatError] = useState(false)
   const [category, setCategory] = useState<Category | null>(existing?.category ?? null)
   const [priority, setPriority] = useState<Priority>(existing?.priority ?? DEFAULT_PRIORITY)
   const [notes, setNotes] = useState(existing?.notes ?? '')
@@ -47,6 +61,19 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
   const [formError, setFormError] = useState<string>()
   const pending = create.isPending || update.isPending
 
+  function changeDueDate(value: LocalDate) {
+    setDueDate(value)
+    if (value) setDueDateError(false)
+  }
+
+  function toggleRepeatDay(day: Weekday) {
+    setRepeatDays((days) =>
+      days.includes(day) ? days.filter((value) => value !== day) : [...days, day],
+    )
+    setRepeatError(false)
+  }
+
+  const repeatErrorMessage = repeatError ? t('todoForm.repeatDaysRequired') : undefined
   const notesLimit = t('todoForm.notesLimit', { max: NOTES_MAX_LENGTH })
 
   async function onSubmit(event: FormEvent) {
@@ -64,11 +91,34 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
       return
     }
 
+    if (!subtask && repeatMode !== 'none' && !dueDate) {
+      setDueDateError(true)
+      dueDateRef.current?.focus()
+      return
+    }
+    if (!subtask && repeatMode === 'weekly' && repeatDays.length === 0) {
+      setRepeatError(true)
+      repeatRef.current?.focus()
+      return
+    }
+    const repeatRule: RepeatRule | null =
+      repeatMode === 'none'
+        ? null
+        : repeatMode === 'daily'
+          ? { type: 'daily' }
+          : { type: 'weekly', days: WEEKDAYS.filter((day) => repeatDays.includes(day)) }
+
     const fields = {
       title,
       priority,
       notes: notes.trim() || null,
-      ...(subtask ? {} : { category: category ?? DEFAULT_CATEGORY, due_date: dueDate || null }),
+      ...(subtask
+        ? {}
+        : {
+            category: category ?? DEFAULT_CATEGORY,
+            due_date: dueDate || null,
+            repeat_rule: repeatRule,
+          }),
     }
     try {
       if (existing) await update.mutateAsync({ id: existing.id, patch: fields })
@@ -116,18 +166,63 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
           <>
             <div className="flex items-end gap-2">
               <Input
+                ref={dueDateRef}
                 type="date"
-                label={t('todoForm.dueDate')}
+                label={t(repeatMode === 'none' ? 'todoForm.dueDate' : 'todoForm.repeatDueDate')}
                 value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                aria-required={repeatMode !== 'none'}
+                error={dueDateError ? t('todoForm.repeatDueDateRequired') : undefined}
+                onChange={(e) => changeDueDate(e.target.value)}
                 className="min-w-0 flex-1"
               />
               {dueDate !== '' && (
-                <Button variant="ghost" onClick={() => setDueDate('')}>
+                <Button variant="ghost" onClick={() => changeDueDate('')}>
                   {t('todoForm.clearDueDate')}
                 </Button>
               )}
             </div>
+            <Field label={t('todoForm.repeat')} error={repeatErrorMessage}>
+              {(field) => (
+                <select
+                  ref={repeatRef}
+                  {...field}
+                  value={repeatMode}
+                  onChange={(event) => {
+                    const mode = event.target.value as typeof repeatMode
+                    setRepeatMode(mode)
+                    setRepeatError(false)
+                    if (mode === 'none') setDueDateError(false)
+                  }}
+                  className={cn(
+                    'min-h-touch motion-reduce:transition-none',
+                    fieldClasses(repeatErrorMessage),
+                  )}
+                >
+                  <option value="none">{t('todoForm.repeatNone')}</option>
+                  <option value="daily">{t('todoForm.repeatDaily')}</option>
+                  <option value="weekly">{t('todoForm.repeatWeekly')}</option>
+                </select>
+              )}
+            </Field>
+            {repeatMode === 'weekly' && (
+              <fieldset className="min-w-0">
+                <legend className="mb-2 text-sm font-bold">{t('todoForm.repeatDays')}</legend>
+                <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-3">
+                  {WEEKDAYS.map((day) => {
+                    const label = t(`weekdays.long.${day}`)
+                    return (
+                      <DayToggle
+                        key={day}
+                        label={label}
+                        text={label}
+                        selected={repeatDays.includes(day)}
+                        onClick={() => toggleRepeatDay(day)}
+                      />
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
             <fieldset className="min-w-0">
               <legend className="mb-2 text-sm font-bold">{t('todoForm.category')}</legend>
               <div className="flex flex-wrap gap-2">

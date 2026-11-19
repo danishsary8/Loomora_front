@@ -260,7 +260,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/subtasks.spec.ts`
 
 ### F-024: Repeating to-dos UI
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
   1. Needs B-020. In the to-do sheet add Repeat: None, Daily, Weekly with weekday chips. It requires a due date (show the message under the field).

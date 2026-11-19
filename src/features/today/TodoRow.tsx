@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Chip } from '@/components/ui'
-import { PencilIcon, TrashIcon } from '@/components/ui/icons'
+import { PencilIcon, RepeatIcon, TrashIcon } from '@/components/ui/icons'
 import type { TodayTodo } from '@/features/todos/types'
 import { cn } from '@/lib/cn'
 import { DoneStamp } from './DoneStamp'
@@ -19,10 +19,21 @@ const actionClass =
   'grid size-11 shrink-0 place-items-center rounded border-thin border-ink bg-paper text-ink shadow-hard-sm hover:bg-cream active:translate-x-press-sm active:translate-y-press-sm'
 
 export function TodoRow({ todo, ...actions }: TodoRowProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const done = todo.done_at !== null
   const child = todo.parent_id !== null
   const canAddSubtask = !done || (todo.due_date !== null && !todo.overdue)
+  const repeat = todo.repeat_rule
+  const repeatLabel =
+    repeat?.type === 'daily'
+      ? t('today.repeatsDaily')
+      : repeat?.type === 'weekly'
+        ? t('today.repeatsWeekly', {
+            days: new Intl.ListFormat(i18n.resolvedLanguage, { style: 'narrow' }).format(
+              repeat.days.map((day) => t(`weekdays.short.${day}`)),
+            ),
+          })
+        : null
   const total = todo.subtasks.length
   const completed = todo.subtasks.filter(({ done_at }) => done_at !== null).length
 
@@ -47,6 +58,12 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
               <span className={cn('break-words font-semibold', done && 'text-muted line-through')}>
                 {todo.title}
               </span>
+              {repeatLabel && (
+                <span className="flex items-start gap-1 text-xs font-semibold text-muted">
+                  <RepeatIcon className="size-4 shrink-0" />
+                  {repeatLabel}
+                </span>
+              )}
               <span className="flex flex-wrap items-center gap-1.5 text-sm">
                 {!child && <Chip category={todo.category} />}
                 <span className="rounded-full border-thin border-ink bg-paper px-2 text-xs font-bold leading-6">

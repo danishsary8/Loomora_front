@@ -67,6 +67,8 @@ export function useSetTodoDone(date: LocalDate) {
             changeTodayTodo(list, id, (todo) => ({
               ...todo,
               done_at: saved.done_at,
+              repeat_rule: saved.repeat_rule,
+              next_todo_id: saved.next_todo_id,
               subtasks: todo.subtasks.map((child) => {
                 const updated = saved.subtasks?.find((row) => row.id === child.id)
                 return updated ? { ...child, done_at: updated.done_at } : child

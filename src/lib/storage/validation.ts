@@ -1,4 +1,9 @@
-import type { CreateTodoInput, UpdateTodoInput } from '@/features/todos/types'
+import type {
+  CreateTodoInput,
+  LocalDate,
+  RepeatRule,
+  UpdateTodoInput,
+} from '@/features/todos/types'
 import { NOTES_MAX_LENGTH, PRIORITIES, TITLE_MAX_LENGTH } from '@/features/todos/types'
 import { isLocalDate } from '@/lib/date'
 import { CATEGORIES } from '@/styles/tokens'
@@ -21,7 +26,7 @@ export function notesTooLong(notes: string): boolean {
 export function checkSubtaskFields(input: UpdateTodoInput): void {
   if (input.due_date != null)
     throw new ValidationError('due_date', 'A subtask cannot have a due date.')
-  if ('repeat_rule' in input && input.repeat_rule != null)
+  if (input.repeat_rule != null)
     throw new ValidationError('repeat_rule', 'A subtask cannot repeat.')
   if ('remind_at' in input && input.remind_at != null)
     throw new ValidationError('remind_at', 'A subtask cannot have a reminder.')
@@ -36,4 +41,24 @@ export function checkTodoFields(input: CreateTodoInput | UpdateTodoInput): void 
     throw new ValidationError('category', 'Unknown category.')
   if (input.due_date !== undefined && input.due_date !== null && !isLocalDate(input.due_date))
     throw new ValidationError('due_date', 'Due date must be YYYY-MM-DD.')
+}
+
+/** Validate the effective rule and return the same normalized shape as B-020. */
+export function normalizeRepeatRule(
+  rule: RepeatRule | null,
+  dueDate: LocalDate | null,
+): RepeatRule | null {
+  if (rule === null) return null
+  if (
+    rule.type !== 'daily' &&
+    (rule.type !== 'weekly' ||
+      !Array.isArray(rule.days) ||
+      rule.days.length === 0 ||
+      rule.days.some((day) => !Number.isInteger(day) || day < 0 || day > 6) ||
+      new Set(rule.days).size !== rule.days.length)
+  ) {
+    throw new ValidationError('repeat_rule', 'Choose valid weekdays for a weekly repeat.')
+  }
+  if (dueDate === null) throw new ValidationError('due_date', 'A repeating to-do needs a due date.')
+  return rule.type === 'daily' ? { type: 'daily' } : { type: 'weekly', days: [...rule.days].sort() }
 }
