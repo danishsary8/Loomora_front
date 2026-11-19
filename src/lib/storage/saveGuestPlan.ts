@@ -47,6 +47,11 @@ export function hadFullDay(plan: GuestPlan, today: LocalDate): boolean {
   return [...days.values()].some(Boolean)
 }
 
+// Per-call caps of `POST /import` (docs/openapi.yaml). To-dos and items are totals per user, so
+// they all go in the first call.
+const MAX_EXCEPTIONS_PER_CALL = 5000
+const MAX_CHECKINS_PER_CALL = 10000
+
 /** Rows keep their client UUIDs, so sending the same plan again creates no duplicates. */
 function toImportBody(plan: GuestPlan): ImportBody {
   return {
@@ -76,15 +81,38 @@ function toImportBody(plan: GuestPlan): ImportBody {
   }
 }
 
+/** The first call carries to-dos and items; every call stays under the exception and check-in caps. */
+function chunkImportBody(body: ImportBody): ImportBody[] {
+  const count = Math.max(
+    1,
+    Math.ceil(body.exceptions.length / MAX_EXCEPTIONS_PER_CALL),
+    Math.ceil(body.checkins.length / MAX_CHECKINS_PER_CALL),
+  )
+  return Array.from({ length: count }, (_, index) => ({
+    todos: index === 0 ? body.todos : [],
+    schedule_items: index === 0 ? body.schedule_items : [],
+    exceptions: body.exceptions.slice(
+      index * MAX_EXCEPTIONS_PER_CALL,
+      (index + 1) * MAX_EXCEPTIONS_PER_CALL,
+    ),
+    checkins: body.checkins.slice(
+      index * MAX_CHECKINS_PER_CALL,
+      (index + 1) * MAX_CHECKINS_PER_CALL,
+    ),
+  }))
+}
+
 /**
- * Move the guest plan into the account (docs/08 rule 9): one `POST /import`, then clear the
- * device. If the call fails nothing is cleared, so the plan stays and can be sent again.
- * Resolves to `false` when there was nothing to move.
+ * Move the guest plan into the account (docs/08 rule 9): `POST /import` (several calls when the
+ * plan is over the caps), then clear the device. If any call fails nothing is cleared, so the
+ * plan stays and can be sent again; the import is idempotent by id. Resolves to `false` when there was nothing to move.
  */
 export async function saveGuestPlan(guest: GuestStorage, api: AccountDataApi): Promise<boolean> {
   const plan = await readGuestPlan(guest)
   if (isEmptyPlan(plan)) return false
-  await api.importGuestData(toImportBody(plan))
+  for (const chunk of chunkImportBody(toImportBody(plan))) {
+    await api.importGuestData(chunk)
+  }
   await Promise.all([guest.todos.clear(), guest.schedule.clear()])
   return true
 }

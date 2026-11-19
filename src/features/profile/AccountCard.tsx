@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Card, Input } from '@/components/ui'
+import { ResendVerification } from '@/features/auth/ResendVerification'
 import { FormError } from '@/features/auth/FormError'
 import { deviceTimeZone, timeZoneOptions } from '@/features/auth/timezone'
 import { useFormAction } from '@/features/auth/useFormAction'
@@ -35,6 +36,12 @@ export function AccountCard({ user }: { user: User }) {
     <Card className="flex flex-col gap-4">
       <h2 className="text-lg font-bold">{t('profile.accountTitle')}</h2>
       <p className="text-sm text-muted">{user.email}</p>
+      {user.email_verified_at === null && (
+        <div className="flex flex-col gap-3">
+          <p className="font-semibold">{t('profile.emailNotConfirmed')}</p>
+          <ResendVerification />
+        </div>
+      )}
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <FormError message={formError} />
         <Input
