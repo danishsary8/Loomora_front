@@ -25,12 +25,16 @@ tags:
     description: The signed-in user's account.
   - name: Todos
     description: To-dos and the Today list.
+  - name: Reminders
+    description: In-app reminders for to-dos. No push notifications yet.
   - name: Feedback
     description: Messages from users and guests.
   - name: Schedule
     description: The fixed weekly schedule.
   - name: Import
     description: Moving guest data into an account.
+  - name: Days
+    description: Things the user sets for a single day.
   - name: Streak
     description: Days in a row with something checked off.
 security:
@@ -435,8 +439,18 @@ paths:
                 timezone:
                   type: string
                   description: IANA time zone name.
+                time_format:
+                  type: string
+                  enum: ['12h', '24h']
+                week_starts_on:
+                  type: integer
+                  minimum: 1
+                  maximum: 7
+                  description: 1 = Monday to 7 = Sunday.
             example:
               timezone: Europe/Paris
+              time_format: 12h
+              week_starts_on: 7
       responses:
         '200':
           $ref: '#/components/responses/MeResponse'
@@ -546,7 +560,8 @@ paths:
       description: |
         To-dos due on `date` (done or not), undated to-dos that are not done, and overdue
         to-dos (due before `date`, not done). Future-dated to-dos are hidden until their day.
-        Sorted overdue first, then by due date, then by creation time.
+        Sorted overdue first, then by due date, then by creation time. Only top-level to-dos are listed;
+        each carries its subtasks (done or not) in `subtasks`, oldest first.
       parameters:
         - name: date
           in: query
@@ -574,19 +589,48 @@ paths:
                   - id: 2b7e1a90-5c3d-4f2e-9a1b-0c8d7e6f5a4b
                     title: Finish essay draft
                     category: study
+                    priority: high
+                    notes: Use the library sources.
+                    parent_id: null
+                    repeat_rule: null
+                    next_todo_id: null
+                    remind_at: null
                     due_date: '2026-10-20'
                     done_at: null
                     overdue: true
                     old: false
                     created_at: '2026-10-19T08:00:00Z'
+                    subtasks:
+                      - id: 9d1e2f3a-4b5c-4d6e-8f7a-1b2c3d4e5f6a
+                        title: Write the outline
+                        category: study
+                        priority: normal
+                        notes: null
+                        parent_id: 2b7e1a90-5c3d-4f2e-9a1b-0c8d7e6f5a4b
+                        repeat_rule: null
+                        next_todo_id: null
+                        remind_at: null
+                        due_date: null
+                        done_at: '2026-10-24T02:00:00Z'
+                        overdue: false
+                        old: false
+                        created_at: '2026-10-19T08:05:00Z'
+                        subtasks: []
                   - id: 7c4d2e1f-0a9b-4c8d-8e7f-6a5b4c3d2e1f
                     title: Gym
                     category: health
+                    priority: normal
+                    notes: null
+                    parent_id: null
+                    repeat_rule: {type: weekly, days: [0, 2, 4]}
+                    next_todo_id: 4e5f6a7b-8c9d-4e0f-a1b2-c3d4e5f6a7b8
+                    remind_at: null
                     due_date: '2026-10-24'
                     done_at: '2026-10-24T03:00:00Z'
                     overdue: false
                     old: false
                     created_at: '2026-10-24T01:00:00Z'
+                    subtasks: []
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '422':
@@ -594,8 +638,14 @@ paths:
     post:
       tags: [Todos]
       operationId: createTodo
-      summary: Create a to-do
-      description: At most 500 to-dos per user (reported on `title`).
+      summary: Create a to-do or a subtask
+      description: |
+        At most 500 to-dos per user, subtasks included (reported on `title`).
+        Send `parent_id` to create a subtask. The parent must be one of the user's own top-level to-dos:
+        another user's or an unknown id is a 404, and a parent that is itself a subtask is a 422 on `parent_id`.
+        A subtask takes its parent's category unless one is sent, and cannot have a `due_date` (422).
+        A to-do with a `repeat_rule` needs a `due_date` (422 on `due_date`); a subtask cannot repeat (422 on `repeat_rule`)
+        or have a `remind_at` (422 on `remind_at`).
       requestBody:
         required: true
         content:
@@ -605,12 +655,15 @@ paths:
             example:
               title: Read chapter 3
               category: study
+              priority: high
               due_date: '2026-10-24'
       responses:
         '201':
           $ref: '#/components/responses/TodoResponse'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
 
@@ -621,7 +674,11 @@ paths:
       tags: [Todos]
       operationId: updateTodo
       summary: Edit a to-do
-      description: Send only the fields to change.
+      description: |
+        Send only the fields to change. `parent_id` cannot be changed. A subtask cannot get a `due_date` or a
+        `repeat_rule` (422). A repeating to-do must keep a `due_date`: clearing it, or adding a rule to an undated
+        to-do, is a 422 on `due_date`. Send `repeat_rule: null` to stop repeating. A subtask cannot get a `remind_at` (422).
+        A `remind_at` different from the current one brings back a dismissed reminder; `remind_at: null` removes it.
       requestBody:
         required: true
         content:
@@ -638,9 +695,21 @@ paths:
                 due_date:
                   type: [string, 'null']
                   format: date
+                priority:
+                  $ref: '#/components/schemas/Priority'
+                notes:
+                  type: [string, 'null']
+                  maxLength: 2000
+                repeat_rule:
+                  oneOf:
+                    - $ref: '#/components/schemas/RepeatRule'
+                    - type: 'null'
+                remind_at:
+                  $ref: '#/components/schemas/RemindAt'
             example:
               title: Read chapter 4
               due_date: null
+              priority: low
       responses:
         '200':
           $ref: '#/components/responses/TodoResponse'
@@ -656,6 +725,9 @@ paths:
       tags: [Todos]
       operationId: deleteTodo
       summary: Delete a to-do
+      description: |
+        Soft delete: hides the to-do and its subtasks everywhere. It can be restored with
+        `POST /todos/{todo}/restore` for 7 days. Account deletion removes every row, deleted ones included.
       responses:
         '204':
           description: Deleted.
@@ -666,6 +738,33 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /todos/{todo}/restore:
+    parameters:
+      - $ref: '#/components/parameters/TodoId'
+    post:
+      tags: [Todos]
+      operationId: restoreTodo
+      summary: Restore a deleted to-do
+      description: |
+        Brings back a to-do deleted less than 7 days ago, with the same id, together with the subtasks that were
+        deleted along with it (not ones deleted on their own earlier). A to-do that is not deleted is returned
+        unchanged. Another user's to-do is a 404. A subtask cannot be restored while its parent is still deleted (422).
+      responses:
+        '200':
+          $ref: '#/components/responses/TodoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: The to-do was deleted 7 days ago or more and can no longer be restored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
   /todos/{todo}/done:
     parameters:
       - $ref: '#/components/parameters/TodoId'
@@ -673,7 +772,15 @@ paths:
       tags: [Todos]
       operationId: markTodoDone
       summary: Check off a to-do
-      description: Sets `done_at`. Calling it again keeps the first completion time.
+      description: |
+        Sets `done_at`. Calling it again keeps the first completion time. Checking off a parent also checks
+        off its open subtasks with the same time; subtasks already done keep theirs. Subtask check-offs count
+        for the streak like any to-do.
+
+        For a repeating to-do, the first check-off also creates the next one in the same transaction and returns
+        its id in `next_todo_id`: same title, category, priority, notes and rule, plus undone copies of the
+        subtasks (the reminder is not copied). Its `due_date` is the next date matching the rule after the later of the old due date and
+        today in the user's time zone. Unchecking and checking off again does not create another.
       responses:
         '200':
           $ref: '#/components/responses/TodoResponse'
@@ -687,7 +794,7 @@ paths:
       tags: [Todos]
       operationId: markTodoUndone
       summary: Undo a check-off
-      description: Clears `done_at`.
+      description: Clears `done_at`. Unchecking a parent leaves its subtasks as they are.
       responses:
         '200':
           $ref: '#/components/responses/TodoResponse'
@@ -697,6 +804,101 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /reminders/due:
+    get:
+      tags: [Reminders]
+      operationId: listDueReminders
+      summary: Reminders that are due now
+      description: |
+        The user's to-dos that are not done, whose `remind_at` has passed and whose reminder was not dismissed,
+        oldest `remind_at` first, at most 50. The client polls this while the app is open and shows each one
+        until it is dismissed or snoozed.
+      responses:
+        '200':
+          description: The due reminders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 50
+                    items:
+                      $ref: '#/components/schemas/Todo'
+              example:
+                data:
+                  - id: 2b7e1a90-5c3d-4f2e-9a1b-0c8d7e6f5a4b
+                    title: Call the bank
+                    category: life
+                    priority: normal
+                    notes: null
+                    parent_id: null
+                    repeat_rule: null
+                    next_todo_id: null
+                    remind_at: '2026-10-24T03:00:00Z'
+                    due_date: '2026-10-24'
+                    done_at: null
+                    overdue: false
+                    old: false
+                    created_at: '2026-10-23T08:00:00Z'
+                    subtasks: []
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /todos/{todo}/reminder/dismiss:
+    parameters:
+      - $ref: '#/components/parameters/TodoId'
+    post:
+      tags: [Reminders]
+      operationId: dismissReminder
+      summary: Dismiss a reminder
+      description: |
+        Removes the to-do from the due list; `remind_at` is kept. Calling it again keeps the first dismissal.
+        Setting a different `remind_at` (edit or snooze) brings the reminder back.
+        Another user's to-do is a 404.
+      responses:
+        '200':
+          $ref: '#/components/responses/TodoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /todos/{todo}/reminder/snooze:
+    parameters:
+      - $ref: '#/components/parameters/TodoId'
+    post:
+      tags: [Reminders]
+      operationId: snoozeReminder
+      summary: Snooze a reminder
+      description: |
+        Sets `remind_at` to now plus `minutes` and clears a dismissal. Another user's to-do is a 404;
+        a subtask is a 422 on `remind_at` (subtasks have no reminders).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [minutes]
+              properties:
+                minutes:
+                  type: integer
+                  enum: [5, 10, 30, 60]
+            example:
+              minutes: 10
+      responses:
+        '200':
+          $ref: '#/components/responses/TodoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   /schedule/items:
     get:
@@ -1105,6 +1307,51 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
+  /days/{date}/intention:
+    parameters:
+      - $ref: '#/components/parameters/DatePath'
+    get:
+      tags: [Days]
+      operationId: getDailyIntention
+      summary: The intention for a day
+      description: |
+        One short line the user sets for a local day. `text` is null when none is set. `date` must be a real
+        `Y-m-d` date within 366 days of the user's today (before or after); otherwise 422.
+      responses:
+        '200':
+          $ref: '#/components/responses/IntentionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags: [Days]
+      operationId: putDailyIntention
+      summary: Set or clear the intention for a day
+      description: |
+        Creates the intention or replaces the existing one (one per user and day). `text` must be sent: up to
+        200 characters after trimming. An empty string, blank text or null deletes it. Same date rules as GET.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: [string, 'null']
+                  maxLength: 200
+            example:
+              text: Finish the essay outline
+      responses:
+        '200':
+          $ref: '#/components/responses/IntentionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
   /streak:
     get:
       tags: [Streak]
@@ -1159,6 +1406,10 @@ paths:
         and day for exceptions and check-ins) are left untouched and counted as `skipped`. An id that belongs
         to another account is a 422. Limits: 500 to-dos and 100 schedule items per user in total, 5000 exceptions
         and 10000 check-ins per call. Exceptions and check-ins must point at an item in the payload or one the user has.
+        A to-do's `parent_id` must point at a top-level to-do in the payload or one the user has (in any order in the
+        payload), and a subtask cannot have a `due_date` or a `repeat_rule`. A to-do with a `repeat_rule` needs a
+        `due_date`. `next_todo_id` must point at a to-do in the payload or one the user has. A subtask cannot have a
+        `remind_at`; send `remind_dismissed_at` for a reminder the guest already dismissed.
       requestBody:
         required: true
         content:
@@ -1178,6 +1429,13 @@ paths:
                       due_date: {type: [string, 'null'], format: date}
                       done_at: {type: [string, 'null'], format: date-time}
                       created_at: {type: [string, 'null'], format: date-time}
+                      priority: {$ref: '#/components/schemas/Priority'}
+                      notes: {type: [string, 'null'], maxLength: 2000}
+                      parent_id: {type: [string, 'null'], format: uuid}
+                      repeat_rule: {oneOf: [{$ref: '#/components/schemas/RepeatRule'}, {type: 'null'}]}
+                      next_todo_id: {type: [string, 'null'], format: uuid}
+                      remind_at: {$ref: '#/components/schemas/RemindAt'}
+                      remind_dismissed_at: {$ref: '#/components/schemas/RemindAt'}
                 schedule_items:
                   type: array
                   items:
@@ -1216,6 +1474,16 @@ paths:
                       schedule_item_id: {type: string, format: uuid}
                       date: {type: string, format: date}
                       done_at: {type: [string, 'null'], format: date-time}
+                daily_intentions:
+                  type: array
+                  maxItems: 1000
+                  description: One per day. A day the user already has an intention for is skipped (the server copy wins).
+                  items:
+                    type: object
+                    required: [date, text]
+                    properties:
+                      date: {type: string, format: date}
+                      text: {type: string, minLength: 1, maxLength: 200}
             example:
               todos:
                 - id: 3b9a6c1e-2d4f-4a8b-9c0d-1e2f3a4b5c6d
@@ -1242,18 +1510,20 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [todos, schedule_items, exceptions, checkins]
+                    required: [todos, schedule_items, exceptions, checkins, daily_intentions]
                     properties:
                       todos: {type: object, required: [created, skipped], properties: {created: {type: integer}, skipped: {type: integer}}}
                       schedule_items: {type: object, required: [created, skipped], properties: {created: {type: integer}, skipped: {type: integer}}}
                       exceptions: {type: object, required: [created, skipped], properties: {created: {type: integer}, skipped: {type: integer}}}
                       checkins: {type: object, required: [created, skipped], properties: {created: {type: integer}, skipped: {type: integer}}}
+                      daily_intentions: {type: object, required: [created, skipped], properties: {created: {type: integer}, skipped: {type: integer}}}
               example:
                 data:
                   todos: {created: 1, skipped: 0}
                   schedule_items: {created: 1, skipped: 0}
                   exceptions: {created: 0, skipped: 0}
                   checkins: {created: 0, skipped: 0}
+                  daily_intentions: {created: 0, skipped: 0}
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '422':
@@ -1430,7 +1700,7 @@ components:
 
     User:
       type: object
-      required: [id, name, email, email_verified_at, timezone, goal, heard_from, survey_done, current_streak, longest_streak, created_at]
+      required: [id, name, email, has_password, email_verified_at, timezone, time_format, week_starts_on, goal, heard_from, survey_done, current_streak, longest_streak, created_at]
       properties:
         id:
           type: string
@@ -1440,11 +1710,24 @@ components:
         email:
           type: string
           format: email
+        has_password:
+          type: boolean
+          description: False for an account created with Google that never set a password.
         email_verified_at:
           type: [string, 'null']
           format: date-time
         timezone:
           type: string
+        time_format:
+          type: string
+          enum: ['12h', '24h']
+          default: 24h
+        week_starts_on:
+          type: integer
+          minimum: 1
+          maximum: 7
+          default: 1
+          description: First day of the week, 1 = Monday to 7 = Sunday.
         goal:
           type: [string, 'null']
           enum: [be_consistent, manage_time, finish_tasks, other, null]
@@ -1491,10 +1774,57 @@ components:
         due_date:
           type: [string, 'null']
           format: date
+          description: Not allowed on a subtask.
+        priority:
+          $ref: '#/components/schemas/Priority'
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+        parent_id:
+          type: [string, 'null']
+          format: uuid
+          description: Makes this a subtask of one of the user's top-level to-dos. Only on create.
+        repeat_rule:
+          oneOf:
+            - $ref: '#/components/schemas/RepeatRule'
+            - type: 'null'
+          description: Needs a `due_date`. Not allowed on a subtask.
+        remind_at:
+          $ref: '#/components/schemas/RemindAt'
+
+    RemindAt:
+      type: [string, 'null']
+      format: date-time
+      description: |
+        When to remind, as ISO 8601 with an explicit offset (`2026-10-24T18:30:00+07:00` or `2026-10-24T11:30:00.000Z`).
+        A value without an offset is a 422. Stored and returned in UTC. Not allowed on a subtask.
+      example: '2026-10-24T11:30:00Z'
+
+    RepeatRule:
+      type: object
+      description: |
+        `{type: daily}` or `{type: weekly, days: [...]}`. Days use the schedule numbers (0 = Monday ... 6 = Sunday);
+        they are returned sorted. `days` is ignored for `daily`.
+      required: [type]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: [daily, weekly]
+        days:
+          $ref: '#/components/schemas/Weekdays'
+      example:
+        type: weekly
+        days: [0, 2, 4]
+
+    Priority:
+      type: string
+      enum: [low, normal, high]
+      default: normal
 
     Todo:
       type: object
-      required: [id, title, category, due_date, done_at, overdue, old, created_at]
+      required: [id, title, category, priority, notes, parent_id, repeat_rule, next_todo_id, remind_at, due_date, done_at, overdue, old, created_at, subtasks]
       properties:
         id:
           type: string
@@ -1503,6 +1833,26 @@ components:
           type: string
         category:
           $ref: '#/components/schemas/Category'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        notes:
+          type: [string, 'null']
+        parent_id:
+          type: [string, 'null']
+          format: uuid
+          description: Set on a subtask. Subtasks are one level deep.
+        repeat_rule:
+          oneOf:
+            - $ref: '#/components/schemas/RepeatRule'
+            - type: 'null'
+        next_todo_id:
+          type: [string, 'null']
+          format: uuid
+          description: Set when a repeating to-do is first checked off; the to-do created for the next date.
+        remind_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the in-app reminder is due, in UTC. Always null on a subtask.
         due_date:
           type: [string, 'null']
           format: date
@@ -1518,6 +1868,11 @@ components:
         created_at:
           type: string
           format: date-time
+        subtasks:
+          type: array
+          description: The to-do's subtasks, oldest first. Always empty on a subtask.
+          items:
+            $ref: '#/components/schemas/Todo'
 
     Error:
       type: object
@@ -1602,6 +1957,28 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             message: If an account exists for that email, we sent a reset link.
+    IntentionResponse:
+      description: The day's intention, wrapped in `data`.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [date, text]
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  text:
+                    type: [string, 'null']
+                    maxLength: 200
+          example:
+            data:
+              date: '2026-10-24'
+              text: Finish the essay outline
     TodoResponse:
       description: The to-do, wrapped in `data`.
       content:
@@ -1666,8 +2043,11 @@ components:
           id: 9f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f
           name: Sokha
           email: sokha@example.com
+          has_password: true
           email_verified_at: null
           timezone: Asia/Phnom_Penh
+          time_format: 24h
+          week_starts_on: 1
           goal: null
           heard_from: null
           survey_done: false
@@ -1682,8 +2062,11 @@ components:
           id: 9f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f
           name: Sokha
           email: sokha@example.com
+          has_password: true
           email_verified_at: null
           timezone: Asia/Phnom_Penh
+          time_format: 24h
+          week_starts_on: 1
           goal: null
           heard_from: null
           survey_done: false

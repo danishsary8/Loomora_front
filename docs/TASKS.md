@@ -203,7 +203,7 @@ _None yet._
 Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-task-prompts.md` (behaviour reference only; never copy Daycraft code or visuals). Every new to-do field must work the same for guests (Dexie) and accounts, with the same rules and the same tests. Tasks that need a changed API wait for the planner to refresh `docs/openapi.yaml` from the backend repo; if it is not refreshed yet, mark the task `blocked` and move on.
 
 ### F-019: Error, offline and not-found states
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Steps:**
   1. Audit what exists (route error boundary, 404 page, offline banner, error mapping). Add only what is missing.
@@ -216,7 +216,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/app/*`, `src/lib/api/*`, `src/components/*`, `src/i18n/locales/en.json`, `e2e/backend-down.spec.ts`
 
 ### F-020: Import in chunks under the API limits
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Steps:**
   1. The import endpoint caps exceptions at 5000 and check-ins at 10000. Split the guest payload into several `POST /import` calls under the caps (the import is idempotent by id, so repeats are safe) and clear the device data only after every call succeeds.
@@ -226,7 +226,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/*/saveGuestPlan*`, tests
 
 ### F-021: Resend verification email
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Steps:**
   1. Add a Resend link on the verify-email screen and the Profile account card for unverified accounts, calling `POST /auth/email/resend`. Show success, the 429 wait time (`retryAfter`) and other errors with `t()` text.
@@ -318,7 +318,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/profile/*`, `src/lib/api/*`
 
 ### F-029: Static HTML shell and lazy Dexie for first paint
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Steps:**
   1. Answers Q24. Paint the cream background and logo from `index.html` before JavaScript runs, and open Dexie only on the first read. Measure Lighthouse mobile on `vite preview` before and after and write both in `docs/PROGRESS.md`.
