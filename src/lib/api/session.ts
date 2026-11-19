@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useBackendOutage } from './outage'
 import { clearSession, readSession, writeSession } from './tokenStorage'
 import type { TokenResponse, User } from './types'
 
@@ -32,6 +33,7 @@ export const useSession = create<SessionState>((set, get) => ({
   },
   signOut: () => {
     clearSession()
+    useBackendOutage.getState().reset()
     set({ token: null, expiresAt: null, user: null })
   },
 }))

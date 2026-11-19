@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
 import { SavePlanImport } from '@/features/auth/SavePlanImport'
+import { BackendOutageBanner } from './BackendOutageBanner'
 import { OfflineBanner } from './OfflineBanner'
 
 export function RootLayout() {
@@ -16,6 +17,7 @@ export function RootLayout() {
         {t('common.skipToContent')}
       </a>
       <OfflineBanner />
+      <BackendOutageBanner />
       <SavePlanImport />
       <Suspense
         fallback={

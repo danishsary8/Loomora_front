@@ -1,11 +1,14 @@
 import { createAuthApi } from './auth'
 import { createAccountDataApi } from './account'
 import { createApiClient } from './client'
+import { useBackendOutage } from './outage'
 import { createScheduleApi } from './schedule'
 import { useSession } from './session'
 import { createTodosApi } from './todos'
 
 export { ApiError, type FieldErrors } from './errors'
+export { mapApiError } from './errorMapping'
+export { useBackendOutage } from './outage'
 export { useSession } from './session'
 export type { GoogleIntent } from './auth'
 export type { AccountDataApi } from './account'
@@ -20,6 +23,8 @@ const client = createApiClient({
   baseUrl: import.meta.env.VITE_API_URL || DEFAULT_API_URL,
   getToken: () => useSession.getState().token,
   onUnauthorized: () => useSession.getState().signOut(),
+  onNetworkOrServerError: () => useBackendOutage.getState().reportFailure(),
+  onSuccess: () => useBackendOutage.getState().reportSuccess(),
 })
 
 export const authApi = createAuthApi(client)

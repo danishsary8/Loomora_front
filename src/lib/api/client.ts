@@ -5,6 +5,10 @@ export interface ApiClientOptions {
   getToken: () => string | null
   /** Called when a request that carried a token comes back 401. */
   onUnauthorized: () => void
+  /** Called when a request with a token fails with a network error or 5xx (account mode outage). */
+  onNetworkOrServerError?: (error: ApiError) => void
+  /** Called when an authenticated request succeeds (can recover from outage). */
+  onSuccess?: () => void
   fetchImpl?: typeof fetch
 }
 
@@ -37,6 +41,8 @@ export function createApiClient({
   baseUrl,
   getToken,
   onUnauthorized,
+  onNetworkOrServerError,
+  onSuccess,
   fetchImpl,
 }: ApiClientOptions) {
   const base = baseUrl.replace(/\/+$/, '')
@@ -65,14 +71,27 @@ export function createApiClient({
         body: body === undefined ? null : JSON.stringify(body),
       })
     } catch {
-      throw new ApiError(0, { message: 'Network error' })
+      const netError = new ApiError(0, { message: 'Network error' })
+      if (token) onNetworkOrServerError?.(netError)
+      throw netError
     }
 
     const data = await readBody(response)
-    if (response.ok) return data as T
+    if (response.ok) {
+      if (token) onSuccess?.()
+      return data as T
+    }
 
     if (response.status === 401 && token) onUnauthorized()
-    throw new ApiError(response.status, (data ?? {}) as ApiErrorBody, retryAfterSeconds(response))
+    const apiError = new ApiError(
+      response.status,
+      (data ?? {}) as ApiErrorBody,
+      retryAfterSeconds(response),
+    )
+    if (token && response.status >= 500) {
+      onNetworkOrServerError?.(apiError)
+    }
+    throw apiError
   }
 
   return { request, baseUrl: base }

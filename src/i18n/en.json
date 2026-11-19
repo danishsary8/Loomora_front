@@ -7,7 +7,8 @@
     "loading": "Loading…",
     "retry": "Try again",
     "comingSoon": "Coming soon",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "goToToday": "Go to Today"
   },
   "categories": {
     "study": "Study",
@@ -340,7 +341,27 @@
     "retry": "Try again"
   },
   "offline": {
-    "banner": "You are offline. Your plan still works and saves on this device."
+    "banner": "You are offline. Your plan still works and saves on this device.",
+    "accountBanner": "You are offline. Connect to the internet to save your changes."
+  },
+  "apiErrors": {
+    "networkTitle": "Connection problem",
+    "network": "Cannot connect to the server. Please check your internet connection.",
+    "unauthorizedTitle": "Session expired",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "validationTitle": "Check your input",
+    "validation": "Some details were invalid. Please check the fields and try again.",
+    "rateLimitedTitle": "Too many requests",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "rateLimitedWithRetry": "Too many requests. Please wait {{seconds}} seconds and try again.",
+    "serverTitle": "Server problem",
+    "server": "The server ran into a problem. Please try again later.",
+    "unexpectedTitle": "Something went wrong",
+    "unexpected": "Something went wrong. Please try again."
+  },
+  "backendOutage": {
+    "banner": "Cannot reach the server. Changes cannot be saved until connection is restored.",
+    "retry": "Retry"
   },
   "auth": {
     "email": "Email",
