@@ -22,13 +22,12 @@ export interface GuestPlan {
   intentions: DailyIntentionRecord[]
 }
 
-export async function readGuestPlan({
-  todos,
-  schedule,
-  intentions,
-}: GuestStorage): Promise<GuestPlan> {
+export async function readGuestPlan(
+  { todos, schedule, intentions }: GuestStorage,
+  activeTodos: Todo[] | Promise<Todo[]> = todos.listAll(),
+): Promise<GuestPlan> {
   const [allTodos, items, exceptions, checkins, dailyIntentions] = await Promise.all([
-    todos.listAll(),
+    activeTodos,
     schedule.listItems(),
     schedule.listExceptions(),
     schedule.listCheckins(),
@@ -155,7 +154,11 @@ export async function saveGuestPlan(
   api: Pick<AccountDataApi, 'importGuestData'>,
   assertSession = () => {},
 ): Promise<boolean> {
-  const plan = await readGuestPlan(guest)
+  const todoSnapshot = await guest.todos.listAll({ includeDeleted: true })
+  const plan = await readGuestPlan(
+    guest,
+    todoSnapshot.filter((todo) => !todo.deleted_at),
+  )
   if (isEmptyPlan(plan)) return false
   for (const chunk of chunkImportBody(toImportBody(plan))) {
     assertSession()
@@ -163,7 +166,7 @@ export async function saveGuestPlan(
   }
   assertSession()
   await Promise.all([
-    guest.todos.clearImported(plan.todos),
+    guest.todos.clearImported(todoSnapshot),
     guest.schedule.clearImported(plan),
     guest.intentions.clearImported(plan.intentions),
   ])

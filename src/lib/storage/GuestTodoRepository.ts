@@ -45,20 +45,34 @@ export class GuestTodoRepository implements TodoRepository {
     this.timeZone = timeZone
   }
 
-  async listAll(): Promise<Todo[]> {
+  async listAll({ includeDeleted = false } = {}): Promise<Todo[]> {
     const all = await (await this.open()).todos.toArray()
-    return all.filter((t) => !t.deleted_at)
+    return includeDeleted ? all : all.filter((todo) => !todo.deleted_at)
   }
 
-  /** Keep the local list together if another tab added, edited or deleted a to-do during import. */
-  async clearImported(rows: Todo[]): Promise<void> {
-    if (rows.length === 0) return
+  /** Clean up the import snapshot without discarding changes made by another tab. */
+  async clearImported(snapshot: Todo[]): Promise<void> {
+    if (snapshot.length === 0) return
     const db = await this.open()
     await db.transaction('rw', db.todos, async () => {
-      const current = (await db.todos.toArray()).filter((todo) => !todo.deleted_at)
-      if (JSON.stringify(current) === JSON.stringify(rows)) {
-        await db.todos.bulkDelete(rows.map(({ id }) => id))
+      const current = await db.todos.toArray()
+      const active = (rows: Todo[]) => rows.filter((todo) => !todo.deleted_at)
+      const activeUnchanged = JSON.stringify(active(current)) === JSON.stringify(active(snapshot))
+      const beforeById = new Map(snapshot.map((todo) => [todo.id, todo]))
+      const remove = new Set(
+        current
+          .filter(
+            (todo) =>
+              (todo.deleted_at || activeUnchanged) &&
+              JSON.stringify(todo) === JSON.stringify(beforeById.get(todo.id)),
+          )
+          .map(({ id }) => id),
+      )
+      // A retained subtask still needs its parent for display or restore.
+      for (const { id, parent_id } of current) {
+        if (parent_id && !remove.has(id)) remove.delete(parent_id)
       }
+      await db.todos.bulkDelete([...remove])
     })
   }
 

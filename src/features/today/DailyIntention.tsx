@@ -5,17 +5,16 @@ import { Button, Input } from '@/components/ui'
 import { guestPlanKey } from '@/features/auth/useGuestPlan'
 import type { LocalDate } from '@/features/todos/types'
 import { accountDataApi, ApiError, useSession } from '@/lib/api'
-import { toLocalDate } from '@/lib/date'
 import { useGuestStorage } from '@/lib/storage'
 
 const MAX_LENGTH = 200
 const SAVE_DELAY = 600
 const normalize = (text: string) => text.trim() || null
 
-// Session expiry can remount the editor. Keep the last failed draft in memory for its owner.
-const expiredDrafts = new WeakMap<
+// A failed save can outlive its editor. Keep drafts in memory by owner and date.
+const failedDrafts = new WeakMap<
   QueryClient,
-  Map<string, { date: LocalDate; generation: number; text: string }>
+  Map<string, Map<LocalDate, { generation: number; text: string }>>
 >()
 
 interface DailyIntentionProps {
@@ -28,14 +27,53 @@ export function DailyIntention(props: DailyIntentionProps) {
   const guest = useSession((state) => state.token === null)
   const accountId = useSession((state) => state.user?.id)
   return (
-    <ScopedIntention
-      key={`${generation}:${props.date}`}
+    <IntentionSession
+      key={generation}
       {...props}
       generation={generation}
       guest={guest}
-      accountId={accountId}
+      owner={guest ? 'guest' : accountId ? `account:${accountId}` : null}
     />
   )
+}
+
+type SessionProps = DailyIntentionProps & {
+  generation: number
+  guest: boolean
+  owner: string | null
+}
+
+function IntentionSession({ date, dateHint, ...session }: SessionProps) {
+  const queryClient = useQueryClient()
+  const { i18n } = useTranslation()
+  const [pendingDates, setPendingDates] = useState<LocalDate[]>(() =>
+    session.owner ? [...(failedDrafts.get(queryClient)?.get(session.owner)?.keys() ?? [])] : [],
+  )
+
+  function trackPending(day: LocalDate, pending: boolean) {
+    setPendingDates((dates) => {
+      if (pending === dates.includes(day)) return dates
+      return pending ? [...dates, day] : dates.filter((savedDate) => savedDate !== day)
+    })
+  }
+
+  // Keep the editor and its debounce alive across midnight while it has an unsaved draft.
+  return [date, ...pendingDates.filter((day) => day !== date)].map((day) => (
+    <ScopedIntention
+      key={day}
+      {...session}
+      date={day}
+      dateHint={day === date ? dateHint : undefined}
+      previousDateLabel={
+        day === date
+          ? undefined
+          : new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(
+              new Date(`${day}T00:00:00`),
+            )
+      }
+      onPendingChange={(pending) => trackPending(day, pending)}
+    />
+  ))
 }
 
 function ScopedIntention({
@@ -43,30 +81,34 @@ function ScopedIntention({
   dateHint,
   generation,
   guest,
-  accountId,
-}: DailyIntentionProps & { generation: number; guest: boolean; accountId: string | undefined }) {
+  owner,
+  previousDateLabel,
+  onPendingChange,
+}: SessionProps & {
+  previousDateLabel?: string
+  onPendingChange: (pending: boolean) => void
+}) {
   const { t } = useTranslation()
   const { intentions } = useGuestStorage()
   const queryClient = useQueryClient()
   const queryKey = ['daily-intention', generation, date] as const
-  const recovered = !guest && accountId ? expiredDrafts.get(queryClient)?.get(accountId) : undefined
+  const recovered = owner ? failedDrafts.get(queryClient)?.get(owner)?.get(date) : undefined
   function updateRecovery(text: string | null) {
-    if (guest || !accountId) return
-    const drafts = expiredDrafts.get(queryClient) ?? new Map()
-    const previous = drafts.get(accountId)
+    if (!owner) return
+    const owners = failedDrafts.get(queryClient) ?? new Map()
+    const drafts = owners.get(owner) ?? new Map()
+    const previous = drafts.get(date)
     if (previous && previous.generation > generation) return
     if (text === null) {
-      if (previous?.date === date) drafts.delete(accountId)
+      drafts.delete(date)
+      if (drafts.size === 0) owners.delete(owner)
     } else {
-      drafts.set(accountId, { date, generation, text })
-      expiredDrafts.set(queryClient, drafts)
+      drafts.set(date, { generation, text })
+      owners.set(owner, drafts)
+      failedDrafts.set(queryClient, owners)
     }
   }
   const sessionMatches = () => useSession.getState().generation === generation
-  function isCurrentDate() {
-    const { token, user } = useSession.getState()
-    return toLocalDate(new Date(), token ? user?.timezone : undefined) === date
-  }
 
   const intention = useQuery({
     queryKey,
@@ -83,8 +125,7 @@ function ScopedIntention({
     scope: { id: queryKey.join(':') },
     networkMode: 'always',
     mutationFn: async (text: string | null) => {
-      if (!sessionMatches() || !isCurrentDate())
-        throw new Error('Intention date or session changed')
+      if (!sessionMatches()) throw new Error('Session changed')
       const saved = guest
         ? await intentions.save(date, text)
         : (await accountDataApi.putDailyIntention(date, text)).text
@@ -101,16 +142,21 @@ function ScopedIntention({
   })
 
   if (intention.data === undefined) {
+    if (previousDateLabel && !intention.isError) return null
     return (
       <div className="flex flex-col gap-1.5">
-        <Input label={t('intention.label')} placeholder={t('intention.placeholder')} disabled />
+        {!previousDateLabel && (
+          <Input label={t('intention.label')} placeholder={t('intention.placeholder')} disabled />
+        )}
         {intention.isError ? (
           <>
             <p role="alert" className="text-sm font-semibold text-danger">
               {t('intention.loadError')}
             </p>
             <Button variant="ghost" className="self-start" onClick={() => void intention.refetch()}>
-              {t('intention.retryLoad')}
+              {previousDateLabel
+                ? t('intention.retryLoadForDate', { date: previousDateLabel })
+                : t('intention.retryLoad')}
             </Button>
           </>
         ) : (
@@ -126,11 +172,13 @@ function ScopedIntention({
     <IntentionEditor
       stored={intention.data}
       readStored={() => queryClient.getQueryData<string | null>(queryKey) ?? null}
-      recoveredDraft={recovered?.date === date ? recovered.text : null}
+      recoveredDraft={recovered?.text ?? null}
       updateRecovery={updateRecovery}
       save={save.mutateAsync}
-      canSave={() => sessionMatches() && isCurrentDate()}
+      canSave={sessionMatches}
       dateHint={dateHint}
+      previousDateLabel={previousDateLabel}
+      onPendingChange={onPendingChange}
     />
   )
 }
@@ -143,6 +191,8 @@ interface IntentionEditorProps {
   save: (text: string | null) => Promise<string | null>
   canSave: () => boolean
   dateHint?: string | undefined
+  previousDateLabel?: string | undefined
+  onPendingChange: (pending: boolean) => void
 }
 
 function IntentionEditor({
@@ -153,6 +203,8 @@ function IntentionEditor({
   save,
   canSave,
   dateHint,
+  previousDateLabel,
+  onPendingChange,
 }: IntentionEditorProps) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState(recoveredDraft)
@@ -186,6 +238,8 @@ function IntentionEditor({
     }
     if (text === readStored()) {
       updateRecovery(null)
+      setStatus((current) => (current === 'error' ? 'idle' : current))
+      onPendingChange(false)
       return
     }
 
@@ -200,11 +254,16 @@ function IntentionEditor({
         latest.current = null
         setDraft(null)
       }
-      setStatus(unchanged || normalize(latest.current ?? '') === result ? 'saved' : 'idle')
+      const settled = unchanged || normalize(latest.current ?? '') === result
+      setStatus(settled ? 'saved' : 'idle')
+      if (settled) onPendingChange(false)
     } catch (error) {
+      const unsaved = normalize(latest.current ?? '') !== readStored()
       if (error instanceof ApiError && error.status === 401) updateRecovery(latest.current)
+      else if (canSave()) updateRecovery(unsaved ? latest.current : null)
       if (active.current && canSave()) {
-        setStatus(normalize(latest.current ?? '') === readStored() ? 'idle' : 'error')
+        setStatus(unsaved ? 'error' : 'idle')
+        if (!unsaved) onPendingChange(false)
       }
     } finally {
       inFlight.current = undefined
@@ -223,30 +282,43 @@ function IntentionEditor({
     latest.current = trimmed.length > MAX_LENGTH ? trimmed.slice(0, MAX_LENGTH).join('') : value
     setDraft(latest.current)
     if (inFlight.current === undefined) setStatus('idle')
+    const pending = inFlight.current !== undefined || normalize(latest.current) !== readStored()
+    onPendingChange(pending)
+    if (!pending) updateRecovery(null)
     timer.current = setTimeout(() => void flush(), SAVE_DELAY)
   }
 
+  if (previousDateLabel && status !== 'error') return null
+
   return (
     <div className="flex flex-col gap-1.5">
-      <Input
-        label={t('intention.label')}
-        placeholder={t('intention.placeholder')}
-        hint={dateHint ? t('intention.dateHint', { date: dateHint }) : undefined}
-        value={draft ?? stored ?? ''}
-        onChange={(event) => change(event.currentTarget.value)}
-        onBlur={() => void flush()}
-      />
-      <p role="status" className="min-h-5 text-sm text-muted">
-        {status === 'saving' && t('intention.saving')}
-        {status === 'saved' && t('intention.saved')}
-      </p>
+      {!previousDateLabel && (
+        <>
+          <Input
+            label={t('intention.label')}
+            placeholder={t('intention.placeholder')}
+            hint={dateHint ? t('intention.dateHint', { date: dateHint }) : undefined}
+            value={draft ?? stored ?? ''}
+            onChange={(event) => change(event.currentTarget.value)}
+            onBlur={() => void flush()}
+          />
+          <p role="status" className="min-h-5 text-sm text-muted">
+            {status === 'saving' && t('intention.saving')}
+            {status === 'saved' && t('intention.saved')}
+          </p>
+        </>
+      )}
       {status === 'error' && (
         <div className="flex flex-wrap items-center gap-x-2">
           <p role="alert" className="text-sm font-semibold text-danger">
-            {t('intention.saveError')}
+            {previousDateLabel
+              ? t('intention.saveErrorForDate', { date: previousDateLabel })
+              : t('intention.saveError')}
           </p>
           <Button variant="ghost" onClick={() => void flush()}>
-            {t('intention.retrySave')}
+            {previousDateLabel
+              ? t('intention.retrySaveForDate', { date: previousDateLabel })
+              : t('intention.retrySave')}
           </Button>
         </div>
       )}

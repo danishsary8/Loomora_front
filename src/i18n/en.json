@@ -142,7 +142,10 @@
     "loadError": "Could not load your intention.",
     "saveError": "Could not save your intention.",
     "retryLoad": "Retry loading intention",
-    "retrySave": "Retry saving intention"
+    "retrySave": "Retry saving intention",
+    "saveErrorForDate": "Could not save your intention for {{date}}.",
+    "retryLoadForDate": "Retry loading intention for {{date}}",
+    "retrySaveForDate": "Retry saving intention for {{date}}"
   },
   "today": {
     "addTodo": "Add a to-do",

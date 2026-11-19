@@ -221,6 +221,101 @@ it('switches at Phnom Penh midnight and ignores a pending response from the prev
   expect(field()).toHaveValue('New day draft')
 })
 
+describe('an intention edited just before Phnom Penh midnight', () => {
+  const yesterday = '2026-11-19'
+  const today = '2026-11-20'
+
+  function setMidnight() {
+    vi.setSystemTime(new Date('2026-11-19T17:00:00.000Z'))
+    fireEvent.focus(window)
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-19T16:59:59.800Z'))
+    mockAccountReads()
+    useSession.getState().signIn(makeTokenResponse())
+  })
+
+  it('finishes the pending debounce for the original date and leaves the next day empty', async () => {
+    const calls: unknown[] = []
+    server.use(
+      http.put(`${API}/days/:date/intention`, async ({ params, request }) => {
+        const { text } = (await request.json()) as { text: string }
+        calls.push({ date: params.date, text, authorization: request.headers.get('Authorization') })
+        return HttpResponse.json({ data: { date: params.date, text } })
+      }),
+    )
+    await openToday()
+    write('Finish before midnight')
+    setMidnight()
+    await waitFor(() => expect(field()).toBeEnabled())
+    expect(field()).toHaveValue('')
+    await waitFor(() =>
+      expect(calls).toEqual([
+        { date: yesterday, text: 'Finish before midnight', authorization: 'Bearer 1|test-token' },
+      ]),
+    )
+    expect(field()).toHaveValue('')
+  })
+
+  it('retries a failed previous-day save while retaining the new day’s own edit', async () => {
+    const calls: unknown[] = []
+    server.use(
+      http.put(`${API}/days/:date/intention`, async ({ params, request }) => {
+        const { text } = (await request.json()) as { text: string }
+        calls.push({ date: params.date, text })
+        if (calls.length === 1) return HttpResponse.json({ message: 'Invalid' }, { status: 422 })
+        return HttpResponse.json({ data: { date: params.date, text } })
+      }),
+    )
+    await openToday()
+    write('Recover yesterday')
+    setMidnight()
+    const retry = await screen.findByRole('button', { name: /retry saving intention for/i })
+    expect(field()).toHaveValue('')
+    write('Write the new day')
+    blur()
+    await waitFor(saved)
+    fireEvent.click(retry)
+    await waitFor(() =>
+      expect(calls).toEqual([
+        { date: yesterday, text: 'Recover yesterday' },
+        { date: today, text: 'Write the new day' },
+        { date: yesterday, text: 'Recover yesterday' },
+      ]),
+    )
+    await waitFor(() => expect(retry).not.toBeInTheDocument())
+    expect(field()).toHaveValue('Write the new day')
+  })
+
+  it('cancels the old account debounce when accounts change during rollover', async () => {
+    const calls: unknown[] = []
+    server.use(
+      http.put(`${API}/days/:date/intention`, async ({ params, request }) => {
+        const { text } = (await request.json()) as { text: string }
+        calls.push({ date: params.date, text, authorization: request.headers.get('Authorization') })
+        return HttpResponse.json({ data: { date: params.date, text } })
+      }),
+    )
+    await openToday()
+    vi.useRealTimers()
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
+    vi.setSystemTime(new Date('2026-11-19T16:59:59.800Z'))
+    write('Private pending draft')
+    setMidnight()
+    act(() =>
+      useSession.getState().signIn({
+        ...makeTokenResponse(makeUser({ id: 'another-user' })),
+        token: '2|other-token',
+      }),
+    )
+    await act(() => vi.advanceTimersByTimeAsync(601))
+    vi.useRealTimers()
+    expect(calls).toEqual([])
+  })
+})
+
 it('keeps a trailing space typed while a save is pending', async () => {
   const pending = deferred()
   const started = deferred()
