@@ -9,6 +9,9 @@ export type Priority = (typeof PRIORITIES)[number]
 export const DEFAULT_PRIORITY: Priority = 'normal'
 export const NOTES_MAX_LENGTH = 2000
 
+export const SNOOZE_MINUTES = [5, 10, 30, 60] as const
+export type SnoozeMinutes = (typeof SNOOZE_MINUTES)[number]
+
 export type RepeatRule = { type: 'daily' } | { type: 'weekly'; days: Weekday[] }
 
 /**
@@ -24,6 +27,9 @@ export interface Todo {
   parent_id: string | null
   repeat_rule: RepeatRule | null
   next_todo_id: string | null
+  remind_at: string | null
+  /** Local dismissal timestamp. The account API does not expose this field. */
+  remind_dismissed_at?: string | null
   due_date: LocalDate | null
   /** ISO 8601 UTC timestamp, or null when not done. */
   done_at: string | null
@@ -36,7 +42,7 @@ export interface Todo {
 }
 
 export type UpdateTodoInput = Partial<
-  Pick<Todo, 'title' | 'category' | 'due_date' | 'priority' | 'notes' | 'repeat_rule'>
+  Pick<Todo, 'title' | 'category' | 'due_date' | 'priority' | 'notes' | 'repeat_rule' | 'remind_at'>
 >
 
 export interface CreateTodoInput extends UpdateTodoInput {

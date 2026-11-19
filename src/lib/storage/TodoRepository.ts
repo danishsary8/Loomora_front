@@ -1,6 +1,7 @@
 import type {
   CreateTodoInput,
   LocalDate,
+  SnoozeMinutes,
   TodayTodo,
   Todo,
   UpdateTodoInput,
@@ -20,6 +21,9 @@ export interface TodoRepository {
   update(id: string, patch: UpdateTodoInput): Promise<SavedTodo>
   /** Set or clear done_at (docs/08 rule 7). */
   setDone(id: string, done: boolean): Promise<SavedTodo>
+  listDueReminders(signal?: AbortSignal): Promise<Todo[]>
+  snoozeReminder(id: string, minutes: SnoozeMinutes): Promise<Todo>
+  dismissReminder(id: string): Promise<Todo>
   restore(id: string): Promise<SavedTodo>
   delete(id: string): Promise<void>
 }

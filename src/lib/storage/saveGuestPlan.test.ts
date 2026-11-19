@@ -201,6 +201,8 @@ describe('saveGuestPlan in chunks', () => {
       due_date: '2026-10-26',
       repeat_rule: { type: 'daily' },
     })
+    const reminder = await guest.todos.create({ title: 'Call', remind_at: '2026-10-26T03:00:00Z' })
+    const dismissed = await guest.todos.dismissReminder(reminder.id)
     const child = await guest.todos.create({ title: 'Child', parent_id: parent.id })
     const completed = await guest.todos.setDone(parent.id, true)
     const nextId = completed.next_todo_id
@@ -222,7 +224,7 @@ describe('saveGuestPlan in chunks', () => {
     await expect(saveGuestPlan(guest, accountDataApi)).rejects.toBeDefined()
     expect(await db.schedule_checkins.count()).toBe(12000)
     expect((await readGuestPlan(guest)).items).toHaveLength(1)
-    expect((await readGuestPlan(guest)).todos).toHaveLength(4)
+    expect((await readGuestPlan(guest)).todos).toHaveLength(5)
     expect(seenTodos[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -232,6 +234,11 @@ describe('saveGuestPlan in chunks', () => {
         }),
         expect.objectContaining({ id: nextId, repeat_rule: { type: 'daily' }, next_todo_id: null }),
         expect.objectContaining({ id: child.id, parent_id: parent.id }),
+        expect.objectContaining({
+          id: reminder.id,
+          remind_at: '2026-10-26T03:00:00.000Z',
+          remind_dismissed_at: dismissed.remind_dismissed_at,
+        }),
         expect.objectContaining({ parent_id: nextId, done_at: null }),
       ]),
     )

@@ -1,3 +1,4 @@
+import type { SnoozeMinutes } from '@/features/todos/types'
 import type { ApiClient } from './client'
 import type { ApiTodo, TodoBody } from './types'
 
@@ -5,6 +6,14 @@ import type { ApiTodo, TodoBody } from './types'
 export function createTodosApi({ request }: ApiClient) {
   const one = (r: { data: ApiTodo }) => r.data
   return {
+    listDueReminders: (signal?: AbortSignal) =>
+      request<{ data: ApiTodo[] }>('GET', '/reminders/due', { signal }).then((r) => r.data),
+    snoozeReminder: (id: string, minutes: SnoozeMinutes) =>
+      request<{ data: ApiTodo }>('POST', `/todos/${id}/reminder/snooze`, {
+        body: { minutes },
+      }).then(one),
+    dismissReminder: (id: string) =>
+      request<{ data: ApiTodo }>('POST', `/todos/${id}/reminder/dismiss`).then(one),
     list: (date: string) =>
       request<{ data: ApiTodo[] }>('GET', '/todos', { query: { date } }).then((r) => r.data),
     create: (body: TodoBody & { title: string; parent_id?: string | null }) =>

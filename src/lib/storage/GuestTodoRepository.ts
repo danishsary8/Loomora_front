@@ -6,6 +6,7 @@ import {
   MAX_TODOS,
   type CreateTodoInput,
   type LocalDate,
+  type SnoozeMinutes,
   type TodayTodo,
   type Todo,
   type UpdateTodoInput,
@@ -16,7 +17,13 @@ import type { GuestDatabase } from './db'
 import { NotFoundError, ValidationError } from './errors'
 import { openGuestDatabase } from './openGuestDatabase'
 import type { SavedTodo, TodoRepository } from './TodoRepository'
-import { checkSubtaskFields, checkTodoFields, cleanTitle, normalizeRepeatRule } from './validation'
+import {
+  checkSubtaskFields,
+  checkTodoFields,
+  cleanTitle,
+  normalizeReminder,
+  normalizeRepeatRule,
+} from './validation'
 
 export interface GuestTodoRepositoryOptions {
   db?: GuestDatabase
@@ -54,6 +61,49 @@ export class GuestTodoRepository implements TodoRepository {
     return buildTodayList(all, date)
   }
 
+  async listDueReminders(): Promise<Todo[]> {
+    const now = this.now().getTime()
+    const rows = await this.listAll()
+    return rows
+      .filter(
+        (row) =>
+          !row.parent_id &&
+          !row.done_at &&
+          !row.remind_dismissed_at &&
+          row.remind_at !== null &&
+          Date.parse(row.remind_at) <= now,
+      )
+      .sort(
+        (a, b) => (a.remind_at ?? '').localeCompare(b.remind_at ?? '') || a.id.localeCompare(b.id),
+      )
+  }
+
+  snoozeReminder(id: string, minutes: SnoozeMinutes): Promise<SavedTodo> {
+    return this.write(id, async (db, current) => {
+      const now = this.now()
+      const remindAt = new Date(now.getTime() + minutes * 60_000).toISOString()
+      if (current.parent_id) checkSubtaskFields({ remind_at: remindAt })
+      const updated = {
+        ...current,
+        remind_at: remindAt,
+        remind_dismissed_at: null,
+        updated_at: now.toISOString(),
+      }
+      await db.todos.put(updated)
+      return updated
+    })
+  }
+
+  dismissReminder(id: string): Promise<SavedTodo> {
+    return this.write(id, async (db, current) => {
+      if (!current.remind_at || current.remind_dismissed_at) return current
+      const stamp = this.now().toISOString()
+      const updated = { ...current, remind_dismissed_at: stamp, updated_at: stamp }
+      await db.todos.put(updated)
+      return updated
+    })
+  }
+
   async create(input: CreateTodoInput): Promise<Todo> {
     checkTodoFields(input)
     const title = cleanTitle(input.title)
@@ -77,6 +127,8 @@ export class GuestTodoRepository implements TodoRepository {
         due_date: input.due_date ?? null,
         repeat_rule: normalizeRepeatRule(input.repeat_rule ?? null, input.due_date ?? null),
         next_todo_id: null,
+        remind_at: input.remind_at == null ? null : normalizeReminder(input.remind_at),
+        remind_dismissed_at: null,
         done_at: null,
         created_at: stamp,
         updated_at: stamp,
@@ -101,6 +153,13 @@ export class GuestTodoRepository implements TodoRepository {
       if (patch.due_date !== undefined) changes.due_date = patch.due_date
       if (patch.priority !== undefined) changes.priority = patch.priority
       if (patch.notes !== undefined) changes.notes = patch.notes?.trim() || null
+      if (patch.remind_at !== undefined) {
+        const reminder = patch.remind_at === null ? null : normalizeReminder(patch.remind_at)
+        if (reminder !== (current.remind_at ?? null)) {
+          changes.remind_at = reminder
+          changes.remind_dismissed_at = null
+        }
+      }
       const updated = { ...current, ...changes }
       updated.repeat_rule = normalizeRepeatRule(
         patch.repeat_rule === undefined ? current.repeat_rule : patch.repeat_rule,
@@ -122,6 +181,7 @@ export class GuestTodoRepository implements TodoRepository {
           updated.next_todo_id = await this.createNext(
             db,
             current,
+            current.due_date,
             nextRepeatDate(
               current.repeat_rule,
               current.due_date,
@@ -195,6 +255,7 @@ export class GuestTodoRepository implements TodoRepository {
   private async createNext(
     db: GuestDatabase,
     parent: Todo,
+    previousDueDate: LocalDate,
     dueDate: LocalDate,
     stamp: string,
     subtasks: Todo[],
@@ -202,12 +263,18 @@ export class GuestTodoRepository implements TodoRepository {
     // Check capacity for the whole occurrence inside the completion transaction.
     await this.checkCapacity(db, 1 + subtasks.length)
     const id = newId()
+    // Date-only ISO strings use UTC midnight, so this delta counts whole days across DST.
+    const shift = Date.parse(dueDate) - Date.parse(previousDueDate)
     const next = {
       ...parent,
       id,
       due_date: dueDate,
       done_at: null,
       next_todo_id: null,
+      remind_at: parent.remind_at
+        ? new Date(Date.parse(parent.remind_at) + shift).toISOString()
+        : null,
+      remind_dismissed_at: null,
       created_at: stamp,
       updated_at: stamp,
     }
@@ -217,6 +284,8 @@ export class GuestTodoRepository implements TodoRepository {
         ...row,
         id: newId(),
         parent_id: id,
+        remind_at: null,
+        remind_dismissed_at: null,
         done_at: null,
         updated_at: stamp,
       })),

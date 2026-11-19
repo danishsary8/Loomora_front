@@ -164,6 +164,64 @@ describe('ServerTodoRepository', () => {
     })
   })
 
+  it('maps reminders and uses the authenticated due, snooze, dismiss and completion endpoints', async () => {
+    const requests: unknown[] = []
+    const remind_at = '2026-10-26T01:00:00Z'
+    const row = {
+      ...apiTodo,
+      remind_at,
+      priority: 'normal',
+      notes: null,
+      parent_id: null,
+      repeat_rule: null,
+      next_todo_id: null,
+      subtasks: [],
+    }
+    server.use(
+      http.get(`${API}/reminders/due`, ({ request }) => {
+        requests.push(request.headers.get('Authorization'))
+        return HttpResponse.json({ data: [row] })
+      }),
+      http.post(`${API}/todos/${ID}/reminder/snooze`, async ({ request }) => {
+        requests.push([request.headers.get('Authorization'), await request.json()])
+        return HttpResponse.json({ data: { ...row, remind_at: '2026-10-26T01:10:00Z' } })
+      }),
+      http.post(`${API}/todos/${ID}/reminder/dismiss`, ({ request }) => {
+        requests.push(request.headers.get('Authorization'))
+        return HttpResponse.json({ data: row })
+      }),
+      http.post(`${API}/todos/${ID}/done`, ({ request }) => {
+        requests.push(request.headers.get('Authorization'))
+        return HttpResponse.json({ data: { ...row, done_at: remind_at } })
+      }),
+      http.post(`${API}/todos`, async ({ request }) => {
+        requests.push(await request.json())
+        return HttpResponse.json({ data: row }, { status: 201 })
+      }),
+      http.patch(`${API}/todos/${ID}`, async ({ request }) => {
+        requests.push(await request.json())
+        return HttpResponse.json({ data: { ...row, remind_at: null } })
+      }),
+    )
+
+    await expect(repo.create({ title: 'Read', remind_at })).resolves.toMatchObject({ remind_at })
+    await expect(repo.listDueReminders()).resolves.toMatchObject([{ id: ID, remind_at }])
+    await expect(repo.snoozeReminder(ID, 10)).resolves.toMatchObject({
+      remind_at: '2026-10-26T01:10:00Z',
+    })
+    await expect(repo.dismissReminder(ID)).resolves.toMatchObject({ remind_at })
+    await expect(repo.setDone(ID, true)).resolves.toMatchObject({ done_at: remind_at })
+    await expect(repo.update(ID, { remind_at: null })).resolves.toMatchObject({ remind_at: null })
+    expect(requests).toEqual([
+      { title: 'Read', remind_at },
+      'Bearer 1|test-token',
+      ['Bearer 1|test-token', { minutes: 10 }],
+      'Bearer 1|test-token',
+      'Bearer 1|test-token',
+      { remind_at: null },
+    ])
+  })
+
   it.each([404, 422])('handles subtask creation errors (%i)', async (status) => {
     server.use(
       http.post(`${API}/todos`, () =>

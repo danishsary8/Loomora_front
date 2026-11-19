@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { streakKeys } from '@/features/streak/useStreak'
+import { useSession } from '@/lib/api'
 import { useTodoRepository } from '@/lib/storage'
 import { changeTodayTodo } from './todayCache'
 import type { CreateTodoInput, LocalDate, TodayTodo, UpdateTodoInput } from './types'
 
 export const todoKeys = {
   all: ['todos'] as const,
-  today: (date: LocalDate) => ['todos', 'today', date] as const,
+  lists: ['todos', 'today'] as const,
+  due: ['todos', 'reminders'] as const,
+  reminders: (accountId: string | null) => [...todoKeys.due, accountId] as const,
+  today: (date: LocalDate) => [...todoKeys.lists, date] as const,
 }
 
 export function useTodayTodos(date: LocalDate) {
@@ -35,33 +39,53 @@ export function useUpdateTodo() {
   })
 }
 
+interface SetDoneInput {
+  id: string
+  done: boolean
+  /** Set for a reminder action so a queued completion cannot cross sessions. */
+  sessionToken?: string | null
+}
+
 /** Check off / un-check, shown at once (optimistic) and rolled back if saving fails. */
-export function useSetTodoDone(date: LocalDate) {
+export function useSetTodoDone(date: LocalDate | undefined, networkMode?: 'always') {
   const repo = useTodoRepository()
   const queryClient = useQueryClient()
-  const key = todoKeys.today(date)
+  const filters = date
+    ? { queryKey: todoKeys.today(date), exact: true }
+    : { queryKey: todoKeys.lists }
 
   return useMutation({
     // A parent completion and a child toggle write the same state. Process them in order.
     scope: { id: 'todo-completion' },
-    mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      await queryClient.cancelQueries({ queryKey: key })
-      let previousDoneAt: string | null | undefined
-      queryClient.setQueryData<TodayTodo[]>(
-        key,
-        (list) =>
-          list &&
-          changeTodayTodo(list, id, (todo) => {
-            previousDoneAt = todo.done_at
-            return { ...todo, done_at: done ? new Date().toISOString() : null }
-          }),
-      )
+    networkMode,
+    mutationFn: async ({ id, done, sessionToken }: SetDoneInput) => {
+      const sameSession = () =>
+        sessionToken === undefined || useSession.getState().token === sessionToken
+      if (!sameSession()) return
+      await queryClient.cancelQueries(filters)
+      if (!sameSession()) return
+
+      const stamp = done ? new Date().toISOString() : null
+      const previous = queryClient.getQueriesData<TodayTodo[]>(filters).map(([key]) => {
+        let doneAt: string | null | undefined
+        queryClient.setQueryData<TodayTodo[]>(
+          key,
+          (list) =>
+            list &&
+            changeTodayTodo(list, id, (todo) => {
+              doneAt = todo.done_at
+              return { ...todo, done_at: stamp }
+            }),
+        )
+        return { key, doneAt }
+      })
 
       try {
         const saved = await repo.setDone(id, done)
+        if (!sameSession()) return
         // Re-reading would immediately hide checked undated or overdue top-level rows.
-        queryClient.setQueryData<TodayTodo[]>(
-          key,
+        queryClient.setQueriesData<TodayTodo[]>(
+          filters,
           (list) =>
             list &&
             changeTodayTodo(list, id, (todo) => ({
@@ -76,13 +100,16 @@ export function useSetTodoDone(date: LocalDate) {
             })),
         )
         void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+        void queryClient.invalidateQueries({ queryKey: todoKeys.due })
       } catch (error) {
-        const doneAt = previousDoneAt
-        if (doneAt !== undefined) {
-          queryClient.setQueryData<TodayTodo[]>(
-            key,
-            (list) => list && changeTodayTodo(list, id, (todo) => ({ ...todo, done_at: doneAt })),
-          )
+        if (sameSession()) {
+          for (const { key, doneAt } of previous) {
+            if (doneAt === undefined) continue
+            queryClient.setQueryData<TodayTodo[]>(
+              key,
+              (list) => list && changeTodayTodo(list, id, (todo) => ({ ...todo, done_at: doneAt })),
+            )
+          }
         }
         throw error
       }

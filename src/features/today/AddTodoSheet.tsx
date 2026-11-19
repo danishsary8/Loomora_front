@@ -1,6 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input, Sheet } from '@/components/ui'
+import { deviceTimeZone } from '@/features/auth/timezone'
+import { localReminderValue, reminderInstant } from '@/features/reminders/reminderTime'
+import { useSession } from '@/lib/api'
 import { DayToggle } from '@/features/schedule/DayToggle'
 import type { Weekday } from '@/features/schedule/types'
 import { WEEKDAYS } from '@/features/schedule/week/weekPlan'
@@ -37,11 +40,17 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
   const { t } = useTranslation()
   const titleRef = useRef<HTMLInputElement>(null)
   const dueDateRef = useRef<HTMLInputElement>(null)
+  const reminderRef = useRef<HTMLInputElement>(null)
   const repeatRef = useRef<HTMLSelectElement>(null)
   const notesRef = useRef<HTMLTextAreaElement>(null)
   const create = useCreateTodo()
   const update = useUpdateTodo()
   const existing = target.type === 'edit' ? target.todo : undefined
+  const timeZone = useSession((state) => state.user?.timezone) ?? deviceTimeZone()
+  const savedReminder = existing?.remind_at ?? null
+  const savedLocalReminder = localReminderValue(savedReminder, timeZone)
+  const [reminder, setReminder] = useState(savedLocalReminder)
+  const [reminderError, setReminderError] = useState(false)
   const subtask = target.type === 'subtask' || Boolean(existing?.parent_id)
   const [title, setTitle] = useState(existing?.title ?? '')
   const [dueDate, setDueDate] = useState<LocalDate>(existing ? (existing.due_date ?? '') : today)
@@ -101,6 +110,13 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
       repeatRef.current?.focus()
       return
     }
+    const remindAt =
+      reminder === savedLocalReminder ? savedReminder : reminderInstant(reminder, timeZone)
+    if (!subtask && (reminderRef.current?.validity.badInput || (reminder && !remindAt))) {
+      setReminderError(true)
+      reminderRef.current?.focus()
+      return
+    }
     const repeatRule: RepeatRule | null =
       repeatMode === 'none'
         ? null
@@ -118,6 +134,7 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
             category: category ?? DEFAULT_CATEGORY,
             due_date: dueDate || null,
             repeat_rule: repeatRule,
+            ...(remindAt !== savedReminder ? { remind_at: remindAt } : {}),
           }),
     }
     try {
@@ -136,6 +153,9 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
       } else if (error instanceof ValidationError && error.field === 'notes') {
         setNotesError(notesLimit)
         notesRef.current?.focus()
+      } else if (error instanceof ValidationError && error.field === 'remind_at') {
+        setReminderError(true)
+        reminderRef.current?.focus()
       } else setFormError(t('today.saveError'))
     }
   }
@@ -178,6 +198,33 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
               {dueDate !== '' && (
                 <Button variant="ghost" onClick={() => changeDueDate('')}>
                   {t('todoForm.clearDueDate')}
+                </Button>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-col gap-2">
+              <Input
+                ref={reminderRef}
+                type="datetime-local"
+                label={t('todoForm.remindMe')}
+                hint={t('todoForm.reminderTimeZone', { zone: timeZone })}
+                value={reminder}
+                error={reminderError ? t('todoForm.reminderInvalid') : undefined}
+                onChange={(event) => {
+                  setReminder(event.target.value)
+                  setReminderError(false)
+                }}
+              />
+              {reminder && (
+                <Button
+                  variant="ghost"
+                  className="self-start"
+                  onClick={() => {
+                    setReminder('')
+                    setReminderError(false)
+                    reminderRef.current?.focus()
+                  }}
+                >
+                  {t('todoForm.clearReminder')}
                 </Button>
               )}
             </div>

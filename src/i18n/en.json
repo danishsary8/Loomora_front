@@ -159,7 +159,22 @@
     "undo": "Undo",
     "saveError": "Could not save. Please try again."
   },
+  "reminders": {
+    "label": "Reminder",
+    "announcement": "Reminder for {{title}}",
+    "done": "Done",
+    "snooze": "Snooze",
+    "dismiss": "Dismiss",
+    "snoozeFor": "Snooze for",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "checkError": "Could not check reminders."
+  },
   "todoForm": {
+    "remindMe": "Remind me",
+    "reminderTimeZone": "Time zone: {{zone}}",
+    "clearReminder": "Remove reminder",
+    "reminderInvalid": "Enter a valid reminder date and time.",
     "title": "Title",
     "titlePlaceholder": "What do you need to do?",
     "titleRequired": "Please enter a title.",

@@ -39,5 +39,8 @@ export class GuestDatabase extends Dexie {
     this.version(5).upgrade((tx) =>
       tx.table<Todo>('todos').toCollection().modify({ repeat_rule: null, next_todo_id: null }),
     )
+    this.version(6).upgrade((tx) =>
+      tx.table<Todo>('todos').toCollection().modify({ remind_at: null, remind_dismissed_at: null }),
+    )
   }
 }

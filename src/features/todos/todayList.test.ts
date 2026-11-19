@@ -15,6 +15,7 @@ function todo(overrides: Partial<Todo> = {}): Todo {
     notes: null,
     repeat_rule: null,
     next_todo_id: null,
+    remind_at: null,
     parent_id: null,
     due_date: null,
     done_at: null,

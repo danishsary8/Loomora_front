@@ -22,6 +22,7 @@ it('settles parent completion before a queued child check and retains its saved 
     notes: null,
     repeat_rule: null,
     next_todo_id: null,
+    remind_at: null,
     created_at: stamp,
     updated_at: stamp,
     due_date: null,

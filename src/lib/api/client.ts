@@ -3,7 +3,7 @@ import { ApiError, type ApiErrorBody } from './errors'
 export interface ApiClientOptions {
   baseUrl: string
   getToken: () => string | null
-  /** Called when a request that carried a token comes back 401. */
+  /** Called when a 401 belongs to the current session. */
   onUnauthorized: () => void
   /** Called when the API could not be reached or answered with a 5xx. */
   onServiceFailure?: () => void
@@ -13,6 +13,7 @@ export interface ApiClientOptions {
 export interface RequestOptions {
   body?: unknown
   query?: Record<string, string | undefined>
+  signal?: AbortSignal
   /** Send the bearer token (default true). */
   auth?: boolean
 }
@@ -49,7 +50,7 @@ export function createApiClient({
     path: string,
     options: RequestOptions = {},
   ): Promise<T> {
-    const { body, query, auth = true } = options
+    const { body, query, signal, auth = true } = options
     const url = new URL(`${base}${path}`, window.location.origin)
     for (const [key, value] of Object.entries(query ?? {})) {
       if (value !== undefined) url.searchParams.set(key, value)
@@ -65,17 +66,20 @@ export function createApiClient({
       response = await (fetchImpl ?? fetch)(url, {
         method,
         headers,
+        signal,
         body: body === undefined ? null : JSON.stringify(body),
       })
     } catch {
+      signal?.throwIfAborted()
       onServiceFailure?.()
       throw new ApiError(0, { message: 'Network error' })
     }
 
     const data = await readBody(response)
+    signal?.throwIfAborted()
     if (response.ok) return data as T
 
-    if (response.status === 401 && token) onUnauthorized()
+    if (response.status === 401 && token && getToken() === token) onUnauthorized()
     if (response.status >= 500) onServiceFailure?.()
     throw new ApiError(response.status, (data ?? {}) as ApiErrorBody, retryAfterSeconds(response))
   }

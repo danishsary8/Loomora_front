@@ -30,6 +30,8 @@ export function validationError(field: string, message: string) {
 }
 
 /** One MSW server for all tests; each test adds its own handlers with `server.use`. */
-export const server = setupServer()
+export const server = setupServer(
+  http.get(`${API}/reminders/due`, () => HttpResponse.json({ data: [] })),
+)
 
 export { http, HttpResponse }
