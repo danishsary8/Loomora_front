@@ -147,6 +147,16 @@ export interface ApiStreak {
   today_counted: boolean
 }
 
+export interface DailyIntentionRecord {
+  date: string
+  text: string
+}
+
+export interface ApiDailyIntention {
+  date: string
+  text: string | null
+}
+
 export interface ImportBody {
   todos: Array<{
     id: string
@@ -174,6 +184,7 @@ export interface ImportBody {
     end_time: string | null
   }>
   checkins: Array<{ id: string; schedule_item_id: string; date: string; done_at: string }>
+  daily_intentions: DailyIntentionRecord[]
 }
 
 interface ImportCount {
@@ -186,4 +197,5 @@ export interface ImportResult {
   schedule_items: ImportCount
   exceptions: ImportCount
   checkins: ImportCount
+  daily_intentions: ImportCount
 }

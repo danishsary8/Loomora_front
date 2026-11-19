@@ -133,6 +133,17 @@
     "errorTitle": "Something went wrong",
     "errorMessage": "Please try again."
   },
+  "intention": {
+    "label": "Daily intention",
+    "placeholder": "What do you want to focus on?",
+    "dateHint": "Intention for {{date}}",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "loadError": "Could not load your intention.",
+    "saveError": "Could not save your intention.",
+    "retryLoad": "Retry loading intention",
+    "retrySave": "Retry saving intention"
+  },
   "today": {
     "addTodo": "Add a to-do",
     "addSubtask": "Add subtask",

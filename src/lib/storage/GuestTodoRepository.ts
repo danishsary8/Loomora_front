@@ -50,9 +50,16 @@ export class GuestTodoRepository implements TodoRepository {
     return all.filter((t) => !t.deleted_at)
   }
 
-  /** Remove every guest to-do (after a successful import, docs/08 rule 9). */
-  async clear(): Promise<void> {
-    await (await this.open()).todos.clear()
+  /** Keep the local list together if another tab added, edited or deleted a to-do during import. */
+  async clearImported(rows: Todo[]): Promise<void> {
+    if (rows.length === 0) return
+    const db = await this.open()
+    await db.transaction('rw', db.todos, async () => {
+      const current = (await db.todos.toArray()).filter((todo) => !todo.deleted_at)
+      if (JSON.stringify(current) === JSON.stringify(rows)) {
+        await db.todos.bulkDelete(rows.map(({ id }) => id))
+      }
+    })
   }
 
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {

@@ -1,6 +1,8 @@
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
+import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import type { GuestStorage } from './saveGuestPlan'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
 import {
@@ -15,7 +17,7 @@ const COUNTS = { created: 1, skipped: 0 }
 const RESULT = { todos: COUNTS, schedule_items: COUNTS, exceptions: COUNTS, checkins: COUNTS }
 
 let db: GuestDatabase
-let guest: { todos: GuestTodoRepository; schedule: GuestScheduleRepository }
+let guest: GuestStorage
 
 async function fillGuest() {
   const todo = await guest.todos.create({ title: 'Read', due_date: '2026-10-26' })
@@ -34,7 +36,11 @@ async function fillGuest() {
 
 beforeEach(() => {
   db = new GuestDatabase(`test-${crypto.randomUUID()}`)
-  guest = { todos: new GuestTodoRepository({ db }), schedule: new GuestScheduleRepository({ db }) }
+  guest = {
+    todos: new GuestTodoRepository({ db }),
+    schedule: new GuestScheduleRepository({ db }),
+    intentions: new GuestDailyIntentionRepository(db),
+  }
   useSession.getState().signIn(makeTokenResponse())
 })
 

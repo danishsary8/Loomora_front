@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { accountDataApi } from '@/lib/api'
+import { accountDataApi, useSession } from '@/lib/api'
 import { saveGuestPlan, useGuestStorage } from '@/lib/storage'
 import { useSavePlanIntent } from './savePlanIntent'
 
@@ -8,11 +8,16 @@ export function useSavePlan() {
   const guest = useGuestStorage()
   const queryClient = useQueryClient()
   const clearIntent = useSavePlanIntent((s) => s.clear)
+  const generation = useSession((state) => state.generation)
   return useMutation({
-    mutationFn: () => saveGuestPlan(guest, accountDataApi),
+    mutationFn: () =>
+      saveGuestPlan(guest, accountDataApi, () => {
+        const current = useSession.getState()
+        if (!current.token || current.generation !== generation) throw new Error('Session changed')
+      }),
     onSuccess: async () => {
       clearIntent()
-      await queryClient.resetQueries()
+      await queryClient.invalidateQueries()
     },
   })
 }

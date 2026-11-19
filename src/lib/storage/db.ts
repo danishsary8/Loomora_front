@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import { DEFAULT_PRIORITY, type Todo } from '@/features/todos/types'
 
+import type { DailyIntentionRecord } from '@/lib/api/types'
 import type { TimePreferences } from '@/lib/time/time'
 
 export const GUEST_DB_NAME = 'loomora-guest'
@@ -9,6 +10,7 @@ export const GUEST_DB_NAME = 'loomora-guest'
 /** Guest data in IndexedDB (A8-4). Rows keep their client UUIDs for the later import. */
 export class GuestDatabase extends Dexie {
   meta!: EntityTable<{ key: string; value: TimePreferences }, 'key'>
+  dailyIntentions!: EntityTable<DailyIntentionRecord, 'date'>
   todos!: EntityTable<Todo, 'id'>
   schedule_items!: EntityTable<ScheduleItem, 'id'>
   schedule_exceptions!: EntityTable<ScheduleException, 'id'>
@@ -46,5 +48,6 @@ export class GuestDatabase extends Dexie {
       tx.table<Todo>('todos').toCollection().modify({ remind_at: null, remind_dismissed_at: null }),
     )
     this.version(7).stores({ meta: 'key' })
+    this.version(8).stores({ dailyIntentions: 'date' })
   }
 }

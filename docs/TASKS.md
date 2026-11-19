@@ -297,14 +297,14 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/profile/*`, `src/lib/time/*`, guest storage, schedule and reminder components, `src/i18n/en.json`, `e2e/time-preferences.spec.ts`
 
 ### F-027: Daily intention on Today
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
   1. Needs B-024. A one-line field under the Today header (max 200 characters, placeholder via `t()`), saved 600 ms after typing stops and on blur, with a small Saved hint. It is per local date: another day shows its own text and a new day starts empty.
   2. Guest: Dexie `dailyIntentions`; account: the API. Include it in the import payload.
 - **Done when:**
-  - [ ] Vitest with fake timers: typing saves once, changing the date loads a different value, a save error keeps the text and shows a toast
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest with fake timers: typing saves once, changing the date loads a different value, a save error keeps the text and shows a toast
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/features/today/DailyIntention.tsx`, repositories, `src/lib/db/*`, `src/i18n/locales/en.json`
 
 ### F-028: Delete-account password field uses `has_password`
