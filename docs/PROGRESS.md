@@ -230,3 +230,10 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - Playwright: 41 passed on phone-375 (`npx playwright test --project=phone-375`), 0 failures, 0 axe a11y violations.
 - **Questions:** None.
 
+### 2026-11-19: F-022 final review fixes
+- **Merged:** latest `v2-rebuild` (only `docs/openapi.yaml` changed, no conflicts, no force-push).
+- **Review of `useUndoableDelete.ts`, confirmed issues fixed:** (1) Overlapping deletes: one shared snapshot and timer meant a late failure of delete A rolled back with B's snapshot, hid B's toast and could restore the wrong rows. Each delete now has its own entry; a failure puts back only its own row, and only touches the toast if it is still the current one. Only the newest delete offers Undo. (2) Undo while the remove call was still running could call restore first; Undo now waits for the remove to settle, and a double tap restores once. (3) A failed restore showed the generic save error and left the cache out of sync; it now shows `today.restoreError`, keeps the row deleted and refetches. (4) The error toast never went away; it now clears after 5 s. Unused `clearError` removed.
+- **Tests added** (`useUndoableDelete.test.tsx`): late failure of an older delete keeps the newer one; no restore before a slow delete, and a double Undo restores once; restore failure; error toast clears.
+- **Verified:** lint, typecheck, knip, build exit 0; Vitest 41 files / 377 tests passed; Playwright phone-375 41 passed. `format:check` reports 209 files including untouched ones (e.g. `tsconfig.json`), so it is a local Windows CRLF issue, not this change; CI (Linux) result is the reference.
+- **Questions:** None.
+

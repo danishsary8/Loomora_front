@@ -188,19 +188,18 @@ describe('useUndoableDelete', () => {
       })
 
       expect(calls).toEqual(['DELETE'])
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual([
-        UUID_2,
-      ])
+      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
+        [UUID_2],
+      )
 
       await act(async () => {
         await result.current.undo()
       })
 
       expect(calls).toEqual(['DELETE', 'RESTORE'])
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual([
-        UUID_1,
-        UUID_2,
-      ])
+      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
+        [UUID_1, UUID_2],
+      )
     })
 
     it('persists delete when timeout elapses without undo', async () => {
@@ -253,11 +252,119 @@ describe('useUndoableDelete', () => {
       await waitFor(() => {
         expect(result.current.error).toBe('Could not delete. Please try again.')
       })
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual([
-        UUID_1,
-        UUID_2,
-      ])
+      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
+        [UUID_1, UUID_2],
+      )
       expect(result.current.pending).toBeNull()
     })
   })
+})
+
+describe('useUndoableDelete regressions (account mode)', () => {
+  let queryClient: ReturnType<typeof createQueryClient>
+
+  beforeEach(() => {
+    useSession.getState().signIn(makeTokenResponse())
+    queryClient = createQueryClient()
+    queryClient.setQueryData(todoKeys.today(DATE), [sampleTodo1, sampleTodo2])
+  })
+
+  afterEach(() => {
+    useSession.getState().signOut()
+  })
+
+  function wrapper({ children }: { children: ReactNode }) {
+    return <AppProviders queryClient={queryClient}>{children}</AppProviders>
+  }
+
+  const ids = () => queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)
+
+  it('keeps the newer delete when an older one fails late', async () => {
+    server.use(
+      http.delete(`${API}/todos/${UUID_1}`, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150))
+        return HttpResponse.json({ message: 'boom' }, { status: 500 })
+      }),
+      http.delete(`${API}/todos/${UUID_2}`, () => new HttpResponse(null, { status: 204 })),
+    )
+    const { result } = renderHook(() => useUndoableDelete({ date: DATE }), { wrapper })
+
+    let first: Promise<void> = Promise.resolve()
+    await act(async () => {
+      first = result.current.deleteTodo(sampleTodo1)
+      await Promise.resolve()
+    })
+    await act(async () => {
+      await result.current.deleteTodo(sampleTodo2)
+    })
+    await act(async () => {
+      await first
+    })
+
+    expect(ids()).toEqual([UUID_1])
+    expect(result.current.pending?.id).toBe(UUID_2)
+    expect(result.current.error).toBe('Could not delete. Please try again.')
+  })
+
+  it('does not restore before a slow delete has finished, and restores once', async () => {
+    const calls: string[] = []
+    server.use(
+      http.delete(`${API}/todos/${UUID_1}`, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        calls.push('DELETE')
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.post(`${API}/todos/${UUID_1}/restore`, () => {
+        calls.push('RESTORE')
+        return HttpResponse.json({ data: sampleTodo1 })
+      }),
+    )
+    const { result } = renderHook(() => useUndoableDelete({ date: DATE }), { wrapper })
+
+    let removal: Promise<void> = Promise.resolve()
+    await act(async () => {
+      removal = result.current.deleteTodo(sampleTodo1)
+      await Promise.resolve()
+    })
+    await waitFor(() => expect(result.current.pending?.id).toBe(UUID_1))
+    await act(async () => {
+      await Promise.all([result.current.undo(), result.current.undo()])
+      await removal
+    })
+
+    expect(calls).toEqual(['DELETE', 'RESTORE'])
+    expect(ids()).toEqual([UUID_1, UUID_2])
+  })
+
+  it('keeps the row deleted and shows an error when restore fails', async () => {
+    server.use(
+      http.delete(`${API}/todos/${UUID_1}`, () => new HttpResponse(null, { status: 204 })),
+      http.post(`${API}/todos/${UUID_1}/restore`, () =>
+        HttpResponse.json({ message: 'boom' }, { status: 500 }),
+      ),
+    )
+    const { result } = renderHook(() => useUndoableDelete({ date: DATE }), { wrapper })
+
+    await act(async () => {
+      await result.current.deleteTodo(sampleTodo1)
+    })
+    await act(async () => {
+      await result.current.undo()
+    })
+
+    expect(result.current.error).toBe('Could not restore. The to-do stays deleted.')
+    expect(result.current.pending).toBeNull()
+    expect(ids()).toEqual([UUID_2])
+  })
+
+  it('clears the error toast after a few seconds', async () => {
+    server.use(http.delete(`${API}/todos/${UUID_1}`, () => HttpResponse.json({}, { status: 500 })))
+    const { result } = renderHook(() => useUndoableDelete({ date: DATE }), { wrapper })
+
+    await act(async () => {
+      await result.current.deleteTodo(sampleTodo1)
+    })
+    expect(result.current.error).not.toBeNull()
+    await waitFor(() => expect(result.current.error).toBeNull(), { timeout: 7000 })
+  }, 10000)
 })

@@ -7,18 +7,33 @@ import type { LocalDate, TodayTodo } from './types'
 import { todoKeys } from './useTodos'
 
 export const UNDO_DELETE_DELAY_MS = 5000
+const ERROR_DELAY_MS = 5000
 
 export interface UseUndoableDeleteOptions {
   date: LocalDate
   delayMs?: number
 }
 
-interface DeletedSnapshot {
-  previous: TodayTodo[]
+interface PendingDelete {
   item: TodayTodo
   index: number
+  /** Settles when the remove call ends; resolves to whether it succeeded. */
+  removed: Promise<boolean>
 }
 
+function insertAt(list: TodayTodo[] | undefined, item: TodayTodo, index: number): TodayTodo[] {
+  const current = list ?? []
+  if (current.some((t) => t.id === item.id)) return current
+  const next = [...current]
+  next.splice(index >= 0 ? Math.min(index, next.length) : next.length, 0, item)
+  return next
+}
+
+/**
+ * Delete with a short Undo window. The row leaves the cache at once. Only the latest
+ * delete offers Undo; an earlier one is final. A failed remove puts only its own row
+ * back, and a failed restore leaves the row deleted and says so.
+ */
 export function useUndoableDelete({
   date,
   delayMs = UNDO_DELETE_DELAY_MS,
@@ -26,116 +41,93 @@ export function useUndoableDelete({
   const { t } = useTranslation()
   const repo = useTodoRepository()
   const queryClient = useQueryClient()
+  const key = todoKeys.today(date)
   const [pending, setPending] = useState<TodayTodo | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const snapshotRef = useRef<DeletedSnapshot | null>(null)
-  const isRestoringRef = useRef(false)
-  const deletePromiseRef = useRef<Promise<void> | null>(null)
+  const current = useRef<PendingDelete | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const errorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const restoring = useRef(false)
 
-  const clearTimer = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-      timerRef.current = undefined
-    }
-  }
+  const showError = useCallback((message: string) => {
+    clearTimeout(errorTimer.current)
+    setError(message)
+    errorTimer.current = setTimeout(() => setError(null), ERROR_DELAY_MS)
+  }, [])
 
   const deleteTodo = useCallback(
     async (todo: TodayTodo) => {
-      clearTimer()
+      clearTimeout(undoTimer.current)
+      clearTimeout(errorTimer.current)
       setError(null)
-      isRestoringRef.current = false
 
-      const key = todoKeys.today(date)
       await queryClient.cancelQueries({ queryKey: key })
-
-      const previous = queryClient.getQueryData<TodayTodo[]>(key) ?? []
-      const index = previous.findIndex((t) => t.id === todo.id)
-
-      snapshotRef.current = { previous, item: todo, index }
-      setPending(todo)
-
-      // Optimistically remove from query cache
+      const index = (queryClient.getQueryData<TodayTodo[]>(key) ?? []).findIndex(
+        (row) => row.id === todo.id,
+      )
       queryClient.setQueryData<TodayTodo[]>(key, (list) =>
-        list?.filter((t) => t.id !== todo.id) ?? [],
+        (list ?? []).filter((row) => row.id !== todo.id),
       )
 
-      timerRef.current = setTimeout(() => {
+      const removed = repo.delete(todo.id).then(
+        () => true,
+        () => false,
+      )
+      const entry: PendingDelete = { item: todo, index, removed }
+      current.current = entry
+      setPending(todo)
+      undoTimer.current = setTimeout(() => {
+        if (current.current !== entry) return
+        current.current = null
         setPending(null)
-        snapshotRef.current = null
       }, delayMs)
 
-      const deletePromise = repo.delete(todo.id)
-      deletePromiseRef.current = deletePromise
-
-      try {
-        await deletePromise
+      if (await removed) {
         void queryClient.invalidateQueries({ queryKey: streakKeys.all })
-      } catch {
-        clearTimer()
-        setPending(null)
-        if (snapshotRef.current?.previous) {
-          queryClient.setQueryData(key, snapshotRef.current.previous)
-        }
-        snapshotRef.current = null
-        setError(t('today.deleteError'))
+        return
       }
+      queryClient.setQueryData<TodayTodo[]>(key, (list) => insertAt(list, todo, index))
+      if (current.current === entry) {
+        clearTimeout(undoTimer.current)
+        current.current = null
+        setPending(null)
+      }
+      showError(t('today.deleteError'))
     },
-    [date, delayMs, queryClient, repo, t],
+    [delayMs, key, queryClient, repo, showError, t],
   )
 
   const undo = useCallback(async () => {
-    if (isRestoringRef.current) return
-    isRestoringRef.current = true
-    clearTimer()
-
-    const snapshot = snapshotRef.current
-    const item = pending
-    if (!item) {
-      isRestoringRef.current = false
-      return
-    }
-
+    const entry = current.current
+    if (!entry || restoring.current) return
+    restoring.current = true
+    clearTimeout(undoTimer.current)
+    current.current = null
     setPending(null)
-    snapshotRef.current = null
-
     try {
-      if (deletePromiseRef.current) {
-        await deletePromiseRef.current.catch(() => {})
-      }
-      const restored = await repo.restore(item.id)
-      const key = todoKeys.today(date)
-      queryClient.setQueryData<TodayTodo[]>(key, (list) => {
-        if (!list) return [{ ...item, ...restored }]
-        if (list.some((t) => t.id === item.id)) return list
-        const next = [...list]
-        const targetIndex =
-          snapshot?.index !== undefined && snapshot.index >= 0
-            ? Math.min(snapshot.index, next.length)
-            : next.length
-        next.splice(targetIndex, 0, { ...item, ...restored })
-        return next
-      })
+      // A remove that has not finished must settle first, or restore could run before it.
+      if (!(await entry.removed)) return
+      const restored = await repo.restore(entry.item.id)
+      queryClient.setQueryData<TodayTodo[]>(key, (list) =>
+        insertAt(list, { ...entry.item, ...restored }, entry.index),
+      )
       void queryClient.invalidateQueries({ queryKey: streakKeys.all })
     } catch {
-      setError(t('today.saveError'))
+      void queryClient.invalidateQueries({ queryKey: key })
+      showError(t('today.restoreError'))
     } finally {
-      isRestoringRef.current = false
+      restoring.current = false
     }
-  }, [date, pending, queryClient, repo, t])
+  }, [key, queryClient, repo, showError, t])
 
-  const clearError = useCallback(() => setError(null), [])
+  useEffect(
+    () => () => {
+      clearTimeout(undoTimer.current)
+      clearTimeout(errorTimer.current)
+    },
+    [],
+  )
 
-  useEffect(() => {
-    return () => clearTimer()
-  }, [])
-
-  return {
-    pending,
-    error,
-    deleteTodo,
-    undo,
-    clearError,
-  }
+  return { pending, error, deleteTodo, undo }
 }

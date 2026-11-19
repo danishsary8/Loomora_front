@@ -146,6 +146,7 @@
     "deleteTodo": "Delete “{{title}}”",
     "todoDeleted": "Deleted “{{title}}”",
     "deleteError": "Could not delete. Please try again.",
+    "restoreError": "Could not restore. The to-do stays deleted.",
     "undo": "Undo",
     "saveError": "Could not save. Please try again."
   },
