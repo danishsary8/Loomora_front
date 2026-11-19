@@ -266,3 +266,20 @@ describe('Profile for accounts (S9)', () => {
     expect(useSession.getState().token).not.toBeNull()
   })
 })
+
+describe('Profile resend verification', () => {
+  it.each([
+    ['an unverified account', null, true],
+    ['a verified account', '2026-10-24T03:00:00Z', false],
+  ])('%s', async (_name, verifiedAt, shows) => {
+    useSession.getState().signIn(makeTokenResponse(makeUser({ email_verified_at: verifiedAt })))
+    server.use(
+      http.get(`${API}/streak`, () =>
+        HttpResponse.json({ data: { current_streak: 0, longest_streak: 0, today_counted: false } }),
+      ),
+    )
+    await openProfile()
+    const button = screen.queryByRole('button', { name: 'Send the confirmation email again' })
+    expect(Boolean(button)).toBe(shows)
+  })
+})

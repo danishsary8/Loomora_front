@@ -5,6 +5,7 @@ import { PageHeading, StandalonePage } from '@/components/page'
 import { LoadingState } from '@/components/states'
 import { Card } from '@/components/ui'
 import { authApi, useSession } from '@/lib/api'
+import { ResendVerification } from './ResendVerification'
 
 type Status = 'checking' | 'verified' | 'failed'
 
@@ -14,6 +15,7 @@ export function VerifyEmailPage() {
   const [params] = useSearchParams()
   const signedIn = useSession((s) => s.token !== null)
   const setUser = useSession((s) => s.setUser)
+  const unverified = useSession((s) => s.token !== null && s.user?.email_verified_at === null)
   const id = params.get('id')
   const expires = Number(params.get('expires'))
   const signature = params.get('signature')
@@ -47,6 +49,7 @@ export function VerifyEmailPage() {
           {t('auth.verify.failed')}
         </Card>
       )}
+      {status === 'failed' && unverified && <ResendVerification />}
       <Link
         to={signedIn ? '/today' : '/sign-in'}
         className="inline-flex min-h-touch items-center font-semibold underline"

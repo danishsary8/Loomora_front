@@ -329,4 +329,18 @@ describe('Verify email', () => {
     renderRoute('/verify-email?id=abc')
     expect(await screen.findByRole('alert')).toHaveTextContent('not valid or has expired')
   })
+
+  it('offers a new email to a signed-in, unconfirmed user when the link failed', async () => {
+    signInAs(makeUser({ survey_done: true }))
+    renderRoute('/verify-email?id=abc')
+    expect(
+      await screen.findByRole('button', { name: 'Send the confirmation email again' }),
+    ).toBeInTheDocument()
+  })
+
+  it('does not offer it to someone who is signed out', async () => {
+    renderRoute('/verify-email?id=abc')
+    await screen.findByRole('alert')
+    expect(screen.queryByRole('button', { name: /confirmation email/ })).not.toBeInTheDocument()
+  })
 })
