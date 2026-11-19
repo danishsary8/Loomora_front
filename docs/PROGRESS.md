@@ -203,3 +203,30 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - `docs/openapi.yaml` is refreshed from the backend (B-019 to B-025 merged: subtasks/priority/notes, repeat_rule, reminders, soft delete and restore, time_format/week_starts_on, daily intention, has_password). F-022 to F-028 are unblocked (their earlier `blocked` PR was closed and replaced by this one).
 - Backend B-026 (repeat keeps its reminder time) and B-027 (local-date helper) are still to come. They do not change any endpoint shape, so F-024 and F-025 can start now.
 
+### 2026-11-19: F-022 Undo toast for deletes
+- **Plan:** (1) Soft-delete support in Dexie schema (`deleted_at`), `GuestTodoRepository` soft-delete and restore, `ServerTodoRepository.restore` using `POST /todos/{id}/restore`; (2) Reusable `useUndoableDelete` hook: optimistic query cache removal, immediate repository delete call with rollback snapshot and error toast on failure, 5-second undo timer, restore row into query cache at original position on undo; (3) Neo-brutalist `TrashIcon` and delete button in `TodoRow` with accessible labels; (4) Accessible `UndoDeleteToast` with `role="status"` and `aria-live="polite"` and focusable Undo button; (5) Unit and integration tests covering guest and account modes, delete + undo, 5s timeout persistence, error rollback, and Playwright e2e test at 375 px.
+- **Changed:**
+  - `src/features/todos/types.ts`: added `deleted_at?: string | null` to `Todo` interface.
+  - `src/lib/storage/db.ts`: bumped version to 3 with `todos: 'id, due_date, created_at, deleted_at'`.
+  - `src/lib/api/todos.ts`: added `restore: (id: string) => POST /todos/{id}/restore`.
+  - `src/lib/storage/TodoRepository.ts`, `ServerTodoRepository.ts`, `GuestTodoRepository.ts`: added `restore(id: string)` and implemented soft delete (`deleted_at: now`) in `GuestTodoRepository.delete`. Filtered soft-deleted items in `listForDate` and `listAll`.
+  - `src/features/todos/todayList.ts`: filtered soft-deleted items in `buildTodayList` as defense-in-depth.
+  - `src/components/ui/icons.tsx`: added neo-brutalist `TrashIcon`.
+  - `src/i18n/en.json`: added `deleteTodo`, `todoDeleted`, `deleteError`, and `undo` under `today`.
+  - `src/features/today/DoneStamp.tsx`: added support for optional `className` for flexible layout positioning.
+  - `src/features/today/TodoRow.tsx`: added `onDelete` action with `TrashIcon` button (`aria-label={t('today.deleteTodo', { title: todo.title })}`), aligned side-by-side with DoneStamp without overlapping text at 375 px.
+  - `src/features/todos/UndoDeleteToast.tsx`: created status toast with polite aria-live and focusable Undo button.
+  - `src/features/todos/useUndoableDelete.ts`: implemented reusable hook managing optimistic cache removal, delete execution, rollback on error, 5s timeout, and single-invocation restore returning row to its original index.
+  - `src/features/today/TodayPage.tsx`: wired `useUndoableDelete` and rendered `UndoDeleteToast`.
+  - `src/features/todos/useUndoableDelete.test.tsx`: test suite covering guest mode and account mode (immediate remove, soft-delete, restore to original position, 5s timeout persistence, and server/Dexie error rollback).
+  - `src/features/today/TodayPage.test.tsx`: test for delete with undo toast in Today screen.
+  - `e2e/today.spec.ts`: e2e test on phone-375 verifying delete, undo restoration, and delete finalization persisting across page reloads.
+- **Verified:**
+  - `npm run lint` exited 0 (0 errors, 0 warnings).
+  - `npm run typecheck` (`tsc -b`) exited 0.
+  - `npm run knip` exited 0 (no unused files, dependencies, or exports).
+  - Vitest: 41 test files passed, 373 tests passed.
+  - `npm run build` succeeded cleanly with PWA manifest and service worker generated.
+  - Playwright: 41 passed on phone-375 (`npx playwright test --project=phone-375`), 0 failures, 0 axe a11y violations.
+- **Questions:** None.
+

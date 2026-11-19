@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Checkbox, Chip } from '@/components/ui'
+import { TrashIcon } from '@/components/ui/icons'
 import type { TodayTodo } from '@/features/todos/types'
 import { cn } from '@/lib/cn'
 import { DoneStamp } from './DoneStamp'
@@ -8,10 +9,11 @@ import { DoneStamp } from './DoneStamp'
 export interface TodoRowProps {
   todo: TodayTodo
   onToggle: (id: string, done: boolean) => void
+  onDelete?: (todo: TodayTodo) => void
   formatDate: (date: string) => string
 }
 
-export function TodoRow({ todo, onToggle, formatDate }: TodoRowProps) {
+export function TodoRow({ todo, onToggle, onDelete, formatDate }: TodoRowProps) {
   const { t } = useTranslation()
   const done = todo.done_at !== null
 
@@ -28,7 +30,7 @@ export function TodoRow({ todo, onToggle, formatDate }: TodoRowProps) {
         checked={done}
         onChange={(e) => onToggle(todo.id, e.target.checked)}
         aria-label={t('today.markDone', { title: todo.title })}
-        className="w-full py-1 pr-20"
+        className="w-full py-1 pr-32"
         label={
           <span className="flex min-w-0 flex-col gap-1">
             <span className={cn('break-words font-semibold', done && 'text-muted line-through')}>
@@ -55,7 +57,21 @@ export function TodoRow({ todo, onToggle, formatDate }: TodoRowProps) {
           </span>
         }
       />
-      <AnimatePresence initial={false}>{done && <DoneStamp key="stamp" />}</AnimatePresence>
+      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2">
+        <AnimatePresence initial={false}>
+          {done && <DoneStamp key="stamp" className="relative right-auto top-auto translate-y-0" />}
+        </AnimatePresence>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(todo)}
+            aria-label={t('today.deleteTodo', { title: todo.title })}
+            className="grid size-9 shrink-0 place-items-center rounded border-thin border-ink bg-paper text-ink shadow-hard-sm hover:bg-cream active:translate-x-press-sm active:translate-y-press-sm"
+          >
+            <TrashIcon className="size-4" />
+          </button>
+        )}
+      </div>
     </li>
   )
 }

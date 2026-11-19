@@ -103,16 +103,28 @@ describe('GuestTodoRepository', () => {
     expect((await db.todos.get(todo.id))?.done_at).toBeNull()
   })
 
-  it('deletes a to-do', async () => {
+  it('soft-deletes and restores a to-do', async () => {
     const todo = await repo.create({ title: 'Delete me' })
+    clock = new Date('2026-10-24T08:05:00.000Z')
     await repo.delete(todo.id)
-    expect(await db.todos.get(todo.id)).toBeUndefined()
+    const inDb = await db.todos.get(todo.id)
+    expect(inDb?.deleted_at).toBe('2026-10-24T08:05:00.000Z')
     expect(await repo.listForDate('2026-10-24')).toEqual([])
+    expect(await repo.listAll()).toEqual([])
+
+    clock = new Date('2026-10-24T08:06:00.000Z')
+    const restored = await repo.restore(todo.id)
+    expect(restored.deleted_at).toBeNull()
+    expect(restored.updated_at).toBe('2026-10-24T08:06:00.000Z')
+    expect((await repo.listForDate('2026-10-24')).map((t) => t.id)).toEqual([todo.id])
+    expect((await repo.listAll()).map((t) => t.id)).toEqual([todo.id])
   })
 
   it('throws NotFoundError for unknown ids', async () => {
     await expect(repo.update('missing', { title: 'x' })).rejects.toBeInstanceOf(NotFoundError)
     await expect(repo.setDone('missing', true)).rejects.toBeInstanceOf(NotFoundError)
+    await expect(repo.delete('missing')).rejects.toBeInstanceOf(NotFoundError)
+    await expect(repo.restore('missing')).rejects.toBeInstanceOf(NotFoundError)
   })
 
   it('keeps data across repository instances (reopen the app)', async () => {

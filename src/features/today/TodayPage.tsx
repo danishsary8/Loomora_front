@@ -7,6 +7,8 @@ import { FloatingAddButton, ProgressRing } from '@/components/ui'
 import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
+import { UndoDeleteToast } from '@/features/todos/UndoDeleteToast'
+import { useUndoableDelete } from '@/features/todos/useUndoableDelete'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
 import { AddTodoSheet } from './AddTodoSheet'
@@ -29,6 +31,7 @@ export function TodayPage() {
   const { now: nowItem, next: nextItem } = nowAndNext(schedule, format(now, 'HH:mm'))
   const todos = useTodayTodos(today)
   const setDone = useSetTodoDone(today)
+  const del = useUndoableDelete({ date: today })
 
   const formatDate = useCallback(
     (date: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) =>
@@ -83,6 +86,7 @@ export function TodayPage() {
                   todo={todo}
                   formatDate={formatDate}
                   onToggle={(id, done) => setDone.mutate({ id, done })}
+                  onDelete={(target) => void del.deleteTodo(target)}
                 />
               ))}
             </ul>
@@ -109,6 +113,11 @@ export function TodayPage() {
       />
       <SavePlanPrompt today={today} />
       <AddTodoSheet open={sheetOpen} onClose={() => setSheetOpen(false)} today={today} />
+      <UndoDeleteToast
+        pending={del.pending}
+        onUndo={() => void del.undo()}
+        error={del.error}
+      />
     </div>
   )
 }

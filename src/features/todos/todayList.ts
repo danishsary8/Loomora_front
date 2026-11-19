@@ -24,6 +24,7 @@ export function buildTodayList(todos: readonly Todo[], today: LocalDate): TodayT
   const current: TodayTodo[] = []
 
   for (const todo of todos) {
+    if (todo.deleted_at) continue
     const done = todo.done_at !== null
     if (todo.due_date === null) {
       if (!done) current.push({ ...todo, overdue: false, old: false })

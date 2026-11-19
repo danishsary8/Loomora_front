@@ -22,5 +22,9 @@ export class GuestDatabase extends Dexie {
       schedule_exceptions: 'id, schedule_item_id, date, &[schedule_item_id+date]',
       schedule_checkins: 'id, schedule_item_id, date, &[schedule_item_id+date]',
     })
+    // Soft-delete support (F-022).
+    this.version(3).stores({
+      todos: 'id, due_date, created_at, deleted_at',
+    })
   }
 }

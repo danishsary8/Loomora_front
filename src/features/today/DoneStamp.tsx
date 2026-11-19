@@ -1,14 +1,22 @@
 import { m, useReducedMotion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/cn'
+
+export interface DoneStampProps {
+  className?: string
+}
 
 /** Neo-brutalist "Done!" stamp shown on a checked row (docs/04 check-off path). */
-export function DoneStamp() {
+export function DoneStamp({ className }: DoneStampProps = {}) {
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
   return (
     <m.span
       aria-hidden="true"
-      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none rounded-sm border-thick border-success bg-paper px-2 py-0.5 text-sm font-bold uppercase tracking-wide text-success"
+      className={cn(
+        'pointer-events-none select-none rounded-sm border-thick border-success bg-paper px-2 py-0.5 text-sm font-bold uppercase tracking-wide text-success',
+        className ?? 'absolute right-3 top-1/2 -translate-y-1/2',
+      )}
       initial={reduceMotion ? { opacity: 0, rotate: -12 } : { opacity: 0, scale: 2.2, rotate: -28 }}
       animate={reduceMotion ? { opacity: 1, rotate: -12 } : { opacity: 1, scale: 1, rotate: -12 }}
       exit={{ opacity: 0 }}

@@ -12,6 +12,7 @@ export function createTodosApi({ request }: ApiClient) {
       request<{ data: ApiTodo }>('PATCH', `/todos/${id}`, { body }).then(one),
     setDone: (id: string) => request<{ data: ApiTodo }>('POST', `/todos/${id}/done`).then(one),
     clearDone: (id: string) => request<{ data: ApiTodo }>('DELETE', `/todos/${id}/done`).then(one),
+    restore: (id: string) => request<{ data: ApiTodo }>('POST', `/todos/${id}/restore`).then(one),
     remove: (id: string) => request<undefined>('DELETE', `/todos/${id}`),
   }
 }

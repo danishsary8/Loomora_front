@@ -109,3 +109,37 @@ test('the last row can scroll clear of the floating +', async ({ page }) => {
   if (!lastRow || !fab) throw new Error('row or floating + not rendered')
   expect(lastRow.y + lastRow.height).toBeLessThanOrEqual(fab.y)
 })
+
+test('guest deletes a to-do, undo restores it, and delete without undo keeps it deleted (F-022)', async ({
+  page,
+}) => {
+  await page.goto('/today')
+  await page.getByRole('button', { name: 'Add a to-do' }).click()
+  await page.getByRole('dialog').getByLabel('Title').fill('Task to delete')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog')).toBeHidden()
+  const checkbox = page.getByRole('checkbox', { name: 'Mark “Task to delete” done' })
+  await expect(checkbox).toBeVisible()
+
+  // Click delete button
+  await page.getByRole('button', { name: 'Delete “Task to delete”' }).click()
+
+  // To-do is removed from view and undo toast is shown
+  await expect(checkbox).toBeHidden()
+  await expect(page.getByText('Deleted “Task to delete”')).toBeVisible()
+  const undoButton = page.getByRole('button', { name: 'Undo' })
+  await expect(undoButton).toBeVisible()
+
+  // Click Undo: to-do returns to the list
+  await undoButton.click()
+  await expect(checkbox).toBeVisible()
+  await expect(page.getByText('Deleted “Task to delete”')).toBeHidden()
+
+  // Delete again without clicking Undo
+  await page.getByRole('button', { name: 'Delete “Task to delete”' }).click()
+  await expect(checkbox).toBeHidden()
+
+  // Reload page: to-do remains deleted
+  await page.reload()
+  await expect(checkbox).toBeHidden()
+})
