@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
-import type { Todo } from '@/features/todos/types'
+import { DEFAULT_PRIORITY, type Todo } from '@/features/todos/types'
 
 export const GUEST_DB_NAME = 'loomora-guest'
 
@@ -26,5 +26,14 @@ export class GuestDatabase extends Dexie {
     this.version(3).stores({
       todos: 'id, due_date, created_at, deleted_at',
     })
+    this.version(4)
+      .stores({ todos: 'id, due_date, created_at, deleted_at, parent_id' })
+      .upgrade((tx) =>
+        tx.table<Todo>('todos').toCollection().modify({
+          priority: DEFAULT_PRIORITY,
+          notes: null,
+          parent_id: null,
+        }),
+      )
   }
 }

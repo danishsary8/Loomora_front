@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { streakKeys } from '@/features/streak/useStreak'
 import { useTodoRepository } from '@/lib/storage'
 import type { LocalDate, TodayTodo } from './types'
+import { changeTodayTodo, insertTodayTodo } from './todayCache'
 import { todoKeys } from './useTodos'
 
 export const UNDO_DELETE_DELAY_MS = 5000
@@ -19,14 +20,6 @@ interface PendingDelete {
   index: number
   /** Settles when the remove call ends; resolves to whether it succeeded. */
   removed: Promise<boolean>
-}
-
-function insertAt(list: TodayTodo[] | undefined, item: TodayTodo, index: number): TodayTodo[] {
-  const current = list ?? []
-  if (current.some((t) => t.id === item.id)) return current
-  const next = [...current]
-  next.splice(index >= 0 ? Math.min(index, next.length) : next.length, 0, item)
-  return next
 }
 
 /**
@@ -63,11 +56,10 @@ export function useUndoableDelete({
       setError(null)
 
       await queryClient.cancelQueries({ queryKey: key })
-      const index = (queryClient.getQueryData<TodayTodo[]>(key) ?? []).findIndex(
-        (row) => row.id === todo.id,
-      )
-      queryClient.setQueryData<TodayTodo[]>(key, (list) =>
-        (list ?? []).filter((row) => row.id !== todo.id),
+      const list = queryClient.getQueryData<TodayTodo[]>(key) ?? []
+      const index = list.findIndex((row) => row.id === todo.id)
+      queryClient.setQueryData<TodayTodo[]>(key, (rows) =>
+        changeTodayTodo(rows ?? [], todo.id, () => null),
       )
 
       const removed = repo.delete(todo.id).then(
@@ -87,7 +79,7 @@ export function useUndoableDelete({
         void queryClient.invalidateQueries({ queryKey: streakKeys.all })
         return
       }
-      queryClient.setQueryData<TodayTodo[]>(key, (list) => insertAt(list, todo, index))
+      queryClient.setQueryData<TodayTodo[]>(key, (list) => insertTodayTodo(list ?? [], todo, index))
       if (current.current === entry) {
         clearTimeout(undoTimer.current)
         current.current = null
@@ -110,7 +102,7 @@ export function useUndoableDelete({
       if (!(await entry.removed)) return
       const restored = await repo.restore(entry.item.id)
       queryClient.setQueryData<TodayTodo[]>(key, (list) =>
-        insertAt(list, { ...entry.item, ...restored }, entry.index),
+        insertTodayTodo(list ?? [], { ...entry.item, ...restored }, entry.index),
       )
       void queryClient.invalidateQueries({ queryKey: streakKeys.all })
     } catch {

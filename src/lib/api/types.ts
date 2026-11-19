@@ -1,3 +1,5 @@
+import type { Priority } from '@/features/todos/types'
+
 // Shapes from docs/openapi.yaml (snake_case, as the API sends them).
 
 export type Goal = 'be_consistent' | 'manage_time' | 'finish_tasks' | 'other'
@@ -64,6 +66,10 @@ export interface ApiTodo {
   id: string
   title: string
   category: Category
+  priority: Priority
+  notes: string | null
+  parent_id: string | null
+  subtasks: ApiTodo[]
   due_date: string | null
   done_at: string | null
   overdue: boolean
@@ -75,6 +81,8 @@ export interface TodoBody {
   title?: string
   category?: Category
   due_date?: string | null
+  priority?: Priority
+  notes?: string | null
 }
 
 export interface ApiScheduleItem {
@@ -138,6 +146,9 @@ export interface ImportBody {
     title: string
     category: Category
     due_date: string | null
+    priority: Priority
+    notes: string | null
+    parent_id: string | null
     done_at: string | null
     created_at: string
   }>

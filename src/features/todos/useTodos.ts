@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { streakKeys } from '@/features/streak/useStreak'
 import { useTodoRepository } from '@/lib/storage'
-import type { CreateTodoInput, LocalDate, TodayTodo } from './types'
+import { changeTodayTodo } from './todayCache'
+import type { CreateTodoInput, LocalDate, TodayTodo, UpdateTodoInput } from './types'
 
 export const todoKeys = {
   all: ['todos'] as const,
@@ -25,6 +26,15 @@ export function useCreateTodo() {
   })
 }
 
+export function useUpdateTodo() {
+  const repo = useTodoRepository()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateTodoInput }) => repo.update(id, patch),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: todoKeys.all }),
+  })
+}
+
 /** Check off / un-check, shown at once (optimistic) and rolled back if saving fails. */
 export function useSetTodoDone(date: LocalDate) {
   const repo = useTodoRepository()
@@ -32,27 +42,48 @@ export function useSetTodoDone(date: LocalDate) {
   const key = todoKeys.today(date)
 
   return useMutation({
-    mutationFn: ({ id, done }: { id: string; done: boolean }) => repo.setDone(id, done),
-    onMutate: async ({ id, done }) => {
+    // A parent completion and a child toggle write the same state. Process them in order.
+    scope: { id: 'todo-completion' },
+    mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
       await queryClient.cancelQueries({ queryKey: key })
-      const previous = queryClient.getQueryData<TodayTodo[]>(key)
-      queryClient.setQueryData<TodayTodo[]>(key, (list) =>
-        list?.map((t) =>
-          t.id === id ? { ...t, done_at: done ? new Date().toISOString() : null } : t,
-        ),
+      let previousDoneAt: string | null | undefined
+      queryClient.setQueryData<TodayTodo[]>(
+        key,
+        (list) =>
+          list &&
+          changeTodayTodo(list, id, (todo) => {
+            previousDoneAt = todo.done_at
+            return { ...todo, done_at: done ? new Date().toISOString() : null }
+          }),
       )
-      return { previous }
-    },
-    onError: (_error, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(key, context.previous)
-    },
-    // Keep the checked row on screen until the next load: re-reading now would drop an
-    // undated to-do the moment it is checked (docs/08 rule 1; see Q3 in docs/PROGRESS.md).
-    onSuccess: (saved) => {
-      void queryClient.invalidateQueries({ queryKey: streakKeys.all })
-      queryClient.setQueryData<TodayTodo[]>(key, (list) =>
-        list?.map((t) => (t.id === saved.id ? { ...t, ...saved } : t)),
-      )
+
+      try {
+        const saved = await repo.setDone(id, done)
+        // Re-reading would immediately hide checked undated or overdue top-level rows.
+        queryClient.setQueryData<TodayTodo[]>(
+          key,
+          (list) =>
+            list &&
+            changeTodayTodo(list, id, (todo) => ({
+              ...todo,
+              done_at: saved.done_at,
+              subtasks: todo.subtasks.map((child) => {
+                const updated = saved.subtasks?.find((row) => row.id === child.id)
+                return updated ? { ...child, done_at: updated.done_at } : child
+              }),
+            })),
+        )
+        void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+      } catch (error) {
+        const doneAt = previousDoneAt
+        if (doneAt !== undefined) {
+          queryClient.setQueryData<TodayTodo[]>(
+            key,
+            (list) => list && changeTodayTodo(list, id, (todo) => ({ ...todo, done_at: doneAt })),
+          )
+        }
+        throw error
+      }
     },
   })
 }

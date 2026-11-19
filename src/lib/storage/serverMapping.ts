@@ -6,19 +6,29 @@ import type {
   ScheduleItem,
   Weekday,
 } from '@/features/schedule/types'
-import type { TodayTodo, Todo } from '@/features/todos/types'
+import { DEFAULT_PRIORITY, type TodayTodo } from '@/features/todos/types'
 import { ValidationError } from './errors'
 
 // The API does not send `updated_at`; the creation time stands in so guest and server rows
 // share one shape (A8-5).
 
-export function toTodo(todo: ApiTodo): Todo {
-  const { id, title, category, due_date, done_at, created_at } = todo
-  return { id, title, category, due_date, done_at, created_at, updated_at: created_at }
-}
-
 export function toTodayTodo(todo: ApiTodo): TodayTodo {
-  return { ...toTodo(todo), overdue: todo.overdue, old: todo.old }
+  const { id, title, category, due_date, done_at, created_at, overdue, old } = todo
+  return {
+    id,
+    title,
+    category,
+    due_date,
+    done_at,
+    created_at,
+    updated_at: created_at,
+    overdue,
+    old,
+    priority: todo.priority ?? DEFAULT_PRIORITY,
+    notes: todo.notes ?? null,
+    parent_id: todo.parent_id ?? null,
+    subtasks: todo.subtasks?.map(toTodayTodo) ?? [],
+  }
 }
 
 export function toScheduleItem(item: ApiScheduleItem): ScheduleItem {

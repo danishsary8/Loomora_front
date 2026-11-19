@@ -55,14 +55,21 @@ const MAX_CHECKINS_PER_CALL = 10000
 /** Rows keep their client UUIDs, so sending the same plan again creates no duplicates. */
 function toImportBody(plan: GuestPlan): ImportBody {
   return {
-    todos: plan.todos.map(({ id, title, category, due_date, done_at, created_at }) => ({
-      id,
-      title,
-      category,
-      due_date,
-      done_at,
-      created_at,
-    })),
+    todos: [...plan.todos]
+      .sort((a, b) => Number(a.parent_id !== null) - Number(b.parent_id !== null))
+      .map(
+        ({ id, title, category, due_date, done_at, created_at, priority, notes, parent_id }) => ({
+          id,
+          title,
+          category,
+          due_date,
+          done_at,
+          created_at,
+          priority,
+          notes,
+          parent_id,
+        }),
+      ),
     schedule_items: plan.items.map(
       ({ id, title, category, start_time, end_time, days, starts_on, ends_on, created_at }) => ({
         id,

@@ -47,6 +47,16 @@ describe('Today screen', () => {
     })
   })
 
+  it('hides Add subtask when a checked undated parent will leave Today', async () => {
+    await repo.create({ title: 'Undated' })
+    await openToday()
+    const addSubtask = await screen.findByRole('button', { name: /Add subtask to.*Undated/ })
+    expect(addSubtask).toBeVisible()
+    await userEvent.click(screen.getByText('Undated'))
+    expect(screen.getByRole('checkbox', { name: /Undated/ })).toBeChecked()
+    expect(addSubtask).not.toBeInTheDocument()
+  })
+
   describe('add a to-do (US-2.1)', () => {
     it('opens the sheet with the title focused, adds the to-do, and hides the empty prompt', async () => {
       await openToday()

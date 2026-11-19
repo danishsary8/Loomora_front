@@ -41,6 +41,40 @@ beforeEach(() => {
 afterEach(() => db.delete())
 
 describe('saveGuestPlan (docs/08 rule 9)', () => {
+  it('imports parents and subtasks together with their original UUIDs and keeps them after rejection', async () => {
+    const parent = await guest.todos.create({ title: 'Parent', priority: 'high', notes: 'Book' })
+    const child = await guest.todos.create({
+      title: 'Child',
+      parent_id: parent.id,
+      priority: 'low',
+      notes: 'Pencil',
+    })
+    const calls: ImportBody[] = []
+    server.use(
+      http.post(`${API}/import`, async ({ request }) => {
+        calls.push((await request.json()) as ImportBody)
+        if (calls.length === 1) return HttpResponse.json({ message: 'Invalid' }, { status: 422 })
+        return HttpResponse.json({ data: RESULT })
+      }),
+    )
+    await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 422 })
+    expect((await guest.todos.listAll()).map(({ id }) => id).sort()).toEqual(
+      [parent.id, child.id].sort(),
+    )
+    await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+    expect(calls[0]?.todos).toEqual([
+      expect.objectContaining({ id: parent.id, parent_id: null, priority: 'high', notes: 'Book' }),
+      expect.objectContaining({
+        id: child.id,
+        parent_id: parent.id,
+        priority: 'low',
+        notes: 'Pencil',
+      }),
+    ])
+    expect(calls[1]).toEqual(calls[0])
+    expect(await guest.todos.listAll()).toEqual([])
+  })
+
   it('sends every row with its client id, then clears the device', async () => {
     const { todo, item } = await fillGuest()
     let body: ImportBody | undefined

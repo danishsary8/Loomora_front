@@ -11,6 +11,9 @@ function todo(overrides: Partial<Todo> = {}): Todo {
     id: `t${seq}`,
     title: `Todo ${seq}`,
     category: 'other',
+    priority: 'normal',
+    notes: null,
+    parent_id: null,
     due_date: null,
     done_at: null,
     created_at: stamp,
@@ -26,7 +29,9 @@ describe('buildTodayList (docs/08 rules 1 and 2)', () => {
   describe('rule 1: what is on Today', () => {
     it('includes a to-do due today that is not done', () => {
       const t = todo({ due_date: TODAY })
-      expect(buildTodayList([t], TODAY)).toEqual([{ ...t, overdue: false, old: false }])
+      expect(buildTodayList([t], TODAY)).toEqual([
+        { ...t, overdue: false, old: false, subtasks: [] },
+      ])
     })
 
     it('keeps a to-do due today after it is done, so the check stays visible', () => {
@@ -36,7 +41,9 @@ describe('buildTodayList (docs/08 rules 1 and 2)', () => {
 
     it('includes an undated to-do that is not done', () => {
       const t = todo({ due_date: null })
-      expect(buildTodayList([t], TODAY)).toEqual([{ ...t, overdue: false, old: false }])
+      expect(buildTodayList([t], TODAY)).toEqual([
+        { ...t, overdue: false, old: false, subtasks: [] },
+      ])
     })
 
     it('leaves out an undated to-do that is done', () => {
@@ -60,7 +67,9 @@ describe('buildTodayList (docs/08 rules 1 and 2)', () => {
   describe('rule 2: Overdue is computed, not stored', () => {
     it('flags a past, unfinished to-do as overdue', () => {
       const t = todo({ due_date: '2026-10-23' })
-      expect(buildTodayList([t], TODAY)).toEqual([{ ...t, overdue: true, old: false }])
+      expect(buildTodayList([t], TODAY)).toEqual([
+        { ...t, overdue: true, old: false, subtasks: [] },
+      ])
     })
 
     it('leaves out a past to-do that is done', () => {
@@ -89,7 +98,7 @@ describe('buildTodayList (docs/08 rules 1 and 2)', () => {
 
     it('still shows very old overdue items', () => {
       const t = todo({ due_date: '2025-01-01' })
-      expect(buildTodayList([t], TODAY)).toEqual([{ ...t, overdue: true, old: true }])
+      expect(buildTodayList([t], TODAY)).toEqual([{ ...t, overdue: true, old: true, subtasks: [] }])
     })
 
     it('counts calendar days across month, year and DST changes', () => {
