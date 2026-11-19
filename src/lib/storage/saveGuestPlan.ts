@@ -71,6 +71,8 @@ function toImportBody(plan: GuestPlan): ImportBody {
           parent_id,
           repeat_rule,
           next_todo_id,
+          remind_at,
+          remind_dismissed_at,
         }) => ({
           id,
           title,
@@ -82,6 +84,8 @@ function toImportBody(plan: GuestPlan): ImportBody {
           notes,
           parent_id,
           repeat_rule,
+          remind_at: parent_id ? null : (remind_at ?? null),
+          remind_dismissed_at: !parent_id && remind_at ? (remind_dismissed_at ?? null) : null,
           // Soft-deleted occurrences are excluded from import and cannot be referenced.
           next_todo_id: next_todo_id && todoIds.has(next_todo_id) ? next_todo_id : null,
         }),

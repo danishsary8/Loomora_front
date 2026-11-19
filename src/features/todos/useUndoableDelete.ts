@@ -77,6 +77,7 @@ export function useUndoableDelete({
 
       if (await removed) {
         void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+        void queryClient.invalidateQueries({ queryKey: todoKeys.due })
         return
       }
       queryClient.setQueryData<TodayTodo[]>(key, (list) => insertTodayTodo(list ?? [], todo, index))
@@ -105,6 +106,7 @@ export function useUndoableDelete({
         insertTodayTodo(list ?? [], { ...entry.item, ...restored }, entry.index),
       )
       void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+      void queryClient.invalidateQueries({ queryKey: todoKeys.due })
     } catch {
       void queryClient.invalidateQueries({ queryKey: key })
       showError(t('today.restoreError'))

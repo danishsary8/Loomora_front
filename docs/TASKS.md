@@ -272,16 +272,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/repeat.spec.ts`
 
 ### F-025: In-app reminders UI
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
   1. Needs B-021. Add a Remind me field (date and time in the user's time zone) to the to-do sheet.
   2. A root watcher checks every 30 s and on tab focus. Accounts call `GET /reminders/due`; guests compare `remind_at` in Dexie. Show a banner or toast with the title and Done, Snooze (5, 10, 30, 60 min) and Dismiss. No sound (audio comes with Focus) and no push.
   3. Include `remind_at` in the import payload and Dexie schema.
 - **Done when:**
-  - [ ] Vitest with fake timers: a reminder shows once, snooze moves it, dismiss hides it, a done to-do never shows
-  - [ ] Playwright (375 px, guest): set a reminder 1 minute ahead (use a fake clock) and see the banner
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest with fake timers: a reminder shows once, snooze moves it, dismiss hides it, a done to-do never shows
+  - [x] Playwright (375 px, guest): set a reminder 1 minute ahead (use a fake clock) and see the banner
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/features/reminders/*`, `src/features/todos/*`, `src/lib/db/*`, `src/i18n/locales/en.json`, `e2e/reminders.spec.ts`
 
 ### F-026: Time format and week start settings

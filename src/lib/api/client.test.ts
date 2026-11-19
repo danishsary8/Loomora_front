@@ -70,6 +70,23 @@ describe('API client', () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(1)
   })
 
+  it('preserves a newer session when an older authenticated request returns 401', async () => {
+    let token = 'first'
+    const onUnauthorized = vi.fn()
+    server.use(
+      http.post(`${API}/todos/old/reminder/dismiss`, ({ request }) => {
+        expect(request.headers.get('Authorization')).toBe('Bearer first')
+        token = 'second'
+        return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+      }),
+    )
+    const client = createApiClient({ baseUrl: API, getToken: () => token, onUnauthorized })
+    await expect(client.request('POST', '/todos/old/reminder/dismiss')).rejects.toMatchObject({
+      status: 401,
+    })
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
   it('does not report a 401 when no token was sent', async () => {
     server.use(
       http.get(`${API}/me`, () =>

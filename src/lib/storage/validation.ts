@@ -28,8 +28,19 @@ export function checkSubtaskFields(input: UpdateTodoInput): void {
     throw new ValidationError('due_date', 'A subtask cannot have a due date.')
   if (input.repeat_rule != null)
     throw new ValidationError('repeat_rule', 'A subtask cannot repeat.')
-  if ('remind_at' in input && input.remind_at != null)
+  if (input.remind_at != null)
     throw new ValidationError('remind_at', 'A subtask cannot have a reminder.')
+}
+
+const OFFSET_TIMESTAMP =
+  /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/
+
+export function normalizeReminder(value: string): string {
+  const localDate = OFFSET_TIMESTAMP.exec(value)?.[1]
+  const date = new Date(value)
+  if (!localDate || !isLocalDate(localDate) || !Number.isFinite(date.getTime()))
+    throw new ValidationError('remind_at', 'Use an ISO 8601 reminder time with an offset.')
+  return date.toISOString()
 }
 
 export function checkTodoFields(input: CreateTodoInput | UpdateTodoInput): void {

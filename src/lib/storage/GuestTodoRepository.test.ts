@@ -30,6 +30,8 @@ describe('GuestTodoRepository', () => {
       parent_id: null,
       repeat_rule: null,
       next_todo_id: null,
+      remind_at: null,
+      remind_dismissed_at: null,
       id: expect.stringMatching(UUID_V4),
       title: 'Read chapter 3',
       category: 'other',
@@ -266,6 +268,8 @@ describe('GuestTodoRepository', () => {
       parent_id: null,
       repeat_rule: null,
       next_todo_id: null,
+      remind_at: null,
+      remind_dismissed_at: null,
     })
     expect(await repo.listAll()).toEqual([])
   })
@@ -350,6 +354,7 @@ describe('GuestTodoRepository', () => {
         repeat_rule: daily,
         done_at: null,
         next_todo_id: null,
+        remind_at: null,
         subtasks: [
           {
             title: child.title,
@@ -405,7 +410,13 @@ describe('GuestTodoRepository', () => {
       }
       await old.table('todos').add(row)
       old.close()
-      expect(await db.todos.get(row.id)).toEqual({ ...row, repeat_rule: null, next_todo_id: null })
+      expect(await db.todos.get(row.id)).toEqual({
+        ...row,
+        repeat_rule: null,
+        next_todo_id: null,
+        remind_at: null,
+        remind_dismissed_at: null,
+      })
     })
   })
 
@@ -448,6 +459,7 @@ describe('GuestTodoRepository', () => {
         parent_id: null,
         repeat_rule: null,
         next_todo_id: null,
+        remind_at: null,
         due_date: null,
         done_at: null,
         created_at: stamp,

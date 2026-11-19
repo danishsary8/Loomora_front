@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
+import { ReminderWatcher } from '@/features/reminders/ReminderWatcher'
 import { SavePlanImport } from '@/features/auth/SavePlanImport'
 import { OfflineBanner } from './OfflineBanner'
 import { ServiceDownBanner } from './ServiceDownBanner'
@@ -19,6 +20,7 @@ export function RootLayout() {
       <OfflineBanner />
       <ServiceDownBanner />
       <SavePlanImport />
+      <ReminderWatcher />
       <Suspense
         fallback={
           <div className="mx-auto max-w-2xl px-4 pt-8">

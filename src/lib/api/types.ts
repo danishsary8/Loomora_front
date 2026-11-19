@@ -71,6 +71,7 @@ export interface ApiTodo {
   parent_id: string | null
   repeat_rule: RepeatRule | null
   next_todo_id: string | null
+  remind_at: string | null
   subtasks: ApiTodo[]
   due_date: string | null
   done_at: string | null
@@ -86,6 +87,7 @@ export interface TodoBody {
   priority?: Priority
   notes?: string | null
   repeat_rule?: RepeatRule | null
+  remind_at?: string | null
 }
 
 export interface ApiScheduleItem {
@@ -154,6 +156,8 @@ export interface ImportBody {
     parent_id: string | null
     repeat_rule: RepeatRule | null
     next_todo_id: string | null
+    remind_at: string | null
+    remind_dismissed_at: string | null
     done_at: string | null
     created_at: string
   }>

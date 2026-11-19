@@ -1,6 +1,6 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { toLocalDate } from '@/lib/date'
+import { localDateIn, toLocalDate } from '@/lib/date'
 import { GuestTodoRepository } from '@/lib/storage'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 
@@ -145,6 +145,48 @@ describe('Today screen', () => {
       await userEvent.click(screen.getByRole('button', { name: /Add subtask to.*Gym/ }))
       const subtaskDialog = within(screen.getByRole('dialog', { name: 'Add subtask' }))
       expect(subtaskDialog.queryByRole('combobox', { name: 'Repeat' })).not.toBeInTheDocument()
+      expect(subtaskDialog.queryByLabelText('Remind me')).not.toBeInTheDocument()
+    })
+
+    it('displays a saved reminder locally and can change and remove it', async () => {
+      const initial = '2090-11-19T17:01:11.000Z'
+      const changed = '2090-11-19T17:15:00.000Z'
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const clock = new Intl.DateTimeFormat('en-GB', {
+        timeZone: zone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      })
+      const fieldValue = (instant: string) =>
+        `${localDateIn(instant, zone)}T${clock.format(new Date(instant))}`
+      const todo = await repo.create({ title: 'Call', remind_at: initial })
+      await openToday()
+      const edit = await screen.findByRole('button', { name: /Edit.*Call/ })
+      const user = userEvent.setup()
+      await user.click(edit)
+      let dialog = within(screen.getByRole('dialog'))
+      expect(dialog.getByLabelText('Remind me')).toHaveValue(fieldValue(initial))
+      await user.click(dialog.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect((await repo.listAll())[0]?.remind_at).toBe(initial)
+
+      await user.click(edit)
+      dialog = within(screen.getByRole('dialog'))
+      fireEvent.change(dialog.getByLabelText('Remind me'), {
+        target: { value: fieldValue(changed) },
+      })
+      await user.click(dialog.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect((await repo.listAll())[0]).toMatchObject({ id: todo.id, remind_at: changed })
+
+      await user.click(edit)
+      dialog = within(screen.getByRole('dialog'))
+      await user.click(dialog.getByRole('button', { name: 'Remove reminder' }))
+      expect(dialog.getByLabelText('Remind me')).toHaveFocus()
+      await user.click(dialog.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect((await repo.listAll())[0]?.remind_at).toBeNull()
     })
 
     it('can add a to-do with no due date', async () => {
