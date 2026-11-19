@@ -4,6 +4,7 @@ The queue Claude Code works from. Take the first task with status `todo`, top to
 Status values: `todo` | `doing` | `review` | `done` | `blocked`
 
 Rules:
+- A task with an `Owner:` line belongs to that tool only (`claude`, `codex`, `antigravity`). Take the first `todo` task whose owner is you. If it has no owner, anyone may take it. Edit only your own task's status line in this file.
 - One task is about 1 to 2 hours of work and touches one concern.
 - One task = one branch (`feat/<id>-short-name`) = one PR into `v2-rebuild`. Tests must pass before the PR.
 - A `blocked` task must state a clear question. Then move on to the next task.
@@ -203,6 +204,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-019: Error, offline and not-found states
 - **Status:** todo
+- **Owner:** antigravity
 - **Steps:**
   1. Audit what exists (route error boundary, 404 page, offline banner, error mapping). Add only what is missing.
   2. Route-level error boundary with `t()` text, Try again and Go to Today. Map API errors to user text (network, 401 sign out, 422 field errors, 429, 5xx); never show raw `error.message`.
@@ -215,6 +217,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-020: Import in chunks under the API limits
 - **Status:** todo
+- **Owner:** antigravity
 - **Steps:**
   1. The import endpoint caps exceptions at 5000 and check-ins at 10000. Split the guest payload into several `POST /import` calls under the caps (the import is idempotent by id, so repeats are safe) and clear the device data only after every call succeeds.
 - **Done when:**
@@ -224,6 +227,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-021: Resend verification email
 - **Status:** todo
+- **Owner:** antigravity
 - **Steps:**
   1. Add a Resend link on the verify-email screen and the Profile account card for unverified accounts, calling `POST /auth/email/resend`. Show success, the 429 wait time (`retryAfter`) and other errors with `t()` text.
 - **Done when:**
@@ -233,6 +237,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-022: Undo toast for deletes
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-022 and a refreshed `docs/openapi.yaml`. Add `restore` to the to-do repositories (Dexie: clear `deleted_at`; server: `POST /todos/{id}/restore`).
   2. A reusable `useUndoableDelete`: remove from the cache at once, call remove, show a 5 s toast with Undo (focusable, `aria-live=polite`). Undo restores; a remove error rolls back and shows an error toast. Use it for to-dos.
@@ -244,6 +249,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-023: Subtasks, priority and notes UI
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-019. Add notes (textarea), priority (low, normal, high with a text label, not only color) and subtasks (add, check, delete; one level) to the to-do sheet and rows. Show a subtask count like 2/3 on the row. Checking a parent marks its open subtasks done.
   2. Guest repository enforces the same rules (depth 1, parent check-off marks subtasks done). Bump the Dexie version with a migration and include the new fields in the import payload.
@@ -255,6 +261,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-024: Repeating to-dos UI
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-020. In the to-do sheet add Repeat: None, Daily, Weekly with weekday chips. It requires a due date (show the message under the field).
   2. Guest repository creates the next occurrence on the first check-off with the same rules as B-020 (use the user's time zone helper). Add a small repeat icon and label on the row. Bump Dexie if needed and include `repeat_rule` in the import payload.
@@ -266,6 +273,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-025: In-app reminders UI
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-021. Add a Remind me field (date and time in the user's time zone) to the to-do sheet.
   2. A root watcher checks every 30 s and on tab focus. Accounts call `GET /reminders/due`; guests compare `remind_at` in Dexie. Show a banner or toast with the title and Done, Snooze (5, 10, 30, 60 min) and Dismiss. No sound (audio comes with Focus) and no push.
@@ -278,6 +286,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-026: Time format and week start settings
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-023. In Profile add a 12 h or 24 h toggle and a week-starts-on picker (Monday or Sunday). Guests keep them in Dexie `meta`; accounts use `PATCH /me`.
   2. Use them in every place that shows a time (schedule, Now/Next, reminders) and in the Week view column order. Add `src/lib/time` tests that read `local-date-cases.json` (copy of the backend fixture).
@@ -289,6 +298,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-027: Daily intention on Today
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-024. A one-line field under the Today header (max 200 characters, placeholder via `t()`), saved 600 ms after typing stops and on blur, with a small Saved hint. It is per local date: another day shows its own text and a new day starts empty.
   2. Guest: Dexie `dailyIntentions`; account: the API. Include it in the import payload.
@@ -299,6 +309,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-028: Delete-account password field uses `has_password`
 - **Status:** todo
+- **Owner:** codex
 - **Steps:**
   1. Needs B-025. In the delete-account sheet, hide the password field for accounts where `has_password` is false and explain the confirmation step the API requires (read the contract). Answers Q37.
 - **Done when:**
@@ -308,6 +319,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-029: Static HTML shell and lazy Dexie for first paint
 - **Status:** review
+- **Owner:** antigravity
 - **Steps:**
   1. Answers Q24. Paint the cream background and logo from `index.html` before JavaScript runs, and open Dexie only on the first read. Measure Lighthouse mobile on `vite preview` before and after and write both in `docs/PROGRESS.md`.
 - **Done when:**
