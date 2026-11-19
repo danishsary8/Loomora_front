@@ -44,7 +44,8 @@ export function createAuthApi(client: ApiClient) {
     logout: () => request<undefined>('POST', '/auth/logout'),
     /** Deletes the account and everything in it. Needs the current password. */
     deleteMe: (password: string) => request<undefined>('DELETE', '/me', { body: { password } }),
-    getMe: () => request<{ data: User }>('GET', '/me').then((r) => r.data),
+    getMe: (signal?: AbortSignal) =>
+      request<{ data: User }>('GET', '/me', { signal }).then((r) => r.data),
     updateMe: (input: UpdateMeInput) =>
       request<{ data: User }>('PATCH', '/me', { body: input }).then((r) => r.data),
     submitSurvey: (input: SurveyInput) =>

@@ -3,9 +3,9 @@ import type { LocalDate } from '@/features/todos/types'
 
 const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}$/
 
-/** The calendar date of `date` in the device's time zone, `YYYY-MM-DD`. */
-export function toLocalDate(date: Date = new Date()): LocalDate {
-  return format(date, 'yyyy-MM-dd')
+/** The calendar date in an account's time zone, or the device zone by default. */
+export function toLocalDate(date: Date = new Date(), zone?: string): LocalDate {
+  return zone ? localDateIn(date.toISOString(), zone) : format(date, 'yyyy-MM-dd')
 }
 
 /** True for a real calendar date written as `YYYY-MM-DD`. */

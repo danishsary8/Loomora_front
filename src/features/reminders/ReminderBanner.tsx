@@ -1,19 +1,22 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
+import { useClockDisplay } from '@/lib/time/useTimePreferences'
 import { SNOOZE_MINUTES, type SnoozeMinutes } from '@/features/todos/types'
 
 export type ReminderAction = 'done' | 'dismiss' | SnoozeMinutes
 
 interface ReminderBannerProps {
   title: string
+  remindAt: string | null
   busy: boolean
   error?: string
   onAction: (action: ReminderAction) => void
 }
 
-export function ReminderBanner({ title, busy, error, onAction }: ReminderBannerProps) {
+export function ReminderBanner({ title, remindAt, busy, error, onAction }: ReminderBannerProps) {
   const { t } = useTranslation()
+  const { instant } = useClockDisplay()
   const [expanded, setExpanded] = useState(false)
   const snooze = useRef<HTMLButtonElement>(null)
   const firstOption = useRef<HTMLButtonElement>(null)
@@ -34,6 +37,11 @@ export function ReminderBanner({ title, busy, error, onAction }: ReminderBannerP
         <h2 tabIndex={-1} className="break-words text-base font-bold">
           {title}
         </h2>
+        {remindAt && (
+          <p className="text-sm text-muted">
+            {t('reminders.scheduledFor', { time: instant(remindAt) })}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button aria-disabled={busy} onClick={() => onAction('done')}>
             {t('reminders.done')}

@@ -1,3 +1,4 @@
+import { useIsMutating, useMutation } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Card, Input } from '@/components/ui'
@@ -6,29 +7,71 @@ import { FormError } from '@/features/auth/FormError'
 import { deviceTimeZone, timeZoneOptions } from '@/features/auth/timezone'
 import { useFormAction } from '@/features/auth/useFormAction'
 import { authApi, useSession, type User } from '@/lib/api'
+import type { UpdateMeInput } from '@/lib/api/types'
 import { fieldClasses } from '@/components/ui/fieldClasses'
 import { Field } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
+import type { TimePreferences } from '@/lib/time/time'
+import { useTimePreferences } from '@/lib/time/useTimePreferences'
+import { PreferenceFields, PreferencesLoadStatus } from './PreferenceFields'
 
-/** Name and time zone of the signed-in user (PATCH /me), plus where the email is shown. */
+/** Account identity, time zone and display settings (PATCH /me). */
 export function AccountCard({ user }: { user: User }) {
   const { t } = useTranslation()
-  const setUser = useSession((s) => s.setUser)
+  const generation = useSession((s) => s.generation)
+  const mutationKey = ['profile', generation]
   const { pending, formError, fieldErrors, run } = useFormAction()
-  const [name, setName] = useState(user.name)
-  const [timezone, setTimezone] = useState(user.timezone)
+  const saving = useIsMutating({ mutationKey }) > 0 || pending
+  const save = useMutation({
+    mutationKey,
+    networkMode: 'always',
+    mutationFn: (input: UpdateMeInput) => {
+      if (useSession.getState().generation !== generation) throw new Error('Session changed')
+      return authApi.updateMe(input)
+    },
+  })
+  const prefs = useTimePreferences()
+  const [draft, setDraft] = useState<Partial<TimePreferences>>({})
+  const values = { ...prefs.values, ...draft }
+  const [nameDraft, setName] = useState<string>()
+  const [zoneDraft, setTimezone] = useState<string>()
+  const name = nameDraft ?? user.name
+  const timezone = zoneDraft ?? user.timezone
   const [saved, setSaved] = useState(false)
   const device = deviceTimeZone()
 
   const trimmed = name.trim()
-  const changed = trimmed !== user.name || timezone !== user.timezone
+  const changed =
+    trimmed !== user.name ||
+    timezone !== user.timezone ||
+    values.time_format !== prefs.values.time_format ||
+    values.week_starts_on !== prefs.values.week_starts_on
 
   function submit(event: FormEvent) {
     event.preventDefault()
+    if (!changed || saving || prefs.loading || !trimmed) return
     setSaved(false)
     void run(async () => {
-      setUser(await authApi.updateMe({ name: trimmed, timezone }))
-      setSaved(true)
+      try {
+        const updated = await save.mutateAsync({
+          ...(trimmed !== user.name && { name: trimmed }),
+          ...(timezone !== user.timezone && { timezone }),
+          ...(values.time_format !== prefs.values.time_format && {
+            time_format: values.time_format,
+          }),
+          ...(values.week_starts_on !== prefs.values.week_starts_on && {
+            week_starts_on: values.week_starts_on,
+          }),
+        })
+        const current = useSession.getState()
+        if (current.generation !== generation || current.user?.id !== updated.id) return
+        current.setUser({ ...current.user, ...updated })
+        setName(undefined)
+        setTimezone(undefined)
+        setSaved(true)
+      } finally {
+        setDraft({})
+      }
     })
   }
 
@@ -47,6 +90,7 @@ export function AccountCard({ user }: { user: User }) {
         <Input
           label={t('profile.name')}
           autoComplete="name"
+          disabled={saving}
           maxLength={100}
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -61,6 +105,7 @@ export function AccountCard({ user }: { user: User }) {
             <select
               {...field}
               className={cn('min-h-touch', fieldClasses(fieldErrors.timezone))}
+              disabled={saving}
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -73,12 +118,30 @@ export function AccountCard({ user }: { user: User }) {
           )}
         </Field>
         {timezone !== device && (
-          <Button variant="ghost" onClick={() => setTimezone(device)}>
+          <Button variant="ghost" disabled={saving} onClick={() => setTimezone(device)}>
             {t('profile.useDeviceTimeZone', { zone: device })}
           </Button>
         )}
-        <Button type="submit" size="lg" fullWidth disabled={pending || !changed || trimmed === ''}>
-          {t(pending ? 'profile.saving' : 'profile.save')}
+        {prefs.loading || prefs.failed ? (
+          <PreferencesLoadStatus failed={prefs.failed} retry={prefs.retry} />
+        ) : (
+          <PreferenceFields
+            values={values}
+            disabled={saving}
+            errors={fieldErrors}
+            onChange={(changes) => {
+              setSaved(false)
+              setDraft((current) => ({ ...current, ...changes }))
+            }}
+          />
+        )}
+        <Button
+          type="submit"
+          size="lg"
+          fullWidth
+          disabled={saving || prefs.loading || !changed || trimmed === ''}
+        >
+          {t(saving ? 'profile.saving' : 'profile.save')}
         </Button>
         {saved && !changed && (
           <p role="status" className="text-center font-semibold">

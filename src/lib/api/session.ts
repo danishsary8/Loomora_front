@@ -3,6 +3,7 @@ import { clearSession, readSession, writeSession } from './tokenStorage'
 import type { TokenResponse, User } from './types'
 
 interface SessionState {
+  generation: number
   token: string | null
   expiresAt: string | null
   user: User | null
@@ -18,12 +19,13 @@ const saved = readSession()
 
 /** Auth state: the bearer token (with its expiry) and the signed-in user. */
 export const useSession = create<SessionState>((set, get) => ({
+  generation: 0,
   token: saved?.token ?? null,
   expiresAt: saved?.expiresAt ?? null,
   user: saved?.user ?? null,
   signIn: ({ token, expires_at, user }) => {
     writeSession({ token, expiresAt: expires_at, user })
-    set({ token, expiresAt: expires_at, user })
+    set(({ generation }) => ({ token, expiresAt: expires_at, user, generation: generation + 1 }))
   },
   setUser: (user) => {
     const { token, expiresAt } = get()
@@ -32,6 +34,11 @@ export const useSession = create<SessionState>((set, get) => ({
   },
   signOut: () => {
     clearSession()
-    set({ token: null, expiresAt: null, user: null })
+    set(({ generation }) => ({
+      token: null,
+      expiresAt: null,
+      user: null,
+      generation: generation + 1,
+    }))
   },
 }))

@@ -1,10 +1,12 @@
 import type { Priority, RepeatRule } from '@/features/todos/types'
 
+import type { TimePreferences } from '@/lib/time/time'
+
 // Shapes from docs/openapi.yaml (snake_case, as the API sends them).
 
 export type Goal = 'be_consistent' | 'manage_time' | 'finish_tasks' | 'other'
 
-export interface User {
+export interface User extends TimePreferences {
   id: string
   name: string
   email: string
@@ -53,7 +55,7 @@ export interface SurveyInput {
   heard_from?: string | null
 }
 
-export interface UpdateMeInput {
+export interface UpdateMeInput extends Partial<TimePreferences> {
   name?: string
   timezone?: string
 }

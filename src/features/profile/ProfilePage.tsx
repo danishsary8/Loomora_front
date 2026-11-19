@@ -13,17 +13,19 @@ import { toLocalDate } from '@/lib/date'
 import { AccountCard } from './AccountCard'
 import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { FeedbackSheet } from './FeedbackSheet'
+import { GuestPreferencesCard } from './GuestPreferencesCard'
 
 /** S9 Profile: account (name, time zone, sign out, delete), streak, Save your plan, feedback. */
 export function ProfilePage() {
   const { t } = useTranslation()
-  const [today] = useState(() => toLocalDate())
-  const streak = useStreak(today).data
+  const [openedAt] = useState(() => new Date())
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const navigate = useNavigate()
   const user = useSession((s) => s.user)
+  const generation = useSession((s) => s.generation)
+  const streak = useStreak(toLocalDate(openedAt, user?.timezone)).data
   const signOut = useSession((s) => s.signOut)
   const isGuest = useSession((s) => s.token === null)
   const requestSave = useSavePlanIntent((s) => s.request)
@@ -46,7 +48,8 @@ export function ProfilePage() {
     <div className="flex flex-col gap-6">
       <PageHeading>{t('pages.profile.title')}</PageHeading>
 
-      {user && <AccountCard key={user.id} user={user} />}
+      {user && <AccountCard key={generation} user={user} />}
+      {isGuest && <GuestPreferencesCard />}
 
       {streak && (
         <Card className="flex items-center justify-between gap-3">

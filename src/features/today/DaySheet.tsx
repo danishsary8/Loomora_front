@@ -3,6 +3,7 @@ import { Card, Checkbox, Sheet } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import type { Occurrence } from '@/features/schedule'
 import type { LocalDate } from '@/features/todos/types'
+import { useClockDisplay } from '@/lib/time/useTimePreferences'
 import { useSetScheduleCheckin } from '@/features/schedule/useSchedule'
 
 export interface DaySheetProps {
@@ -17,6 +18,7 @@ export interface DaySheetProps {
 export function DaySheet({ open, onClose, date, occurrences }: DaySheetProps) {
   const { t } = useTranslation()
   const setCheckin = useSetScheduleCheckin()
+  const { wall } = useClockDisplay()
   return (
     <Sheet open={open} onClose={onClose} title={t('nowNext.daySheetTitle')}>
       <ul className="flex flex-col gap-3">
@@ -36,7 +38,7 @@ export function DaySheet({ open, onClose, date, occurrences }: DaySheetProps) {
                       {o.title}
                     </span>
                     <span className="text-sm">
-                      {t('nowNext.range', { start: o.start_time, end: o.end_time })}
+                      {t('nowNext.range', { start: wall(o.start_time), end: wall(o.end_time) })}
                     </span>
                   </span>
                 }

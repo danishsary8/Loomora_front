@@ -18,7 +18,7 @@ Errors use one shape: `{ "message": "...", "errors": { "field": ["..."] } }` wit
 | POST | /auth/password/forgot | send reset email |
 | POST | /auth/password/reset | token + new password |
 | GET | /me | current user |
-| PATCH | /me | name, timezone |
+| PATCH | /me | name, timezone, time_format, week_starts_on |
 | POST | /me/survey | goal, heard_from (skippable) |
 | DELETE | /me | delete account (password or Google re-auth confirmation) |
 

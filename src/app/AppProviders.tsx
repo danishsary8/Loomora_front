@@ -15,6 +15,8 @@ import {
   TodoRepositoryContext,
   type GuestStorage,
 } from '@/lib/storage'
+import type { GuestDatabase } from '@/lib/storage/db'
+import { GuestPreferenceDatabaseContext } from '@/lib/storage/guestPreferences'
 import { createQueryClient } from './queryClient'
 
 // Animation features load after first paint, keeping them out of the entry chunk.
@@ -25,6 +27,7 @@ export interface AppProvidersProps {
   /** Tests pass their own guest repositories (on a throwaway database). */
   todoRepository?: GuestTodoRepository
   scheduleRepository?: GuestScheduleRepository
+  guestDatabase?: GuestDatabase
   queryClient?: QueryClient
 }
 
@@ -34,6 +37,7 @@ export function AppProviders({
   todoRepository,
   scheduleRepository,
   queryClient,
+  guestDatabase,
 }: AppProvidersProps) {
   const [client] = useState(() => queryClient ?? createQueryClient())
   const [guest] = useState<GuestStorage>(() => ({
@@ -67,7 +71,9 @@ export function AppProviders({
           <TodoRepositoryContext.Provider value={active.todos}>
             <ScheduleRepositoryContext.Provider value={active.schedule}>
               <StreakRepositoryContext.Provider value={active.streak}>
-                {children}
+                <GuestPreferenceDatabaseContext.Provider value={guestDatabase}>
+                  {children}
+                </GuestPreferenceDatabaseContext.Provider>
               </StreakRepositoryContext.Provider>
             </ScheduleRepositoryContext.Provider>
           </TodoRepositoryContext.Provider>

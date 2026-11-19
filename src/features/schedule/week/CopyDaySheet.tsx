@@ -4,7 +4,8 @@ import { Button, Sheet } from '@/components/ui'
 import { DayToggle } from '../DayToggle'
 import type { ScheduleItem, Weekday } from '../types'
 import { useCopyDay } from './useWeek'
-import { WEEKDAYS } from './weekPlan'
+import { orderedWeekdays } from '@/lib/time/time'
+import { useTimePreferences } from '@/lib/time/useTimePreferences'
 
 export interface CopyDaySheetProps {
   /** The day to copy; `null` keeps the sheet closed. */
@@ -36,6 +37,7 @@ function CopyDayBody({
   const { t } = useTranslation()
   const [targets, setTargets] = useState<Weekday[]>([])
   const copy = useCopyDay(items)
+  const { values } = useTimePreferences()
 
   function toggle(day: Weekday) {
     setTargets((current) =>
@@ -52,15 +54,17 @@ function CopyDayBody({
     <div className="flex flex-col gap-4">
       <p className="text-muted">{t('copyDay.hint')}</p>
       <div role="group" aria-label={t('copyDay.targets')} className="flex gap-2">
-        {WEEKDAYS.filter((day) => day !== from).map((day) => (
-          <DayToggle
-            key={day}
-            label={t(`weekdays.long.${day}`)}
-            text={t(`weekdays.short.${day}`)}
-            selected={targets.includes(day)}
-            onClick={() => toggle(day)}
-          />
-        ))}
+        {orderedWeekdays(values.week_starts_on)
+          .filter((day) => day !== from)
+          .map((day) => (
+            <DayToggle
+              key={day}
+              label={t(`weekdays.long.${day}`)}
+              text={t(`weekdays.short.${day}`)}
+              selected={targets.includes(day)}
+              onClick={() => toggle(day)}
+            />
+          ))}
       </div>
       {copy.isError && (
         <p role="alert" className="font-semibold text-danger">

@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
@@ -11,6 +10,8 @@ import { UndoDeleteToast } from '@/features/todos/UndoDeleteToast'
 import { useUndoableDelete } from '@/features/todos/useUndoableDelete'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
+import { useSession } from '@/lib/api'
+import { formatInstantTime } from '@/lib/time/time'
 import { AddTodoSheet, type TodoSheetTarget } from './AddTodoSheet'
 import { DaySheet } from './DaySheet'
 import { NowNextStrip } from './NowNextStrip'
@@ -21,7 +22,10 @@ import { useNow } from './useNow'
 /** S2/S3 Today, v1: guest to-dos only (F-006). */
 export function TodayPage() {
   const { t, i18n } = useTranslation()
-  const [today] = useState(() => toLocalDate())
+  const now = useNow()
+  const [openedAt] = useState(() => now)
+  const zone = useSession((state) => state.user?.timezone)
+  const today = toLocalDate(openedAt, zone)
   const [sheet, setSheet] = useState<{ open: boolean; target: TodoSheetTarget; instance: number }>({
     open: false,
     target: { type: 'create' },
@@ -30,9 +34,11 @@ export function TodayPage() {
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
   const [daySheetOpen, setDaySheetOpen] = useState(false)
   const streak = useStreak(today).data
-  const now = useNow()
   const schedule = useScheduleDay(today).data ?? []
-  const { now: nowItem, next: nextItem } = nowAndNext(schedule, format(now, 'HH:mm'))
+  const { now: nowItem, next: nextItem } = nowAndNext(
+    schedule,
+    formatInstantTime(now, '24h', 'en-GB', zone),
+  )
   const todos = useTodayTodos(today)
   const setDone = useSetTodoDone(today)
   const del = useUndoableDelete({ date: today })

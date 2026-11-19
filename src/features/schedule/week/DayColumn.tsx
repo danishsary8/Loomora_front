@@ -6,13 +6,21 @@ import type { ScheduleItem, Weekday } from '../types'
 export interface DayColumnProps {
   day: Weekday
   items: readonly ScheduleItem[]
+  formatTime: (time: string) => string
   className?: string
   onOpenItem: (item: ScheduleItem) => void
   onCopy: (day: Weekday) => void
 }
 
 /** One weekday of the fixed schedule: its items and the Copy day action. */
-export function DayColumn({ day, items, className, onOpenItem, onCopy }: DayColumnProps) {
+export function DayColumn({
+  day,
+  items,
+  formatTime,
+  className,
+  onOpenItem,
+  onCopy,
+}: DayColumnProps) {
   const { t } = useTranslation()
   const name = t(`weekdays.long.${day}`)
   return (
@@ -22,27 +30,29 @@ export function DayColumn({ day, items, className, onOpenItem, onCopy }: DayColu
         <p className="text-muted">{t('week.nothingPlanned')}</p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                onClick={() => onOpenItem(item)}
-                aria-label={t('week.editItem', {
-                  title: item.title,
-                  start: item.start_time,
-                  end: item.end_time,
-                })}
-                className="block w-full text-left"
-              >
-                <Card tone={item.category} compact>
-                  <span className="block text-sm font-semibold">
-                    {t('week.timeRange', { start: item.start_time, end: item.end_time })}
-                  </span>
-                  <span className="block break-words font-bold">{item.title}</span>
-                </Card>
-              </button>
-            </li>
-          ))}
+          {items.map((item) => {
+            const times = { start: formatTime(item.start_time), end: formatTime(item.end_time) }
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenItem(item)}
+                  aria-label={t('week.editItem', {
+                    title: item.title,
+                    ...times,
+                  })}
+                  className="block w-full text-left"
+                >
+                  <Card tone={item.category} compact>
+                    <span className="block text-sm font-semibold">
+                      {t('week.timeRange', times)}
+                    </span>
+                    <span className="block break-words font-bold">{item.title}</span>
+                  </Card>
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
       {items.length > 0 && (

@@ -285,16 +285,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/reminders/*`, `src/features/todos/*`, `src/lib/db/*`, `src/i18n/locales/en.json`, `e2e/reminders.spec.ts`
 
 ### F-026: Time format and week start settings
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
   1. Needs B-023. In Profile add a 12 h or 24 h toggle and a week-starts-on picker (Monday or Sunday). Guests keep them in Dexie `meta`; accounts use `PATCH /me`.
   2. Use them in every place that shows a time (schedule, Now/Next, reminders) and in the Week view column order. Add `src/lib/time` tests that read `local-date-cases.json` (copy of the backend fixture).
 - **Done when:**
-  - [ ] Vitest: formatting in both modes, Sunday-first week order, all fixture cases
-  - [ ] Playwright (375 px): switching to 12 h changes the schedule times
-  - [ ] Lint, typecheck, test, build pass
-- **Files:** `src/features/profile/*`, `src/lib/time/*`, schedule and week components, `src/i18n/locales/en.json`
+  - [x] Vitest: formatting in both modes, Sunday-first week order, all fixture cases
+  - [x] Playwright (375 px): switching to 12 h changes the schedule times
+  - [x] Lint, typecheck, test, build pass
+- **Files:** `src/features/profile/*`, `src/lib/time/*`, guest storage, schedule and reminder components, `src/i18n/en.json`, `e2e/time-preferences.spec.ts`
 
 ### F-027: Daily intention on Today
 - **Status:** todo

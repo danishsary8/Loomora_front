@@ -17,6 +17,7 @@ export function renderRoute(
   path: string,
   todoRepository?: GuestTodoRepository,
   scheduleRepository?: GuestScheduleRepository,
+  guestDatabase?: GuestDatabase,
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   const { db, repo: defaultTodos } = createTestRepository()
@@ -28,6 +29,7 @@ export function renderRoute(
       <AppProviders
         todoRepository={repo}
         scheduleRepository={schedule}
+        guestDatabase={guestDatabase ?? db}
         queryClient={createQueryClient()}
       >
         <RouterProvider router={router} />
