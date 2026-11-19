@@ -11,7 +11,7 @@ import { UndoDeleteToast } from '@/features/todos/UndoDeleteToast'
 import { useUndoableDelete } from '@/features/todos/useUndoableDelete'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
-import { AddTodoSheet } from './AddTodoSheet'
+import { AddTodoSheet, type TodoSheetTarget } from './AddTodoSheet'
 import { DaySheet } from './DaySheet'
 import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
@@ -22,7 +22,11 @@ import { useNow } from './useNow'
 export function TodayPage() {
   const { t, i18n } = useTranslation()
   const [today] = useState(() => toLocalDate())
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheet, setSheet] = useState<{ open: boolean; target: TodoSheetTarget; instance: number }>({
+    open: false,
+    target: { type: 'create' },
+    instance: 0,
+  })
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
   const [daySheetOpen, setDaySheetOpen] = useState(false)
   const streak = useStreak(today).data
@@ -41,7 +45,10 @@ export function TodayPage() {
 
   const list = todos.data ?? []
   const doneCount = list.filter((todo) => todo.done_at !== null).length
-  const openSheet = () => setSheetOpen(true)
+  function openSheet(target: TodoSheetTarget) {
+    setSheet(({ instance }) => ({ open: true, target, instance: instance + 1 }))
+  }
+  const addTodo = () => openSheet({ type: 'create' })
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,7 +71,7 @@ export function TodayPage() {
       ) : todos.isError ? (
         <ErrorState onRetry={() => void todos.refetch()} />
       ) : list.length === 0 ? (
-        <TodayEmpty onAddTodo={openSheet} onAddSchedule={() => setScheduleSheetOpen(true)} />
+        <TodayEmpty onAddTodo={addTodo} onAddSchedule={() => setScheduleSheetOpen(true)} />
       ) : (
         <>
           <div className="flex justify-center">
@@ -86,6 +93,8 @@ export function TodayPage() {
                   todo={todo}
                   formatDate={formatDate}
                   onToggle={(id, done) => setDone.mutate({ id, done })}
+                  onEdit={(target) => openSheet({ type: 'edit', todo: target })}
+                  onAddSubtask={(parent) => openSheet({ type: 'subtask', parent })}
                   onDelete={(target) => void del.deleteTodo(target)}
                 />
               ))}
@@ -96,7 +105,7 @@ export function TodayPage() {
               </p>
             )}
           </section>
-          <FloatingAddButton onClick={openSheet} label={t('today.addTodo')} />
+          <FloatingAddButton onClick={addTodo} label={t('today.addTodo')} />
         </>
       )}
 
@@ -112,7 +121,17 @@ export function TodayPage() {
         target={{ type: 'create' }}
       />
       <SavePlanPrompt today={today} />
-      <AddTodoSheet open={sheetOpen} onClose={() => setSheetOpen(false)} today={today} />
+      <AddTodoSheet
+        key={sheet.instance}
+        open={sheet.open}
+        onClose={() =>
+          setSheet((current) =>
+            current.instance === sheet.instance ? { ...current, open: false } : current,
+          )
+        }
+        today={today}
+        target={sheet.target}
+      />
       <UndoDeleteToast pending={del.pending} onUndo={() => void del.undo()} error={del.error} />
     </div>
   )

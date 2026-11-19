@@ -1,12 +1,6 @@
-import type {
-  CreateTodoInput,
-  LocalDate,
-  TodayTodo,
-  Todo,
-  UpdateTodoInput,
-} from '@/features/todos/types'
+import type { CreateTodoInput, LocalDate, TodayTodo, UpdateTodoInput } from '@/features/todos/types'
 import type { TodosApi } from '@/lib/api'
-import { asValidation, toTodayTodo, toTodo } from './serverMapping'
+import { asValidation, toTodayTodo } from './serverMapping'
 import type { TodoRepository } from './TodoRepository'
 
 /** Account to-dos via the API (docs/09 `/todos`). */
@@ -21,20 +15,20 @@ export class ServerTodoRepository implements TodoRepository {
     return (await this.api.list(date)).map(toTodayTodo)
   }
 
-  async create(input: CreateTodoInput): Promise<Todo> {
-    return toTodo(await asValidation(this.api.create(input)))
+  async create(input: CreateTodoInput): Promise<TodayTodo> {
+    return toTodayTodo(await asValidation(this.api.create(input)))
   }
 
-  async update(id: string, patch: UpdateTodoInput): Promise<Todo> {
-    return toTodo(await asValidation(this.api.update(id, patch)))
+  async update(id: string, patch: UpdateTodoInput): Promise<TodayTodo> {
+    return toTodayTodo(await asValidation(this.api.update(id, patch)))
   }
 
-  async setDone(id: string, done: boolean): Promise<Todo> {
-    return toTodo(await (done ? this.api.setDone(id) : this.api.clearDone(id)))
+  async setDone(id: string, done: boolean): Promise<TodayTodo> {
+    return toTodayTodo(await (done ? this.api.setDone(id) : this.api.clearDone(id)))
   }
 
-  async restore(id: string): Promise<Todo> {
-    return toTodo(await asValidation(this.api.restore(id)))
+  async restore(id: string): Promise<TodayTodo> {
+    return toTodayTodo(await asValidation(this.api.restore(id)))
   }
 
   delete(id: string): Promise<void> {

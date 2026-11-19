@@ -50,6 +50,79 @@ describe('ServerTodoRepository', () => {
     expect(todo?.updated_at).toBe(todo?.created_at)
   })
 
+  it('sends B-019 fields and maps nested responses without changing their order', async () => {
+    const child = {
+      ...apiTodo,
+      id: 'child',
+      due_date: null,
+      parent_id: ID,
+      priority: 'low',
+      notes: 'Pencil',
+      subtasks: [],
+    }
+    const parent = {
+      ...apiTodo,
+      priority: 'high',
+      notes: 'Book',
+      parent_id: null,
+      subtasks: [child],
+    }
+    const bodies: unknown[] = []
+    server.use(
+      http.get(`${API}/todos`, () => HttpResponse.json({ data: [parent] })),
+      http.post(`${API}/todos`, async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ data: child }, { status: 201 })
+      }),
+      http.patch(`${API}/todos/child`, async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ data: { ...child, notes: null } })
+      }),
+      http.post(`${API}/todos/child/done`, () =>
+        HttpResponse.json({ data: { ...child, done_at: '2026-10-26T02:00:00Z' } }),
+      ),
+      http.delete(`${API}/todos/child`, () => new HttpResponse(null, { status: 204 })),
+    )
+    expect(await repo.listForDate('2026-10-26')).toEqual([
+      expect.objectContaining({
+        priority: 'high',
+        notes: 'Book',
+        subtasks: [
+          expect.objectContaining({ id: 'child', parent_id: ID, priority: 'low', notes: 'Pencil' }),
+        ],
+      }),
+    ])
+    await expect(
+      repo.create({ title: 'Read', parent_id: ID, priority: 'low', notes: 'Pencil' }),
+    ).resolves.toMatchObject({ parent_id: ID })
+    await expect(repo.update('child', { notes: null })).resolves.toMatchObject({ notes: null })
+    expect(bodies).toEqual([
+      { title: 'Read', parent_id: ID, priority: 'low', notes: 'Pencil' },
+      { notes: null },
+    ])
+    await expect(repo.setDone('child', true)).resolves.toMatchObject({
+      done_at: '2026-10-26T02:00:00Z',
+    })
+    await expect(repo.delete('child')).resolves.toBeUndefined()
+  })
+
+  it.each([404, 422])('handles subtask creation errors (%i)', async (status) => {
+    server.use(
+      http.post(`${API}/todos`, () =>
+        HttpResponse.json(
+          {
+            message: 'Invalid parent',
+            errors: { parent_id: ['Invalid parent'] },
+          },
+          { status },
+        ),
+      ),
+    )
+    await expect(repo.create({ title: 'Child', parent_id: ID })).rejects.toMatchObject(
+      status === 422 ? { field: 'parent_id' } : { status: 404 },
+    )
+  })
+
   it('creates, edits, checks off, un-checks and deletes', async () => {
     const calls: string[] = []
     server.use(

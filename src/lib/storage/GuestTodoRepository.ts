@@ -1,6 +1,7 @@
-import { buildTodayList } from '@/features/todos/todayList'
+import { buildTodayList, byCreated, toTodaySubtask } from '@/features/todos/todayList'
 import {
   DEFAULT_CATEGORY,
+  DEFAULT_PRIORITY,
   MAX_TODOS,
   type CreateTodoInput,
   type LocalDate,
@@ -12,8 +13,8 @@ import { newId } from '@/lib/id'
 import type { GuestDatabase } from './db'
 import { NotFoundError, ValidationError } from './errors'
 import { openGuestDatabase } from './openGuestDatabase'
-import type { TodoRepository } from './TodoRepository'
-import { checkTodoFields, cleanTitle } from './validation'
+import type { SavedTodo, TodoRepository } from './TodoRepository'
+import { checkSubtaskFields, checkTodoFields, cleanTitle } from './validation'
 
 export interface GuestTodoRepositoryOptions {
   db?: GuestDatabase
@@ -44,70 +45,145 @@ export class GuestTodoRepository implements TodoRepository {
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
     // R1 caps guests at 500 to-dos, so filtering in memory is fine.
     const all = await (await this.open()).todos.toArray()
-    return buildTodayList(
-      all.filter((t) => !t.deleted_at),
-      date,
-    )
+    return buildTodayList(all, date)
   }
 
   async create(input: CreateTodoInput): Promise<Todo> {
     checkTodoFields(input)
     const title = cleanTitle(input.title)
     const stamp = this.now().toISOString()
-    const todo: Todo = {
-      id: newId(),
-      title,
-      category: input.category ?? DEFAULT_CATEGORY,
-      due_date: input.due_date ?? null,
-      done_at: null,
-      created_at: stamp,
-      updated_at: stamp,
-    }
-    // Errors are thrown outside Dexie transactions: Dexie rewraps errors whose names
-    // match its own (e.g. NotFoundError), so callers would get a DexieError instead.
     const db = await this.open()
-    const added = await db.transaction('rw', db.todos, async () => {
-      if ((await db.todos.count()) >= MAX_TODOS) return false
-      await db.todos.add(todo)
-      return true
+    const todo = await db.transaction('rw', db.todos, async () => {
+      const parent = input.parent_id ? await db.todos.get(input.parent_id) : undefined
+      if (input.parent_id && (!parent || parent.deleted_at)) return null
+      if (parent?.parent_id)
+        throw new ValidationError('parent_id', 'Subtasks cannot have subtasks.')
+      if (parent) checkSubtaskFields(input)
+      if ((await db.todos.count()) >= MAX_TODOS)
+        throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
+
+      const row: Todo = {
+        id: newId(),
+        title,
+        category: input.category ?? parent?.category ?? DEFAULT_CATEGORY,
+        priority: input.priority ?? DEFAULT_PRIORITY,
+        notes: input.notes?.trim() || null,
+        parent_id: parent?.id ?? null,
+        due_date: input.due_date ?? null,
+        done_at: null,
+        created_at: stamp,
+        updated_at: stamp,
+      }
+      await db.todos.add(row)
+      return row
     })
-    if (!added) throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
+    if (!todo) throw new NotFoundError('Todo', input.parent_id ?? '')
     return todo
   }
 
   async update(id: string, patch: UpdateTodoInput): Promise<Todo> {
     checkTodoFields(patch)
-    const changes: Partial<Todo> = { updated_at: this.now().toISOString() }
-    if (patch.title !== undefined) changes.title = cleanTitle(patch.title)
-    if (patch.category !== undefined) changes.category = patch.category
-    if (patch.due_date !== undefined) changes.due_date = patch.due_date
-    return this.write(id, changes)
-  }
+    if ('parent_id' in patch)
+      throw new ValidationError('parent_id', 'The parent cannot be changed.')
 
-  async setDone(id: string, done: boolean): Promise<Todo> {
-    const stamp = this.now().toISOString()
-    return this.write(id, { done_at: done ? stamp : null, updated_at: stamp })
-  }
-
-  async restore(id: string): Promise<Todo> {
-    const stamp = this.now().toISOString()
-    return this.write(id, { deleted_at: null, updated_at: stamp })
-  }
-
-  async delete(id: string): Promise<void> {
-    const stamp = this.now().toISOString()
-    await this.write(id, { deleted_at: stamp, updated_at: stamp })
-  }
-
-  private async write(id: string, changes: Partial<Todo>): Promise<Todo> {
-    const db = await this.open()
-    const next = await db.transaction('rw', db.todos, async () => {
-      const current = await db.todos.get(id)
-      if (!current) return undefined
-      const updated: Todo = { ...current, ...changes }
+    return this.write(id, async (db, current) => {
+      if (current.parent_id) checkSubtaskFields(patch)
+      const changes: Partial<Todo> = { updated_at: this.now().toISOString() }
+      if (patch.title !== undefined) changes.title = cleanTitle(patch.title)
+      if (patch.category !== undefined) changes.category = patch.category
+      if (patch.due_date !== undefined) changes.due_date = patch.due_date
+      if (patch.priority !== undefined) changes.priority = patch.priority
+      if (patch.notes !== undefined) changes.notes = patch.notes?.trim() || null
+      const updated = { ...current, ...changes }
       await db.todos.put(updated)
       return updated
     })
+  }
+
+  async setDone(id: string, done: boolean): Promise<SavedTodo> {
+    return this.write(id, async (db, current) => {
+      const stamp = this.now().toISOString()
+      const doneAt = done ? (current.done_at ?? stamp) : null
+      const updated = { ...current, done_at: doneAt, updated_at: stamp }
+      await db.todos.put(updated)
+      if (!current.parent_id && doneAt) {
+        await db.todos
+          .where('parent_id')
+          .equals(id)
+          .filter((row) => !row.deleted_at && !row.done_at)
+          .modify({ done_at: doneAt, updated_at: stamp })
+      }
+      return this.withSubtasks(db, updated)
+    })
+  }
+
+  async restore(id: string): Promise<SavedTodo> {
+    return this.write(
+      id,
+      async (db, current) => {
+        if (!current.deleted_at) return this.withSubtasks(db, current)
+        if (current.parent_id && (await db.todos.get(current.parent_id))?.deleted_at)
+          throw new ValidationError('parent_id', 'Restore the parent first.')
+
+        const stamp = this.now().toISOString()
+        const updated = { ...current, deleted_at: null, updated_at: stamp }
+        if (updated.deleted_with_parent) updated.deleted_with_parent = false
+        await db.todos.put(updated)
+        if (!current.parent_id) {
+          await db.todos
+            .where('parent_id')
+            .equals(id)
+            .filter((row) => row.deleted_with_parent === true)
+            .modify({ deleted_at: null, deleted_with_parent: false, updated_at: stamp })
+        }
+        return this.withSubtasks(db, updated)
+      },
+      true,
+    )
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.write(id, async (db, current) => {
+      const stamp = this.now().toISOString()
+      const deleted = { ...current, deleted_at: stamp, updated_at: stamp }
+      await db.todos.put(deleted)
+      if (!current.parent_id) {
+        await db.todos
+          .where('parent_id')
+          .equals(id)
+          .filter((row) => !row.deleted_at)
+          .modify({ deleted_at: stamp, deleted_with_parent: true, updated_at: stamp })
+      }
+      return deleted
+    })
+  }
+
+  private async withSubtasks(db: GuestDatabase, todo: Todo): Promise<SavedTodo> {
+    const rows = todo.parent_id
+      ? []
+      : await db.todos
+          .where('parent_id')
+          .equals(todo.id)
+          .filter((row) => !row.deleted_at)
+          .toArray()
+    return {
+      ...todo,
+      subtasks: rows.sort(byCreated).map(toTodaySubtask),
+    }
+  }
+
+  private async write(
+    id: string,
+    change: (db: GuestDatabase, current: Todo) => Promise<SavedTodo>,
+    includeDeleted = false,
+  ): Promise<SavedTodo> {
+    const db = await this.open()
+    const next = await db.transaction('rw', db.todos, async () => {
+      const current = await db.todos.get(id)
+      if (!current || (!includeDeleted && current.deleted_at)) return undefined
+      return change(db, current)
+    })
+    // Dexie wraps errors named NotFoundError thrown inside a transaction.
     if (!next) throw new NotFoundError('Todo', id)
     return next
   }

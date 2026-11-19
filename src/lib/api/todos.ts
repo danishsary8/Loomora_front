@@ -7,7 +7,8 @@ export function createTodosApi({ request }: ApiClient) {
   return {
     list: (date: string) =>
       request<{ data: ApiTodo[] }>('GET', '/todos', { query: { date } }).then((r) => r.data),
-    create: (body: TodoBody) => request<{ data: ApiTodo }>('POST', '/todos', { body }).then(one),
+    create: (body: TodoBody & { title: string; parent_id?: string | null }) =>
+      request<{ data: ApiTodo }>('POST', '/todos', { body }).then(one),
     update: (id: string, body: TodoBody) =>
       request<{ data: ApiTodo }>('PATCH', `/todos/${id}`, { body }).then(one),
     setDone: (id: string) => request<{ data: ApiTodo }>('POST', `/todos/${id}/done`).then(one),

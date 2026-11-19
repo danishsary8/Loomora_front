@@ -248,15 +248,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/components/*`, `src/features/todos/*`, repositories, `src/i18n/locales/en.json`
 
 ### F-023: Subtasks, priority and notes UI
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
   1. Needs B-019. Add notes (textarea), priority (low, normal, high with a text label, not only color) and subtasks (add, check, delete; one level) to the to-do sheet and rows. Show a subtask count like 2/3 on the row. Checking a parent marks its open subtasks done.
   2. Guest repository enforces the same rules (depth 1, parent check-off marks subtasks done). Bump the Dexie version with a migration and include the new fields in the import payload.
 - **Done when:**
-  - [ ] Vitest for the rules in guest mode and for the account mapping with MSW
-  - [ ] Playwright (375 px): add a to-do with 2 subtasks, check one, check the parent, all done
-  - [ ] Lint, typecheck, test, build, axe pass
+  - [x] Vitest for the rules in guest mode and for the account mapping with MSW
+  - [x] Playwright (375 px): add a to-do with 2 subtasks, check one, check the parent, all done
+  - [x] Lint, typecheck, test, build, axe pass
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/subtasks.spec.ts`
 
 ### F-024: Repeating to-dos UI
