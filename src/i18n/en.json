@@ -340,7 +340,8 @@
     "retry": "Try again"
   },
   "offline": {
-    "banner": "You are offline. Your plan still works and saves on this device."
+    "banner": "You are offline. Your plan still works and saves on this device.",
+    "bannerAccount": "You are offline. Changes will not be saved until you are back online."
   },
   "auth": {
     "email": "Email",
@@ -360,10 +361,7 @@
       "emailInvalid": "Enter a valid email address.",
       "passwordRequired": "Enter your password.",
       "passwordShort": "Use at least {{count}} characters.",
-      "wrongCredentials": "Wrong email or password.",
-      "network": "Could not reach Loomora. Check your connection and try again.",
-      "rateLimited": "Too many tries. Wait a minute and try again.",
-      "unexpected": "Something went wrong. Please try again."
+      "wrongCredentials": "Wrong email or password."
     },
     "googleErrors": {
       "account_not_found": "We could not find an account for that Google address. Create one below.",
@@ -407,5 +405,20 @@
       "failed": "This confirmation link is not valid or has expired.",
       "toToday": "Go to Today"
     }
+  },
+  "errors": {
+    "network": "Could not reach Loomora. Check your connection and try again.",
+    "unauthorized": "Your session ended. Please sign in again.",
+    "validation": "Some details need fixing. Check the form and try again.",
+    "rateLimited": "Too many tries. Wait a minute and try again.",
+    "server": "Loomora is having trouble right now. Please try again in a moment.",
+    "unexpected": "Something went wrong. Please try again."
+  },
+  "serviceDown": {
+    "banner": "We cannot reach Loomora right now. Changes may not be saved until it is back.",
+    "retry": "Retry"
+  },
+  "routeError": {
+    "goToToday": "Go to Today"
   }
 }
