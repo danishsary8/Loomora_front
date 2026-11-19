@@ -113,11 +113,7 @@ export function TodayPage() {
       />
       <SavePlanPrompt today={today} />
       <AddTodoSheet open={sheetOpen} onClose={() => setSheetOpen(false)} today={today} />
-      <UndoDeleteToast
-        pending={del.pending}
-        onUndo={() => void del.undo()}
-        error={del.error}
-      />
+      <UndoDeleteToast pending={del.pending} onUndo={() => void del.undo()} error={del.error} />
     </div>
   )
 }
