@@ -35,6 +35,8 @@ export function createAuthApi(client: ApiClient) {
     },
     verifyEmail: (input: VerifyEmailInput) =>
       request<Message & { user: User }>('POST', '/auth/email/verify', { body: input, auth: false }),
+    /** Sends the verification email again (3 per 10 minutes). Needs the token. */
+    resendVerification: () => request<Message>('POST', '/auth/email/resend'),
     forgotPassword: (email: string) =>
       request<Message>('POST', '/auth/password/forgot', { body: { email }, auth: false }),
     resetPassword: (input: ResetPasswordInput) =>

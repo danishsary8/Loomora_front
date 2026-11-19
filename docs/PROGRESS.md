@@ -178,3 +178,10 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm test` 39 files / 356 tests (mapping table, banner: guest hidden, Retry fails then succeeds, 30 s poll with fake timers, route error, account offline text); `lint`, `format:check`, `typecheck`, `knip`, `build` exit 0; e2e phone-375: 40 passed, incl. new `e2e/backend-down.spec.ts` (`/api/**` aborted shows the banner, un-abort plus Retry hides it, unknown URL shows 404, guests make no API calls).
 - **Problems:** None open.
 - **Questions:** (Q40) The task lists `src/i18n/locales/en.json`, but the file is `src/i18n/en.json`; I used the real path. (Q41) Failed list queries (Today, Week) still show the generic ErrorState text, not the mapped one; should they use the mapping too? Left out to stay inside the steps. (Q42) The e2e mocks the API with Playwright routes; there is no real backend in CI.
+
+### 2026-11-18: F-021 Resend verification email
+- **Note on order:** stacked on F-019 (PR #21) because it uses the error-mapping table. Merge #21 first.
+- **Plan:** (1) `authApi.resendVerification` (`POST /auth/email/resend`, with token); (2) shared `ResendVerification` button with success, 429 wait time and error text; (3) show it on the Profile account card for unverified accounts and on the verify-email screen for a signed-in, unverified user (when the link failed); (4) MSW tests.
+- **Changed:** as planned. The 429 text uses `Retry-After` rounded up to minutes ("Try again in 2 minutes."); without a retry time it falls back to the shared rate-limit text; other failures use `errors.*`. Signed-out visitors on the verify screen do not see it (the endpoint needs a token).
+- **Verified:** `npm test` all pass incl. new tests (success sends the bearer token, 429 with and without retry time, network error, Profile verified vs unverified, verify page signed in vs out); lint, format:check, typecheck, knip, build, e2e results in the PR.
+- **Questions:** (Q44) Should the verify screen also show Resend right after a successful sign-up, before any link is opened? Not in the steps; left out.
