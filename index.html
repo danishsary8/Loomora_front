@@ -7,9 +7,29 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Loomora</title>
+    <style>
+      /* Static shell: cream page and logo paint before any JavaScript runs. */
+      html,
+      body {
+        margin: 0;
+        background: #f5ede6;
+      }
+      #boot {
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+      #boot img {
+        width: 96px;
+        height: 96px;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot"><img src="/icon.svg" alt="Loomora" width="96" height="96" /></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

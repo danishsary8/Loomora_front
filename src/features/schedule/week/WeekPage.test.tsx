@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { GuestDatabase, GuestScheduleRepository } from '@/lib/storage'
+import { GuestDatabase } from '@/lib/storage/db'
+import { GuestScheduleRepository } from '@/lib/storage'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 import type { Weekday } from '../types'
 

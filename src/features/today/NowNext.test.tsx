@@ -2,7 +2,8 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { todayWeekday } from '@/features/schedule/week/weekPlan'
 import { toLocalDate } from '@/lib/date'
-import { GuestDatabase, GuestScheduleRepository } from '@/lib/storage'
+import { GuestDatabase } from '@/lib/storage/db'
+import { GuestScheduleRepository } from '@/lib/storage'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 
 // The fake clock: Now/Next read the time from `useNow`, so each test just sets it.
