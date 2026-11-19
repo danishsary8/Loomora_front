@@ -124,6 +124,67 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
   })
 })
 
+describe('saveGuestPlan in chunks', () => {
+  async function fillManyCheckins(count: number) {
+    const item = await guest.schedule.create({
+      title: 'Math',
+      start_time: '08:00',
+      end_time: '09:00',
+      days: [0],
+      starts_on: '2026-01-01',
+    })
+    await db.schedule_checkins.bulkAdd(
+      Array.from({ length: count }, (_, i) => ({
+        id: crypto.randomUUID(),
+        schedule_item_id: item.id,
+        date: `d${i}`,
+        done_at: '2026-10-26T03:00:00Z',
+      })),
+    )
+  }
+
+  it('sends 12000 check-ins in 2 calls, items first, then clears the device', async () => {
+    await fillManyCheckins(12000)
+    const bodies: ImportBody[] = []
+    server.use(
+      http.post(`${API}/import`, async ({ request }) => {
+        bodies.push((await request.json()) as ImportBody)
+        return HttpResponse.json({ data: RESULT })
+      }),
+    )
+
+    expect(await saveGuestPlan(guest, accountDataApi)).toBe(true)
+
+    expect(bodies.map((b) => b.checkins.length)).toEqual([10000, 2000])
+    expect(bodies.map((b) => b.schedule_items.length)).toEqual([1, 0])
+    expect(await db.schedule_checkins.count()).toBe(0)
+  })
+
+  it('keeps all local data when the second call fails, and a retry sends no duplicates', async () => {
+    await fillManyCheckins(12000)
+    const sent = new Set<string>()
+    let calls = 0
+    server.use(
+      http.post(`${API}/import`, async ({ request }) => {
+        calls += 1
+        if (calls === 2) return HttpResponse.json({ message: 'Boom' }, { status: 500 })
+        const body = (await request.json()) as ImportBody
+        body.checkins.forEach((c) => sent.add(c.id))
+        return HttpResponse.json({ data: RESULT })
+      }),
+    )
+
+    await expect(saveGuestPlan(guest, accountDataApi)).rejects.toBeDefined()
+    expect(await db.schedule_checkins.count()).toBe(12000)
+    expect((await readGuestPlan(guest)).items).toHaveLength(1)
+
+    expect(await saveGuestPlan(guest, accountDataApi)).toBe(true)
+    // The server skips ids it has; every id reached it, and none is outside the plan.
+    expect(sent.size).toBe(12000)
+    expect(await db.schedule_checkins.count()).toBe(0)
+  })
+})
+
 describe('checkOffCount', () => {
   it('counts done to-dos and schedule check-ins', async () => {
     await fillGuest()

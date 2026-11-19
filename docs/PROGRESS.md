@@ -178,6 +178,11 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** `npm test` 39 files / 356 tests (mapping table, banner: guest hidden, Retry fails then succeeds, 30 s poll with fake timers, route error, account offline text); `lint`, `format:check`, `typecheck`, `knip`, `build` exit 0; e2e phone-375: 40 passed, incl. new `e2e/backend-down.spec.ts` (`/api/**` aborted shows the banner, un-abort plus Retry hides it, unknown URL shows 404, guests make no API calls).
 - **Problems:** None open.
 - **Questions:** (Q40) The task lists `src/i18n/locales/en.json`, but the file is `src/i18n/en.json`; I used the real path. (Q41) Failed list queries (Today, Week) still show the generic ErrorState text, not the mapped one; should they use the mapping too? Left out to stay inside the steps. (Q42) The e2e mocks the API with Playwright routes; there is no real backend in CI.
+### 2026-11-18: F-020 Import in chunks under the API limits
+- **Plan:** (1) split the import body into calls under the per-call caps (5000 exceptions, 10000 check-ins); (2) to-dos and items (totals per user) go in the first call; (3) call in order, clear the device only after every call succeeds; (4) Vitest.
+- **Changed:** `chunkImportBody` in `src/lib/storage/saveGuestPlan.ts`; `saveGuestPlan` sends the chunks one after another. Branched from `v2-rebuild` (not stacked on F-019); `docs/PROGRESS.md` and `TASKS.md` may conflict on merge, keep both notes.
+- **Verified:** 12000 check-ins send 2 calls (10000 + 2000, items only in the first); a failure on call 2 keeps all 12000 check-ins and the items; the retry succeeds and clears the device (ids are identical, so the server skips repeats). Full run below.
+- **Questions:** (Q43) Task Files says `src/features/*/saveGuestPlan*`; the file is `src/lib/storage/saveGuestPlan.ts`.
 
 ### 2026-11-18: F-021 Resend verification email
 - **Note on order:** stacked on F-019 (PR #21) because it uses the error-mapping table. Merge #21 first.

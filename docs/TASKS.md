@@ -216,13 +216,13 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/app/*`, `src/lib/api/*`, `src/components/*`, `src/i18n/locales/en.json`, `e2e/backend-down.spec.ts`
 
 ### F-020: Import in chunks under the API limits
-- **Status:** todo
+- **Status:** review
 - **Owner:** antigravity
 - **Steps:**
   1. The import endpoint caps exceptions at 5000 and check-ins at 10000. Split the guest payload into several `POST /import` calls under the caps (the import is idempotent by id, so repeats are safe) and clear the device data only after every call succeeds.
 - **Done when:**
-  - [ ] Vitest: a payload with 12000 check-ins sends 2 calls; a failure on the second call keeps all local data; a retry succeeds without duplicates
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest: a payload with 12000 check-ins sends 2 calls; a failure on the second call keeps all local data; a retry succeeds without duplicates
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/features/*/saveGuestPlan*`, tests
 
 ### F-021: Resend verification email
