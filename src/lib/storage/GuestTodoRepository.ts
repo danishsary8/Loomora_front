@@ -32,7 +32,8 @@ export class GuestTodoRepository implements TodoRepository {
   }
 
   async listAll(): Promise<Todo[]> {
-    return (await this.open()).todos.toArray()
+    const all = await (await this.open()).todos.toArray()
+    return all.filter((t) => !t.deleted_at)
   }
 
   /** Remove every guest to-do (after a successful import, docs/08 rule 9). */
@@ -42,7 +43,11 @@ export class GuestTodoRepository implements TodoRepository {
 
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
     // R1 caps guests at 500 to-dos, so filtering in memory is fine.
-    return buildTodayList(await (await this.open()).todos.toArray(), date)
+    const all = await (await this.open()).todos.toArray()
+    return buildTodayList(
+      all.filter((t) => !t.deleted_at),
+      date,
+    )
   }
 
   async create(input: CreateTodoInput): Promise<Todo> {
@@ -84,8 +89,14 @@ export class GuestTodoRepository implements TodoRepository {
     return this.write(id, { done_at: done ? stamp : null, updated_at: stamp })
   }
 
+  async restore(id: string): Promise<Todo> {
+    const stamp = this.now().toISOString()
+    return this.write(id, { deleted_at: null, updated_at: stamp })
+  }
+
   async delete(id: string): Promise<void> {
-    await (await this.open()).todos.delete(id)
+    const stamp = this.now().toISOString()
+    await this.write(id, { deleted_at: stamp, updated_at: stamp })
   }
 
   private async write(id: string, changes: Partial<Todo>): Promise<Todo> {

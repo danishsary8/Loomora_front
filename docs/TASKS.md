@@ -236,15 +236,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/auth/*`, `src/features/profile/*`, `src/lib/api/*`, `src/i18n/locales/en.json`
 
 ### F-022: Undo toast for deletes
-- **Status:** todo
-- **Owner:** codex
+- **Status:** review
+- **Owner:** antigravity
 - **Steps:**
   1. Needs B-022 and a refreshed `docs/openapi.yaml`. Add `restore` to the to-do repositories (Dexie: clear `deleted_at`; server: `POST /todos/{id}/restore`).
   2. A reusable `useUndoableDelete`: remove from the cache at once, call remove, show a 5 s toast with Undo (focusable, `aria-live=polite`). Undo restores; a remove error rolls back and shows an error toast. Use it for to-dos.
 - **Done when:**
-  - [ ] Vitest: delete then Undo calls restore once and the row returns; no Undo within 5 s keeps it gone; a remove error rolls back
-  - [ ] Guest and account modes both covered
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest: delete then Undo calls restore once and the row returns; no Undo within 5 s keeps it gone; a remove error rolls back
+  - [x] Guest and account modes both covered
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/components/*`, `src/features/todos/*`, repositories, `src/i18n/locales/en.json`
 
 ### F-023: Subtasks, priority and notes UI

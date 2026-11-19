@@ -33,6 +33,10 @@ export class ServerTodoRepository implements TodoRepository {
     return toTodo(await (done ? this.api.setDone(id) : this.api.clearDone(id)))
   }
 
+  async restore(id: string): Promise<Todo> {
+    return toTodo(await asValidation(this.api.restore(id)))
+  }
+
   delete(id: string): Promise<void> {
     return this.api.remove(id)
   }

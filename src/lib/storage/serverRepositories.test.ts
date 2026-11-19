@@ -73,18 +73,24 @@ describe('ServerTodoRepository', () => {
         calls.push('DELETE todo')
         return new HttpResponse(null, { status: 204 })
       }),
+      http.post(`${API}/todos/${ID}/restore`, () => {
+        calls.push('POST restore')
+        return HttpResponse.json({ data: apiTodo })
+      }),
     )
     expect((await repo.create({ title: 'Read', due_date: '2026-10-26' })).id).toBe(ID)
     expect((await repo.update(ID, { title: 'Read more' })).title).toBe('Read more')
     expect((await repo.setDone(ID, true)).done_at).toBe('2026-10-26T02:00:00Z')
     expect((await repo.setDone(ID, false)).done_at).toBeNull()
     await repo.delete(ID)
+    expect((await repo.restore(ID)).id).toBe(ID)
     expect(calls).toEqual([
       'POST /todos {"title":"Read","due_date":"2026-10-26"}',
       'PATCH {"title":"Read more"}',
       'POST done',
       'DELETE done',
       'DELETE todo',
+      'POST restore',
     ])
   })
 

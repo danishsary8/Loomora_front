@@ -14,6 +14,8 @@ export interface Todo {
   due_date: LocalDate | null
   /** ISO 8601 UTC timestamp, or null when not done. */
   done_at: string | null
+  /** ISO 8601 UTC timestamp when soft-deleted, or null/undefined. */
+  deleted_at?: string | null
   created_at: string
   updated_at: string
 }

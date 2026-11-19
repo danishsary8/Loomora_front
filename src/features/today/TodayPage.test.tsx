@@ -215,3 +215,23 @@ describe('streak badge', () => {
     expect(badge).toHaveAttribute('data-today-counted', 'false')
   })
 })
+
+describe('delete with undo (F-022)', () => {
+  it('deletes a to-do, shows undo toast, and restores when Undo is clicked', async () => {
+    await repo.create({ title: 'Delete me', due_date: today })
+    await openToday()
+    expect(await screen.findByText('Delete me')).toBeInTheDocument()
+
+    const deleteBtn = screen.getByRole('button', { name: 'Delete “Delete me”' })
+    await userEvent.click(deleteBtn)
+
+    expect(screen.queryByText('Delete me')).not.toBeInTheDocument()
+    expect(await screen.findByText('Deleted “Delete me”')).toBeInTheDocument()
+    const undoBtn = screen.getByRole('button', { name: 'Undo' })
+    expect(undoBtn).toBeInTheDocument()
+
+    await userEvent.click(undoBtn)
+    expect(await screen.findByText('Delete me')).toBeInTheDocument()
+    expect(screen.queryByText('Deleted “Delete me”')).not.toBeInTheDocument()
+  })
+})

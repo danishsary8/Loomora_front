@@ -17,5 +17,6 @@ export interface TodoRepository {
   update(id: string, patch: UpdateTodoInput): Promise<Todo>
   /** Set or clear done_at (docs/08 rule 7). */
   setDone(id: string, done: boolean): Promise<Todo>
+  restore(id: string): Promise<Todo>
   delete(id: string): Promise<void>
 }
