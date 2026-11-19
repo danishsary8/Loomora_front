@@ -11,6 +11,8 @@ export function makeUser(overrides: Partial<User> = {}): User {
     email: 'sokha@example.com',
     email_verified_at: null,
     timezone: 'Asia/Phnom_Penh',
+    time_format: '24h',
+    week_starts_on: 1,
     goal: null,
     heard_from: null,
     survey_done: false,

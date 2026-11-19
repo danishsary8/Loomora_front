@@ -1,8 +1,11 @@
 import { useState } from 'react'
+import { useSession } from '@/lib/api'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Button, FloatingAddButton } from '@/components/ui'
+import { formatWallTime, orderedWeekdays } from '@/lib/time/time'
+import { useTimePreferences } from '@/lib/time/useTimePreferences'
 import { DayToggle } from '../DayToggle'
 import { ScheduleItemSheet, type ScheduleTarget } from '../ScheduleItemSheet'
 import type { ScheduleItem, Weekday } from '../types'
@@ -11,14 +14,18 @@ import { useUndoableDelete } from '../useUndoableDelete'
 import { CopyDaySheet } from './CopyDaySheet'
 import { DayColumn } from './DayColumn'
 import { useScheduleItems } from './useWeek'
-import { itemsOnWeekday, todayWeekday, WEEKDAYS } from './weekPlan'
+import { itemsOnWeekday, todayWeekday } from './weekPlan'
 
 /** S6 Week: the fixed schedule. Phone: one day at a time or an overview; 768 px and up: 7 columns. */
 export function WeekPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const { values } = useTimePreferences()
+  const weekdays = orderedWeekdays(values.week_starts_on)
+  const formatTime = (time: string) => formatWallTime(time, values.time_format, i18n.language)
+  const zone = useSession((state) => state.user?.timezone)
   const items = useScheduleItems()
   const del = useUndoableDelete()
-  const [selected, setSelected] = useState<Weekday>(() => todayWeekday())
+  const [selected, setSelected] = useState<Weekday>(() => todayWeekday(new Date(), zone))
   const [overview, setOverview] = useState(false)
   const [target, setTarget] = useState<ScheduleTarget | null>(null)
   const [copyFrom, setCopyFrom] = useState<Weekday | null>(null)
@@ -52,9 +59,9 @@ export function WeekPage() {
             <div
               role="group"
               aria-label={t('week.dayStrip')}
-              className={overview ? 'hidden' : 'flex gap-2'}
+              className={overview ? 'hidden' : 'flex flex-wrap gap-1'}
             >
-              {WEEKDAYS.map((day) => (
+              {weekdays.map((day) => (
                 <DayToggle
                   key={day}
                   label={t(`weekdays.long.${day}`)}
@@ -75,11 +82,12 @@ export function WeekPage() {
 
           {/* pb-20: room to scroll the last item clear of the floating + */}
           <div className="flex flex-col gap-6 pb-20 md:grid md:grid-cols-7 md:items-start md:gap-3">
-            {WEEKDAYS.map((day) => (
+            {weekdays.map((day) => (
               <DayColumn
                 key={day}
                 day={day}
                 items={itemsOnWeekday(list, day)}
+                formatTime={formatTime}
                 className={overview || day === selected ? undefined : 'hidden md:flex'}
                 onOpenItem={openItem}
                 onCopy={setCopyFrom}

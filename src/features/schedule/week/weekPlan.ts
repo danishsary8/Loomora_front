@@ -1,10 +1,11 @@
 import type { ScheduleItem, Weekday } from '../types'
 
-export const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6]
+import { toLocalDate } from '@/lib/date'
+import { weekdayOf } from '../occurrences'
 
 /** The weekday number (0 = Monday) of a date. */
-export function todayWeekday(date: Date = new Date()): Weekday {
-  return ((date.getDay() + 6) % 7) as Weekday
+export function todayWeekday(date: Date = new Date(), zone?: string): Weekday {
+  return weekdayOf(toLocalDate(date, zone))
 }
 
 function byStart(a: ScheduleItem, b: ScheduleItem): number {

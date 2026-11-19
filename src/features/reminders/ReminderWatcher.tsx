@@ -147,6 +147,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
         <ReminderBanner
           key={currentKey}
           title={current.title}
+          remindAt={current.remind_at}
           busy={busy}
           error={error?.key === currentKey ? error?.message : undefined}
           onAction={(action) => void act(action)}

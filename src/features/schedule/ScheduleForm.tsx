@@ -2,12 +2,14 @@ import type { TFunction } from 'i18next'
 import { useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input } from '@/components/ui'
+import { ClockInput } from '@/components/ui/ClockInput'
 import { ValidationError } from '@/lib/storage'
 import { CATEGORIES, type Category } from '@/styles/tokens'
 import { DayToggle } from './DayToggle'
 import type { TimeOfDay, Weekday } from './types'
 
-const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6]
+import { orderedWeekdays, parseWallTime } from '@/lib/time/time'
+import { useTimePreferences } from '@/lib/time/useTimePreferences'
 
 export interface ScheduleFormValues {
   title: string
@@ -38,8 +40,12 @@ export function ScheduleForm({
   onDelete,
 }: ScheduleFormProps) {
   const { t } = useTranslation()
+  const { values: preferences } = useTimePreferences()
   const titleRef = useRef<HTMLInputElement>(null)
   const [values, setValues] = useState(initial)
+  const [timeDraft, setTimeDraft] = useState<
+    Partial<Pick<ScheduleFormValues, 'start_time' | 'end_time'>>
+  >({})
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
 
@@ -55,7 +61,12 @@ export function ScheduleForm({
     change({ days }, 'days')
   }
 
-  function validate(): Errors {
+  function changeTime(field: 'start_time' | 'end_time', time: string) {
+    setTimeDraft((current) => ({ ...current, [field]: time }))
+    setErrors((current) => ({ ...current, time: undefined }))
+  }
+
+  function validate(values: ScheduleFormValues): Errors {
     const found: Errors = {}
     if (values.title.trim() === '') found.title = t('scheduleForm.titleRequired')
     if (values.start_time === '' || values.end_time === '')
@@ -67,7 +78,18 @@ export function ScheduleForm({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    const found = validate()
+    const normalized = {
+      ...values,
+      start_time:
+        timeDraft.start_time === undefined
+          ? values.start_time
+          : (parseWallTime(timeDraft.start_time) ?? ''),
+      end_time:
+        timeDraft.end_time === undefined
+          ? values.end_time
+          : (parseWallTime(timeDraft.end_time) ?? ''),
+    }
+    const found = validate(normalized)
     setErrors(found)
     if (Object.keys(found).length > 0) {
       if (found.title) titleRef.current?.focus()
@@ -75,7 +97,7 @@ export function ScheduleForm({
     }
     setSaving(true)
     try {
-      await onSubmit(values)
+      await onSubmit(normalized)
     } catch (error) {
       setErrors(toErrors(error, t))
       setSaving(false)
@@ -95,18 +117,20 @@ export function ScheduleForm({
         onChange={(e) => change({ title: e.target.value }, 'title')}
       />
       <div className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            type="time"
+        <div className="grid grid-cols-2 gap-3 [&>div]:min-w-0">
+          <ClockInput
             label={t('scheduleForm.start')}
-            value={values.start_time}
-            onChange={(e) => change({ start_time: e.target.value }, 'time')}
+            format={preferences.time_format}
+            wallTime={values.start_time}
+            draft={timeDraft.start_time}
+            onChange={(time) => changeTime('start_time', time)}
           />
-          <Input
-            type="time"
+          <ClockInput
             label={t('scheduleForm.end')}
-            value={values.end_time}
-            onChange={(e) => change({ end_time: e.target.value }, 'time')}
+            format={preferences.time_format}
+            wallTime={values.end_time}
+            draft={timeDraft.end_time}
+            onChange={(time) => changeTime('end_time', time)}
           />
         </div>
         {errors.time && (
@@ -119,8 +143,8 @@ export function ScheduleForm({
         <>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-sm font-bold">{t('scheduleForm.repeat')}</legend>
-            <div className="flex gap-1.5">
-              {WEEKDAYS.map((day) => (
+            <div className="flex flex-wrap gap-1.5">
+              {orderedWeekdays(preferences.week_starts_on).map((day) => (
                 <DayToggle
                   key={day}
                   label={t(`weekdays.long.${day}`)}
