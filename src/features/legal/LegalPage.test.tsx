@@ -26,6 +26,10 @@ describe.each([
     expect(mainText).not.toMatch(/does not send it to us/i)
     expect(mainText).not.toMatch(/Your plan is saved on your device only/i)
     expect(mainText).not.toMatch(/we never had it/i)
+    expect(mainText).not.toMatch(/sell your data/i)
+    expect(mainText).not.toMatch(/no (?:third-party )?(?:ad networks|ad trackers|analytics)/i)
+    expect(mainText).not.toMatch(/analytics scripts/i)
+    expect(mainText).not.toMatch(/streak history/i)
   })
 })
 
@@ -40,11 +44,14 @@ describe('Privacy disclosures', () => {
     expect(mainText).toMatch(/clear.*browser|browser data/i)
     expect(mainText).toMatch(/lose.*device|device is lost/i)
 
-    // Account mode: API, PostgreSQL, email/Google auth, localStorage token, import
+    // Account mode: API, PostgreSQL, email/Google auth, localStorage token, import, streak fields
     expect(mainText).toMatch(/PostgreSQL/i)
     expect(mainText).toMatch(/API/i)
     expect(mainText).toMatch(/localStorage/i)
     expect(mainText).toMatch(/import/i)
+    expect(mainText).toMatch(/current streak/i)
+    expect(mainText).toMatch(/longest streak/i)
+    expect(mainText).toMatch(/last counted streak date/i)
   })
 
   it('discloses feedback, email delivery, Google sign-in, hosting providers, and offline caching', async () => {

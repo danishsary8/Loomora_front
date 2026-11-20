@@ -34,8 +34,12 @@ test('legal links navigate from landing, sign-in, and sign-up and pass 375 px ac
   expect(privacyMain).toMatch(/IndexedDB/i)
   expect(privacyMain).toMatch(/PostgreSQL/i)
   expect(privacyMain).toMatch(/Google-only/i)
+  expect(privacyMain).toMatch(/current streak/i)
   expect(privacyMain).not.toMatch(/Accounts are not available yet/i)
   expect(privacyMain).not.toMatch(/does not send it to us/i)
+  expect(privacyMain).not.toMatch(/sell your data/i)
+  expect(privacyMain).not.toMatch(/analytics scripts/i)
+  expect(privacyMain).not.toMatch(/streak history/i)
 
   const privacyHeadings = await page
     .locator('main h1, main h2, main h3')

@@ -323,7 +323,7 @@
         "body": "Creating an account is optional. When you sign up or sign in with email and password or with Google, Loomora sends your plan and account details to the Loomora API and stores them in a remote PostgreSQL database.",
         "items": {
           "i1": "Account and authentication details: email address, display name, time zone, display settings (12h/24h and week start), a hashed password (for email accounts), a Google account ID and verified email status (for Google sign-in), and optional sign-up survey answers (your main goal and how you heard about Loomora).",
-          "i2": "Plan data: your to-dos, subtasks, notes, reminders, schedule items, exceptions, check-ins, daily intentions, and streak history.",
+          "i2": "Plan data: your to-dos, subtasks, notes, reminders, schedule items, exceptions, check-ins, daily intentions, and your current streak, longest streak, and last counted streak date.",
           "i3": "Session storage: the app stores a 30-day API access token and basic profile details in your browser’s localStorage so you stay signed in across reloads and tabs.",
           "i4": "Guest import: if you have a guest plan on your device when you sign up or sign in, Loomora imports those records to your account and removes the imported plan data from local IndexedDB once every import batch succeeds."
         }
@@ -334,7 +334,7 @@
       },
       "s4": {
         "title": "Hosting, email, and third-party services",
-        "body": "Loomora is a student-developed project that relies on external infrastructure providers. The app includes no third-party ad networks, ad trackers, or analytics scripts, and we do not sell your data.",
+        "body": "Loomora is a student-developed project that relies on external infrastructure providers to run the web app, API, database, optional Google sign-in, and emails:",
         "items": {
           "i1": "Vercel is configured to host and deliver the web app.",
           "i2": "Render is configured to host the Loomora backend API.",
@@ -364,7 +364,7 @@
       },
       "s7": {
         "title": "Contact and open publication details",
-        "body": "Loomora is a student-developed app still in active development. You can send questions or reports through Send feedback in Profile. A dedicated operator contact email, data retention and backup schedule, and official effective date require owner confirmation before public launch."
+        "body": "Loomora is a student-developed app still in active development. You can send questions or reports through Send feedback in Profile. A dedicated operator contact email, data retention and backup schedule, hosting analytics and data-sharing disclosures, and an official effective date require owner confirmation before public launch."
       }
     },
     "terms": {
