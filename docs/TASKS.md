@@ -379,5 +379,6 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Direct account switches across tabs isolate cached data and close or reset stale session UI without exposing the previous account's data.
   - [x] Retired async responses (`login`, `register`, `googleExchange`, `submitSurvey`, `logout`, `streak`, `reminders`, `401`) cannot restore an old session or leak stale data.
   - [x] Guest Dexie data is preserved across sign-out; storage-event feedback loops and duplicate sign-outs are prevented.
+  - [x] Delayed or reordered cross-tab messages cannot overwrite a newer session or restore a session after sign-out, and BroadcastChannel fallback works when storage is blocked.
   - [x] Lint, typecheck, Knip, LF formatting, Vitest, production build, phone-375 Playwright (including two-tab test), and Redocly OpenAPI lint pass.
 - **Files:** `src/lib/api/session.ts`, `src/lib/api/tokenStorage.ts`, `src/lib/api/client.ts`, `src/lib/api/index.ts`, `src/app/AppProviders.tsx`, `src/features/streak/useStreak.ts`, `src/features/todos/useTodos.ts`, `src/features/reminders/ReminderWatcher.tsx`, `src/features/profile/ProfilePage.tsx`, `src/features/auth/*`, `src/app/crossTabSession.test.tsx`, `e2e/cross-tab-session.spec.ts`

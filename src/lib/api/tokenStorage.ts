@@ -40,6 +40,19 @@ export function parseStoredSession(
   }
 }
 
+/** Read the current session from localStorage without mutating storage. */
+export function readStoredSessionStatus(now: Date = new Date()): {
+  readable: boolean
+  session: StoredSession | null
+} {
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY)
+    return { readable: true, session: parseStoredSession(raw, now) }
+  } catch {
+    return { readable: false, session: null }
+  }
+}
+
 /** The saved session, or null when there is none, it is unreadable, or the token has expired. */
 export function readSession(now: Date = new Date()): StoredSession | null {
   try {
@@ -56,18 +69,22 @@ export function readSession(now: Date = new Date()): StoredSession | null {
   }
 }
 
-export function writeSession(session: StoredSession): void {
+export function writeSession(session: StoredSession): boolean {
   try {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
+    return true
   } catch {
     // Storage full or blocked: the session still works until the page closes.
+    return false
   }
 }
 
-export function clearSession(): void {
+export function clearSession(): boolean {
   try {
     localStorage.removeItem(SESSION_STORAGE_KEY)
+    return true
   } catch {
     // Nothing stored that we could remove.
+    return false
   }
 }
