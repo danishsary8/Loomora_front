@@ -201,7 +201,9 @@ describe('Sign up and the survey (S10)', () => {
 describe('Google callback', () => {
   it('trades the code for a token and opens the survey for a new account', async () => {
     server.use(
-      http.post(`${API}/auth/google/exchange`, () => HttpResponse.json(makeTokenResponse())),
+      http.post(`${API}/auth/google/exchange`, () =>
+        HttpResponse.json(makeTokenResponse(makeUser({ has_password: false }))),
+      ),
     )
     renderRoute(`/auth/google/callback?code=${'a'.repeat(64)}`)
     expect(await screen.findByRole('heading', { level: 1, name: 'Welcome!' })).toBeInTheDocument()
@@ -211,7 +213,7 @@ describe('Google callback', () => {
   it('opens Today for an account that finished the survey', async () => {
     server.use(
       http.post(`${API}/auth/google/exchange`, () =>
-        HttpResponse.json(makeTokenResponse(makeUser({ survey_done: true }))),
+        HttpResponse.json(makeTokenResponse(makeUser({ survey_done: true, has_password: false }))),
       ),
     )
     renderRoute(`/auth/google/callback?code=${'a'.repeat(64)}`)

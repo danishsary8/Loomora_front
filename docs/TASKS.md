@@ -308,14 +308,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/today/DailyIntention.tsx`, repositories, `src/lib/db/*`, `src/i18n/locales/en.json`
 
 ### F-028: Delete-account password field uses `has_password`
-- **Status:** todo
+- **Status:** review
 - **Owner:** codex
 - **Steps:**
-  1. Needs B-025. In the delete-account sheet, hide the password field for accounts where `has_password` is false and explain the confirmation step the API requires (read the contract). Answers Q37.
+  1. Use the B-025 `User.has_password` flag to gate password confirmation. Resolve saved sessions with a missing flag through authenticated `GET /me`. Answers Q37.
+  2. Confirm password-account deletion with `DELETE /me`. Explain the Google-only restriction and keep a close action available.
 - **Done when:**
-  - [ ] Vitest: password account shows the field, Google-only account does not
-  - [ ] Lint, typecheck, test, build pass
-- **Files:** `src/features/profile/*`, `src/lib/api/*`
+  - [x] Password accounts retain the warning and confirmation. Empty passwords are rejected locally, 422 displays the password error, and only 204 signs out and redirects.
+  - [x] Google-only accounts get a translated explanation and close controls, with no deletion request.
+  - [x] Older sessions resolve the flag through `GET /me`. Failed lookups offer retry and keep deletion unavailable.
+  - [x] Closing or switching accounts clears form state. Pending requests are deduplicated, and stale responses cannot sign out or redirect a new session.
+  - [x] Vitest and phone-375 Playwright cover the flows. Lint, typecheck, Knip, LF formatting, build and OpenAPI verification pass.
+- **Files:** `src/features/profile/*`, `src/lib/api/*`, `src/i18n/en.json`, `src/test/apiMocks.ts`, `e2e/delete-account.spec.ts`
 
 ### F-029: Static HTML shell and lazy Dexie for first paint
 - **Status:** done

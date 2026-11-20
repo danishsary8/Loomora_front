@@ -9,6 +9,7 @@ export interface StoredSession {
 }
 
 function isStoredSession(value: unknown): value is StoredSession {
+  // Keep reading older saved users. Features resolve missing account fields through GET /me.
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
   return (

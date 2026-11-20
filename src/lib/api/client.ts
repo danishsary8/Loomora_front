@@ -16,6 +16,9 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** Send the bearer token (default true). */
   auth?: boolean
+  expectedStatus?: number
+  /** Let the caller show a failure without clearing the session on a 401. */
+  preserveSessionOnUnauthorized?: boolean
 }
 
 export type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
@@ -50,7 +53,14 @@ export function createApiClient({
     path: string,
     options: RequestOptions = {},
   ): Promise<T> {
-    const { body, query, signal, auth = true } = options
+    const {
+      body,
+      query,
+      signal,
+      auth = true,
+      expectedStatus,
+      preserveSessionOnUnauthorized,
+    } = options
     const url = new URL(`${base}${path}`, window.location.origin)
     for (const [key, value] of Object.entries(query ?? {})) {
       if (value !== undefined) url.searchParams.set(key, value)
@@ -77,9 +87,18 @@ export function createApiClient({
 
     const data = await readBody(response)
     signal?.throwIfAborted()
-    if (response.ok) return data as T
+    if (response.ok && (expectedStatus === undefined || response.status === expectedStatus)) {
+      return data as T
+    }
 
-    if (response.status === 401 && token && getToken() === token) onUnauthorized()
+    if (
+      response.status === 401 &&
+      !preserveSessionOnUnauthorized &&
+      token &&
+      getToken() === token
+    ) {
+      onUnauthorized()
+    }
     if (response.status >= 500) onServiceFailure?.()
     throw new ApiError(response.status, (data ?? {}) as ApiErrorBody, retryAfterSeconds(response))
   }

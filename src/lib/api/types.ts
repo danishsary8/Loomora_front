@@ -10,6 +10,7 @@ export interface User extends TimePreferences {
   id: string
   name: string
   email: string
+  has_password: boolean
   email_verified_at: string | null
   timezone: string
   goal: Goal | null
