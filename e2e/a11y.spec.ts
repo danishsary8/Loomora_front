@@ -31,3 +31,86 @@ for (const path of SCREENS) {
     ).toEqual([])
   })
 }
+
+test('populated Today, Week, DaySheet, and 320px CopyDaySheet pass axe, overflow, and focus checks', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone-375', 'Mobile accessibility and 320px sheet check')
+
+  await page.setViewportSize({ width: 320, height: 640 })
+  await page.goto('/today')
+
+  // Opening and submitting the first to-do unmounts TodayEmpty: focus must land in #main, not body.
+  const emptyAdd = page.getByRole('button', { name: 'Add a to-do' })
+  await emptyAdd.click()
+  const addDialog = page.getByRole('dialog', { name: 'Add a to-do' })
+  await expect(addDialog).toBeVisible()
+  await addDialog.getByLabel('Title').focus()
+  await page.keyboard.press('Shift+Tab')
+  expect(
+    await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]'))),
+  ).toBe(true)
+  await addDialog.getByLabel('Title').fill('Check mobile accessibility')
+  await addDialog.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(addDialog).toBeHidden()
+  expect(await page.evaluate(() => document.activeElement?.id)).toBe('main')
+
+  // Escape restores focus to the connected trigger button.
+  const fab = page.getByRole('button', { name: 'Add a to-do' })
+  await fab.click()
+  await expect(addDialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(addDialog).toBeHidden()
+  await expect(fab).toBeFocused()
+
+  // Populate Week, inspect populated Week + 320px CopyDaySheet overflow and axe.
+  await page.goto('/week')
+  await page.getByRole('button', { name: 'Add to my schedule' }).click()
+  const schedDialog = page.getByRole('dialog', { name: 'Add to my schedule' })
+  await schedDialog.getByLabel('Title').fill('Deep work')
+  for (const day of [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ]) {
+    await schedDialog.getByRole('button', { name: day, exact: true }).click()
+  }
+  await schedDialog.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(schedDialog).toBeHidden()
+
+  const weekViolations = (await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations
+  expect(weekViolations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(' | ')}`)).toEqual(
+    [],
+  )
+
+  await page
+    .getByRole('button', { name: /Copy .* to/ })
+    .first()
+    .click()
+  const copyDialog = page.getByRole('dialog')
+  await expect(copyDialog).toBeVisible()
+  const copyOverflow = await copyDialog.evaluate((el) => el.scrollWidth - el.clientWidth)
+  expect(copyOverflow).toBeLessThanOrEqual(0)
+  await page.keyboard.press('Escape')
+  await expect(copyDialog).toBeHidden()
+
+  // Return to Today with Now/Next strip + TodoRow and check axe + DaySheet.
+  await page.goto('/today')
+  await expect(page.getByText('Check mobile accessibility')).toBeVisible()
+  const todayViolations = (await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations
+  expect(
+    todayViolations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(' | ')}`),
+  ).toEqual([])
+
+  await page.getByRole('button', { name: /Open today/i }).click()
+  const dayDialog = page.getByRole('dialog', { name: 'Today’s schedule' })
+  await expect(dayDialog).toBeVisible()
+  const dayViolations = (await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations
+  expect(dayViolations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(' | ')}`)).toEqual(
+    [],
+  )
+})

@@ -48,7 +48,7 @@ function CopyDayBody({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-muted">{t('copyDay.hint')}</p>
-      <div role="group" aria-label={t('copyDay.targets')} className="flex gap-2">
+      <div role="group" aria-label={t('copyDay.targets')} className="flex flex-wrap gap-2">
         {orderedWeekdays(values.week_starts_on)
           .filter((day) => day !== from)
           .map((day) => (

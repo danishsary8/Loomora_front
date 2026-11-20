@@ -466,7 +466,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Status:** blocked
 - **Owner:** antigravity
 - **Source:** QA-001 / QA-002 / B-032 staging audit follow-up on `https://loomora-craft.vercel.app`.
-- **Blocked on:** Owner Vercel dashboard/CLI access (`vercel` CLI has no local credentials; all preview URLs return `302` to `vercel.com/sso-api`) and explicit owner approval to update Vercel Production Branch / `VITE_API_URL` environment scoping and promote `dpl_GU1bKLwGwWE5UvEaBBfprmFZHe58` (`37d5dd5`).
+- **Blocked on:** Owner Vercel dashboard/CLI access (`vercel` CLI has no local credentials; all preview URLs return `302` to `vercel.com/sso-api`) and explicit owner approval to update Vercel Production Branch / `VITE_API_URL` environment scoping and promote latest `v2-rebuild` (currently `98a9b79` / `Afv78XhdBNJPxbGNoqLNSeNMdMjq` + QA-018).
 - **Plan:**
   1. Verify PR #41 (`37d5dd5`) merge and inspect deployment provenance across `v2-rebuild`, `main`, GitHub commit statuses, PR bot comments, and Vercel CLI/dashboard access.
   2. Probe all 13 public routes on `https://loomora-craft.vercel.app` and inspect the served JS bundle to confirm exact deployed state, missing headers, and configured API origin.
@@ -476,16 +476,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Done when:**
   - [x] Production deployment mismatch, exact deployed SHA (`acd5e7d` / `dpl_DV53gg1xKhSr2XbBFneDuyDy3Yge`), latest `v2-rebuild` build (`37d5dd5` / `dpl_GU1bKLwGwWE5UvEaBBfprmFZHe58`), live route HTTP results, and security header gaps are verified and documented.
   - [x] Local `37d5dd5` build, Vitest, phone-375 Playwright (`spa-routing.spec.ts`, `security-headers.spec.ts`, `pwa.spec.ts`), static checks, and audits pass.
-  - [ ] Owner confirms Vercel Project Settings (`Production Branch`, `Root Directory`, `Build & Output`, `Auto-assign Custom Production Domains`, `VITE_API_URL` scope, `Deployment Protection` / `Vercel Toolbar`) and approves/executes promotion of `37d5dd5` (`GU1bKLwGwWE5UvEaBBfprmFZHe58`).
-  - [ ] Live production verification on `https://loomora-craft.vercel.app` (and/or authenticated `37d5dd5` candidate) passes direct SPA routes, 6 security headers, `/sw.js` caching, 375 px mobile/PWA offline reload, and zero CSP violations without weakening production CSP.
+  - [x] **2026-11-21 production verification (QA-018):** Unauthenticated HTTP and Chromium checks on `https://loomora-craft.vercel.app` confirm QA-013/QA-015/F-029 (`37d5dd5`/`077c69e` bundle: `index-Cbeen9Dj.js`, `LegalPage-B608plpI.js`) are now live — HTTP `200` on all 15+ SPA routes & reloads, all 6 security headers + CSP with zero violations, `/sw.js` `Cache-Control` + `NavigationRoute` `denylist`, `404` on `/api*` & `/assets/missing-chunk.js`, `0` console/page/installability errors. However, PR #43 (`98a9b79`, QA-017) is not live yet and Vercel project settings / SSO-protected `v2-rebuild` previews still await owner verification.
+  - [ ] Owner confirms Vercel Project Settings (`Production Branch`, `Root Directory`, `Build & Output`, `Auto-assign Custom Production Domains`, `VITE_API_URL` scope, `Deployment Protection` / `Vercel Toolbar`) and approves/executes promotion of latest `v2-rebuild` (`98a9b79`+).
+  - [ ] Live production verification on `https://loomora-craft.vercel.app` (and/or authenticated latest candidate) passes against the current release commit without weakening production CSP.
 - **Files:** `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### QA-017: Privacy & Terms accuracy
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
+- **Merge:** [PR #43](https://github.com/danishsary8/Loomora_front/pull/43) at `98a9b79`.
 - **Source:** QA-001 / QA-004 (outdated local-only and unavailable-account Privacy and Terms disclosures). Independent of backend B-035 (Q23 Google-only account recovery/deletion investigation).
-- **Publication gate:** **BLOCKED** — Code/copy accuracy fixes are ready for planner review, while **QA-004** and public legal publication remain incomplete/blocked pending Danish's owner confirmations (contact details, retention/backup disclosures, live provider confirmation, effective date/jurisdiction) and Q23 resolution.
+- **Publication gate:** **BLOCKED** — Code/copy accuracy fixes are merged on `v2-rebuild`, while **QA-004** and public legal publication remain incomplete/blocked pending Danish's owner confirmations (contact details, retention/backup disclosures, live provider confirmation, effective date/jurisdiction) and Q23 resolution.
 - **Plan:**
   1. Audit existing Privacy/Terms copy against frontend storage/auth/profile/feedback/PWA code and read-only `loomora_back` sources.
   2. Write failing RED Vitest (`src/features/legal/LegalPage.test.tsx`) and 375 px Playwright (`e2e/legal.spec.ts`) regression tests before changing production files.
@@ -499,3 +501,23 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] RED/GREEN Vitest (`LegalPage.test.tsx`) and 375 px Playwright (`e2e/legal.spec.ts`) regressions, accessibility, i18n, and full verification checks pass.
   - [ ] **Owner / Publication blocker (QA-004):** Danish confirms operator legal name/identity, support/privacy contact email/address, governing jurisdiction, official policy effective date, server/DB/email retention & backup practices, live Vercel/Render/Neon/Brevo/Google provider disclosures, Q23 launch scope for Google-only accounts, and final legal publication approval.
 - **Files:** `src/features/legal/LegalPage.tsx`, `src/i18n/en.json`, `src/features/legal/LegalPage.test.tsx`, `e2e/legal.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-018: Mobile, PWA & production quality verification
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** QA-001 / QA-008 / F-018 / F-029 mobile responsiveness, accessibility, Lighthouse performance, PWA/offline, and live deployment verification on `v2-rebuild` (`98a9b79`).
+- **Plan:**
+  1. Set up isolated QA-018 worktree from `origin/v2-rebuild` (`98a9b79`, PR #43) and run read-only HTTP and Chromium checks against `https://loomora-craft.vercel.app`.
+  2. Audit mobile responsiveness and accessibility across 320, 375, 768, and 1280 px viewports (screens, states, sheets, focus trap/restoration, touch targets, reduced motion, console errors).
+  3. Verify PWA installability, manifest/icons, offline guest & account behavior, and two-version `autoUpdate` service-worker update behavior (Q21).
+  4. Measure Lighthouse 11.7.1 mobile scores (`/` and `/today`) against the local production preview build.
+  5. Fix narrowly scoped accessibility/responsiveness defects with RED → GREEN regressions, run full verification checks, and document remaining release blockers (Q21, Q23, Q25, QA-004, QA-009, QA-016).
+- **Done when:**
+  - [x] Live production routing, headers, CSP, SW/manifest, and deployment identity (`37d5dd5`/`077c69e` live vs `98a9b79` on `v2-rebuild`) are verified and recorded.
+  - [x] Mobile responsiveness and accessibility checks at 320/375/768/1280 px complete; reproducible WCAG 2.1 Level A `label-content-name-mismatch`, 320 px `CopyDaySheet` wrap, `DayColumn` narrow column clamping, and detached-opener `Sheet` focus restoration defects fixed with RED → GREEN regressions.
+  - [x] PWA installability, manifest/icons, offline guest/account behavior, and Q21 `autoUpdate` service-worker update risk verified and covered in `e2e/pwa.spec.ts` (`test.fail` for Q21 unsaved draft loss pending planner decision).
+  - [x] Actual Lighthouse 11.7.1 mobile runs on `/` and `/today` recorded in `docs/PROGRESS.md` (Performance targets from F-018/F-029 remain unmet under mobile CPU throttling; documented without overclaiming).
+  - [x] Lint, typecheck, Knip, LF Prettier, Vitest (`--maxWorkers=1`), build, phone-375 Playwright, npm audits, Redocly OpenAPI lint, and `git diff --check` pass.
+  - [ ] **Open release blockers:** Q21 (planner decision on SW update prompt vs `autoUpdate`), Q23 (Google-only deletion), Q25 (backend infra), QA-004 (legal owner approvals), QA-009 (paired staging integration), QA-016 (owner Vercel promotion of latest `v2-rebuild` & settings check).
+- **Files:** `src/components/ui/Sheet.tsx`, `src/components/ui/Sheet.test.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/CopyDaySheet.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/NowNext.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/pwa.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`

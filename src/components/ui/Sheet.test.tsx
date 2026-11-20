@@ -60,6 +60,34 @@ describe('Sheet', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it('moves focus to #main when the opener unmounts before the sheet closes', async () => {
+    function UnmountingHarness() {
+      const [open, setOpen] = useState(false)
+      const [showOpener, setShowOpener] = useState(true)
+      return (
+        <main id="main" tabIndex={-1}>
+          {showOpener && <button onClick={() => setOpen(true)}>Start</button>}
+          <Sheet open={open} onClose={() => setOpen(false)} title="Add a to-do">
+            <button
+              onClick={() => {
+                setShowOpener(false)
+                setOpen(false)
+              }}
+            >
+              Submit
+            </button>
+          </Sheet>
+        </main>
+      )
+    }
+
+    render(<UnmountingHarness />)
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('main')).toHaveFocus()
+  })
+
   it('keeps Tab focus inside the sheet', async () => {
     render(<Harness />)
     await userEvent.click(screen.getByRole('button', { name: 'Open' }))

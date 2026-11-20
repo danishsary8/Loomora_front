@@ -53,14 +53,14 @@ async function openToday() {
   return view
 }
 
-const strip = () => screen.findByRole('button', { name: 'Open today’s schedule' })
+const strip = () => screen.findByRole('button', { name: /Open today’s schedule/ })
 
 describe('Now/Next strip', () => {
   it('is hidden when nothing is scheduled today', async () => {
     setClock(10, 30)
     await openToday()
     await screen.findByRole('button', { name: 'Add a to-do' })
-    expect(screen.queryByRole('button', { name: 'Open today’s schedule' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Open today’s schedule/ })).not.toBeInTheDocument()
   })
 
   it('shows the current and the next item', async () => {

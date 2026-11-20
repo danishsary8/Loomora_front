@@ -24,8 +24,8 @@ export function DayColumn({
   const { t } = useTranslation()
   const name = t(`weekdays.long.${day}`)
   return (
-    <section aria-label={name} className={cn('flex flex-col gap-3', className)}>
-      <h2 className="font-script text-3xl font-bold md:text-2xl">{name}</h2>
+    <section aria-label={name} className={cn('flex min-w-0 flex-col gap-3', className)}>
+      <h2 className="truncate font-script text-3xl font-bold md:text-2xl">{name}</h2>
       {items.length === 0 ? (
         <p className="text-muted">{t('week.nothingPlanned')}</p>
       ) : (
@@ -41,13 +41,13 @@ export function DayColumn({
                     title: item.title,
                     ...times,
                   })}
-                  className="block w-full text-left"
+                  className="block w-full min-w-0 text-left"
                 >
-                  <Card tone={item.category} compact>
+                  <Card tone={item.category} compact className="flex flex-col-reverse">
+                    <span className="block break-words font-bold">{item.title}</span>{' '}
                     <span className="block text-sm font-semibold">
                       {t('week.timeRange', times)}
                     </span>
-                    <span className="block break-words font-bold">{item.title}</span>
                   </Card>
                 </button>
               </li>

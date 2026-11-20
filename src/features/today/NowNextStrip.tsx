@@ -43,12 +43,7 @@ export function NowNextStrip({ now, next, onOpen }: NowNextStripProps) {
   const { t } = useTranslation()
   const { wall } = useClockDisplay()
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      aria-label={t('nowNext.openDay')}
-      className="flex w-full gap-3 text-left"
-    >
+    <button type="button" onClick={onOpen} className="flex w-full gap-3 text-left">
       <Slot
         label={t('nowNext.now')}
         occurrence={now}
@@ -61,6 +56,7 @@ export function NowNextStrip({ now, next, onOpen }: NowNextStripProps) {
         formatTime={wall}
         emptyText={t('nowNext.nothingMore')}
       />
+      <span className="sr-only">{t('nowNext.openDay')}</span>
     </button>
   )
 }
