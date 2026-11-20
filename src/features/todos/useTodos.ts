@@ -9,7 +9,8 @@ export const todoKeys = {
   all: ['todos'] as const,
   lists: ['todos', 'today'] as const,
   due: ['todos', 'reminders'] as const,
-  reminders: (accountId: string | null) => [...todoKeys.due, accountId] as const,
+  reminders: (accountId: string | null, generation = 0) =>
+    [...todoKeys.due, accountId, generation] as const,
   sessionLists: (generation: number) => [...todoKeys.lists, generation] as const,
   today: (date: LocalDate, generation: number) =>
     [...todoKeys.sessionLists(generation), date] as const,

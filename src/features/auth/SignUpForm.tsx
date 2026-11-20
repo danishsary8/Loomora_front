@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@/components/ui'
 import { authApi, useSession } from '@/lib/api'
@@ -13,6 +13,14 @@ export function SignUpForm() {
   const { pending, formError, fieldErrors, setFieldErrors, run } = useFormAction()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -24,16 +32,16 @@ export function SignUpForm() {
     setFieldErrors(problems)
     if (Object.keys(problems).length > 0) return
 
+    const startGeneration = useSession.getState().generation
     void run(async () => {
       const address = email.trim()
-      signIn(
-        await authApi.register({
-          name: nameFromEmail(address),
-          email: address,
-          password,
-          timezone: deviceTimeZone(),
-        }),
-      )
+      const answer = await authApi.register({
+        name: nameFromEmail(address),
+        email: address,
+        password,
+        timezone: deviceTimeZone(),
+      })
+      if (mounted.current && useSession.getState().generation === startGeneration) signIn(answer)
     })
   }
 

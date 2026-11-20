@@ -26,7 +26,10 @@ function reminderKey(todo: Todo) {
 
 export function ReminderWatcher() {
   const accountId = useSession((state) => (state.token ? state.user?.id : null)) ?? null
-  return <ActiveReminderWatcher key={accountId ?? 'guest'} accountId={accountId} />
+  const generation = useSession((state) => state.generation)
+  return (
+    <ActiveReminderWatcher key={`${generation}:${accountId ?? 'guest'}`} accountId={accountId} />
+  )
 }
 
 function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
@@ -46,7 +49,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
   const actionPending = useRef(false)
   const banner = useRef<HTMLDivElement>(null)
   const lastFocused = useRef<HTMLElement | null>(null)
-  const key = todoKeys.reminders(accountId)
+  const key = todoKeys.reminders(accountId, generation)
   const enabled = visible && !busy && (!accountId || online)
   const {
     data,
@@ -58,7 +61,10 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
     queryKey: key,
     // Guest reads can run offline. Passing the signal cancels account reads on a session change.
     queryFn: ({ signal }) => {
-      if (useSession.getState().token !== token) throw new Error('Session changed')
+      const current = useSession.getState()
+      if (current.generation !== generation || current.token !== token) {
+        throw new Error('Session changed')
+      }
       return repo.listDueReminders(signal)
     },
     enabled,

@@ -22,6 +22,7 @@ const DEFAULT_API_URL = 'http://localhost:8000/api/v1'
 const client = createApiClient({
   baseUrl: import.meta.env.VITE_API_URL || DEFAULT_API_URL,
   getToken: () => useSession.getState().token,
+  getSessionVersion: () => useSession.getState().generation,
   onUnauthorized: () => useSession.getState().signOut(),
   onServiceFailure: () => useServiceStatus.getState().markDown(),
 })

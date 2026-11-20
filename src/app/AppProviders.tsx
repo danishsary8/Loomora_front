@@ -1,7 +1,7 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { LazyMotion } from 'framer-motion'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { accountDataApi, scheduleApi, todosApi, useSession } from '@/lib/api'
+import { useEffect, useState, type ReactNode } from 'react'
+import { accountDataApi, scheduleApi, todosApi, useServiceStatus, useSession } from '@/lib/api'
 import {
   GuestScheduleRepository,
   GuestStorageContext,
@@ -54,13 +54,17 @@ export function AppProviders({
   }))
 
   const signedIn = useSession((s) => s.token !== null)
-  const previous = useRef(signedIn)
   useEffect(() => {
-    if (previous.current === signedIn) return
-    previous.current = signedIn
-    // Lists read from the other storage now: drop what the old one cached and load again.
-    void client.resetQueries()
-  }, [signedIn, client])
+    let seenGeneration = useSession.getState().generation
+    return useSession.subscribe((state) => {
+      if (state.generation === seenGeneration) return
+      seenGeneration = state.generation
+      useServiceStatus.getState().markUp()
+      // Drop and cancel the previous session's queries before the next generation mounts.
+      void client.cancelQueries()
+      client.removeQueries()
+    })
+  }, [client])
 
   const active = signedIn
     ? server

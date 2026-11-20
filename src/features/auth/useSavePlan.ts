@@ -16,7 +16,7 @@ export function useSavePlan() {
         if (!current.token || current.generation !== generation) throw new Error('Session changed')
       }),
     onSuccess: async () => {
-      clearIntent()
+      if (useSession.getState().generation === generation) clearIntent()
       await queryClient.invalidateQueries()
     },
   })

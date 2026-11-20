@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Button, Input } from '@/components/ui'
@@ -14,6 +14,14 @@ export function SignInForm() {
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({})
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -23,8 +31,10 @@ export function SignInForm() {
     setClientErrors(problems)
     if (Object.keys(problems).length > 0) return
 
+    const startGeneration = useSession.getState().generation
     void run(async () => {
-      signIn(await authApi.login({ email: email.trim(), password }))
+      const answer = await authApi.login({ email: email.trim(), password })
+      if (mounted.current && useSession.getState().generation === startGeneration) signIn(answer)
     })
   }
 

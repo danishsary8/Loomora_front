@@ -12,6 +12,11 @@ const SAVED_TOAST_MS = 4000
  * Success shows a toast; failure keeps the plan on the device and offers a retry.
  */
 export function SavePlanImport() {
+  const generation = useSession((s) => s.generation)
+  return <SavePlanImportSession key={generation} />
+}
+
+function SavePlanImportSession() {
   const { t } = useTranslation()
   const signedIn = useSession((s) => s.token !== null)
   const { pending, clear } = useSavePlanIntent()
