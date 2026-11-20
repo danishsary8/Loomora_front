@@ -330,3 +330,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [ ] (not measured, see PROGRESS) Performance is at least 90 on `/` and 85 on `/today` in the same environment as the F-018 measurements, or the note explains what is left
   - [x] Lint, typecheck, test, build, e2e pass
 - **Files:** `index.html`, `src/lib/db/*`, `src/main.tsx`
+
+### QA-003: Offline guest to-do persistence
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** QA-001, guest offline blocker on Today.
+- **Plan:**
+  1. Reproduce the offline save, offline list and session switch failures with Vitest.
+  2. Let Dexie-backed to-do operations run offline and bind pending operations to their original session.
+  3. Test draft retention on storage error and IndexedDB persistence through reload and reconnect at 375 px.
+  4. Run the required checks, document findings and open the PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Guest to-dos and subtasks save and load offline, with draft retention on a rejected write.
+  - [x] Reload and reconnect preserve the IndexedDB row and ID. Reopening the browser profile offline shows the saved to-do.
+  - [x] Account requests retain their existing network behavior. Pending operations and Today state stay tied to their original session.
+  - [x] Lint, typecheck, Knip, formatting, Vitest, build, phone-375 Playwright and OpenAPI lint pass.

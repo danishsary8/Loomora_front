@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { streakKeys } from '@/features/streak/useStreak'
+import { useSession } from '@/lib/api'
 import { useTodoRepository } from '@/lib/storage'
 import type { LocalDate, TodayTodo } from './types'
 import { changeTodayTodo, insertTodayTodo } from './todayCache'
@@ -18,6 +19,7 @@ export interface UseUndoableDeleteOptions {
 interface PendingDelete {
   item: TodayTodo
   index: number
+  generation: number
   /** Settles when the remove call ends; resolves to whether it succeeded. */
   removed: Promise<boolean>
 }
@@ -34,14 +36,15 @@ export function useUndoableDelete({
   const { t } = useTranslation()
   const repo = useTodoRepository()
   const queryClient = useQueryClient()
-  const key = todoKeys.today(date)
-  const [pending, setPending] = useState<TodayTodo | null>(null)
+  const generation = useSession((state) => state.generation)
+  const key = todoKeys.today(date, generation)
+  const [pending, setPending] = useState<PendingDelete | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const current = useRef<PendingDelete | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const errorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const restoring = useRef(false)
+  const restoring = useRef<PendingDelete | null>(null)
 
   const showError = useCallback((message: string) => {
     clearTimeout(errorTimer.current)
@@ -51,11 +54,14 @@ export function useUndoableDelete({
 
   const deleteTodo = useCallback(
     async (todo: TodayTodo) => {
+      const sameSession = () => useSession.getState().generation === generation
+      if (!sameSession()) return
       clearTimeout(undoTimer.current)
       clearTimeout(errorTimer.current)
       setError(null)
 
       await queryClient.cancelQueries({ queryKey: key })
+      if (!sameSession()) return
       const list = queryClient.getQueryData<TodayTodo[]>(key) ?? []
       const index = list.findIndex((row) => row.id === todo.id)
       queryClient.setQueryData<TodayTodo[]>(key, (rows) =>
@@ -66,16 +72,18 @@ export function useUndoableDelete({
         () => true,
         () => false,
       )
-      const entry: PendingDelete = { item: todo, index, removed }
+      const entry: PendingDelete = { item: todo, index, generation, removed }
       current.current = entry
-      setPending(todo)
+      setPending(entry)
       undoTimer.current = setTimeout(() => {
         if (current.current !== entry) return
         current.current = null
         setPending(null)
       }, delayMs)
 
-      if (await removed) {
+      const succeeded = await removed
+      if (!sameSession()) return
+      if (succeeded) {
         void queryClient.invalidateQueries({ queryKey: streakKeys.all })
         void queryClient.invalidateQueries({ queryKey: todoKeys.due })
         return
@@ -88,32 +96,41 @@ export function useUndoableDelete({
       }
       showError(t('today.deleteError'))
     },
-    [delayMs, key, queryClient, repo, showError, t],
+    [delayMs, generation, key, queryClient, repo, showError, t],
   )
 
   const undo = useCallback(async () => {
     const entry = current.current
-    if (!entry || restoring.current) return
-    restoring.current = true
+    const sameSession = () => useSession.getState().generation === generation
+    if (
+      !entry ||
+      entry.generation !== generation ||
+      !sameSession() ||
+      restoring.current?.generation === generation
+    )
+      return
+    restoring.current = entry
     clearTimeout(undoTimer.current)
     current.current = null
     setPending(null)
     try {
       // A remove that has not finished must settle first, or restore could run before it.
-      if (!(await entry.removed)) return
+      if (!(await entry.removed) || !sameSession()) return
       const restored = await repo.restore(entry.item.id)
+      if (!sameSession()) return
       queryClient.setQueryData<TodayTodo[]>(key, (list) =>
         insertTodayTodo(list ?? [], { ...entry.item, ...restored }, entry.index),
       )
       void queryClient.invalidateQueries({ queryKey: streakKeys.all })
       void queryClient.invalidateQueries({ queryKey: todoKeys.due })
     } catch {
+      if (!sameSession()) return
       void queryClient.invalidateQueries({ queryKey: key })
       showError(t('today.restoreError'))
     } finally {
-      restoring.current = false
+      if (restoring.current === entry) restoring.current = null
     }
-  }, [key, queryClient, repo, showError, t])
+  }, [generation, key, queryClient, repo, showError, t])
 
   useEffect(
     () => () => {
@@ -123,5 +140,10 @@ export function useUndoableDelete({
     [],
   )
 
-  return { pending, error, deleteTodo, undo }
+  return {
+    pending: pending?.generation === generation ? pending.item : null,
+    error,
+    deleteTodo,
+    undo,
+  }
 }
