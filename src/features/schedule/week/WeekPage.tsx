@@ -10,14 +10,19 @@ import { DayToggle } from '../DayToggle'
 import { ScheduleItemSheet, type ScheduleTarget } from '../ScheduleItemSheet'
 import type { ScheduleItem, Weekday } from '../types'
 import { UndoDeleteToast } from '../UndoDeleteToast'
+import { useScheduleItems } from '../useSchedule'
 import { useUndoableDelete } from '../useUndoableDelete'
 import { CopyDaySheet } from './CopyDaySheet'
 import { DayColumn } from './DayColumn'
-import { useScheduleItems } from './useWeek'
 import { itemsOnWeekday, todayWeekday } from './weekPlan'
 
 /** S6 Week: the fixed schedule. Phone: one day at a time or an overview; 768 px and up: 7 columns. */
 export function WeekPage() {
+  const generation = useSession((state) => state.generation)
+  return <WeekSchedule key={generation} />
+}
+
+function WeekSchedule() {
   const { t, i18n } = useTranslation()
   const { values } = useTimePreferences()
   const weekdays = orderedWeekdays(values.week_starts_on)
@@ -30,8 +35,7 @@ export function WeekPage() {
   const [target, setTarget] = useState<ScheduleTarget | null>(null)
   const [copyFrom, setCopyFrom] = useState<Weekday | null>(null)
 
-  // The item waiting for its undo window is hidden, as the delete hook asks.
-  const list = (items.data ?? []).filter((item) => item.id !== del.pending?.item.id)
+  const list = (items.data ?? []).filter((item) => !del.isDeleting(item.id))
   const openAdd = () => setTarget({ type: 'create' })
   const openItem = (item: ScheduleItem) => setTarget({ type: 'item', item })
 
@@ -102,12 +106,12 @@ export function WeekPage() {
         <ScheduleItemSheet
           open
           target={target}
-          onClose={() => setTarget(null)}
-          onDelete={(request) => void del.request(request)}
+          onClose={() => setTarget((current) => (current === target ? null : current))}
+          onDelete={del.request}
         />
       )}
       <CopyDaySheet from={copyFrom} items={list} onClose={() => setCopyFrom(null)} />
-      <UndoDeleteToast pending={del.pending} onUndo={del.undo} />
+      <UndoDeleteToast pending={del.pending} onUndo={del.undo} error={del.error} />
     </div>
   )
 }

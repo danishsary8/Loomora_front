@@ -123,23 +123,30 @@ export class GuestScheduleRepository implements ScheduleRepository {
   }
 
   async update(id: string, patch: UpdateScheduleItemInput): Promise<ScheduleItem> {
-    const current = await this.requireItem(id)
-    const next: ScheduleItem = {
-      ...current,
-      title: patch.title === undefined ? current.title : cleanTitle(patch.title),
-      category: patch.category ?? current.category,
-      start_time: patch.start_time ?? current.start_time,
-      end_time: patch.end_time ?? current.end_time,
-      days: patch.days === undefined ? current.days : normalizeDays(patch.days),
-      ends_on: patch.ends_on === undefined ? current.ends_on : patch.ends_on,
-      updated_at: this.now().toISOString(),
-    }
-    checkCategory(next.category)
-    checkTimeRange(next.start_time, next.end_time)
-    checkDays(next.days)
-    checkEndsOn(next.starts_on, next.ends_on)
-    await (await this.open()).schedule_items.put(next)
-    return next
+    const db = await this.open()
+    const saved = await db.transaction('rw', db.schedule_items, async () => {
+      const current = await db.schedule_items.get(id)
+      if (!current) return undefined
+      const next: ScheduleItem = {
+        ...current,
+        title: patch.title === undefined ? current.title : cleanTitle(patch.title),
+        category: patch.category ?? current.category,
+        start_time: patch.start_time ?? current.start_time,
+        end_time: patch.end_time ?? current.end_time,
+        days: patch.days === undefined ? current.days : normalizeDays(patch.days),
+        ends_on: patch.ends_on === undefined ? current.ends_on : patch.ends_on,
+        updated_at: this.now().toISOString(),
+      }
+      checkCategory(next.category)
+      checkTimeRange(next.start_time, next.end_time)
+      checkDays(next.days)
+      checkEndsOn(next.starts_on, next.ends_on)
+      await db.schedule_items.put(next)
+      return next
+    })
+    // Dexie wraps errors named NotFoundError inside a transaction.
+    if (!saved) throw new NotFoundError('Schedule item', id)
+    return saved
   }
 
   async delete(id: string): Promise<void> {
@@ -157,16 +164,26 @@ export class GuestScheduleRepository implements ScheduleRepository {
     date: LocalDate,
     input: ExceptionInput,
   ): Promise<ScheduleException> {
-    const item = await this.requireOccurringItem(id, date)
-    const exception = this.buildException(item, date, input)
     const db = await this.open()
-    const stored = await db.transaction('rw', db.schedule_exceptions, async () => {
-      const existing = await this.findException(id, date)
-      const row = existing ? { ...exception, id: existing.id } : exception
-      await db.schedule_exceptions.put(row)
-      return row
-    })
-    return stored
+    const saved = await db.transaction(
+      'rw',
+      db.schedule_items,
+      db.schedule_exceptions,
+      async () => {
+        const item = await this.findOccurringItem(db, id, date)
+        if (!item) return undefined
+        const exception = this.buildException(item, date, input)
+        const existing = await db.schedule_exceptions
+          .where('[schedule_item_id+date]')
+          .equals([id, date])
+          .first()
+        const row = existing ? { ...exception, id: existing.id } : exception
+        await db.schedule_exceptions.put(row)
+        return row
+      },
+    )
+    if (!saved) throw new NotFoundError('Schedule item', id)
+    return saved
   }
 
   async removeException(id: string, date: LocalDate): Promise<void> {
@@ -180,20 +197,23 @@ export class GuestScheduleRepository implements ScheduleRepository {
       await db.schedule_checkins.where('[schedule_item_id+date]').equals([id, date]).delete()
       return
     }
-    await this.requireOccurringItem(id, date)
-    await db.transaction('rw', db.schedule_checkins, async () => {
+    const found = await db.transaction('rw', db.schedule_items, db.schedule_checkins, async () => {
+      if (!(await this.findOccurringItem(db, id, date))) return false
       const existing = await db.schedule_checkins
         .where('[schedule_item_id+date]')
         .equals([id, date])
         .first()
-      if (existing) return
-      await db.schedule_checkins.add({
-        id: newId(),
-        schedule_item_id: id,
-        date,
-        done_at: this.now().toISOString(),
-      })
+      if (!existing) {
+        await db.schedule_checkins.add({
+          id: newId(),
+          schedule_item_id: id,
+          date,
+          done_at: this.now().toISOString(),
+        })
+      }
+      return true
     })
+    if (!found) throw new NotFoundError('Schedule item', id)
   }
 
   private buildException(item: ScheduleItem, date: LocalDate, input: ExceptionInput) {
@@ -215,23 +235,14 @@ export class GuestScheduleRepository implements ScheduleRepository {
     } as const
   }
 
-  private async findException(id: string, date: LocalDate) {
-    return (await this.open()).schedule_exceptions
-      .where('[schedule_item_id+date]')
-      .equals([id, date])
-      .first()
-  }
-
-  private async requireItem(id: string): Promise<ScheduleItem> {
-    const item = await (await this.open()).schedule_items.get(id)
-    if (!item) throw new NotFoundError('Schedule item', id)
-    return item
-  }
-
-  private async requireOccurringItem(id: string, date: LocalDate): Promise<ScheduleItem> {
+  private async findOccurringItem(
+    db: GuestDatabase,
+    id: string,
+    date: LocalDate,
+  ): Promise<ScheduleItem | undefined> {
     checkDate('date', date)
-    const item = await this.requireItem(id)
-    if (!occursOn(item, date))
+    const item = await db.schedule_items.get(id)
+    if (item && !occursOn(item, date))
       throw new ValidationError('date', 'This item does not occur on that date.')
     return item
   }

@@ -45,11 +45,6 @@ function CopyDayBody({
     )
   }
 
-  async function submit() {
-    await copy.mutateAsync({ from, to: targets })
-    onClose()
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <p className="text-muted">{t('copyDay.hint')}</p>
@@ -75,7 +70,7 @@ function CopyDayBody({
         size="lg"
         fullWidth
         disabled={targets.length === 0 || copy.isPending}
-        onClick={() => void submit()}
+        onClick={() => copy.mutate({ from, to: targets }, { onSuccess: onClose })}
       >
         {t(copy.isPending ? 'copyDay.copying' : 'copyDay.submit')}
       </Button>

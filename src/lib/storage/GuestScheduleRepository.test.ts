@@ -115,6 +115,15 @@ describe('GuestScheduleRepository create (docs/08 rule 11)', () => {
 })
 
 describe('GuestScheduleRepository update ("All repeats", docs/08 rule 5)', () => {
+  it('preserves both fields when a repeat edit and a Copy Day patch overlap', async () => {
+    const item = await repo.create(input({ days: [0] }))
+    await Promise.all([
+      repo.update(item.id, { title: 'Physics' }),
+      repo.update(item.id, { days: [0, 2] }),
+    ])
+    expect(await repo.listItems()).toMatchObject([{ id: item.id, title: 'Physics', days: [0, 2] }])
+  })
+
   it('changes the item, so every occurrence changes', async () => {
     const item = await repo.create(input({ days: [0, 1] }))
     clock = new Date('2026-10-25T08:00:00.000Z')
@@ -270,6 +279,20 @@ describe('GuestScheduleRepository check-ins (docs/08 rule 7)', () => {
 })
 
 describe('GuestScheduleRepository delete (docs/08 rule 5)', () => {
+  it('leaves no item, exception, or check-in when guest writes overlap a full deletion', async () => {
+    const item = await repo.create(input({ days: [0] }))
+    const results = await Promise.allSettled([
+      repo.update(item.id, { title: 'Physics' }),
+      repo.setException(item.id, MON, { type: 'skip' }),
+      repo.setCheckin(item.id, MON, true),
+      repo.delete(item.id),
+    ])
+    expect(results[3]?.status).toBe('fulfilled')
+    expect(await repo.listItems()).toEqual([])
+    expect(await repo.listExceptions()).toEqual([])
+    expect(await repo.listCheckins()).toEqual([])
+  })
+
   it('removes the item with its exceptions and check-ins, and leaves other items alone', async () => {
     const doomed = await repo.create(input({ days: [0] }))
     const kept = await repo.create(input({ title: 'Gym', days: [0] }))

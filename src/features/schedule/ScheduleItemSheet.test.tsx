@@ -1,13 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { useQuery } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { AppProviders } from '@/app/AppProviders'
 import { createQueryClient } from '@/app/queryClient'
 import { GuestDatabase } from '@/lib/storage/db'
-import { GuestScheduleRepository, useScheduleRepository } from '@/lib/storage'
+import { GuestScheduleRepository } from '@/lib/storage'
 import { ScheduleItemSheet, type ScheduleTarget } from './ScheduleItemSheet'
-import { scheduleKeys, useScheduleDay } from './useSchedule'
+import { useScheduleDay, useScheduleItems } from './useSchedule'
 import { useUndoableDelete } from './useUndoableDelete'
 import { UndoDeleteToast } from './UndoDeleteToast'
 
@@ -30,11 +29,7 @@ afterEach(async () => {
 
 /** Stands in for the Week and Today screens, which come in F-009 and F-010. */
 function Host() {
-  const itemsRepo = useScheduleRepository()
-  const { data: items = [] } = useQuery({
-    queryKey: [...scheduleKeys.all, 'items'],
-    queryFn: () => itemsRepo.listItems(),
-  })
+  const { data: items = [] } = useScheduleItems()
   const day = useScheduleDay(MON)
   const [target, setTarget] = useState<ScheduleTarget | null>(null)
   const [last, setLast] = useState<ScheduleTarget>({ type: 'create' })
@@ -44,14 +39,7 @@ function Host() {
     setLast(next)
     setTarget(next)
   }
-  const visible = (day.data ?? []).filter(
-    (o) =>
-      !(
-        del.pending &&
-        del.pending.item.id === o.schedule_item_id &&
-        (del.pending.scope === 'all' || del.pending.date === o.date)
-      ),
-  )
+  const visible = (day.data ?? []).filter((o) => !del.isDeleting(o.schedule_item_id, o.date))
 
   return (
     <>
@@ -79,7 +67,7 @@ function Host() {
         target={last}
         onDelete={(request) => void del.request(request)}
       />
-      <UndoDeleteToast pending={del.pending} onUndo={del.undo} />
+      <UndoDeleteToast pending={del.pending} onUndo={del.undo} error={del.error} />
     </>
   )
 }
@@ -212,6 +200,29 @@ describe('edit from Today', () => {
 })
 
 describe('delete with a 5-second undo', () => {
+  it('keeps the item hidden after Undo expires while the delete is saving', async () => {
+    await setup([math])
+    const remove = repo.delete.bind(repo)
+    let release!: () => void
+    const saving = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const deletion = vi.spyOn(repo, 'delete').mockImplementationOnce(async (id) => {
+      await saving
+      await remove(id)
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'edit week Math' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    try {
+      await waitFor(() => expect(deletion).toHaveBeenCalledOnce())
+      expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Math 09:00-10:00')).not.toBeInTheDocument()
+    } finally {
+      release()
+      await waitFor(async () => expect(await repo.listItems()).toEqual([]))
+    }
+  })
+
   it('from Week deletes all repeats after the undo window', async () => {
     await setup([math])
     await userEvent.click(await screen.findByRole('button', { name: 'edit week Math' }))
