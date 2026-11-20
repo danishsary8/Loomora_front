@@ -444,9 +444,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-015: Frontend security headers and CSP hardening
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** QA-001 / QA-005 (missing browser security headers and Content-Security-Policy on Vercel frontend).
+- **Merge:** [PR #41](https://github.com/danishsary8/Loomora_front/pull/41) at `37d5dd5`.
 - **Plan:**
   1. Audit live `https://loomora-craft.vercel.app` headers and inventory all Loomora asset, font, boot-style, Google OAuth, Render API, Workbox service-worker, and offline PWA requirements.
   2. Add baseline browser security headers (`Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Strict-Transport-Security`, `Permissions-Policy`) to root `vercel.json` on `/(.*)` while preserving the QA-013 SPA rewrite and `/sw.js` `Cache-Control: public, max-age=0, must-revalidate`.
@@ -459,3 +460,22 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Existing Vercel SPA routing, API/missing-asset 404 exclusions, `/sw.js` `Cache-Control`, mobile 375 px layout, Google OAuth flow, and offline PWA continue to work.
   - [x] Vitest (`src/test/securityHeaders.test.ts`) and Playwright (`e2e/security-headers.spec.ts`) demonstrated RED before GREEN and full verification passes; live Vercel verification steps are documented in `docs/PROGRESS.md`.
 - **Files:** `vercel.json`, `playwright.config.ts`, `src/test/securityHeaders.test.ts`, `e2e/security-headers.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-016: Vercel deployment & live route verification
+
+- **Status:** blocked
+- **Owner:** antigravity
+- **Source:** QA-001 / QA-002 / B-032 staging audit follow-up on `https://loomora-craft.vercel.app`.
+- **Blocked on:** Owner Vercel dashboard/CLI access (`vercel` CLI has no local credentials; all preview URLs return `302` to `vercel.com/sso-api`) and explicit owner approval to update Vercel Production Branch / `VITE_API_URL` environment scoping and promote `dpl_GU1bKLwGwWE5UvEaBBfprmFZHe58` (`37d5dd5`).
+- **Plan:**
+  1. Verify PR #41 (`37d5dd5`) merge and inspect deployment provenance across `v2-rebuild`, `main`, GitHub commit statuses, PR bot comments, and Vercel CLI/dashboard access.
+  2. Probe all 13 public routes on `https://loomora-craft.vercel.app` and inspect the served JS bundle to confirm exact deployed state, missing headers, and configured API origin.
+  3. Inspect `v2-rebuild` and PR preview URLs, distinguishing Vercel Deployment Protection (`302` SSO) from SPA routing or CSP behavior.
+  4. Classify root cause (A/B/E vs C/D), prepare the safe owner-executed remediation and post-promotion verification plan without mutating production.
+  5. Document QA-015 (`done`) and QA-016 (`blocked` pending owner execution/promotion) in `docs/TASKS.md` and `docs/PROGRESS.md`, run full verification on the isolated worktree, and open PR for planner review.
+- **Done when:**
+  - [x] Production deployment mismatch, exact deployed SHA (`acd5e7d` / `dpl_DV53gg1xKhSr2XbBFneDuyDy3Yge`), latest `v2-rebuild` build (`37d5dd5` / `dpl_GU1bKLwGwWE5UvEaBBfprmFZHe58`), live route HTTP results, and security header gaps are verified and documented.
+  - [x] Local `37d5dd5` build, Vitest, phone-375 Playwright (`spa-routing.spec.ts`, `security-headers.spec.ts`, `pwa.spec.ts`), static checks, and audits pass.
+  - [ ] Owner confirms Vercel Project Settings (`Production Branch`, `Root Directory`, `Build & Output`, `Auto-assign Custom Production Domains`, `VITE_API_URL` scope, `Deployment Protection` / `Vercel Toolbar`) and approves/executes promotion of `37d5dd5` (`GU1bKLwGwWE5UvEaBBfprmFZHe58`).
+  - [ ] Live production verification on `https://loomora-craft.vercel.app` (and/or authenticated `37d5dd5` candidate) passes direct SPA routes, 6 security headers, `/sw.js` caching, 375 px mobile/PWA offline reload, and zero CSP violations without weakening production CSP.
+- **Files:** `docs/TASKS.md`, `docs/PROGRESS.md`
