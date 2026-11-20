@@ -400,3 +400,34 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
      - `curl.exe -i https://<vercel-host>/assets/<existing-chunk>.js` -> expect `200` and JavaScript content type.
      - `curl.exe -i https://<vercel-host>/api/v1/health` and `/assets/nonexistent.js` -> expect `404` (not `index.html`).
   3. In a fresh browser at 375 px, open `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, and `/does-not-exist`, hard-refresh each, verify no 404 and no redirect loops, and verify PWA install/first-launch to `start_url: /today` plus offline reload.
+
+### 2026-11-20: QA-014 Frontend dependency security
+
+- **Plan:**
+  1. Reproduce `npm audit --omit=dev`, `npm audit`, and `npm ls --depth=0` against QA-001, separating runtime `dependencies` from tooling/build-only `devDependencies`.
+  2. Update `eslint` (`10.13.0` -> `10.15.0`) and `typescript-eslint` (`8.72.0` -> `8.73.0`) within compatible major lines in `package.json` and `package-lock.json` to move `@eslint/config-array` and `@typescript-eslint/*` onto patched `minimatch` (`11.0.9`).
+  3. Evaluate the remaining `vite-plugin-pwa@2.0.0` -> `workbox-build@7.4.1` -> `glob@11.1.0` -> `minimatch@10.2.6` chain and document any unavoidable build-time exception with impact, exploitability, and recommended decision.
+  4. Add an offline Vitest regression test (`src/test/dependencySecurity.test.ts`) verifying production dependency isolation and patched lockfile minimums.
+  5. Run `npm ci`, audits, lint, typecheck, Knip, formatting, Vitest (`--maxWorkers=1`), build, phone-375 Playwright, and Redocly OpenAPI lint; mark QA-013 `done` (`PR #39` merged at `3ffcdfe`).
+- **Audit reproduction vs QA-001 (separated by production vs development):**
+  - **Production (`npm audit --omit=dev`):** `found 0 vulnerabilities` (30 production dependencies) before and after. None of `eslint`, `typescript-eslint`, `vite-plugin-pwa`, `workbox-build`, `glob`, or `minimatch` appear in runtime `dependencies` or non-dev lockfile entries.
+  - **Development-only (`npm audit`) before:** 12 moderate findings matching QA-001:
+    - `GHSA-g3hv-75wg-m249` (`minimatch` `7.0.0 - 11.0.0`, moderate, potential DoS via globparts amplification): affected `eslint` (`10.13.0`), `@eslint/config-array` (`0.23.5`), `typescript-eslint` (`8.72.0`), `@typescript-eslint/{eslint-plugin,parser,type-utils,typescript-estree,utils}` (`8.72.0`), and `glob` (`11.1.0`).
+    - `GHSA-3g3m-2fjr-6pw4` (`glob` `9.0.0 - 14.0.1`, moderate, `AbortSignal` cancellation bypass allows post-timeout filesystem traversal): affected `glob` (`11.1.0`) -> `workbox-build` (`7.4.1`) -> `vite-plugin-pwa` (`2.0.0`).
+  - **Development-only (`npm audit`) after:** 4 moderate findings remaining (8 resolved). `eslint@10.15.0` and `typescript-eslint@8.73.0` moved `@eslint/config-array` (`0.23.6`), `@typescript-eslint/*` (`8.73.0`), and all ESLint / `typescript-eslint` `minimatch` resolutions to `11.0.9`. Note: `npm 11.6.1` on Windows initially pruned the optional `wasm32` `@emnapi/core` (`1.11.2`) and `@emnapi/runtime` (`1.11.2`) peer entries required by `@napi-rs/wasm-runtime` / `@oxc-resolver/binding-wasm32-wasi` during lockfile regeneration; restoring those two `HEAD` entries in `package-lock.json` kept `npm ci` cleanly reproducible.
+- **Unavoidable security exception for planner review (`vite-plugin-pwa@2.0.0` -> `workbox-build@7.4.1` -> `glob@11.1.0` -> `minimatch@10.2.6`):**
+  - **Why not resolved automatically:** `vite-plugin-pwa@2.0.0` and `workbox-build@7.4.1` are already the latest releases in their lines (`workbox-build@7.4.1` declares `"glob": "^11.0.1"`). Running `npm audit fix --force` proposes a breaking downgrade to `vite-plugin-pwa@1.1.0` (`workbox-build@7.3.0` -> `glob@^7.1.6`), which relies on deprecated `glob@7` (only unflagged because `GHSA-3g3m-2fjr-6pw4` starts at `9.0.0`). Forcing `glob` across three major versions (`11` -> `14`) via `package.json` `overrides` goes outside `workbox-build`'s declared semver range.
+  - **Impact & exploitability:** Build-time `devDependency` only; never bundled into `dist/` client assets or `dist/sw.js` runtime code. In `workbox-build/build/lib/get-file-details.js`, `globSync(globPattern, { cwd, follow, ignore })` is called synchronously with static developer-configured `globPatterns` (`**/*.{js,css,html,svg,png,woff,woff2}` in `vite.config.ts`), with no `AbortSignal` (`GHSA-3g3m-2fjr-6pw4` unreachable) and no untrusted glob input (`GHSA-g3hv-75wg-m249` unreachable).
+  - **Recommended decision:** Accept this build-time-only dev exception on `vite-plugin-pwa@2.0.0` / `workbox-build@7.4.1` until upstream `workbox-build` upgrades `glob` to `>=14.0.2`.
+- **Changed:**
+  - `package.json` & `package-lock.json`: Updated `eslint` (`10.13.0` -> `10.15.0`) and `typescript-eslint` (`8.72.0` -> `8.73.0`) with exact pins; preserved optional `@emnapi/core` / `@emnapi/runtime` lockfile entries so `npm ci` succeeds cleanly.
+  - `src/test/dependencySecurity.test.ts`: Added offline regression checks ensuring build/lint tooling stays out of production `dependencies` and lockfile resolutions maintain patched minimums for `eslint`, `@eslint/config-array`, `typescript-eslint`, `@typescript-eslint/*`, `minimatch` (`>=11.0.1`), and `vite-plugin-pwa` (`>=2.0.0`).
+  - `docs/TASKS.md`: Marked QA-013 `done` (`PR #39` merged at `3ffcdfe`) and added QA-014 (`review`).
+- **Verified:**
+  - `npm ci` exited 0 (746 packages added, audited 747 packages).
+  - `npm audit --omit=dev` exited 0 (`found 0 vulnerabilities`).
+  - `npm audit` exited 1 with only the 4 documented moderate dev-only findings (`glob`, `minimatch`, `workbox-build`, `vite-plugin-pwa`).
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run build` (PWA v2.0.0 `generateSW`, 49 precache entries, 993.90 KiB), and `npx @redocly/cli lint docs/openapi.yaml` (valid with 4 existing warnings) all exited 0.
+  - Prettier: `npx prettier --check src/test/dependencySecurity.test.ts` and `npx prettier --check --end-of-line auto .` exited 0 (`npm run format:check` exited 1 solely due to Windows `core.autocrlf=true` CRLF checkout).
+  - Vitest (`npm test -- --maxWorkers=1`): 57 test files / 566 tests passed, including `src/test/dependencySecurity.test.ts` (2 tests).
+  - Playwright `phone-375` (`npm run e2e -- --project=phone-375`): 56/56 passed (1.4m), covering `pwa.spec.ts`, `spa-routing.spec.ts`, `cross-tab-session.spec.ts`, `offline-todos.spec.ts`, `offline-schedule.spec.ts`, `offline-guest-reads.spec.ts`, and `reminders.spec.ts` (an earlier parallel run had 1 timeout in `e2e/reminders.spec.ts` under 4 workers, which passed both standalone and in the final 56/56 run).

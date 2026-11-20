@@ -406,9 +406,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-013: Vercel SPA route reliability
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** QA-001 (QA-002 release blocker: direct HTTP navigation/refresh returns Vercel 404).
+- **Merge:** [PR #39](https://github.com/danishsary8/Loomora_front/pull/39) at `3ffcdfe`.
 - **Plan:**
   1. Reproduce the static-host 404 on direct SPA routes and inspect React Router, Vite PWA `navigateFallback`, and Vercel configuration.
   2. Add root `vercel.json` with Vite build settings, SPA rewrite to `/index.html` excluding `/api`, `/assets`, `/sw.js`, `/manifest.webmanifest`, and `/workbox-*.js`, plus `Cache-Control: public, max-age=0, must-revalidate` for `/sw.js`.
@@ -421,3 +422,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Mobile 375 px layout and offline PWA navigation/reload work across SPA routes and unknown routes.
   - [x] Lint, typecheck, Knip, LF formatting, full Vitest, production build, phone-375 Playwright, and Redocly OpenAPI lint pass; live Vercel verification steps documented for the planner.
 - **Files:** `vercel.json`, `vite.config.ts`, `src/app/spaRouting.test.tsx`, `e2e/spa-routing.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-014: Frontend dependency security
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** QA-001 / QA-005 (frontend npm dependency audit).
+- **Plan:**
+  1. Reproduce `npm audit --omit=dev`, `npm audit`, and `npm ls --depth=0` against QA-001, separating runtime `dependencies` from tooling/build-only `devDependencies`.
+  2. Update `eslint` (`10.13.0` -> `10.15.0`) and `typescript-eslint` (`8.72.0` -> `8.73.0`) within their compatible major lines in `package.json` and `package-lock.json` to move `@eslint/config-array` and `@typescript-eslint/*` onto patched `minimatch` (`11.0.9`).
+  3. Evaluate the remaining `vite-plugin-pwa@2.0.0` -> `workbox-build@7.4.1` -> `glob@11.1.0` -> `minimatch@10.2.6` chain (rejecting `npm audit fix --force` downgrade to `vite-plugin-pwa@1.1.0` / EOL `glob@7.1.6` and unverified 3-major `glob` overrides) and document the non-exploitable build-time exception for planner review.
+  4. Add an offline Vitest regression test (`src/test/dependencySecurity.test.ts`) enforcing production dependency isolation and patched lockfile minimums.
+  5. Run `npm ci`, audits, lint, typecheck, Knip, formatting, Vitest (`--maxWorkers=1`), build, phone-375 Playwright, and Redocly OpenAPI lint; mark QA-013 done and log QA-014 in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] `npm audit --omit=dev` reports 0 vulnerabilities across all production dependencies.
+  - [x] Fixable ESLint and `typescript-eslint` advisories are remediated within compatible release lines and guarded by `src/test/dependencySecurity.test.ts`.
+  - [x] Remaining `vite-plugin-pwa` / `workbox-build` / `glob` / `minimatch` dev-only exception is documented with impact, exploitability, and planner recommendation in `docs/PROGRESS.md`.
+  - [x] `npm ci`, lint, typecheck, Knip, LF formatting (`--end-of-line auto` on Windows CRLF checkout), Vitest (`--maxWorkers=1`), production build, phone-375 Playwright, and Redocly OpenAPI lint pass.
+- **Files:** `package.json`, `package-lock.json`, `src/test/dependencySecurity.test.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
