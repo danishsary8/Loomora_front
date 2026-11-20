@@ -386,9 +386,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-012: Offline guest streak and plan summary
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Planner-authorized follow-up to QA-003 and QA-010.
+- **Merge:** [PR #38](https://github.com/danishsary8/Loomora_front/pull/38) at `478f8a5`.
 - **Plan:**
   1. Reproduce offline cold-cache pauses in `useStreak` and `useGuestPlan` with failing Vitest tests.
   2. Set `networkMode` in `useStreak` from `GuestStreakRepository` vs `ServerStreakRepository` (`'always'` for guest, `'online'` for account).
@@ -402,3 +403,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] New Vitest regression tests (`offlineStreak.test.tsx`, `offlineGuestPlan.test.tsx`) demonstrated RED before GREEN; mobile 375 px Playwright (`offline-guest-reads.spec.ts`) passes.
   - [x] Lint, typecheck, Knip, LF formatting, full Vitest suite, production build, phone-375 Playwright, and Redocly OpenAPI lint pass.
 - **Files:** `src/features/streak/useStreak.ts`, `src/features/auth/useGuestPlan.ts`, `src/features/streak/offlineStreak.test.tsx`, `src/features/auth/offlineGuestPlan.test.tsx`, `e2e/offline-guest-reads.spec.ts`
+
+### QA-013: Vercel SPA route reliability
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** QA-001 (QA-002 release blocker: direct HTTP navigation/refresh returns Vercel 404).
+- **Plan:**
+  1. Reproduce the static-host 404 on direct SPA routes and inspect React Router, Vite PWA `navigateFallback`, and Vercel configuration.
+  2. Add root `vercel.json` with Vite build settings, SPA rewrite to `/index.html` excluding `/api`, `/assets`, `/sw.js`, `/manifest.webmanifest`, and `/workbox-*.js`, plus `Cache-Control: public, max-age=0, must-revalidate` for `/sw.js`.
+  3. Add Workbox `navigateFallbackDenylist` in `vite.config.ts` so the service worker preserves `/api`, `/assets`, and PWA meta/worker files while serving `/index.html` offline for SPA routes.
+  4. Add Vitest (`src/app/spaRouting.test.tsx`) and mobile 375 px Playwright (`e2e/spa-routing.spec.ts`) regressions for direct HTTP navigation, refresh, unknown route (`NotFoundPage`), static assets, API exclusions, offline PWA, and zero redirect loops.
+  5. Run lint, typecheck, Knip, formatting, full Vitest, build, phone-375 Playwright, and Redocly lint; document planner Vercel production verification steps.
+- **Done when:**
+  - [x] Direct HTTP navigation and refresh succeed (HTTP 200) on `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, and unknown routes (rendering `NotFoundPage`) without redirect loops.
+  - [x] Static assets (`/sw.js`, `/manifest.webmanifest`, `/icon.svg`, `/assets/*`) and excluded paths (`/api/*`, missing `/assets/*`) preserve non-SPA responses and MIME types.
+  - [x] Mobile 375 px layout and offline PWA navigation/reload work across SPA routes and unknown routes.
+  - [x] Lint, typecheck, Knip, LF formatting, full Vitest, production build, phone-375 Playwright, and Redocly OpenAPI lint pass; live Vercel verification steps documented for the planner.
+- **Files:** `vercel.json`, `vite.config.ts`, `src/app/spaRouting.test.tsx`, `e2e/spa-routing.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`

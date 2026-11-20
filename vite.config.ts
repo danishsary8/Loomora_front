@@ -35,6 +35,11 @@ export default defineConfig({
         // The whole app shell (JS, CSS, fonts, icons) is cached so it opens offline.
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api(?:\/|\?|$)/,
+          /^\/assets(?:\/|\?|$)/,
+          /^\/(?:sw\.js|manifest\.webmanifest|workbox-[^/]+\.js)(?:\?|$)/,
+        ],
       },
     }),
   ],
