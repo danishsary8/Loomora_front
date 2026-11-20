@@ -13,6 +13,7 @@ import { toLocalDate } from '@/lib/date'
 import { useSession } from '@/lib/api'
 import { formatInstantTime } from '@/lib/time/time'
 import { AddTodoSheet, type TodoSheetTarget } from './AddTodoSheet'
+import { DailyIntention } from './DailyIntention'
 import { DaySheet } from './DaySheet'
 import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
@@ -24,8 +25,9 @@ export function TodayPage() {
   const { t, i18n } = useTranslation()
   const now = useNow()
   const [openedAt] = useState(() => now)
-  const zone = useSession((state) => state.user?.timezone)
+  const zone = useSession((state) => (state.token ? state.user?.timezone : undefined))
   const today = toLocalDate(openedAt, zone)
+  const intentionDate = toLocalDate(now, zone)
   const [sheet, setSheet] = useState<{ open: boolean; target: TodoSheetTarget; instance: number }>({
     open: false,
     target: { type: 'create' },
@@ -67,6 +69,13 @@ export function TodayPage() {
         </div>
         {streak && <StreakBadge {...streak} />}
       </header>
+
+      <DailyIntention
+        date={intentionDate}
+        {...(intentionDate !== today && {
+          dateHint: formatDate(intentionDate, { dateStyle: 'full' }),
+        })}
+      />
 
       {schedule.length > 0 && (
         <NowNextStrip now={nowItem} next={nextItem} onOpen={() => setDaySheetOpen(true)} />

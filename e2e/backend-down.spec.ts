@@ -39,7 +39,9 @@ function answer(route: Route) {
     : {
         data: route.request().url().includes('/streak')
           ? { current_streak: 0, longest_streak: 0, today_counted: false }
-          : [],
+          : route.request().url().endsWith('/intention')
+            ? { text: null }
+            : [],
       }
   return route.fulfill({ json: body, headers: CORS })
 }
@@ -56,7 +58,7 @@ test.describe('backend down', () => {
 
     await page.unroute(API)
     await page.route(API, answer)
-    await page.getByRole('button', { name: 'Retry' }).click()
+    await page.getByRole('button', { name: 'Retry', exact: true }).click()
     await expect(banner).toBeHidden()
   })
 

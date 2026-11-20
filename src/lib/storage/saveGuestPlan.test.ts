@@ -1,6 +1,9 @@
+import { MAX_TODOS } from '@/features/todos/types'
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
+import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import type { GuestStorage } from './saveGuestPlan'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
 import {
@@ -15,7 +18,7 @@ const COUNTS = { created: 1, skipped: 0 }
 const RESULT = { todos: COUNTS, schedule_items: COUNTS, exceptions: COUNTS, checkins: COUNTS }
 
 let db: GuestDatabase
-let guest: { todos: GuestTodoRepository; schedule: GuestScheduleRepository }
+let guest: GuestStorage
 
 async function fillGuest() {
   const todo = await guest.todos.create({ title: 'Read', due_date: '2026-10-26' })
@@ -34,7 +37,11 @@ async function fillGuest() {
 
 beforeEach(() => {
   db = new GuestDatabase(`test-${crypto.randomUUID()}`)
-  guest = { todos: new GuestTodoRepository({ db }), schedule: new GuestScheduleRepository({ db }) }
+  guest = {
+    todos: new GuestTodoRepository({ db }),
+    schedule: new GuestScheduleRepository({ db }),
+    intentions: new GuestDailyIntentionRepository(db),
+  }
   useSession.getState().signIn(makeTokenResponse())
 })
 
@@ -151,6 +158,78 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     expect(bodies[1]).toEqual(bodies[0])
     expect(isEmptyPlan(await readGuestPlan(guest))).toBe(true)
   })
+
+  it('frees capacity used by old tombstones after an intention-only import succeeds', async () => {
+    const todo = await guest.todos.create({ title: 'Old task' })
+    await guest.todos.delete(todo.id)
+    const deleted = await db.todos.get(todo.id)
+    if (!deleted?.deleted_at) throw new Error('Expected a soft-deleted to-do')
+    await db.todos.bulkAdd(
+      Array.from({ length: MAX_TODOS - 1 }, () => ({ ...deleted, id: crypto.randomUUID() })),
+    )
+    await db.dailyIntentions.put({ date: '2026-11-19', text: 'One intention' })
+    await expect(guest.todos.create({ title: 'At capacity' })).rejects.toMatchObject({
+      field: 'title',
+    })
+    let payload: ImportBody | undefined
+    server.use(
+      http.post(`${API}/import`, async ({ request }) => {
+        payload = (await request.json()) as ImportBody
+        return HttpResponse.json({ data: RESULT })
+      }),
+    )
+
+    await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+    expect(payload?.todos).toEqual([])
+    expect(await db.todos.count()).toBe(0)
+    await expect(guest.todos.create({ title: 'Room again' })).resolves.toMatchObject({
+      title: 'Room again',
+    })
+  })
+
+  it.each([200, 422])(
+    'preserves concurrent edits, deletes and restores when import returns %i',
+    async (status) => {
+      const original = await guest.todos.create({ title: 'Original' })
+      const toDelete = await guest.todos.create({ title: 'Delete during import' })
+      const toRestore = await guest.todos.create({ title: 'Restore during import' })
+      const obsolete = await guest.todos.create({ title: 'Already deleted' })
+      await guest.todos.delete(toRestore.id)
+      await guest.todos.delete(obsolete.id)
+      let finish!: () => void
+      let start!: () => void
+      const pending = new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      const started = new Promise<void>((resolve) => {
+        start = resolve
+      })
+      server.use(
+        http.post(`${API}/import`, async () => {
+          start()
+          await pending
+          return HttpResponse.json(status === 200 ? { data: RESULT } : { message: 'Invalid' }, {
+            status,
+          })
+        }),
+      )
+
+      const result = saveGuestPlan(guest, accountDataApi)
+      await started
+      await guest.todos.update(original.id, { title: 'Edited during import' })
+      await guest.todos.delete(toDelete.id)
+      await guest.todos.restore(toRestore.id)
+      await guest.todos.create({ title: 'Added during import' })
+      const afterEdits = await db.todos.toArray()
+      finish()
+      if (status === 200) await expect(result).resolves.toBe(true)
+      else await expect(result).rejects.toMatchObject({ status })
+
+      expect(await db.todos.toArray()).toEqual(
+        status === 200 ? afterEdits.filter(({ id }) => id !== obsolete.id) : afterEdits,
+      )
+    },
+  )
 
   it('does not call the API when there is nothing to move', async () => {
     // No handler for POST /import: MSW fails the test on an unhandled request.

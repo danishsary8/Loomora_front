@@ -23,14 +23,16 @@ export function renderRoute(
   const { db, repo: defaultTodos } = createTestRepository()
   const repo = todoRepository ?? defaultTodos
   const schedule = scheduleRepository ?? new GuestScheduleRepository({ db })
+  const queryClient = createQueryClient()
   return {
     router,
+    queryClient,
     ...render(
       <AppProviders
         todoRepository={repo}
         scheduleRepository={schedule}
         guestDatabase={guestDatabase ?? db}
-        queryClient={createQueryClient()}
+        queryClient={queryClient}
       >
         <RouterProvider router={router} />
       </AppProviders>,

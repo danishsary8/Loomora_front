@@ -15,6 +15,7 @@ import {
   TodoRepositoryContext,
   type GuestStorage,
 } from '@/lib/storage'
+import { GuestDailyIntentionRepository } from '@/lib/storage/GuestDailyIntentionRepository'
 import type { GuestDatabase } from '@/lib/storage/db'
 import { GuestPreferenceDatabaseContext } from '@/lib/storage/guestPreferences'
 import { createQueryClient } from './queryClient'
@@ -43,6 +44,7 @@ export function AppProviders({
   const [guest] = useState<GuestStorage>(() => ({
     todos: todoRepository ?? new GuestTodoRepository(),
     schedule: scheduleRepository ?? new GuestScheduleRepository(),
+    intentions: new GuestDailyIntentionRepository(guestDatabase),
   }))
   const [guestStreak] = useState(() => new GuestStreakRepository(guest.todos, guest.schedule))
   const [server] = useState(() => ({

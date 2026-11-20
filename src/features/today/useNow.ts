@@ -2,12 +2,27 @@ import { useEffect, useState } from 'react'
 
 const MINUTE_MS = 60_000
 
-/** The current time, refreshed every minute so Now/Next stay right. */
+/** Refresh at the next minute boundary and when a suspended tab is visible again. */
 export function useNow(): Date {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), MINUTE_MS)
-    return () => clearInterval(id)
+    let timer: ReturnType<typeof setTimeout>
+    function schedule() {
+      timer = setTimeout(refresh, MINUTE_MS - (Date.now() % MINUTE_MS))
+    }
+    function refresh() {
+      clearTimeout(timer)
+      setNow(new Date())
+      schedule()
+    }
+    schedule()
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
   }, [])
   return now
 }

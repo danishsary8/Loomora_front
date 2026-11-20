@@ -45,14 +45,35 @@ export class GuestTodoRepository implements TodoRepository {
     this.timeZone = timeZone
   }
 
-  async listAll(): Promise<Todo[]> {
+  async listAll({ includeDeleted = false } = {}): Promise<Todo[]> {
     const all = await (await this.open()).todos.toArray()
-    return all.filter((t) => !t.deleted_at)
+    return includeDeleted ? all : all.filter((todo) => !todo.deleted_at)
   }
 
-  /** Remove every guest to-do (after a successful import, docs/08 rule 9). */
-  async clear(): Promise<void> {
-    await (await this.open()).todos.clear()
+  /** Clean up the import snapshot without discarding changes made by another tab. */
+  async clearImported(snapshot: Todo[]): Promise<void> {
+    if (snapshot.length === 0) return
+    const db = await this.open()
+    await db.transaction('rw', db.todos, async () => {
+      const current = await db.todos.toArray()
+      const active = (rows: Todo[]) => rows.filter((todo) => !todo.deleted_at)
+      const activeUnchanged = JSON.stringify(active(current)) === JSON.stringify(active(snapshot))
+      const beforeById = new Map(snapshot.map((todo) => [todo.id, todo]))
+      const remove = new Set(
+        current
+          .filter(
+            (todo) =>
+              (todo.deleted_at || activeUnchanged) &&
+              JSON.stringify(todo) === JSON.stringify(beforeById.get(todo.id)),
+          )
+          .map(({ id }) => id),
+      )
+      // A retained subtask still needs its parent for display or restore.
+      for (const { id, parent_id } of current) {
+        if (parent_id && !remove.has(id)) remove.delete(parent_id)
+      }
+      await db.todos.bulkDelete([...remove])
+    })
   }
 
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
