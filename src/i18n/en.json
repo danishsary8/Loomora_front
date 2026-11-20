@@ -307,51 +307,95 @@
     "counted_other": "Streak: {{count}} days. Today counted."
   },
   "legal": {
-    "updated": "Last updated: 24 October 2026",
+    "updated": "Last updated: 20 November 2026",
     "privacy": {
-      "intro": "This page says, in plain words, what happens to your information in Loomora.",
+      "intro": "This page explains, in plain words, how Loomora handles your data today in guest mode and with an account.",
       "s1": {
-        "title": "Where your data lives",
-        "body": "Everything you add (to-dos, schedule items, check-offs and your streak) is saved on your own device, in your browser’s storage. Loomora does not send it to us or to anyone else."
+        "title": "Guest mode (on your device)",
+        "body": "You can use Loomora without signing up. In guest mode, your to-dos (including subtasks, notes, priorities, repeat rules, and reminders), schedule items, check-ins, daily intentions, and display settings stay on your device in your browser’s IndexedDB storage. Loomora also saves a small localStorage flag to remember when you dismiss the “Save your plan” prompt.",
+        "items": {
+          "i1": "Guest plan data is not sent to our servers unless you create or sign into an account to import it, or choose to send feedback.",
+          "i2": "If you clear your browser’s site data, switch browsers, or lose your device, your local guest data is gone and Loomora cannot restore it."
+        }
       },
       "s2": {
-        "title": "What we do not collect",
-        "body": "You do not need a name or an email to use Loomora. There are no ads, no trackers and no analytics, and we do not sell anything about you."
+        "title": "Account mode (stored remotely)",
+        "body": "Creating an account is optional. When you sign up or sign in with email and password or with Google, Loomora sends your plan and account details to the Loomora API and stores them in a remote PostgreSQL database.",
+        "items": {
+          "i1": "Account and authentication details: email address, display name, time zone, display settings (12h/24h and week start), a hashed password (for email accounts), a Google account ID and verified email status (for Google sign-in), and optional sign-up survey answers (your main goal and how you heard about Loomora).",
+          "i2": "Plan data: your to-dos, subtasks, notes, reminders, schedule items, exceptions, check-ins, daily intentions, and your current streak, longest streak, and last counted streak date.",
+          "i3": "Session storage: the app stores a 30-day API access token and basic profile details in your browser’s localStorage so you stay signed in across reloads and tabs.",
+          "i4": "Guest import: if you have a guest plan on your device when you sign up or sign in, Loomora imports those records to your account and removes the imported plan data from local IndexedDB once every import batch succeeds."
+        }
       },
       "s3": {
-        "title": "Hosting",
-        "body": "The website is delivered by a hosting provider. Like most hosts, it may keep ordinary server logs, such as the time of a visit and the visitor’s IP address."
+        "title": "Feedback",
+        "body": "Both guests and signed-in users can use Send feedback in Profile. Submitted messages are stored in our PostgreSQL database. If you are signed in, your message is linked to your account and your account name and email may be included as a reply-to address when feedback emails are enabled."
       },
       "s4": {
-        "title": "Removing your data",
-        "body": "Clear this site’s data in your browser settings and Loomora forgets everything. We cannot restore it, because we never had it."
+        "title": "Hosting, email, and third-party services",
+        "body": "Loomora is a student-developed project that relies on external infrastructure providers to run the web app, API, database, optional Google sign-in, and emails:",
+        "items": {
+          "i1": "Vercel is configured to host and deliver the web app.",
+          "i2": "Render is configured to host the Loomora backend API.",
+          "i3": "Neon (PostgreSQL) is documented in project setup as the remote database host for account and feedback records.",
+          "i4": "Google sign-in is used only if you choose “Sign in with Google” or “Sign up with Google” (requesting basic profile and email).",
+          "i5": "Brevo is configured in the backend to send account confirmation links, password reset links, and forwarded feedback emails.",
+          "i6": "Like most web and API providers, these hosts may keep standard server or request logs (such as IP addresses and timestamps)."
+        }
       },
       "s5": {
-        "title": "Accounts later",
-        "body": "Accounts are not available yet. Before you are ever asked to save your plan online, this page will be updated to say what is stored and why."
+        "title": "Offline caching (service worker)",
+        "body": "Loomora registers a service worker to cache the app files (code, styles, icons, and bundled fonts) on your device so the app can open offline.",
+        "items": {
+          "i1": "In guest mode, you can view and edit your local plan offline.",
+          "i2": "In account mode, saving or loading changes requires an internet connection; offline edits are not queued or saved until you are back online."
+        }
+      },
+      "s6": {
+        "title": "Deleting your data and account",
+        "body": "How you remove your data depends on whether you use guest mode or an account:",
+        "items": {
+          "i1": "Guest mode: clear this site’s data in your browser settings to erase local IndexedDB data and any saved session token. This does not delete feedback messages already sent to the server.",
+          "i2": "Accounts with a password: open Profile, choose Delete my account, and enter your current password to immediately delete your user record, tokens, password-reset tokens, to-dos (including soft-deleted to-dos), schedule items, exceptions, check-ins, daily intentions, and account-linked feedback from the app database, and sign out on this device. Separate local browser data or feedback emails already delivered to an inbox are not removed automatically.",
+          "i3": "Google-only accounts (without a password): deleting your account directly in the app is not supported yet, because confirming your identity with Google for deletion is not implemented yet.",
+          "i4": "Soft-deleted to-dos: deleting a to-do in an account keeps it soft-deleted so you can undo or restore it for up to 7 days; automatic cleanup of older soft-deleted to-dos is not implemented yet, so those rows remain in the database until your account is deleted."
+        }
+      },
+      "s7": {
+        "title": "Contact and open publication details",
+        "body": "Loomora is a student-developed app still in active development. You can send questions or reports through Send feedback in Profile. A dedicated operator contact email, data retention and backup schedule, hosting analytics and data-sharing disclosures, and an official effective date require owner confirmation before public launch."
       }
     },
     "terms": {
-      "intro": "These are the simple rules for using Loomora.",
+      "intro": "These are the plain-English rules for using Loomora.",
       "s1": {
         "title": "Using Loomora",
-        "body": "Loomora is a free planner for your own to-dos and schedule. Use it for yourself and be kind to others."
+        "body": "Loomora is a free, student-developed planner for your own to-dos and weekly schedule. Use it for yourself and be kind to others."
       },
       "s2": {
-        "title": "Your data",
-        "body": "Your plan is saved on your device only. If you clear your browser data, switch browsers or lose the device, your plan is gone, so keep that in mind."
+        "title": "Guest mode vs. account mode",
+        "body": "You can use Loomora without an account or sign up to sync your plan:",
+        "items": {
+          "i1": "Guest mode: your plan is saved locally in your browser on your device. If you clear your browser data, switch browsers, or lose the device, your local plan is gone.",
+          "i2": "Account mode: your plan is saved to your account on our remote server so you can access it across devices. You are responsible for keeping your password and signed-in devices secure."
+        }
       },
       "s3": {
-        "title": "No promises",
-        "body": "Loomora is early software, provided as it is. It may have bugs or change, and we cannot promise it will always work or never lose data."
+        "title": "Accounts and deletion",
+        "body": "Creating an account is optional. You can sign up with email and password or with Google. Accounts that have a password can be deleted in Profile. Google-only accounts without a password cannot currently be deleted through the app because Google identity confirmation for deletion is not supported yet."
       },
       "s4": {
-        "title": "Fair use",
-        "body": "Please do not try to break Loomora or use it to harm others."
+        "title": "Early software and offline limits",
+        "body": "Loomora is early student-developed software provided as it is, with no promises of uptime, backups, or error-free operation. While a service worker caches the app for offline opening and guest mode works offline, account features require an internet connection and depend on third-party hosting and email providers."
       },
       "s5": {
+        "title": "Fair use",
+        "body": "Please do not try to break, overload, or bypass limits on Loomora, or use it to harm others."
+      },
+      "s6": {
         "title": "Changes",
-        "body": "These terms may change as Loomora grows. The date at the top shows the latest update."
+        "body": "These terms and the Privacy page may change as Loomora is developed. The date at the top shows when this text was last updated, and formal operator contact and legal publication details still require owner approval before public launch."
       }
     }
   },

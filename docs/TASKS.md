@@ -479,3 +479,23 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [ ] Owner confirms Vercel Project Settings (`Production Branch`, `Root Directory`, `Build & Output`, `Auto-assign Custom Production Domains`, `VITE_API_URL` scope, `Deployment Protection` / `Vercel Toolbar`) and approves/executes promotion of `37d5dd5` (`GU1bKLwGwWE5UvEaBBfprmFZHe58`).
   - [ ] Live production verification on `https://loomora-craft.vercel.app` (and/or authenticated `37d5dd5` candidate) passes direct SPA routes, 6 security headers, `/sw.js` caching, 375 px mobile/PWA offline reload, and zero CSP violations without weakening production CSP.
 - **Files:** `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-017: Privacy & Terms accuracy
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** QA-001 / QA-004 (outdated local-only and unavailable-account Privacy and Terms disclosures). Independent of backend B-035 (Q23 Google-only account recovery/deletion investigation).
+- **Publication gate:** **BLOCKED** — Code/copy accuracy fixes are ready for planner review, while **QA-004** and public legal publication remain incomplete/blocked pending Danish's owner confirmations (contact details, retention/backup disclosures, live provider confirmation, effective date/jurisdiction) and Q23 resolution.
+- **Plan:**
+  1. Audit existing Privacy/Terms copy against frontend storage/auth/profile/feedback/PWA code and read-only `loomora_back` sources.
+  2. Write failing RED Vitest (`src/features/legal/LegalPage.test.tsx`) and 375 px Playwright (`e2e/legal.spec.ts`) regression tests before changing production files.
+  3. Update `src/features/legal/LegalPage.tsx` and `src/i18n/en.json` to separate Guest mode, Account mode, feedback/email/hosting/offline behavior, password deletion, and current Google-only deletion limitation without inventing unverified legal claims.
+  4. Verify GREEN across static checks, Vitest, production build, phone-375 Playwright, Prettier, npm audits, OpenAPI lint, and `git diff --check`.
+  5. Record the source-backed audit, RED/GREEN evidence, verification output, and remaining Q23 / QA-004 owner blockers in `docs/TASKS.md` and `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] Verified false claims about local-only data and unavailable accounts are corrected in `src/i18n/en.json` and `src/features/legal/LegalPage.tsx`.
+  - [x] Guest mode (IndexedDB/localStorage, loss risk) and account mode (API, PostgreSQL, email/Google auth, 30-day session token, guest import, feedback, Vercel/Render/Neon/Brevo, offline SW behavior) are accurately differentiated.
+  - [x] Q23's current Google-only deletion restriction is stated truthfully without promising unimplemented B-035 workflows; Q23 remains open.
+  - [x] RED/GREEN Vitest (`LegalPage.test.tsx`) and 375 px Playwright (`e2e/legal.spec.ts`) regressions, accessibility, i18n, and full verification checks pass.
+  - [ ] **Owner / Publication blocker (QA-004):** Danish confirms operator legal name/identity, support/privacy contact email/address, governing jurisdiction, official policy effective date, server/DB/email retention & backup practices, live Vercel/Render/Neon/Brevo/Google provider disclosures, Q23 launch scope for Google-only accounts, and final legal publication approval.
+- **Files:** `src/features/legal/LegalPage.tsx`, `src/i18n/en.json`, `src/features/legal/LegalPage.test.tsx`, `e2e/legal.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
