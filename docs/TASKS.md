@@ -366,9 +366,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-011: Cross-tab session synchronization
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Planner-authorized follow-up to QA-001 (cross-tab session finding QA-006), branched after QA-010.
+- **Merge:** [PR #37](https://github.com/danishsary8/Loomora_front/pull/37) at `c9ef451`.
 - **Plan:**
   1. Reproduce cross-tab sign-out, account switch, retired async responses, and feedback-loop risks with failing Vitest and two-tab Playwright tests.
   2. Synchronize `useSession` across tabs using `storage` events with `BroadcastChannel` and `visibilitychange` / `focus` fallbacks without write-back loops or duplicate sign-outs.
@@ -382,3 +383,22 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Delayed or reordered cross-tab messages cannot overwrite a newer session or restore a session after sign-out, and BroadcastChannel fallback works when storage is blocked.
   - [x] Lint, typecheck, Knip, LF formatting, Vitest, production build, phone-375 Playwright (including two-tab test), and Redocly OpenAPI lint pass.
 - **Files:** `src/lib/api/session.ts`, `src/lib/api/tokenStorage.ts`, `src/lib/api/client.ts`, `src/lib/api/index.ts`, `src/app/AppProviders.tsx`, `src/features/streak/useStreak.ts`, `src/features/todos/useTodos.ts`, `src/features/reminders/ReminderWatcher.tsx`, `src/features/profile/ProfilePage.tsx`, `src/features/auth/*`, `src/app/crossTabSession.test.tsx`, `e2e/cross-tab-session.spec.ts`
+
+### QA-012: Offline guest streak and plan summary
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Planner-authorized follow-up to QA-003 and QA-010.
+- **Plan:**
+  1. Reproduce offline cold-cache pauses in `useStreak` and `useGuestPlan` with failing Vitest tests.
+  2. Set `networkMode` in `useStreak` from `GuestStreakRepository` vs `ServerStreakRepository` (`'always'` for guest, `'online'` for account).
+  3. Set `networkMode: 'always'` and session-generation scoping (`[...guestPlanKey, generation]`) in `useGuestPlan` while preserving `guestPlanKey` and `streakKeys.all` prefix invalidation.
+  4. Add Vitest and mobile 375 px Playwright regression tests covering offline cold-cache reads, invalidation refreshes, reload/reconnect persistence, and account/cross-tab isolation.
+  5. Run lint, typecheck, Knip, formatting, full Vitest suite, production build, phone-375 Playwright, and Redocly OpenAPI lint.
+- **Done when:**
+  - [x] Guest streak and guest-plan summary load offline on a cold TanStack Query cache without waiting for network connectivity.
+  - [x] Account-backed streak reads remain `'online'` (API-dependent) and never leak into guest or another account's view; session-generation and cross-tab protections are preserved.
+  - [x] Existing invalidations (`streakKeys.all`, `guestPlanKey`, full invalidation on import) refresh the expected values; guest Dexie data persists without duplication or accidental clearing.
+  - [x] New Vitest regression tests (`offlineStreak.test.tsx`, `offlineGuestPlan.test.tsx`) demonstrated RED before GREEN; mobile 375 px Playwright (`offline-guest-reads.spec.ts`) passes.
+  - [x] Lint, typecheck, Knip, LF formatting, full Vitest suite, production build, phone-375 Playwright, and Redocly OpenAPI lint pass.
+- **Files:** `src/features/streak/useStreak.ts`, `src/features/auth/useGuestPlan.ts`, `src/features/streak/offlineStreak.test.tsx`, `src/features/auth/offlineGuestPlan.test.tsx`, `e2e/offline-guest-reads.spec.ts`
