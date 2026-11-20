@@ -114,6 +114,26 @@ describe('Add to my schedule (empty Today)', () => {
 })
 
 describe('full day sheet (S5)', () => {
+  it('opens the existing occurrence editor from Today and saves a one-day override', async () => {
+    await seed()
+    setClock(10, 30)
+    await openToday()
+    await userEvent.click(await strip())
+
+    const daySheet = screen.getByRole('dialog', { name: 'Today’s schedule' })
+    await userEvent.click(await within(daySheet).findByRole('button', { name: /Edit Lecture/ }))
+    const edit = screen.getByRole('dialog', { name: 'Edit schedule item' })
+    await userEvent.click(within(edit).getByRole('button', { name: 'Only today' }))
+    const title = within(edit).getByLabelText('Title')
+    await userEvent.clear(title)
+    await userEvent.type(title, 'Exam')
+    await userEvent.click(within(edit).getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Exam')).toBeInTheDocument()
+    expect(await schedule.listExceptions()).toMatchObject([{ date: TODAY, title: 'Exam' }])
+    expect((await schedule.listItems()).map(({ title }) => title)).toContain('Lecture')
+  })
+
   it('lists the day in time order and checks items off', async () => {
     await seed()
     setClock(10, 30)

@@ -6,6 +6,9 @@ import { FloatingAddButton, ProgressRing } from '@/components/ui'
 import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
+import type { ScheduleTarget } from '@/features/schedule/ScheduleItemSheet'
+import { UndoDeleteToast as ScheduleUndoToast } from '@/features/schedule/UndoDeleteToast'
+import { useUndoableDelete as useScheduleDelete } from '@/features/schedule/useUndoableDelete'
 import { UndoDeleteToast } from '@/features/todos/UndoDeleteToast'
 import { useUndoableDelete } from '@/features/todos/useUndoableDelete'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
@@ -19,6 +22,8 @@ import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
 import { TodoRow } from './TodoRow'
 import { useNow } from './useNow'
+
+type SchedulePanel = { type: 'day' } | { type: 'editor'; target: ScheduleTarget }
 
 /** S2/S3 Today, v1: guest to-dos only (F-006). */
 export function TodayPage() {
@@ -35,10 +40,13 @@ export function TodayPage() {
     instance: number
     generation: number
   }>({ open: false, target: { type: 'create' }, instance: 0, generation })
-  const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
-  const [daySheetOpen, setDaySheetOpen] = useState(false)
+  const [panel, setPanel] = useState<(SchedulePanel & { generation: number }) | null>(null)
+  const schedulePanel = panel?.generation === generation ? panel : null
   const streak = useStreak(today).data
-  const schedule = useScheduleDay(today).data ?? []
+  const scheduleDelete = useScheduleDelete()
+  const schedule = (useScheduleDay(today).data ?? []).filter(
+    (occurrence) => !scheduleDelete.isDeleting(occurrence.schedule_item_id, occurrence.date),
+  )
   const { now: nowItem, next: nextItem } = nowAndNext(
     schedule,
     formatInstantTime(now, '24h', 'en-GB', zone),
@@ -59,6 +67,8 @@ export function TodayPage() {
     setSheet(({ instance }) => ({ open: true, target, instance: instance + 1, generation }))
   }
   const addTodo = () => openSheet({ type: 'create' })
+  const openSchedule = (next: SchedulePanel) => setPanel({ ...next, generation })
+  const closeSchedule = () => setPanel((current) => (current === panel ? null : current))
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,7 +90,7 @@ export function TodayPage() {
       />
 
       {schedule.length > 0 && (
-        <NowNextStrip now={nowItem} next={nextItem} onOpen={() => setDaySheetOpen(true)} />
+        <NowNextStrip now={nowItem} next={nextItem} onOpen={() => openSchedule({ type: 'day' })} />
       )}
 
       {todos.isPending ? (
@@ -88,7 +98,10 @@ export function TodayPage() {
       ) : todos.isError ? (
         <ErrorState onRetry={() => void todos.refetch()} />
       ) : list.length === 0 ? (
-        <TodayEmpty onAddTodo={addTodo} onAddSchedule={() => setScheduleSheetOpen(true)} />
+        <TodayEmpty
+          onAddTodo={addTodo}
+          onAddSchedule={() => openSchedule({ type: 'editor', target: { type: 'create' } })}
+        />
       ) : (
         <>
           <div className="flex justify-center">
@@ -126,16 +139,24 @@ export function TodayPage() {
         </>
       )}
 
-      <DaySheet
-        open={daySheetOpen}
-        onClose={() => setDaySheetOpen(false)}
-        date={today}
-        occurrences={schedule}
-      />
+      {schedulePanel?.type !== 'editor' && (
+        <DaySheet
+          key={`day-${generation}`}
+          open={schedulePanel?.type === 'day'}
+          onClose={closeSchedule}
+          date={today}
+          occurrences={schedule}
+          onEdit={(item, occurrence) =>
+            openSchedule({ type: 'editor', target: { type: 'occurrence', item, occurrence } })
+          }
+        />
+      )}
       <ScheduleItemSheet
-        open={scheduleSheetOpen}
-        onClose={() => setScheduleSheetOpen(false)}
-        target={{ type: 'create' }}
+        key={`schedule-${generation}`}
+        open={schedulePanel?.type === 'editor'}
+        onClose={closeSchedule}
+        target={schedulePanel?.type === 'editor' ? schedulePanel.target : { type: 'create' }}
+        onDelete={scheduleDelete.request}
       />
       <SavePlanPrompt today={today} />
       {sheet.generation === generation && (
@@ -152,6 +173,12 @@ export function TodayPage() {
         />
       )}
       <UndoDeleteToast pending={del.pending} onUndo={() => void del.undo()} error={del.error} />
+      <ScheduleUndoToast
+        pending={scheduleDelete.pending}
+        onUndo={scheduleDelete.undo}
+        error={scheduleDelete.error}
+        aboveTodoToast={Boolean(del.pending || del.error)}
+      />
     </div>
   )
 }

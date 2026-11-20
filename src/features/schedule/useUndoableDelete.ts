@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSession } from '@/lib/api'
 import { useScheduleRepository, type ScheduleRepository } from '@/lib/storage'
-import { scheduleKeys } from './useSchedule'
+import { refreshSchedule } from './useSchedule'
 import type { ScheduleItem } from './types'
 import type { LocalDate } from '@/features/todos/types'
 
@@ -12,6 +13,11 @@ export const UNDO_DELAY_MS = 5000
 export type DeleteRequest =
   { scope: 'all'; item: ScheduleItem } | { scope: 'today'; item: ScheduleItem; date: LocalDate }
 
+interface PendingDelete {
+  request: DeleteRequest
+  generation: number
+}
+
 function run(repo: ScheduleRepository, request: DeleteRequest): Promise<unknown> {
   return request.scope === 'all'
     ? repo.delete(request.item.id)
@@ -21,43 +27,78 @@ function run(repo: ScheduleRepository, request: DeleteRequest): Promise<unknown>
 /**
  * Delete with a 5-second undo. Nothing is written until the delay ends; hosts hide the
  * `pending` target from their lists meanwhile. A new request, or leaving the screen,
- * commits the pending delete at once.
+ * commits the pending delete at once when the original session is still active.
  */
 export function useUndoableDelete(delayMs: number = UNDO_DELAY_MS) {
   const repo = useScheduleRepository()
+  const generation = useSession((state) => state.generation)
   const queryClient = useQueryClient()
-  const [pending, setPending] = useState<DeleteRequest | null>(null)
-  const pendingRef = useRef<DeleteRequest | null>(null)
+  const [pending, setPending] = useState<PendingDelete | null>(null)
+  const [committing, setCommitting] = useState<PendingDelete[]>([])
+  const [failedGeneration, setFailedGeneration] = useState<number | null>(null)
+  const pendingRef = useRef<PendingDelete | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const commit = useCallback(async () => {
-    clearTimeout(timer.current)
-    const request = pendingRef.current
-    if (!request) return
-    pendingRef.current = null
-    setPending(null)
-    await run(repo, request)
-    await queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
-  }, [repo, queryClient])
-
-  const undo = useCallback(() => {
+  const clearPending = useCallback(() => {
     clearTimeout(timer.current)
     pendingRef.current = null
     setPending(null)
   }, [])
 
-  const request = useCallback(
-    async (next: DeleteRequest) => {
-      await commit()
-      pendingRef.current = next
-      setPending(next)
-      timer.current = setTimeout(() => void commit(), delayMs)
+  const commit = useCallback(
+    async (entry: PendingDelete | null) => {
+      if (!entry || entry !== pendingRef.current || entry.generation !== generation) return
+      clearPending()
+      if (useSession.getState().generation !== generation) return
+
+      setCommitting((entries) => [...entries, entry])
+      try {
+        await run(repo, entry.request)
+        await refreshSchedule(queryClient, repo, generation)
+      } catch {
+        if (useSession.getState().generation === generation) setFailedGeneration(generation)
+      } finally {
+        setCommitting((entries) => entries.filter((current) => current !== entry))
+      }
     },
-    [commit, delayMs],
+    [clearPending, generation, queryClient, repo],
   )
 
-  // Leaving the screen makes a pending delete final instead of silently dropping it.
-  useEffect(() => () => void commit(), [commit])
+  function undo() {
+    if (
+      pending === pendingRef.current &&
+      pending?.generation === useSession.getState().generation
+    ) {
+      clearPending()
+    }
+  }
 
-  return { pending, request, undo }
+  function request(next: DeleteRequest) {
+    if (useSession.getState().generation !== generation) return
+    void commit(pendingRef.current)
+    const entry = { request: next, generation }
+    pendingRef.current = entry
+    setPending(entry)
+    setFailedGeneration(null)
+    timer.current = setTimeout(() => void commit(entry), delayMs)
+  }
+
+  function isDeleting(id: string, date?: LocalDate) {
+    return [pending, ...committing].some(
+      (entry) =>
+        entry?.generation === generation &&
+        entry.request.item.id === id &&
+        (entry.request.scope === 'all' || entry.request.date === date),
+    )
+  }
+
+  useEffect(() => () => void commit(pendingRef.current), [commit])
+
+  return {
+    pending: pending?.generation === generation ? pending.request : null,
+    error: failedGeneration === generation,
+    isDeleting,
+    request,
+    undo,
+  }
 }

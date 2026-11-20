@@ -259,6 +259,7 @@
     "saving": "Saving…",
     "saveError": "Could not save. Please try again.",
     "delete": "Delete",
+    "deleteError": "Could not delete. Please try again.",
     "deleted": "Deleted “{{title}}”",
     "undo": "Undo"
   },

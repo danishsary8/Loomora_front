@@ -236,7 +236,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/auth/*`, `src/features/profile/*`, `src/lib/api/*`, `src/i18n/locales/en.json`
 
 ### F-022: Undo toast for deletes
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Steps:**
   1. Needs B-022 and a refreshed `docs/openapi.yaml`. Add `restore` to the to-do repositories (Dexie: clear `deleted_at`; server: `POST /todos/{id}/restore`).
@@ -248,7 +248,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/components/*`, `src/features/todos/*`, repositories, `src/i18n/locales/en.json`
 
 ### F-023: Subtasks, priority and notes UI
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Needs B-019. Add notes (textarea), priority (low, normal, high with a text label, not only color) and subtasks (add, check, delete; one level) to the to-do sheet and rows. Show a subtask count like 2/3 on the row. Checking a parent marks its open subtasks done.
@@ -260,7 +260,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/subtasks.spec.ts`
 
 ### F-024: Repeating to-dos UI
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Needs B-020. In the to-do sheet add Repeat: None, Daily, Weekly with weekday chips. It requires a due date (show the message under the field).
@@ -272,7 +272,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/repeat.spec.ts`
 
 ### F-025: In-app reminders UI
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Needs B-021. Add a Remind me field (date and time in the user's time zone) to the to-do sheet.
@@ -285,7 +285,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/reminders/*`, `src/features/todos/*`, `src/lib/db/*`, `src/i18n/locales/en.json`, `e2e/reminders.spec.ts`
 
 ### F-026: Time format and week start settings
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Needs B-023. In Profile add a 12 h or 24 h toggle and a week-starts-on picker (Monday or Sunday). Guests keep them in Dexie `meta`; accounts use `PATCH /me`.
@@ -297,7 +297,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/profile/*`, `src/lib/time/*`, guest storage, schedule and reminder components, `src/i18n/en.json`, `e2e/time-preferences.spec.ts`
 
 ### F-027: Daily intention on Today
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Needs B-024. A one-line field under the Today header (max 200 characters, placeholder via `t()`), saved 600 ms after typing stops and on blur, with a small Saved hint. It is per local date: another day shows its own text and a new day starts empty.
@@ -308,7 +308,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Files:** `src/features/today/DailyIntention.tsx`, repositories, `src/lib/db/*`, `src/i18n/locales/en.json`
 
 ### F-028: Delete-account password field uses `has_password`
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Steps:**
   1. Use the B-025 `User.has_password` flag to gate password confirmation. Resolve saved sessions with a missing flag through authenticated `GET /me`. Answers Q37.
@@ -333,9 +333,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-003: Offline guest to-do persistence
 
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Source:** QA-001, guest offline blocker on Today.
+- **Merge:** [PR #35](https://github.com/danishsary8/Loomora_front/pull/35) at `a3f15b5`.
 - **Plan:**
   1. Reproduce the offline save, offline list and session switch failures with Vitest.
   2. Let Dexie-backed to-do operations run offline and bind pending operations to their original session.
@@ -346,3 +347,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Reload and reconnect preserve the IndexedDB row and ID. Reopening the browser profile offline shows the saved to-do.
   - [x] Account requests retain their existing network behavior. Pending operations and Today state stay tied to their original session.
   - [x] Lint, typecheck, Knip, formatting, Vitest, build, phone-375 Playwright and OpenAPI lint pass.
+
+### QA-010: Offline guest schedule reliability
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Planner-authorized schedule follow-up to QA-003, which deferred this work in PR #35. The QA-001 audit already assigns QA-002 through QA-009.
+- **Plan:**
+  1. Reproduce offline schedule reads, writes and session-switch failures with Vitest.
+  2. Apply session-scoped queries and mutations to Week, Today and Copy Day. Bind delayed deletion and Undo to their original session and request.
+  3. Verify failed draft retention, one-day edits and skips, and persistence through offline reload and reconnect at 375 px.
+  4. Run the required checks, document the remaining offline reads and open one PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Offline guests can load Week and Today, add and edit repeats, edit or skip an occurrence, check and uncheck occurrences, and copy a day.
+  - [x] Write errors preserve the editable draft. The phone regression verifies Week visibility and the original IndexedDB ID after offline reload and reconnect.
+  - [x] Account operations use the API. Retired sessions cannot replay paused mutations, show stale schedule data, commit delayed deletes or undo a later session's delete.
+  - [x] Lint, typecheck, Knip, LF formatting, Vitest, build, phone-375 Playwright and OpenAPI lint pass.

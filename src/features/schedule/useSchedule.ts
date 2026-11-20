@@ -1,70 +1,124 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { LocalDate } from '@/features/todos/types'
 import { streakKeys } from '@/features/streak/useStreak'
-import { useScheduleRepository } from '@/lib/storage'
+import { useSession } from '@/lib/api'
+import {
+  GuestScheduleRepository,
+  useScheduleRepository,
+  type ScheduleRepository,
+} from '@/lib/storage'
 import type { CreateScheduleItemInput, ExceptionInput, UpdateScheduleItemInput } from './types'
 
 export const scheduleKeys = {
   all: ['schedule'] as const,
-  items: ['schedule', 'items'] as const,
-  day: (date: LocalDate) => ['schedule', 'day', date] as const,
+  session: (generation: number) => [...scheduleKeys.all, generation] as const,
+  items: (generation: number) => [...scheduleKeys.session(generation), 'items'] as const,
+  day: (date: LocalDate, generation: number) =>
+    [...scheduleKeys.session(generation), 'day', date] as const,
+}
+
+function useScheduleStorage() {
+  const repo = useScheduleRepository()
+  const generation = useSession((state) => state.generation)
+  const networkMode = repo instanceof GuestScheduleRepository ? 'always' : 'online'
+  const sameSession = () => useSession.getState().generation === generation
+  const assertSession = () => {
+    if (!sameSession()) throw new Error('Session changed')
+  }
+  return { repo, generation, networkMode, assertSession } as const
+}
+
+export function refreshSchedule(
+  queryClient: QueryClient,
+  repo: ScheduleRepository,
+  generation: number,
+  refreshStreak = false,
+) {
+  const active = useSession.getState()
+  // An already-started IndexedDB write can finish after the user returns to the same local plan.
+  const sameGuestPlan = active.token === null && repo instanceof GuestScheduleRepository
+  if (active.generation !== generation && !sameGuestPlan) return
+  if (refreshStreak) void queryClient.invalidateQueries({ queryKey: streakKeys.all })
+  return queryClient.invalidateQueries({ queryKey: scheduleKeys.session(active.generation) })
+}
+
+/** The repeat definitions used by Week and the occurrence editor. */
+export function useScheduleItems(enabled = true) {
+  const { repo, generation, networkMode, assertSession } = useScheduleStorage()
+  return useQuery({
+    queryKey: scheduleKeys.items(generation),
+    networkMode,
+    enabled,
+    queryFn: () => {
+      assertSession()
+      return repo.listItems()
+    },
+  })
 }
 
 export function useScheduleDay(date: LocalDate) {
-  const repo = useScheduleRepository()
+  const { repo, generation, networkMode, assertSession } = useScheduleStorage()
   return useQuery({
-    queryKey: scheduleKeys.day(date),
-    queryFn: () => repo.listForDate(date),
+    queryKey: scheduleKeys.day(date, generation),
+    networkMode,
+    queryFn: () => {
+      assertSession()
+      return repo.listForDate(date)
+    },
   })
 }
 
-function useInvalidateSchedule() {
+export function useScheduleMutation<Input, Result>(
+  operation: string,
+  write: (repo: ScheduleRepository, input: Input) => Promise<Result>,
+  { refreshStreak = false, refreshOnError = false } = {},
+) {
+  const { repo, generation, networkMode, assertSession } = useScheduleStorage()
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+  return useMutation({
+    // A new generation detaches the observer from any paused mutation.
+    mutationKey: [...scheduleKeys.session(generation), operation],
+    scope: { id: `schedule:${generation}:${operation}` },
+    networkMode,
+    mutationFn: (input: Input) => {
+      assertSession()
+      return write(repo, input)
+    },
+    onSettled: (_result, error) => {
+      if (!error || refreshOnError) {
+        return refreshSchedule(queryClient, repo, generation, !error && refreshStreak)
+      }
+    },
+  })
 }
 
 export function useCreateScheduleItem() {
-  const repo = useScheduleRepository()
-  const invalidate = useInvalidateSchedule()
-  return useMutation({
-    mutationFn: (input: CreateScheduleItemInput) => repo.create(input),
-    onSuccess: invalidate,
-  })
+  return useScheduleMutation('create', (repo, input: CreateScheduleItemInput) => repo.create(input))
 }
 
 /** "All repeats" edit. */
 export function useUpdateScheduleItem() {
-  const repo = useScheduleRepository()
-  const invalidate = useInvalidateSchedule()
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: UpdateScheduleItemInput }) =>
-      repo.update(id, patch),
-    onSuccess: invalidate,
-  })
+  return useScheduleMutation(
+    'update',
+    (repo, { id, patch }: { id: string; patch: UpdateScheduleItemInput }) => repo.update(id, patch),
+  )
 }
 
 /** "Only today" change. */
 export function useSetScheduleException() {
-  const repo = useScheduleRepository()
-  const invalidate = useInvalidateSchedule()
-  return useMutation({
-    mutationFn: ({ id, date, input }: { id: string; date: LocalDate; input: ExceptionInput }) =>
+  return useScheduleMutation(
+    'exception',
+    (repo, { id, date, input }: { id: string; date: LocalDate; input: ExceptionInput }) =>
       repo.setException(id, date, input),
-    onSuccess: invalidate,
-  })
+  )
 }
 
 /** Mark an occurrence done or undo it (docs/08 rule 7). */
 export function useSetScheduleCheckin() {
-  const repo = useScheduleRepository()
-  const queryClient = useQueryClient()
-  const invalidate = useInvalidateSchedule()
-  return useMutation({
-    mutationFn: ({ id, date, done }: { id: string; date: LocalDate; done: boolean }) =>
+  return useScheduleMutation(
+    'checkin',
+    (repo, { id, date, done }: { id: string; date: LocalDate; done: boolean }) =>
       repo.setCheckin(id, date, done),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: streakKeys.all })
-      return invalidate()
-    },
-  })
+    { refreshStreak: true },
+  )
 }
