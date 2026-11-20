@@ -11,7 +11,7 @@ import { todoKeys, useSetTodoDone } from './useTodos'
 it('settles parent completion before a queued child check and retains its saved state on failure', async () => {
   useSession.getState().signIn(makeTokenResponse())
   const date = '2026-10-24'
-  const key = todoKeys.today(date)
+  const key = todoKeys.today(date, useSession.getState().generation)
   const stamp = '2026-10-24T10:00:00.000Z'
   const child: TodayTodo = {
     id: 'child',

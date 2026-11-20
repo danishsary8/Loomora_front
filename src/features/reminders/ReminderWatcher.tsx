@@ -33,6 +33,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
   const { t } = useTranslation()
   const repo = useTodoRepository()
   const token = useSession((state) => state.token)
+  const generation = useSession((state) => state.generation)
   const client = useQueryClient()
   const online = useOnlineStatus()
   const serviceDown = useServiceStatus((state) => state.down)
@@ -91,7 +92,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
   }, [enabled, refetch])
 
   async function act(action: ReminderAction) {
-    const sameSession = () => useSession.getState().token === token
+    const sameSession = () => useSession.getState().generation === generation
     if (!current || !currentKey || actionPending.current || !sameSession()) return
     if (token && !online) {
       setError({ key: currentKey, message: t('errors.network') })
@@ -111,7 +112,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
         const saved = await repo.snoozeReminder(current.id, action)
         if (!sameSession()) return
         client.setQueriesData<TodayTodo[]>(
-          { queryKey: todoKeys.lists },
+          { queryKey: todoKeys.sessionLists(generation) },
           (list) =>
             list &&
             changeTodayTodo(list, saved.id, (todo) => ({ ...todo, remind_at: saved.remind_at })),

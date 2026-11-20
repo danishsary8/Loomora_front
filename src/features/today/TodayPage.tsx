@@ -26,13 +26,15 @@ export function TodayPage() {
   const now = useNow()
   const [openedAt] = useState(() => now)
   const zone = useSession((state) => (state.token ? state.user?.timezone : undefined))
+  const generation = useSession((state) => state.generation)
   const today = toLocalDate(openedAt, zone)
   const intentionDate = toLocalDate(now, zone)
-  const [sheet, setSheet] = useState<{ open: boolean; target: TodoSheetTarget; instance: number }>({
-    open: false,
-    target: { type: 'create' },
-    instance: 0,
-  })
+  const [sheet, setSheet] = useState<{
+    open: boolean
+    target: TodoSheetTarget
+    instance: number
+    generation: number
+  }>({ open: false, target: { type: 'create' }, instance: 0, generation })
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
   const [daySheetOpen, setDaySheetOpen] = useState(false)
   const streak = useStreak(today).data
@@ -54,7 +56,7 @@ export function TodayPage() {
   const list = todos.data ?? []
   const doneCount = list.filter((todo) => todo.done_at !== null).length
   function openSheet(target: TodoSheetTarget) {
-    setSheet(({ instance }) => ({ open: true, target, instance: instance + 1 }))
+    setSheet(({ instance }) => ({ open: true, target, instance: instance + 1, generation }))
   }
   const addTodo = () => openSheet({ type: 'create' })
 
@@ -136,17 +138,19 @@ export function TodayPage() {
         target={{ type: 'create' }}
       />
       <SavePlanPrompt today={today} />
-      <AddTodoSheet
-        key={sheet.instance}
-        open={sheet.open}
-        onClose={() =>
-          setSheet((current) =>
-            current.instance === sheet.instance ? { ...current, open: false } : current,
-          )
-        }
-        today={today}
-        target={sheet.target}
-      />
+      {sheet.generation === generation && (
+        <AddTodoSheet
+          key={sheet.instance}
+          open={sheet.open}
+          onClose={() =>
+            setSheet((current) =>
+              current.instance === sheet.instance ? { ...current, open: false } : current,
+            )
+          }
+          today={today}
+          target={sheet.target}
+        />
+      )}
       <UndoDeleteToast pending={del.pending} onUndo={() => void del.undo()} error={del.error} />
     </div>
   )

@@ -12,6 +12,7 @@ import { todoKeys } from './useTodos'
 import { useUndoableDelete } from './useUndoableDelete'
 
 const DATE = '2026-10-24'
+const todayKey = () => todoKeys.today(DATE, useSession.getState().generation)
 const UUID_1 = '11111111-1111-4111-8111-111111111111'
 const UUID_2 = '22222222-2222-4222-8222-222222222222'
 
@@ -70,7 +71,7 @@ describe('useUndoableDelete', () => {
       repo = new GuestTodoRepository({ db })
       queryClient = createQueryClient()
       await db.todos.bulkAdd([sampleTodo1, sampleTodo2])
-      queryClient.setQueryData(todoKeys.today(DATE), [sampleTodo1, sampleTodo2])
+      queryClient.setQueryData(todayKey(), [sampleTodo1, sampleTodo2])
     })
 
     afterEach(async () => {
@@ -93,7 +94,7 @@ describe('useUndoableDelete', () => {
       })
 
       // Immediately removed from query cache
-      const cachedAfterDelete = queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))
+      const cachedAfterDelete = queryClient.getQueryData<TodayTodo[]>(todayKey())
       expect(cachedAfterDelete?.map((t) => t.id)).toEqual([UUID_2])
       expect(result.current.pending?.id).toBe(UUID_1)
 
@@ -106,7 +107,7 @@ describe('useUndoableDelete', () => {
         await result.current.undo()
       })
 
-      const cachedAfterUndo = queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))
+      const cachedAfterUndo = queryClient.getQueryData<TodayTodo[]>(todayKey())
       expect(cachedAfterUndo?.map((t) => t.id)).toEqual([UUID_1, UUID_2])
       expect(result.current.pending).toBeNull()
 
@@ -153,7 +154,7 @@ describe('useUndoableDelete', () => {
       })
 
       // Cache rolled back to original 2 items
-      const cached = queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))
+      const cached = queryClient.getQueryData<TodayTodo[]>(todayKey())
       expect(cached?.map((t) => t.id)).toEqual([UUID_1, UUID_2])
       expect(result.current.pending).toBeNull()
       expect(result.current.error).toBe('Could not delete. Please try again.')
@@ -166,7 +167,7 @@ describe('useUndoableDelete', () => {
     beforeEach(() => {
       useSession.getState().signIn(makeTokenResponse())
       queryClient = createQueryClient()
-      queryClient.setQueryData(todoKeys.today(DATE), [sampleTodo1, sampleTodo2])
+      queryClient.setQueryData(todayKey(), [sampleTodo1, sampleTodo2])
     })
 
     afterEach(() => {
@@ -202,18 +203,17 @@ describe('useUndoableDelete', () => {
       })
 
       expect(calls).toEqual(['DELETE'])
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
-        [UUID_2],
-      )
+      expect(queryClient.getQueryData<TodayTodo[]>(todayKey())?.map((t) => t.id)).toEqual([UUID_2])
 
       await act(async () => {
         await result.current.undo()
       })
 
       expect(calls).toEqual(['DELETE', 'RESTORE'])
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
-        [UUID_1, UUID_2],
-      )
+      expect(queryClient.getQueryData<TodayTodo[]>(todayKey())?.map((t) => t.id)).toEqual([
+        UUID_1,
+        UUID_2,
+      ])
     })
 
     it('persists delete when timeout elapses without undo', async () => {
@@ -266,9 +266,10 @@ describe('useUndoableDelete', () => {
       await waitFor(() => {
         expect(result.current.error).toBe('Could not delete. Please try again.')
       })
-      expect(queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)).toEqual(
-        [UUID_1, UUID_2],
-      )
+      expect(queryClient.getQueryData<TodayTodo[]>(todayKey())?.map((t) => t.id)).toEqual([
+        UUID_1,
+        UUID_2,
+      ])
       expect(result.current.pending).toBeNull()
     })
   })
@@ -280,7 +281,7 @@ describe('useUndoableDelete regressions (account mode)', () => {
   beforeEach(() => {
     useSession.getState().signIn(makeTokenResponse())
     queryClient = createQueryClient()
-    queryClient.setQueryData(todoKeys.today(DATE), [sampleTodo1, sampleTodo2])
+    queryClient.setQueryData(todayKey(), [sampleTodo1, sampleTodo2])
   })
 
   afterEach(() => {
@@ -291,7 +292,7 @@ describe('useUndoableDelete regressions (account mode)', () => {
     return <AppProviders queryClient={queryClient}>{children}</AppProviders>
   }
 
-  const ids = () => queryClient.getQueryData<TodayTodo[]>(todoKeys.today(DATE))?.map((t) => t.id)
+  const ids = () => queryClient.getQueryData<TodayTodo[]>(todayKey())?.map((t) => t.id)
 
   it('keeps the newer delete when an older one fails late', async () => {
     server.use(
