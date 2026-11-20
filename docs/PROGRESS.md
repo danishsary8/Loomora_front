@@ -367,3 +367,36 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - Vitest (`npm test -- --maxWorkers=2`): 55 test files / 555 tests passed.
   - Playwright `phone-375` (`npm run e2e -- --project=phone-375`): 52 tests passed, including `e2e/offline-guest-reads.spec.ts` (3 offline check-offs, `StreakBadge`, `SavePlanPrompt`, cold offline reloads on `/today` and `/profile`, reconnection persistence without duplicates, 375 px width, zero axe violations, zero console/page errors).
 - **Remaining risks / notes:** Account-mode streak and import calls in Vitest/Playwright are verified against MSW/mocked routes rather than a live backend. On Windows (`core.autocrlf=true`), untouched checkout files have CRLF line endings; all changed code files pass strict LF Prettier checks.
+
+### 2026-11-20: QA-013 Vercel SPA route reliability
+
+- **Plan:**
+  1. Reproduce the static-host 404 on direct SPA routes and inspect React Router, Vite PWA `navigateFallback`, and Vercel configuration.
+  2. Add root `vercel.json` with Vite build settings, SPA rewrite to `/index.html` excluding `/api`, `/assets`, `/sw.js`, `/manifest.webmanifest`, and `/workbox-*.js`, plus `Cache-Control: public, max-age=0, must-revalidate` on `/sw.js`.
+  3. Configure `workbox.navigateFallbackDenylist` in `vite.config.ts` so the service worker serves `/index.html` offline for SPA routes without intercepting `/api`, `/assets`, or PWA service-worker/manifest files.
+  4. Add Vitest (`src/app/spaRouting.test.tsx`) and mobile 375 px Playwright (`e2e/spa-routing.spec.ts`) regressions covering direct HTTP navigation, refresh, unknown route (`NotFoundPage`), static assets, API exclusions, offline PWA, and absence of redirect loops.
+  5. Run all required local checks, update `docs/TASKS.md` (marking QA-012 `done` after verifying PR #38 merged at `478f8a5`), and document live Vercel verification steps for the planner.
+- **Root cause:** No `vercel.json` existed at the repository root (only `legacy/vercel.json`), so Vercel served only physical files in `dist/` (`/` -> `index.html`, `/sw.js`, `/manifest.webmanifest`) and returned HTTP 404 for direct HTTP requests/reloads to client-side routes (`/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, unknown routes). `vite preview` masked this locally because Vite's preview server has built-in SPA fallback, and a controlling service worker masked it after first visit on `/`, except `vite.config.ts` also lacked `navigateFallbackDenylist` to keep Workbox's `NavigationRoute` off `/api`, `/assets`, and PWA worker/manifest paths. React Router (`createBrowserRouter` in `src/app/App.tsx`, `routes.tsx`, `RouteGuards.tsx`, `GoogleCallbackPage.tsx`) already uses root-relative paths, handles `*` via `NotFoundPage`, and settles redirects once without loops.
+- **Changed:**
+  - `vercel.json`: Added root Vercel config (`framework: "vite"`, `buildCommand: "npm run build"`, `outputDirectory: "dist"`, `rewrites` with `"/((?!api$|api/|assets$|assets/|sw\\.js$|manifest\\.webmanifest$|workbox-[^/]+\\.js$).*)"` -> `"/index.html"`, and `headers` setting `Cache-Control: public, max-age=0, must-revalidate` on `/sw.js`). Validated `source` pattern against Vercel CLI's bundled `path-to-regexp@6.3.0`.
+  - `vite.config.ts`: Added `workbox.navigateFallbackDenylist` (`[/^\/api(?:\/|\?|$)/, /^\/assets(?:\/|\?|$)/, /^\/(?:sw\.js|manifest\.webmanifest|workbox-[^/]+\.js)(?:\?|$)/]`).
+  - `src/app/spaRouting.test.tsx`: Added 9 Vitest tests verifying direct entry on `/today`, `/week`, `/profile`, `/sign-in`, `/this-route-does-not-exist`, `/auth/google/callback` (error and `?code=` exchange), and `RedirectIfSignedIn`/`RequireAuth` without redirect loops.
+  - `e2e/spa-routing.spec.ts`: Added 4 Playwright `phone-375` tests serving `dist/` through an in-process Vercel-semantics HTTP host (filesystem precedence + `vercel.json` rewrites/headers) to verify direct HTTP GET + `reload()` on `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, and `/this-route-does-not-exist` (`NotFoundPage`), static asset MIME types, 404 preservation on `/api`, `/api/v1/health`, `/assets/missing-chunk.js`, `dist/sw.js` `denylist`, 375 px layout, offline PWA navigation/reload, and zero redirect loops.
+  - `docs/TASKS.md`: Marked QA-012 `done` (`PR #38` merged at `478f8a5`) and added QA-013 (`review`).
+- **Failing-before / passing-after:**
+  - Before `vercel.json` / `vite.config.ts`: Static host probe over `dist/` returned `404` for `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, and `/does-not-exist` (`/` `200`, `/sw.js` `200`, `/manifest.webmanifest` `200`), and `e2e/spa-routing.spec.ts` failed all 4 tests (`initial GET /today` received `404`, `vercel.json` `null`).
+  - After fix: `e2e/spa-routing.spec.ts` passed all 4 tests (`phone-375`) and `dist/sw.js` emitted `NavigationRoute` with the `denylist`.
+- **Verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run build` (PWA precache 49 entries, 993.90 KiB), and Redocly (`npx --yes @redocly/cli lint docs/openapi.yaml`, valid with 4 existing warnings) all exited 0.
+  - Prettier: `npx prettier --check vercel.json vite.config.ts src/app/spaRouting.test.tsx e2e/spa-routing.spec.ts` and `npx prettier --check --end-of-line auto .` exited 0.
+  - Vitest: `npm test -- --maxWorkers=1` passed 56 test files / 564 tests (an earlier `--maxWorkers=2` run had 1 lazy-route load timeout in `TodayPage.test.tsx > shows two equal buttons` under concurrent Windows workers, which passed in `--maxWorkers=1`).
+  - Playwright `phone-375`: `npm run e2e -- --project=phone-375` passed all 56 tests.
+- **Environment-dependent verification for the planner (not run locally — no Vercel credentials, no auto-deploy):**
+  1. Deploy the PR preview / merged `v2-rebuild` build on Vercel (`loomora-craft`).
+  2. In a fresh context (no cookies, no service worker), check HTTP status and `Content-Type` on:
+     - `curl.exe -i https://<vercel-host>/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, `/does-not-exist` -> expect `200` and `text/html`.
+     - `curl.exe -i https://<vercel-host>/sw.js` -> expect `200`, JavaScript content type, and `Cache-Control: public, max-age=0, must-revalidate`.
+     - `curl.exe -i https://<vercel-host>/manifest.webmanifest` -> expect `200` and `application/manifest+json`.
+     - `curl.exe -i https://<vercel-host>/assets/<existing-chunk>.js` -> expect `200` and JavaScript content type.
+     - `curl.exe -i https://<vercel-host>/api/v1/health` and `/assets/nonexistent.js` -> expect `404` (not `index.html`).
+  3. In a fresh browser at 375 px, open `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, and `/does-not-exist`, hard-refresh each, verify no 404 and no redirect loops, and verify PWA install/first-launch to `start_url: /today` plus offline reload.
