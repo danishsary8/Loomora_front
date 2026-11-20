@@ -12,6 +12,7 @@ const USER = {
   id: '9f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f',
   name: 'sokha',
   email: 'sokha@example.com',
+  has_password: true,
   email_verified_at: null,
   timezone: 'Asia/Phnom_Penh',
   goal: null,

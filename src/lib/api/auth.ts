@@ -1,4 +1,4 @@
-import type { ApiClient } from './client'
+import type { ApiClient, RequestOptions } from './client'
 import type {
   LoginInput,
   RegisterInput,
@@ -43,9 +43,16 @@ export function createAuthApi(client: ApiClient) {
       request<Message>('POST', '/auth/password/reset', { body: input, auth: false }),
     logout: () => request<undefined>('POST', '/auth/logout'),
     /** Deletes the account and everything in it. Needs the current password. */
-    deleteMe: (password: string) => request<undefined>('DELETE', '/me', { body: { password } }),
-    getMe: (signal?: AbortSignal) =>
-      request<{ data: User }>('GET', '/me', { signal }).then((r) => r.data),
+    deleteMe: (password: string) =>
+      request<undefined>('DELETE', '/me', {
+        body: { password },
+        expectedStatus: 204,
+        preserveSessionOnUnauthorized: true,
+      }),
+    getMe: (
+      signal?: AbortSignal,
+      options?: Pick<RequestOptions, 'preserveSessionOnUnauthorized'>,
+    ) => request<{ data: User }>('GET', '/me', { ...options, signal }).then((r) => r.data),
     updateMe: (input: UpdateMeInput) =>
       request<{ data: User }>('PATCH', '/me', { body: input }).then((r) => r.data),
     submitSurvey: (input: SurveyInput) =>
