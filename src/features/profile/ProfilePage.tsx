@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { PageHeading } from '@/components/page'
@@ -33,15 +33,28 @@ export function ProfilePage() {
   // After sign-in, a plan left on the device (a failed import) can be sent again from here.
   const leftOnDevice = !isGuest && plan !== undefined && !isEmptyPlan(plan)
 
+  useEffect(() => {
+    return useSession.subscribe((state) => {
+      if (!state.user) setDeleteOpen(false)
+      if (state.token !== null) setSaveOpen(false)
+    })
+  }, [])
+
   /** Revoke the token on the server (best effort), then forget it on this device. */
   async function leave() {
+    const startGeneration = useSession.getState().generation
     try {
       await authApi.logout()
     } catch {
       // Offline or already revoked: signing out on this device still has to work.
     }
-    signOut()
-    navigate('/', { replace: true })
+    const current = useSession.getState()
+    if (current.generation === startGeneration) {
+      signOut()
+      navigate('/', { replace: true })
+    } else if (current.token === null) {
+      navigate('/', { replace: true })
+    }
   }
 
   return (

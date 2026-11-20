@@ -363,3 +363,22 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Write errors preserve the editable draft. The phone regression verifies Week visibility and the original IndexedDB ID after offline reload and reconnect.
   - [x] Account operations use the API. Retired sessions cannot replay paused mutations, show stale schedule data, commit delayed deletes or undo a later session's delete.
   - [x] Lint, typecheck, Knip, LF formatting, Vitest, build, phone-375 Playwright and OpenAPI lint pass.
+
+### QA-011: Cross-tab session synchronization
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Planner-authorized follow-up to QA-001 (cross-tab session finding QA-006), branched after QA-010.
+- **Plan:**
+  1. Reproduce cross-tab sign-out, account switch, retired async responses, and feedback-loop risks with failing Vitest and two-tab Playwright tests.
+  2. Synchronize `useSession` across tabs using `storage` events with `BroadcastChannel` and `visibilitychange` / `focus` fallbacks without write-back loops or duplicate sign-outs.
+  3. Clear previous account caches on generation transitions in `AppProviders`, scope `useStreak` and `ReminderWatcher` by generation, and guard retired auth/profile requests while preserving guest Dexie data.
+  4. Verify with Vitest, two-tab and full phone-375 Playwright suites, lint, typecheck, Knip, LF formatting, production build, and Redocly OpenAPI lint.
+- **Done when:**
+  - [x] Tab B promptly clears its authenticated session and account UI when Tab A signs out without reload.
+  - [x] Direct account switches across tabs isolate cached data and close or reset stale session UI without exposing the previous account's data.
+  - [x] Retired async responses (`login`, `register`, `googleExchange`, `submitSurvey`, `logout`, `streak`, `reminders`, `401`) cannot restore an old session or leak stale data.
+  - [x] Guest Dexie data is preserved across sign-out; storage-event feedback loops and duplicate sign-outs are prevented.
+  - [x] Delayed or reordered cross-tab messages cannot overwrite a newer session or restore a session after sign-out, and BroadcastChannel fallback works when storage is blocked.
+  - [x] Lint, typecheck, Knip, LF formatting, Vitest, production build, phone-375 Playwright (including two-tab test), and Redocly OpenAPI lint pass.
+- **Files:** `src/lib/api/session.ts`, `src/lib/api/tokenStorage.ts`, `src/lib/api/client.ts`, `src/lib/api/index.ts`, `src/app/AppProviders.tsx`, `src/features/streak/useStreak.ts`, `src/features/todos/useTodos.ts`, `src/features/reminders/ReminderWatcher.tsx`, `src/features/profile/ProfilePage.tsx`, `src/features/auth/*`, `src/app/crossTabSession.test.tsx`, `e2e/cross-tab-session.spec.ts`

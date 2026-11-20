@@ -29,12 +29,17 @@ export function GoogleCallbackPage() {
       navigate(`${pageForError(reason)}?error=${encodeURIComponent(reason)}`, { replace: true })
       return
     }
+    const startGeneration = useSession.getState().generation
     authApi.googleExchange(code).then(
       (answer) => {
+        if (useSession.getState().generation !== startGeneration) return
         signIn(answer)
         navigate(answer.user.survey_done ? '/today' : '/sign-up/survey', { replace: true })
       },
-      () => navigate('/sign-in?error=google_failed', { replace: true }),
+      () => {
+        if (useSession.getState().generation !== startGeneration) return
+        navigate('/sign-in?error=google_failed', { replace: true })
+      },
     )
   }, [params, navigate, signIn])
 

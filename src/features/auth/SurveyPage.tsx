@@ -18,11 +18,12 @@ const GOALS: { goal: Goal; color: Category }[] = [
 // S10 step 2: the skippable sign-up survey (display name, biggest goal, how you heard).
 export function SurveyPage() {
   const user = useSession((s) => s.user)
+  const generation = useSession((s) => s.generation)
   if (!user || user.survey_done) return <Navigate to="/today" replace />
-  return <SurveyForm user={user} />
+  return <SurveyForm key={`${generation}:${user.id}`} user={user} generation={generation} />
 }
 
-function SurveyForm({ user }: { user: User }) {
+function SurveyForm({ user, generation }: { user: User; generation: number }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const setUser = useSession((s) => s.setUser)
@@ -31,13 +32,25 @@ function SurveyForm({ user }: { user: User }) {
   const [goal, setGoal] = useState<Goal | null>(null)
   const [heardFrom, setHeardFrom] = useState('')
 
+  function sameSession() {
+    const current = useSession.getState()
+    return (
+      current.token !== null && current.generation === generation && current.user?.id === user.id
+    )
+  }
+
   function finish(save: boolean) {
     void run(async () => {
       const newName = name.trim()
-      if (save && newName && newName !== user.name) await authApi.updateMe({ name: newName })
-      setUser(
-        await authApi.submitSurvey(save ? { goal, heard_from: heardFrom.trim() || null } : {}),
+      if (save && newName && newName !== user.name) {
+        await authApi.updateMe({ name: newName })
+        if (!sameSession()) return
+      }
+      const updated = await authApi.submitSurvey(
+        save ? { goal, heard_from: heardFrom.trim() || null } : {},
       )
+      if (!sameSession()) return
+      setUser(updated)
       navigate('/today', { replace: true })
     })
   }

@@ -87,6 +87,25 @@ describe('API client', () => {
     expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
+  it('ignores a 401 from an earlier session generation even if the token matches', async () => {
+    let version = 1
+    const onUnauthorized = vi.fn()
+    server.use(
+      http.get(`${API}/me`, () => {
+        version = 2
+        return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+      }),
+    )
+    const client = createApiClient({
+      baseUrl: API,
+      getToken: () => 'same-token',
+      getSessionVersion: () => version,
+      onUnauthorized,
+    })
+    await expect(client.request('GET', '/me')).rejects.toMatchObject({ status: 401 })
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
   it('does not report a 401 when no token was sent', async () => {
     server.use(
       http.get(`${API}/me`, () =>

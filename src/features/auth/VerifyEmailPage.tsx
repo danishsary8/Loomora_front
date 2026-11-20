@@ -28,7 +28,8 @@ export function VerifyEmailPage() {
     started.current = true
     authApi.verifyEmail({ id, expires, signature }).then(
       ({ user }) => {
-        if (useSession.getState().user?.id === user.id) setUser(user)
+        const current = useSession.getState()
+        if (current.token !== null && current.user?.id === user.id) setUser(user)
         setStatus('verified')
       },
       () => setStatus('failed'),

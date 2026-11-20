@@ -3,6 +3,7 @@ import { ApiError, type ApiErrorBody } from './errors'
 export interface ApiClientOptions {
   baseUrl: string
   getToken: () => string | null
+  getSessionVersion?: () => number
   /** Called when a 401 belongs to the current session. */
   onUnauthorized: () => void
   /** Called when the API could not be reached or answered with a 5xx. */
@@ -42,6 +43,7 @@ function retryAfterSeconds(response: Response): number | undefined {
 export function createApiClient({
   baseUrl,
   getToken,
+  getSessionVersion,
   onUnauthorized,
   onServiceFailure,
   fetchImpl,
@@ -69,7 +71,12 @@ export function createApiClient({
     const headers: Record<string, string> = { Accept: 'application/json' }
     if (body !== undefined) headers['Content-Type'] = 'application/json'
     const token = auth ? getToken() : null
+    const sessionVersion = getSessionVersion?.()
     if (token) headers.Authorization = `Bearer ${token}`
+
+    const sameSession = () =>
+      (getSessionVersion === undefined || getSessionVersion() === sessionVersion) &&
+      (!token || getToken() === token)
 
     let response: Response
     try {
@@ -81,7 +88,7 @@ export function createApiClient({
       })
     } catch {
       signal?.throwIfAborted()
-      onServiceFailure?.()
+      if (sameSession()) onServiceFailure?.()
       throw new ApiError(0, { message: 'Network error' })
     }
 
@@ -91,15 +98,10 @@ export function createApiClient({
       return data as T
     }
 
-    if (
-      response.status === 401 &&
-      !preserveSessionOnUnauthorized &&
-      token &&
-      getToken() === token
-    ) {
+    if (response.status === 401 && !preserveSessionOnUnauthorized && token && sameSession()) {
       onUnauthorized()
     }
-    if (response.status >= 500) onServiceFailure?.()
+    if (response.status >= 500 && sameSession()) onServiceFailure?.()
     throw new ApiError(response.status, (data ?? {}) as ApiErrorBody, retryAfterSeconds(response))
   }
 
