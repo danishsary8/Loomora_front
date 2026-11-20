@@ -425,9 +425,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-014: Frontend dependency security
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** QA-001 / QA-005 (frontend npm dependency audit).
+- **Merge:** [PR #40](https://github.com/danishsary8/Loomora_front/pull/40) at `fe58dc0`.
 - **Plan:**
   1. Reproduce `npm audit --omit=dev`, `npm audit`, and `npm ls --depth=0` against QA-001, separating runtime `dependencies` from tooling/build-only `devDependencies`.
   2. Update `eslint` (`10.13.0` -> `10.15.0`) and `typescript-eslint` (`8.72.0` -> `8.73.0`) within their compatible major lines in `package.json` and `package-lock.json` to move `@eslint/config-array` and `@typescript-eslint/*` onto patched `minimatch` (`11.0.9`).
@@ -440,3 +441,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Remaining `vite-plugin-pwa` / `workbox-build` / `glob` / `minimatch` dev-only exception is documented with impact, exploitability, and planner recommendation in `docs/PROGRESS.md`.
   - [x] `npm ci`, lint, typecheck, Knip, LF formatting (`--end-of-line auto` on Windows CRLF checkout), Vitest (`--maxWorkers=1`), production build, phone-375 Playwright, and Redocly OpenAPI lint pass.
 - **Files:** `package.json`, `package-lock.json`, `src/test/dependencySecurity.test.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-015: Frontend security headers and CSP hardening
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** QA-001 / QA-005 (missing browser security headers and Content-Security-Policy on Vercel frontend).
+- **Plan:**
+  1. Audit live `https://loomora-craft.vercel.app` headers and inventory all Loomora asset, font, boot-style, Google OAuth, Render API, Workbox service-worker, and offline PWA requirements.
+  2. Add baseline browser security headers (`Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Strict-Transport-Security`, `Permissions-Policy`) to root `vercel.json` on `/(.*)` while preserving the QA-013 SPA rewrite and `/sw.js` `Cache-Control: public, max-age=0, must-revalidate`.
+  3. Restrict `Content-Security-Policy` to `'self'`, hash the inline boot `<style>` (`'sha256-f5dF16tVBt10PewzxCqqrvCGvvv2PnzQeGugOFK59oQ='`) instead of using `'unsafe-inline'`, and permit `https://loomora-api.onrender.com` in `connect-src`.
+  4. Add RED/GREEN Vitest (`src/test/securityHeaders.test.ts`) and Playwright HTTP + Chromium (`e2e/security-headers.spec.ts`) regressions covering headers, CSP enforcement, SPA rewrites, API/missing-asset exclusions, 375 px navigation, Google OAuth, Render API calls, and offline PWA.
+  5. Run full verification (`npm ci`, lint, typecheck, Knip, LF formatting, Vitest, build, phone-375 Playwright, npm audits, Redocly OpenAPI lint), mark QA-014 done, log QA-015 with live Vercel verification steps in `docs/PROGRESS.md`, and open a PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Browser security headers (`Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security`, `Permissions-Policy`) are configured in root `vercel.json`.
+  - [x] CSP permits all documented Loomora functionality without `*`, `'unsafe-inline'`, or `'unsafe-eval'`, and restricts `connect-src` to `'self'` and `https://loomora-api.onrender.com`.
+  - [x] Existing Vercel SPA routing, API/missing-asset 404 exclusions, `/sw.js` `Cache-Control`, mobile 375 px layout, Google OAuth flow, and offline PWA continue to work.
+  - [x] Vitest (`src/test/securityHeaders.test.ts`) and Playwright (`e2e/security-headers.spec.ts`) demonstrated RED before GREEN and full verification passes; live Vercel verification steps are documented in `docs/PROGRESS.md`.
+- **Files:** `vercel.json`, `playwright.config.ts`, `src/test/securityHeaders.test.ts`, `e2e/security-headers.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
