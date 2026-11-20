@@ -431,3 +431,39 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - Prettier: `npx prettier --check src/test/dependencySecurity.test.ts` and `npx prettier --check --end-of-line auto .` exited 0 (`npm run format:check` exited 1 solely due to Windows `core.autocrlf=true` CRLF checkout).
   - Vitest (`npm test -- --maxWorkers=1`): 57 test files / 566 tests passed, including `src/test/dependencySecurity.test.ts` (2 tests).
   - Playwright `phone-375` (`npm run e2e -- --project=phone-375`): 56/56 passed (1.4m), covering `pwa.spec.ts`, `spa-routing.spec.ts`, `cross-tab-session.spec.ts`, `offline-todos.spec.ts`, `offline-schedule.spec.ts`, `offline-guest-reads.spec.ts`, and `reminders.spec.ts` (an earlier parallel run had 1 timeout in `e2e/reminders.spec.ts` under 4 workers, which passed both standalone and in the final 56/56 run).
+
+### 2026-11-20: QA-015 Frontend security headers and CSP hardening
+
+- **Plan:**
+  1. Probe live `https://loomora-craft.vercel.app` and `https://loomora-api.onrender.com/api/v1/health` with read-only HTTP requests to verify QA-001/QA-005 header findings, and inventory all Loomora asset, boot-style, font, Google OAuth, Render API, Workbox SW, and offline PWA requirements.
+  2. Write RED Vitest (`src/test/securityHeaders.test.ts`) and Playwright (`e2e/security-headers.spec.ts`) regressions before changing `vercel.json`.
+  3. Configure baseline security headers and a restrictive `Content-Security-Policy` in root `vercel.json` on `/(.*)` while preserving the QA-013 SPA rewrite and `/sw.js` `Cache-Control: public, max-age=0, must-revalidate`.
+  4. Verify GREEN across all new and existing checks (`npm ci`, lint, typecheck, Knip, LF formatting, Vitest `--maxWorkers=1`, production build, phone-375 Playwright, npm audits, and Redocly OpenAPI lint), mark QA-014 `done` (`PR #40` merged at `fe58dc0`), and document live Vercel verification steps.
+- **Live header audit (read-only `curl.exe -sSI` before changes):**
+  - `https://loomora-craft.vercel.app/` (`200`), `/sw.js` (`200`), `/manifest.webmanifest` (`200`), `/today` (`404` on pre-QA-013 prod): only Vercel platform `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` was present; `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, and `Permissions-Policy` were all absent (matching QA-001 / QA-005).
+  - `https://loomora-api.onrender.com/api/v1/health` (`200`): confirmed backend emits `content-security-policy: default-src 'none'; frame-ancestors 'none'`, `x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy: no-referrer`, `strict-transport-security: max-age=31536000; includeSubDomains`, and `access-control-allow-origin: https://loomora-craft.vercel.app`.
+- **Frontend resource & CSP audit:**
+  - Same-origin scripts/styles/assets: bundled under `/assets/*.js`, `/assets/*.css`, `/sw.js`, `/workbox-*.js`, `/manifest.webmanifest`, `/icon*.svg|png`, and self-hosted `@fontsource-variable/{caveat,space-grotesk}` `.woff2` fonts (no Google Fonts CDN or external scripts/images).
+  - Inline boot `<style>` in `index.html` (F-029): `vite build` strips `\r` so `dist/index.html` has a stable LF SHA-256 hash (`sha256-f5dF16tVBt10PewzxCqqrvCGvvv2PnzQeGugOFK59oQ=`), allowing `style-src` without `'unsafe-inline'` while React CSSOM `style={{...}}` and `framer-motion` `LazyMotion` run with zero CSP violations.
+  - Auth & API: Google OAuth starts via full-page `<a href>` navigation (`GoogleButton.tsx` -> `https://loomora-api.onrender.com/api/v1/auth/google/redirect`), returns to `/auth/google/callback?code=...`, and exchanges via `fetch` to `https://loomora-api.onrender.com/api/v1/auth/google/exchange` (allowed by `connect-src 'self' https://loomora-api.onrender.com`).
+  - Caching: `/` retains Vercel default non-immutable caching (no `Cache-Control` added in `vercel.json`); `/sw.js` preserves `Cache-Control: public, max-age=0, must-revalidate`.
+- **Changed:**
+  - `vercel.json`: Added `/(.*)` header rule with `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, and `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`; preserved `rewrites` and `/sw.js` `Cache-Control`.
+  - `playwright.config.ts`: Set `VITE_API_URL` default (`https://loomora-api.onrender.com/api/v1`) on `webServer.env` so `e2e/spa-routing.spec.ts` and `e2e/security-headers.spec.ts` test `dist/` against the production Render origin rather than the local `http://localhost:8000` fallback.
+  - `src/test/securityHeaders.test.ts`: Added config + CSP hash + header/rewrite resolution regression tests (RED: 7 failed / 1 passed -> GREEN: 8/8 passed).
+  - `e2e/security-headers.spec.ts`: Added HTTP header + Chromium 375 px CSP enforcement, Google OAuth, Render API, and offline PWA regressions against `vercel.json` + `dist/` (RED: 3/3 failed -> GREEN: 3/3 passed).
+  - `docs/TASKS.md`: Marked QA-014 `done` (`PR #40` at `fe58dc0`) and added QA-015 (`review`).
+- **Verified (after final code/config/TASKS edits):**
+  - `npm ci` exited 0 (746 packages added, audited 747 packages).
+  - `npm run lint`, `npm run typecheck`, and `npm run knip` all exited 0.
+  - Prettier: `npx prettier --check vercel.json playwright.config.ts src/test/securityHeaders.test.ts e2e/security-headers.spec.ts` and `npx prettier --check --end-of-line auto .` exited 0 (`npm run format:check` exited 1 solely on 252 untouched files checked out with Windows CRLF).
+  - Vitest (`npm test -- --maxWorkers=1`): 58 test files / 574 tests passed, including `src/test/securityHeaders.test.ts` (8 tests).
+  - `npm run build` exited 0 (PWA v2.0.0 `generateSW`, 49 precache entries, 993.92 KiB).
+  - Playwright (`npm run e2e -- --project=phone-375`): 59/59 passed (1.5m), including `e2e/security-headers.spec.ts` (3/3) and `e2e/spa-routing.spec.ts` (4/4).
+  - `npm audit --omit=dev`: exited 0 (`found 0 vulnerabilities`). `npm audit`: exited 1 with only the 4 accepted dev-only moderate findings (`glob`, `minimatch`, `workbox-build`, `vite-plugin-pwa` from QA-014).
+  - `npx @redocly/cli lint docs/openapi.yaml`: exited 0 (valid with 4 existing warnings).
+- **Local simulator limitations & live Vercel verification steps for planner:**
+  - The local HTTP server in `e2e/security-headers.spec.ts` mirrors `vercel.json` rewrites/headers over `dist/`, which cannot simulate Vercel edge HTTPS/HSTS termination, Vercel CDN default `Cache-Control` on `/assets/*` vs `/`, or Vercel Preview Toolbar (`https://vercel.live`) if enabled on protected preview deployments (CSP intentionally blocks `https://vercel.live` in production; if Preview Toolbar is needed on preview URLs, disable the toolbar or evaluate preview-only headers).
+  - After deploying to Vercel, verify:
+    1. `curl.exe -sSI https://<vercel-host>/` and `/today` and `/sw.js` return all 6 security headers (`content-security-policy`, `x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy: strict-origin-when-cross-origin`, `strict-transport-security: max-age=63072000; includeSubDomains; preload`, `permissions-policy`) and `/sw.js` retains `cache-control: public, max-age=0, must-revalidate` while `/` does not emit long-lived caching.
+    2. Open the deployed site in mobile Chrome/Edge DevTools (`375 px`) across `/`, `/today`, `/week`, `/profile`, `/sign-in`, `/auth/google/callback`, verify zero `Content-Security-Policy` console errors, verify Google OAuth redirect + exchange against `https://loomora-api.onrender.com/api/v1`, and verify PWA install + offline `/today` reload.
