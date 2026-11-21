@@ -63,7 +63,11 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
-      previouslyFocused?.focus()
+      if (previouslyFocused?.isConnected) {
+        previouslyFocused.focus()
+      } else {
+        document.getElementById('main')?.focus({ preventScroll: true })
+      }
     }
   }, [open, initialFocusRef])
 

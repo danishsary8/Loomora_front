@@ -15,7 +15,6 @@ export function DayToggle({ label, text, selected, onClick }: DayToggleProps) {
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={label}
       onClick={onClick}
       className={cn(
         'min-h-touch min-w-touch flex-1 select-none rounded-md border-thick border-ink px-1 text-sm font-bold',
@@ -23,7 +22,14 @@ export function DayToggle({ label, text, selected, onClick }: DayToggleProps) {
         pressSm,
       )}
     >
-      {text}
+      {text === label ? (
+        text
+      ) : (
+        <>
+          <span aria-hidden="true">{text}</span>
+          <span className="sr-only">{label}</span>
+        </>
+      )}
     </button>
   )
 }

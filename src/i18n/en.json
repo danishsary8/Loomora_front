@@ -281,7 +281,7 @@
     "editItem": "Edit {{title}}, {{start}} to {{end}}"
   },
   "copyDay": {
-    "button": "Copy day to…",
+    "button": "Copy",
     "open": "Copy {{day}} to…",
     "title": "Copy {{day}} to…",
     "hint": "Pick the days that get the same items.",
