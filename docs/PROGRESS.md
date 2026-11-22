@@ -727,3 +727,8 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - Added scenarios for browser auth and negative email/reset cases, guest import retry and idempotence, planner data, isolation, the deployed Google deletion callback, and the optional default-off challenge. The runbook records the provider, proof expiry, session changes, and separately authorized final confirmation checks. [QA-022 evidence and runbook](QA-022-staging-evidence.md)
 - At test commit `562be5226f3eda3b3f452013038f303fc94b914c`, 638 Vitest cases and 73 phone-375 Playwright cases passed. The local browser run includes offline guest and both QA-019 update checks. Lint, typecheck, Knip, build, Prettier, the production dependency audit, Redocly, and Git whitespace checks passed. Details and baseline warnings are in the runbook.
 - Live staging is blocked on an approved disposable pair and synthetic identities. QA-009 stays blocked pending live evidence and sign-off. Q23, Q25, QA-004 and QA-016 remain open.
+
+### 2026-11-22 QA-022 integration with QA-021
+
+- Merged `origin/v2-rebuild` at `e4e57b441eddd59909ab194c74b3c58d31ecb9ab` into QA-022 at integration commit `69a2aecdf9e368aabe3ff29d36d2aeba1122ecf4`. Preserved both QA records, all browser projects, the hosted-staging guards, and the deployment suppression rules for both feature branches and `v2-rebuild`.
+- Verified 638 unit tests, 78 phone Playwright tests, 30 cross-browser tests, and the static checks. The runbook records the exact commands and the local retries. QA-009, Q23, Q25, QA-004, and QA-016 remain blocked. [QA-022 evidence and runbook](QA-022-staging-evidence.md#qa-021-integration-on-2026-11-22)

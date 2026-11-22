@@ -101,3 +101,22 @@ On mismatch, rate limiting, unexpected mail recipient, or environment uncertaint
 | `npm audit --omit=dev` | Passed with zero production advisories. |
 | `npx --yes @redocly/cli lint docs/openapi.yaml` | Passed with four baseline warnings for the localhost server example, the health response, and two Google sign-in redirects. |
 | Hosted staging, Google, Brevo, and live account deletion | **Blocked or pending manual evidence.** None was executed. |
+
+## QA-021 integration on 2026-11-22
+
+The verified integration merge is `69a2aecdf9e368aabe3ff29d36d2aeba1122ecf4`. Its parents are QA-022's reviewed head `09b42545f8eba6bbab6d6e9a8e2088660e3e5104` and the QA-021 merge on `v2-rebuild`, `e4e57b441eddd59909ab194c74b3c58d31ecb9ab`. The backend contract baseline remains `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d`. These are source revisions. No deployed pair was verified.
+
+- Preserved both task records and histories and all six Chromium, Firefox, and WebKit projects. Ordinary Playwright retains its inert API origin, test-owned preview, and hosted-staging exclusion. The separate staging config refused test discovery without approval. The unchanged staging guards still require exact frontend and API revisions and synthetic accounts, and deny production targets and every automated DELETE request.
+- The resolved `vercel.json` is identical to the merged base. It preserves the headers, CSP, rewrites, and the three exact `false` rules for QA-021, QA-022, and `v2-rebuild`.
+- The schedule undo test now controls its short fixture timer to remove wall-clock timing from the assertion. No application behavior changed.
+
+| Verification | Observed result |
+| --- | --- |
+| `npx --yes --package=npm@10.9.4 -- npm ci` | Passed using the merged lockfile. |
+| Lint, typecheck, Knip, `npx prettier --check --end-of-line auto .`, build, and `git diff --check` | Passed. |
+| `npm test -- --maxWorkers=1` | Initial run had two timing failures, in the schedule undo and lazy save-plan prompt tests. The focused undo regression passed after switching it to a fake timer. The full one-worker rerun with `--pool=threads` passed all 638 tests across 62 files, including the 12 staging guard tests. |
+| `npm run e2e -- --project=phone-375 --workers=1` | All 78 passed, including offline guest behavior and QA-019 service-worker updates. |
+| `npx playwright test e2e/cross-browser.spec.ts --workers=1` | All 30 passed across six projects on a fresh local preview port after the initial preview startup timed out. |
+| `npm audit --omit=dev` and Redocly OpenAPI lint | Zero production dependency advisories. OpenAPI valid with the four baseline warnings. |
+
+QA-009, Q23, Q25, QA-004, and QA-016 remain blocked. Hosted staging, live provider checks, and account deletion were not executed. PR #49 remains subject to planner review and separate merge authorization.
