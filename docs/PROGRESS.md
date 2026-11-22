@@ -649,3 +649,32 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - `npx --yes @redocly/cli lint docs/openapi.yaml`: exited 0 (valid with 4 existing warnings).
   - `git diff --check`: exited 0.
 - **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, and QA-009 remain open; the app is not declared production-ready.
+
+### 2026-11-22: QA-021 Cross-browser and offline regression
+
+- **Prerequisite:** Started from merged `origin/v2-rebuild` (`93959cb`, PR #46 QA-019) in isolated worktree `loomora-front-QA-021` on `feat/QA-021-cross-browser-release-regression` (independent of QA-020).
+- **Plan:**
+  1. Add `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` projects to `playwright.config.ts` alongside `phone-375` and `desktop-1280`.
+  2. Author `e2e/cross-browser.spec.ts` covering all 12 required scenarios across Chromium, Firefox, and WebKit and `320`, `375`, `768`, and `1280` px viewports.
+  3. Run `e2e/cross-browser.spec.ts` across all 6 projects and `e2e/a11y.spec.ts` across Firefox/WebKit; distinguish browser/harness limitations from application defects.
+  4. Document compatibility matrix, run full verification checks, and keep QA-004, QA-009, QA-016, Q23, and Q25 open without claiming hosted staging sign-off.
+- **Browser & viewport compatibility matrix (`e2e/cross-browser.spec.ts` 30/30 + `e2e/a11y.spec.ts` 30/30 on Firefox/WebKit):**
+  - **Chromium (`phone-375`, `desktop-1280`)**: All 12 scenarios pass across `320`, `375`, `768`, and `1280` px (`0` horizontal overflow, full SW offline reload, `Page.getInstallabilityErrors` `[]`, cross-tab sync, keyboard focus trap/restoration, `prefers-reduced-motion: 0.01ms`, SPA routes/404, manifest/icons).
+  - **Firefox (`firefox-375`, `firefox-1280`)**: All 12 scenarios pass across `320`, `375`, `768`, and `1280` px (`0` horizontal overflow, full SW offline reload, cross-tab sync, keyboard focus trap/restoration, `prefers-reduced-motion: 1e-05s`, SPA routes/404, manifest/icons, `15/15` route axe checks). Harness note: Playwright Firefox `context.setOffline(false)` updates `navigator.onLine` without firing `window` `online` event automatically.
+  - **WebKit (`webkit-375`, `webkit-1280`)**: Core flows, `320`/`375`/`768`/`1280` px responsive sheets (`0` overflow), IndexedDB persistence, cross-tab sync (with `serviceWorkers: 'block'` in `browser.newContext`), keyboard focus trap/restoration, `prefers-reduced-motion: 0.00001s`, SPA routes/404, manifest/icons, SW registration, and `15/15` route axe checks pass.
+- **Browser-specific limitations (not masked):**
+  - **WebKit mouse/touch button focus:** In Safari/WebKit, clicking a `<button>` with mouse/touch does not focus the button (`document.activeElement` remains `document.body`), so `Sheet` focus restoration returns to the opener when activated via keyboard (`Enter`/`Space`), and to `body` on pointer click.
+  - **Playwright WebKit offline reload:** Playwright's `context.setOffline(true)` aborts requests at the WebKit network process before Service Worker interception, so offline reload (`page.reload()`) fails in Playwright WebKit; offline in-page SPA navigation (`Today <-> Week` after route pre-warm) and offline IndexedDB persistence + reconnect are verified instead.
+  - **Chromium-only CDP installability:** `Page.getInstallabilityErrors` is Chromium CDP-only (tested in `e2e/pwa.spec.ts`); Firefox and WebKit verify manifest, icons, and SW registration.
+- **Verification:**
+  - `npm ci`: exited 0 (`added 746 packages, and audited 747 packages`).
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`: all exited 0.
+  - `npm test -- --maxWorkers=1`: **59 test files / 600 tests passed** (exited 0).
+  - `npm run build`: exited 0 (`PWA v2.0.0 generateSW`, 49 precache entries, `1007.53 KiB`).
+  - `npm run e2e -- --project=phone-375 --workers=1`: **69/69 passed** (`2.4 m`).
+  - `npx playwright test e2e/cross-browser.spec.ts --workers=1`: **30/30 passed** across `phone-375`, `desktop-1280`, `firefox-375`, `firefox-1280`, `webkit-375`, `webkit-1280` (`2.8 m`).
+  - `npx playwright test e2e/a11y.spec.ts --project=firefox-375 --project=webkit-375 --workers=1`: **30/30** route axe-core checks passed (`2` `phone-375`-only populated tests skipped).
+  - `npm audit --omit=dev`: exited 0 (`found 0 vulnerabilities`).
+  - `npx --yes @redocly/cli lint docs/openapi.yaml`: exited 0 (valid with 4 existing warnings).
+  - `git diff --check`: exited 0.
+- **Remaining open blockers (out of scope):** QA-004, QA-009, QA-016, Q23, and Q25 remain open; hosted staging sign-off is not claimed from local/mocked runs.
