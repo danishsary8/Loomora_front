@@ -1,16 +1,21 @@
 import { defineConfig, devices } from '@playwright/test'
+import { LOCAL_API_ORIGIN } from './e2e/local-api'
 
-const PORT = 4173
+const PORT = process.env.LOOMORA_E2E_PORT ?? '4173'
+if (!/^[1-9]\d{3,4}$/.test(PORT) || Number(PORT) < 1024 || Number(PORT) > 65_535) {
+  throw new Error('LOOMORA_E2E_PORT must be a valid unprivileged port')
+}
 
 const webServerEnv = Object.fromEntries(
   Object.entries({
     ...process.env,
-    VITE_API_URL: process.env.VITE_API_URL ?? 'https://loomora-api.onrender.com/api/v1',
+    VITE_API_URL: `${LOCAL_API_ORIGIN}/api/v1`,
   }).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
 )
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/staging/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -33,7 +38,7 @@ export default defineConfig({
     command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
     env: webServerEnv,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 })

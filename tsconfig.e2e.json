@@ -11,9 +11,10 @@
     "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
+    "paths": { "@/*": ["./src/*"] },
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["e2e", "playwright.config.ts"]
+  "include": ["e2e", "playwright*.config.ts"]
 }

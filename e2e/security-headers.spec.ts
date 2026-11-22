@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
+import { LOCAL_API_ORIGIN, localHeaderValue, PRODUCTION_API_ORIGIN } from './local-api'
 
 interface VercelHeaderRule {
   source: string
@@ -43,7 +44,7 @@ function serveFile(
   for (const rule of headerRules) {
     if (new RegExp(`^${rule.source}$`).test(pathname)) {
       for (const header of rule.headers) {
-        res.setHeader(header.key, header.value)
+        res.setHeader(header.key, localHeaderValue(header.key, header.value))
       }
     }
   }
@@ -54,6 +55,10 @@ async function startVercelHost(repoRoot: string) {
   const distDir = path.join(repoRoot, 'dist')
   const config = readVercelConfig(repoRoot)
   const rewrites = config.rewrites ?? []
+  expect(config.headers?.flatMap((rule) => rule.headers)).toContainEqual({
+    key: 'Content-Security-Policy',
+    value: expect.stringContaining(`connect-src 'self' ${PRODUCTION_API_ORIGIN};`),
+  })
   const headerRules = config.headers ?? []
 
   const server = http.createServer((req, res) => {
@@ -307,7 +312,7 @@ test.describe('QA-015 Frontend security headers and CSP hardening', () => {
     ).toBe(true)
   })
 
-  test('Render API requests, Google OAuth flow, and offline PWA continue working under CSP', async ({
+  test('Intercepted API requests, OAuth callback UI, and offline PWA continue working under CSP', async ({
     page,
     context,
     browserName,
@@ -319,7 +324,7 @@ test.describe('QA-015 Frontend security headers and CSP hardening', () => {
 
     const { problems, readViolations } = await trackSecurityProblems(page)
 
-    await page.route('https://loomora-api.onrender.com/api/v1/**', async (route) => {
+    await page.route(`${LOCAL_API_ORIGIN}/api/v1/**`, async (route) => {
       if (route.request().method() === 'OPTIONS') {
         await route.fulfill({
           status: 204,
@@ -371,9 +376,10 @@ test.describe('QA-015 Frontend security headers and CSP hardening', () => {
     const googleHref = await page
       .getByRole('link', { name: 'Sign in with Google' })
       .getAttribute('href')
-    expect(googleHref).toMatch(
-      /^https:\/\/loomora-api\.onrender\.com\/api\/v1\/auth\/google\/redirect\?intent=sign_in/,
-    )
+    const redirectUrl = new URL(googleHref ?? '')
+    expect(redirectUrl.origin).toBe(LOCAL_API_ORIGIN)
+    expect(redirectUrl.pathname).toBe('/api/v1/auth/google/redirect')
+    expect(redirectUrl.searchParams.get('intent')).toBe('sign_in')
 
     await page.goto(`${host.baseUrl}/auth/google/callback?code=qa015-valid-code`)
     await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
