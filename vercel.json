@@ -40,6 +40,19 @@
       ]
     },
     {
+      "source": "/([Aa][Uu][Tt][Hh]/[Gg][Oo][Oo][Gg][Ll][Ee]/[Dd][Ee][Ll][Ee][Tt][Ii][Oo][Nn]/[Cc][Aa][Ll][Ll][Bb][Aa][Cc][Kk]/*)",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/sw.js",
       "headers": [
         {

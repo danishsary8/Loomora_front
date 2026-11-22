@@ -40,6 +40,7 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api(?:\/|\?|$)/,
+          /^\/auth\/google\/deletion\/callback\/*(?:\?|$)/i,
           /^\/assets(?:\/|\?|$)/,
           /^\/(?:sw\.js|manifest\.webmanifest|workbox-[^/]+\.js)(?:\?|$)/,
         ],

@@ -192,6 +192,14 @@ test.describe('QA-015 Frontend security headers and CSP hardening', () => {
     const rootHeaders = (await request.get(`${host.baseUrl}/`)).headers()
     expect(rootHeaders['cache-control']).toBeUndefined()
 
+    for (const path of ['/auth/google/deletion/callback', '/Auth/Google/Deletion/Callback/']) {
+      const callback = await request.get(`${host.baseUrl}${path}?code=synthetic&state=synthetic`)
+      expect(callback.status()).toBe(200)
+      expect(callback.headers()['cache-control']).toBe('no-store')
+      expect(callback.headers()['referrer-policy']).toBe('no-referrer')
+      expect(callback.headers()['content-security-policy']).toContain("frame-ancestors 'none'")
+    }
+
     const swHeaders = (await request.get(`${host.baseUrl}/sw.js`)).headers()
     expect(swHeaders['cache-control']).toBe('public, max-age=0, must-revalidate')
 

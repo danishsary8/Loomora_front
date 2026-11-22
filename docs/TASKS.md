@@ -561,11 +561,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [ ] **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, QA-009.
 - **Files:** `package.json`, `package-lock.json`, `vite.config.ts`, `src/main.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/RootLayout.tsx`, `src/app/layout/RootLayout.test.tsx`, `src/features/auth/SavePlanPrompt.tsx`, `src/features/auth/savePlanDismissal.ts`, `src/features/schedule/index.ts`, `src/features/today/TodayPage.tsx`, `src/features/today/NowNext.test.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/todos/todayList.ts`, `src/lib/date.ts`, `src/lib/date.test.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-030: Google account deletion frontend
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Backend B-042, [PR #45](https://github.com/danishsary8/loomora_back/pull/45).
+- **Scope:** Offer Google verification in Profile for Google-only accounts, require an explicit final confirmation, and clear the matching account session after HTTP 204. Preserve password deletion and guest data.
+- **Verification:** See the [F-030 progress entry](PROGRESS.md#2026-11-22-f-030-google-account-deletion-frontend) for the backend contract, regression evidence, and staging checks.
+- **Release gates:** Q23, Q25, QA-004, QA-009, and production approval remain open. The backend Google deletion capability defaults to disabled.
+
 ### QA-021: Cross-browser and offline regression
 
 - **Status:** review
 - **Owner:** antigravity
-- **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`, merged with `40ab685`).
+- **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`, merged with `00a6d01`).
 - **Plan:**
   1. Verify `origin/v2-rebuild` (`93959cb`) in isolated worktree `loomora-front-QA-021` on `feat/QA-021-cross-browser-release-regression` without depending on QA-020.
   2. Configure `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` projects in `playwright.config.ts` alongside `phone-375` and `desktop-1280`.
