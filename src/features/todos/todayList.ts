@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { daysBetweenLocalDates } from '@/lib/date'
 import type { LocalDate, TodayTodo, Todo } from './types'
 
 /** Overdue items older than this many days are flagged "Old" (docs/08 rule 2). */
@@ -44,7 +44,7 @@ export function buildTodayList(todos: readonly Todo[], today: LocalDate): TodayT
     } else if (todo.due_date === today) {
       current.push({ ...todo, overdue: false, old: false, subtasks })
     } else if (todo.due_date < today && !done) {
-      const daysLate = differenceInCalendarDays(parseISO(today), parseISO(todo.due_date))
+      const daysLate = daysBetweenLocalDates(today, todo.due_date)
       overdue.push({ ...todo, overdue: true, old: daysLate > OLD_AFTER_DAYS, subtasks })
     }
   }

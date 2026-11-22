@@ -8,10 +8,14 @@ import '@/styles/index.css'
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element #root not found')
 
-registerServiceWorker()
-
 createRoot(root).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
+if (document.readyState === 'complete') {
+  registerServiceWorker()
+} else {
+  window.addEventListener('load', () => registerServiceWorker(), { once: true })
+}
