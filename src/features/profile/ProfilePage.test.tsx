@@ -1,4 +1,8 @@
+/// <reference types="node" />
+
 import { act, screen, waitFor, within } from '@testing-library/react'
+import { webcrypto } from 'node:crypto'
+import { onTestFinished } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { useSession } from '@/lib/api'
 import { toLocalDate } from '@/lib/date'
@@ -298,19 +302,27 @@ describe('Profile account deletion', () => {
     expect(useSession.getState().token).toBe('1|test-token')
   })
 
-  it('explains the Google-only restriction, offers no submission, and can be closed', async () => {
+  it('shows unavailability when the backend disables Google deletion', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    onTestFinished(() => {
+      vi.unstubAllGlobals()
+    })
     signIn(makeUser({ survey_done: true, has_password: false }))
     const remove = vi.fn(() => new HttpResponse(null, { status: 204 }))
-    server.use(http.delete(`${API}/me`, remove))
+    server.use(
+      http.post(`${API}/me/deletion/google/challenge`, () =>
+        HttpResponse.json({ message: 'Unavailable' }, { status: 503 }),
+      ),
+      http.delete(`${API}/me`, remove),
+    )
     await openProfile()
     const sheet = await openDelete()
-    expect(
-      sheet.getByText(
-        'Deleting your account requires your password. Confirming your identity with Google is not supported yet.',
-      ),
-    ).toBeInTheDocument()
     expect(sheet.queryByLabelText('Your password')).not.toBeInTheDocument()
     expect(sheet.queryByRole('button', { name: 'Delete everything' })).not.toBeInTheDocument()
+    await userEvent.click(sheet.getByRole('button', { name: 'Verify with Google' }))
+    expect(await sheet.findByRole('alert')).toHaveTextContent(
+      'Google verification is currently unavailable.',
+    )
     await userEvent.click(sheet.getByRole('button', { name: 'Cancel' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(remove).not.toHaveBeenCalled()
@@ -478,7 +490,7 @@ describe('Profile account deletion', () => {
 
       response.resolve(HttpResponse.json({ data: { ...user, has_password: false } }))
       expect(sheet.getByRole('button', { name: 'Cancel' })).toHaveFocus()
-      expect(await sheet.findByText(/Confirming your identity with Google/)).toBeInTheDocument()
+      expect(await sheet.findByRole('button', { name: 'Verify with Google' })).toBeInTheDocument()
       expect(sheet.getByRole('button', { name: 'Cancel' })).toHaveFocus()
       expect(lookup).toHaveBeenCalledTimes(2)
     },
@@ -497,7 +509,7 @@ describe('Profile account deletion', () => {
       response.resolve(HttpResponse.json({ data: { ...user, has_password: true } })),
     )
 
-    expect(screen.getByText(/Confirming your identity with Google/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Verify with Google' })).toBeInTheDocument()
     expect(useSession.getState().user).toHaveProperty('has_password', false)
   })
 })

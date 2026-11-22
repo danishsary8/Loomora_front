@@ -8,6 +8,7 @@ import { Button, Input, Sheet } from '@/components/ui'
 import { FormError } from '@/features/auth/FormError'
 import { useFormAction } from '@/features/auth/useFormAction'
 import { authApi, useSession, type User } from '@/lib/api'
+import { GoogleDeletionStart } from './GoogleDeletionStart'
 
 interface DeleteAccountSheetProps {
   open: boolean
@@ -100,9 +101,7 @@ function DeleteAccountSession({
           user.has_password ? (
             <PasswordConfirmation deleting={deleting} onDelete={deleteAccount} />
           ) : (
-            <p role="status" className="text-sm text-muted">
-              {t('profile.deleteGoogleNote')}
-            </p>
+            open && <GoogleDeletionStart />
           )
         ) : lookup.isFetching ? (
           <p role="status">{t('profile.deleteLookupLoading')}</p>

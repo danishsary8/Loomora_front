@@ -76,9 +76,10 @@ for (const hasPassword of [true, false]) {
       await expect(submit).toBeFocused()
       await page.keyboard.press('Tab')
     } else {
-      await expect(sheet.getByText(/Confirming your identity with Google/)).toBeVisible()
+      await expect(sheet.getByRole('button', { name: 'Verify with Google' })).toBeFocused()
       await expect(password).toHaveCount(0)
       await expect(submit).toHaveCount(0)
+      await page.keyboard.press('Tab')
     }
     await expect(cancel).toBeFocused()
     await page.keyboard.press('Tab')

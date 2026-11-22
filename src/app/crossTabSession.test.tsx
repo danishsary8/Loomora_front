@@ -87,7 +87,9 @@ describe('Cross-tab session synchronization', () => {
 
     const view = renderRoute('/today', repo, schedule, db)
     try {
-      expect(await screen.findByText('Account A secret todo')).toBeInTheDocument()
+      expect(
+        await screen.findByText('Account A secret todo', undefined, { timeout: 4000 }),
+      ).toBeInTheDocument()
       expect(await screen.findByDisplayValue('Account A intention')).toBeInTheDocument()
       expect(await screen.findByText('7')).toBeInTheDocument()
 

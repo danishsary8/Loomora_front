@@ -4,6 +4,8 @@ import { RootLayout } from './layout/RootLayout'
 import { RedirectIfSignedIn, RequireAuth } from '@/features/auth/RouteGuards'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { RouteError } from './layout/RouteError'
+import { GoogleDeletionCallbackPage } from '@/features/profile/GoogleDeletionCallbackPage'
+import { googleDeletionCallbackPath } from '@/features/profile/googleDeletionCallback'
 import { NotFoundPage } from './NotFoundPage'
 import {
   FocusPage,
@@ -25,6 +27,11 @@ import {
 
 // Route map from docs/05-screen-map.md (R1).
 export const routes: RouteObject[] = [
+  {
+    path: googleDeletionCallbackPath,
+    element: <GoogleDeletionCallbackPage />,
+    errorElement: <RouteError />,
+  },
   {
     element: <RootLayout />,
     errorElement: <RouteError />,

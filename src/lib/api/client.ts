@@ -20,6 +20,8 @@ export interface RequestOptions {
   expectedStatus?: number
   /** Let the caller show a failure without clearing the session on a 401. */
   preserveSessionOnUnauthorized?: boolean
+  /** An optional capability can return 503 while the rest of the API is healthy. */
+  optionalCapability?: boolean
 }
 
 export type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
@@ -62,6 +64,7 @@ export function createApiClient({
       auth = true,
       expectedStatus,
       preserveSessionOnUnauthorized,
+      optionalCapability,
     } = options
     const url = new URL(`${base}${path}`, window.location.origin)
     for (const [key, value] of Object.entries(query ?? {})) {
@@ -101,7 +104,13 @@ export function createApiClient({
     if (response.status === 401 && !preserveSessionOnUnauthorized && token && sameSession()) {
       onUnauthorized()
     }
-    if (response.status >= 500 && sameSession()) onServiceFailure?.()
+    if (
+      response.status >= 500 &&
+      !(optionalCapability && response.status === 503) &&
+      sameSession()
+    ) {
+      onServiceFailure?.()
+    }
     throw new ApiError(response.status, (data ?? {}) as ApiErrorBody, retryAfterSeconds(response))
   }
 
