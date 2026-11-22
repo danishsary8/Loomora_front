@@ -83,7 +83,9 @@ it('loads guest plan summary offline on a cold cache and persists unchanged on r
 
     const promptView = renderRoute('/today', reopened.todos, reopened.schedule, reopened.db)
     try {
-      expect(await screen.findByRole('dialog', { name: 'Save your plan' })).toBeInTheDocument()
+      expect(
+        await screen.findByRole('dialog', { name: 'Save your plan' }, { timeout: 4000 }),
+      ).toBeInTheDocument()
       goOnline()
       await act(async () => {})
       expect(await reopened.todos.listAll()).toEqual(savedTodos)

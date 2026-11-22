@@ -1,11 +1,25 @@
-import { format } from 'date-fns'
 import type { LocalDate } from '@/features/todos/types'
 
 const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}$/
+const MS_PER_DAY = 86_400_000
+
+function toUtcMs(date: LocalDate): number {
+  const [y, m, d] = date.split('-').map(Number) as [number, number, number]
+  return Date.UTC(y, m - 1, d)
+}
 
 /** The calendar date in an account's time zone, or the device zone by default. */
 export function toLocalDate(date: Date = new Date(), zone?: string): LocalDate {
-  return zone ? localDateIn(date.toISOString(), zone) : format(date, 'yyyy-MM-dd')
+  if (zone) return localDateIn(date.toISOString(), zone)
+  const year = String(date.getFullYear()).padStart(4, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Calendar days from `earlier` to `later` (`later - earlier`) for `YYYY-MM-DD` strings. */
+export function daysBetweenLocalDates(later: LocalDate, earlier: LocalDate): number {
+  return Math.round((toUtcMs(later) - toUtcMs(earlier)) / MS_PER_DAY)
 }
 
 /** True for a real calendar date written as `YYYY-MM-DD`. */

@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
 import { FloatingAddButton, ProgressRing } from '@/components/ui'
 import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
-import { nowAndNext, ScheduleItemSheet, useScheduleDay } from '@/features/schedule'
+import { nowAndNext, useScheduleDay } from '@/features/schedule'
 import type { ScheduleTarget } from '@/features/schedule/ScheduleItemSheet'
 import { UndoDeleteToast as ScheduleUndoToast } from '@/features/schedule/UndoDeleteToast'
 import { useUndoableDelete as useScheduleDelete } from '@/features/schedule/useUndoableDelete'
@@ -15,13 +15,18 @@ import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
 import { useSession } from '@/lib/api'
 import { formatInstantTime } from '@/lib/time/time'
-import { AddTodoSheet, type TodoSheetTarget } from './AddTodoSheet'
+import type { TodoSheetTarget } from './AddTodoSheet'
 import { DailyIntention } from './DailyIntention'
-import { DaySheet } from './DaySheet'
 import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
 import { TodoRow } from './TodoRow'
 import { useNow } from './useNow'
+
+const AddTodoSheet = lazy(() => import('./AddTodoSheet').then((m) => ({ default: m.AddTodoSheet })))
+const DaySheet = lazy(() => import('./DaySheet').then((m) => ({ default: m.DaySheet })))
+const ScheduleItemSheet = lazy(() =>
+  import('@/features/schedule/ScheduleItemSheet').then((m) => ({ default: m.ScheduleItemSheet })),
+)
 
 type SchedulePanel = { type: 'day' } | { type: 'editor'; target: ScheduleTarget }
 
@@ -139,38 +144,46 @@ export function TodayPage() {
         </>
       )}
 
-      {schedulePanel?.type !== 'editor' && (
-        <DaySheet
-          key={`day-${generation}`}
-          open={schedulePanel?.type === 'day'}
-          onClose={closeSchedule}
-          date={today}
-          occurrences={schedule}
-          onEdit={(item, occurrence) =>
-            openSchedule({ type: 'editor', target: { type: 'occurrence', item, occurrence } })
-          }
-        />
+      {schedulePanel?.type === 'day' && (
+        <Suspense fallback={null}>
+          <DaySheet
+            key={`day-${generation}`}
+            open
+            onClose={closeSchedule}
+            date={today}
+            occurrences={schedule}
+            onEdit={(item, occurrence) =>
+              openSchedule({ type: 'editor', target: { type: 'occurrence', item, occurrence } })
+            }
+          />
+        </Suspense>
       )}
-      <ScheduleItemSheet
-        key={`schedule-${generation}`}
-        open={schedulePanel?.type === 'editor'}
-        onClose={closeSchedule}
-        target={schedulePanel?.type === 'editor' ? schedulePanel.target : { type: 'create' }}
-        onDelete={scheduleDelete.request}
-      />
+      {schedulePanel?.type === 'editor' && (
+        <Suspense fallback={null}>
+          <ScheduleItemSheet
+            key={`schedule-${generation}`}
+            open
+            onClose={closeSchedule}
+            target={schedulePanel.target}
+            onDelete={scheduleDelete.request}
+          />
+        </Suspense>
+      )}
       <SavePlanPrompt today={today} />
-      {sheet.generation === generation && (
-        <AddTodoSheet
-          key={sheet.instance}
-          open={sheet.open}
-          onClose={() =>
-            setSheet((current) =>
-              current.instance === sheet.instance ? { ...current, open: false } : current,
-            )
-          }
-          today={today}
-          target={sheet.target}
-        />
+      {sheet.generation === generation && sheet.instance > 0 && (
+        <Suspense fallback={null}>
+          <AddTodoSheet
+            key={sheet.instance}
+            open={sheet.open}
+            onClose={() =>
+              setSheet((current) =>
+                current.instance === sheet.instance ? { ...current, open: false } : current,
+              )
+            }
+            today={today}
+            target={sheet.target}
+          />
+        </Suspense>
       )}
       <UndoDeleteToast pending={del.pending} onUndo={() => void del.undo()} error={del.error} />
       <ScheduleUndoToast

@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom'
 import { AppLayout } from './layout/AppLayout'
 import { RootLayout } from './layout/RootLayout'
 import { RedirectIfSignedIn, RequireAuth } from '@/features/auth/RouteGuards'
+import { LandingPage } from '@/features/landing/LandingPage'
 import { RouteError } from './layout/RouteError'
 import { GoogleDeletionCallbackPage } from '@/features/profile/GoogleDeletionCallbackPage'
 import { googleDeletionCallbackPath } from '@/features/profile/googleDeletionCallback'
@@ -11,7 +12,6 @@ import {
   ForgotPasswordPage,
   GoogleCallbackPage,
   InsightsPage,
-  LandingPage,
   PrivacyPage,
   ProfilePage,
   ResetPasswordPage,

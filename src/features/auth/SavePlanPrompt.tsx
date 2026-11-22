@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useSession } from '@/lib/api'
 import { checkOffCount, hadFullDay } from '@/lib/storage'
 import type { LocalDate } from '@/features/todos/types'
 import { isSnoozed, readDismissedOn, writeDismissedOn } from './savePlanDismissal'
-import { SavePlanSheet } from './SavePlanSheet'
 import { useGuestPlan } from './useGuestPlan'
+
+const SavePlanSheet = lazy(() =>
+  import('./SavePlanSheet').then((m) => ({ default: m.SavePlanSheet })),
+)
 
 /** Check-offs that make the prompt appear (docs/04 Flow 3). */
 export const PROMPT_CHECK_OFFS = 3
@@ -26,10 +29,19 @@ export function SavePlanPrompt({ today }: SavePlanPromptProps) {
     plan !== undefined && (checkOffCount(plan) >= PROMPT_CHECK_OFFS || hadFullDay(plan, today))
   const open = isGuest && earned && !isSnoozed(dismissedOn, today)
 
+  const [everOpened, setEverOpened] = useState(false)
+  if (open && !everOpened) setEverOpened(true)
+
   function dismiss() {
     writeDismissedOn(today)
     setDismissedOn(today)
   }
 
-  return <SavePlanSheet open={open} onClose={dismiss} />
+  if (!everOpened && !open) return null
+
+  return (
+    <Suspense fallback={null}>
+      <SavePlanSheet open={open} onClose={dismiss} />
+    </Suspense>
+  )
 }

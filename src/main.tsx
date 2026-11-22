@@ -10,13 +10,19 @@ import '@/styles/index.css'
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element #root not found')
 
-if (!isGoogleDeletionCallbackPath(window.location.pathname)) {
-  clearGoogleDeletionChallenge()
-  registerServiceWorker()
-}
+const isDeletionCallback = isGoogleDeletionCallbackPath(window.location.pathname)
+if (!isDeletionCallback) clearGoogleDeletionChallenge()
 
 createRoot(root).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
+if (!isDeletionCallback) {
+  if (document.readyState === 'complete') {
+    registerServiceWorker()
+  } else {
+    window.addEventListener('load', registerServiceWorker, { once: true })
+  }
+}

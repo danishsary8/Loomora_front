@@ -339,7 +339,7 @@ it('removes the previous session’s form before its exit animation can run', as
   const user = userEvent.setup()
   renderRoute('/today', repo, undefined, db)
   await user.click(await screen.findByRole('button', { name: 'Add a to-do' }))
-  await user.type(screen.getByLabelText('Title'), 'Guest-only draft')
+  await user.type(await screen.findByLabelText('Title'), 'Guest-only draft')
 
   act(() => useSession.getState().signIn(accountB))
 

@@ -650,6 +650,39 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - `git diff --check`: exited 0.
 - **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, and QA-009 remain open; the app is not declared production-ready.
 
+### 2026-11-22: QA-020 Mobile Lighthouse performance
+
+- **Prerequisite:** Verified QA-019 (`PR #46`) merged on `origin/v2-rebuild` at `93959cb` before branching `feat/QA-020-mobile-performance` in isolated worktree `loomora-front-QA-020`.
+- **Plan:**
+  1. Measure the merged `93959cb` baseline across 3 Lighthouse 11.7.1 mobile runs each on `/` and `/today` and inspect bundle composition.
+  2. Replace `date-fns` in `src/lib/date.ts`, `src/features/todos/todayList.ts`, and `src/features/auth/savePlanDismissal.ts` with native calendar-date helpers (`daysBetweenLocalDates`, zero-padded `toLocalDate`) and remove unused `date-fns`.
+  3. Lazy-load non-critical `RootLayout` overlays (`PwaUpdateBanner`, `ServiceDownBanner`, `SavePlanImport`, `ReminderWatcher`, deferring `ReminderWatcher` until `requestIdleCallback` on `/`), `SavePlanSheet`, and `TodayPage` sheets (`AddTodoSheet`, `DaySheet`, `ScheduleItemSheet`), while keeping `LandingPage` in the entry bundle and setting `build.rollupOptions.output.experimentalMinChunkSize: 15_000`.
+  4. Defer `registerServiceWorker()` until `window` `load` in `src/main.tsx`.
+  5. Add regression tests (`src/lib/date.test.ts`, `src/app/layout/RootLayout.test.tsx`), re-measure 3x Lighthouse mobile runs, and run all required verification commands.
+- **Lighthouse 11.7.1 mobile (`vite preview --port 4173`, Playwright Chromium `1243`, default mobile simulated throttling):**
+  - **Baseline (`93959cb`):**
+    - `/`: Perf **92, 91, 90** (median **91**; A11y 100, BP 100, PWA 100; FCP 0.8–1.7 s, LCP 3.4–3.5 s, CLS 0.001, TBT 10–40 ms, SI 0.8–1.7 s).
+    - `/today`: Perf **87, 86, 87** (median **87**; A11y 100, BP 100, PWA 100; FCP 1.7 s, LCP 4.0 s, CLS 0, TBT 30–70 ms, SI 1.7 s).
+  - **Final (QA-020):**
+    - `/`: Perf **93, 94, 93** (median **93**; A11y 100, BP 100, PWA 100; FCP 1.7 s, LCP 3.0–3.1 s, CLS 0.001, TBT 10–70 ms, SI 1.7 s).
+    - `/today`: Perf **89, 90, 89** (median **89**; A11y 100, BP 100, PWA 100; FCP 1.7 s, LCP 3.6–3.7 s, CLS 0, TBT 60–80 ms, SI 1.7 s).
+- **Bundle comparison (`npm run build`):**
+  - Entry `index-*.js`: `486.02 kB` (`157.80 kB` gzip) -> `436.03 kB` (`141.16 kB` gzip) (`-49.99 kB` / `-16.64 kB` gzip).
+  - `TodayPage-*.js`: `24.79 kB` (`8.49 kB` gzip) -> `17.76 kB` (`6.17 kB` gzip) (`-7.03 kB` / `-2.32 kB` gzip).
+  - Precache: `49 entries (1007.53 KiB)` -> `33 entries (987.80 KiB)`.
+- **Remaining performance notes:**
+  - `index-*.css` (`25.83 kB` / `5.46 kB` gzip) remains a single render-blocking stylesheet (~156 ms on simulated 4G), and `/today` still awaits `db-*.js` (`100.63 kB` / `32.94 kB` gzip) + IndexedDB open before rendering list/empty LCP content.
+- **Verification:**
+  - `npm ci`: exited 0 (`added 746 packages, and audited 747 packages`).
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`: all exited 0.
+  - `npm test -- --maxWorkers=1`: **60 test files / 603 tests passed** (exited 0).
+  - `npm run build`: exited 0 (`PWA v2.0.0 generateSW`, 33 precache entries, `987.80 KiB`).
+  - `npm run e2e -- --project=phone-375 --workers=1`: **64/64 passed** (`2.1 m`).
+  - `npm audit --omit=dev`: exited 0 (`found 0 vulnerabilities`).
+  - `npx --yes @redocly/cli lint docs/openapi.yaml`: exited 0 (valid with 4 existing warnings).
+  - `git diff --check`: exited 0.
+- **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, and QA-009 remain open; the app is not declared production-ready.
+
 ## 2026-11-22 F-030 Google account deletion frontend
 
 - Fetched frontend base `d177047b545c02472c4c09d72f64d07596689f31` from `origin/v2-rebuild` in the existing `loomora_front_v2` clone. Isolated F-030 in `loomora-front-F-030` on `feat/F-030-google-account-deletion`. QA-019 has separate edits in the translation and Vite files in its own worktree.

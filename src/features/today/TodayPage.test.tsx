@@ -61,7 +61,7 @@ describe('Today screen', () => {
     it('opens the sheet with the title focused, adds the to-do, and hides the empty prompt', async () => {
       await openToday()
       await userEvent.click(await screen.findByRole('button', { name: 'Add a to-do' }))
-      const dialog = screen.getByRole('dialog', { name: 'Add a to-do' })
+      const dialog = await screen.findByRole('dialog', { name: 'Add a to-do' })
       const title = within(dialog).getByLabelText('Title')
       expect(title).toHaveFocus()
 
