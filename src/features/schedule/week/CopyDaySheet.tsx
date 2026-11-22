@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useUnsavedDraft } from '@/app/pwaUpdate'
 import { Button, Sheet } from '@/components/ui'
 import { DayToggle } from '../DayToggle'
 import type { ScheduleItem, Weekday } from '../types'
@@ -38,6 +39,7 @@ function CopyDayBody({
   const [targets, setTargets] = useState<Weekday[]>([])
   const copy = useCopyDay(items)
   const { values } = useTimePreferences()
+  useUnsavedDraft('copy-day', targets.length > 0 || copy.isPending)
 
   function toggle(day: Weekday) {
     setTargets((current) =>
