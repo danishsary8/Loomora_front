@@ -1,9 +1,6 @@
 import { lazy } from 'react'
 
 // Each screen is its own chunk, so the first load only pulls what it shows.
-export const LandingPage = lazy(() =>
-  import('@/features/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
-)
 export const TodayPage = lazy(() =>
   import('@/features/today/TodayPage').then((m) => ({ default: m.TodayPage })),
 )

@@ -543,11 +543,29 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [ ] **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, QA-009.
 - **Files:** `vite.config.ts`, `src/app/pwaUpdate.ts`, `src/app/pwaUpdate.test.tsx`, `src/app/registerServiceWorker.ts`, `src/app/layout/PwaUpdateBanner.tsx`, `src/app/layout/RootLayout.tsx`, `src/features/today/DailyIntention.tsx`, `src/features/profile/AccountCard.tsx`, `src/features/profile/GuestPreferencesCard.tsx`, `src/features/schedule/week/CopyDaySheet.tsx`, `src/i18n/en.json`, `e2e/pwa.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### QA-020: Mobile Lighthouse performance
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** F-018 / F-029 mobile Lighthouse performance targets (`/` ≥ 90, `/today` ≥ 85) on `v2-rebuild` (`93959cb`).
+- **Plan:**
+  1. Measure the merged `origin/v2-rebuild` (`93959cb`) baseline across 3 Lighthouse 11.7.1 mobile runs each on `/` and `/today` and analyze entry bundle composition.
+  2. Replace `date-fns` in `src/lib/date.ts`, `src/features/todos/todayList.ts`, and `src/features/auth/savePlanDismissal.ts` with zero-dependency local-date helpers and remove unused `date-fns`.
+  3. Lazy-load `RootLayout` overlays (`PwaUpdateBanner`, `ServiceDownBanner`, `SavePlanImport`, `ReminderWatcher`, deferring `ReminderWatcher` until idle on `/`), `SavePlanSheet`, and `TodayPage` sheets (`AddTodoSheet`, `DaySheet`, `ScheduleItemSheet`), while keeping `LandingPage` in the entry bundle and consolidating tiny shared chunks via `experimentalMinChunkSize: 15_000`.
+  4. Defer `registerServiceWorker()` until `window` `load` in `src/main.tsx` so Workbox registration does not compete with initial hydration.
+  5. Add unit/regression tests (`src/lib/date.test.ts`, `src/app/layout/RootLayout.test.tsx`), re-measure 3x Lighthouse mobile runs on `/` and `/today`, and run full static, Vitest, Playwright `phone-375`, audit, and OpenAPI checks.
+- **Done when:**
+  - [x] Baseline vs final 3-run Lighthouse 11.7.1 mobile measurements recorded: `/` median **91 -> 93** (`93, 94, 93`), `/today` median **87 -> 89** (`89, 90, 89`), with A11y 100, BP 100, PWA 100 preserved.
+  - [x] Entry bundle reduced from `486.02 kB` (`157.80 kB` gzip) to `436.03 kB` (`141.16 kB` gzip) and `TodayPage` chunk from `24.79 kB` (`8.49 kB` gzip) to `17.76 kB` (`6.17 kB` gzip).
+  - [x] Regression tests, `npm ci`, lint, typecheck, Knip, LF Prettier, full Vitest (`--maxWorkers=1`), build, `phone-375` Playwright (`--workers=1`), `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+  - [ ] **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, QA-009.
+- **Files:** `package.json`, `package-lock.json`, `vite.config.ts`, `src/main.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/RootLayout.tsx`, `src/app/layout/RootLayout.test.tsx`, `src/features/auth/SavePlanPrompt.tsx`, `src/features/auth/savePlanDismissal.ts`, `src/features/schedule/index.ts`, `src/features/today/TodayPage.tsx`, `src/features/today/NowNext.test.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/todos/todayList.ts`, `src/lib/date.ts`, `src/lib/date.test.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
 ### QA-021: Cross-browser and offline regression
 
 - **Status:** review
 - **Owner:** antigravity
-- **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`).
+- **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`, merged with `40ab685`).
 - **Plan:**
   1. Verify `origin/v2-rebuild` (`93959cb`) in isolated worktree `loomora-front-QA-021` on `feat/QA-021-cross-browser-release-regression` without depending on QA-020.
   2. Configure `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` projects in `playwright.config.ts` alongside `phone-375` and `desktop-1280`.

@@ -98,7 +98,7 @@ describe('Add to my schedule (empty Today)', () => {
     setClock(10, 30)
     await openToday()
     await userEvent.click(await screen.findByRole('button', { name: 'Add to my schedule' }))
-    const sheet = screen.getByRole('dialog', { name: 'Add to my schedule' })
+    const sheet = await screen.findByRole('dialog', { name: 'Add to my schedule' })
     await userEvent.type(within(sheet).getByLabelText('Title'), 'Study')
     await userEvent.click(
       within(sheet).getByRole('button', {
@@ -120,9 +120,9 @@ describe('full day sheet (S5)', () => {
     await openToday()
     await userEvent.click(await strip())
 
-    const daySheet = screen.getByRole('dialog', { name: 'Today’s schedule' })
+    const daySheet = await screen.findByRole('dialog', { name: 'Today’s schedule' })
     await userEvent.click(await within(daySheet).findByRole('button', { name: /Edit Lecture/ }))
-    const edit = screen.getByRole('dialog', { name: 'Edit schedule item' })
+    const edit = await screen.findByRole('dialog', { name: 'Edit schedule item' })
     await userEvent.click(within(edit).getByRole('button', { name: 'Only today' }))
     const title = within(edit).getByLabelText('Title')
     await userEvent.clear(title)
