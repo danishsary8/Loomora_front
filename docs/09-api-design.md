@@ -20,7 +20,13 @@ Errors use one shape: `{ "message": "...", "errors": { "field": ["..."] } }` wit
 | GET | /me | current user |
 | PATCH | /me | name, timezone, time_format, week_starts_on |
 | POST | /me/survey | goal, heard_from (skippable) |
-| DELETE | /me | delete account (password or Google re-auth confirmation) |
+| POST | /me/deletion/google/challenge | start Google verification for account deletion (Google-only accounts) |
+| POST | /me/deletion/google/verify | verify the callback with the original session and tab verifier |
+| DELETE | /me | confirm account deletion with the current password or a verified Google challenge |
+
+Accounts with `has_password: true` always send `{ password }`, including accounts linked to Google. Google-only accounts send `{ browser_challenge }` to start and receive a `201` with the challenge ID, Google authorization URL, and expiry. The dedicated `/auth/google/deletion/callback` submits `{ challenge_id, code, state, browser_verifier }` and expects a `200` with the confirmation ID and expiry. Only a separate user confirmation sends `{ google_confirmation: { challenge_id, browser_verifier } }` to `DELETE /me`. The frontend clears the matching account session after `204` and preserves the local guest plan.
+
+All three Google operations require JSON, the canonical frontend origin, and the same Loomora bearer. The backend returns `503` while the capability is disabled, which is the default pending paired staging verification. See [OpenAPI](openapi.yaml) for error responses and limits.
 
 ## To-dos
 | Method | Path | Purpose |

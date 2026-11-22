@@ -16,6 +16,21 @@ interface Message {
   message: string
 }
 
+interface GoogleDeletionConfirmation {
+  challenge_id: string
+  browser_verifier: string
+}
+
+interface GoogleDeletionProof {
+  id: string
+  expires_at: string
+}
+
+const googleDeletionOptions = {
+  preserveSessionOnUnauthorized: true,
+  optionalCapability: true,
+}
+
 /** The account endpoints of docs/openapi.yaml (Auth and Me). */
 export function createAuthApi(client: ApiClient) {
   const { request } = client
@@ -48,6 +63,33 @@ export function createAuthApi(client: ApiClient) {
         body: { password },
         expectedStatus: 204,
         preserveSessionOnUnauthorized: true,
+      }),
+    startGoogleDeletion: (browserChallenge: string, signal: AbortSignal) =>
+      request<{ data: GoogleDeletionProof & { authorization_url: string } }>(
+        'POST',
+        '/me/deletion/google/challenge',
+        {
+          ...googleDeletionOptions,
+          body: { browser_challenge: browserChallenge },
+          expectedStatus: 201,
+          signal,
+        },
+      ).then((response) => response.data),
+    verifyGoogleDeletion: (
+      input: GoogleDeletionConfirmation & { code: string; state: string },
+      signal?: AbortSignal,
+    ) =>
+      request<{ data: GoogleDeletionProof }>('POST', '/me/deletion/google/verify', {
+        ...googleDeletionOptions,
+        body: input,
+        expectedStatus: 200,
+        signal,
+      }).then((response) => response.data),
+    deleteMeWithGoogle: (confirmation: GoogleDeletionConfirmation) =>
+      request<undefined>('DELETE', '/me', {
+        ...googleDeletionOptions,
+        body: { google_confirmation: confirmation },
+        expectedStatus: 204,
       }),
     getMe: (
       signal?: AbortSignal,

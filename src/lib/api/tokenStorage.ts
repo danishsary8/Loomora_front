@@ -28,20 +28,20 @@ export function isSessionExpired(session: StoredSession, now: Date = new Date())
 /** Parse a raw serialized session string without mutating localStorage. */
 export function parseStoredSession(
   raw: string | null,
-  now: Date = new Date(),
+  now: Date | null = new Date(),
 ): StoredSession | null {
   if (!raw) return null
   try {
     const parsed: unknown = JSON.parse(raw)
-    if (!isStoredSession(parsed) || isSessionExpired(parsed, now)) return null
+    if (!isStoredSession(parsed) || (now && isSessionExpired(parsed, now))) return null
     return parsed
   } catch {
     return null
   }
 }
 
-/** Read the current session from localStorage without mutating storage. */
-export function readStoredSessionStatus(now: Date = new Date()): {
+/** Read without mutating storage. Pass null for an identity check that includes expired sessions. */
+export function readStoredSessionStatus(now: Date | null = new Date()): {
   readable: boolean
   session: StoredSession | null
 } {

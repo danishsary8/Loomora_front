@@ -358,7 +358,7 @@
         "items": {
           "i1": "Guest mode: clear this site’s data in your browser settings to erase local IndexedDB data and any saved session token. This does not delete feedback messages already sent to the server.",
           "i2": "Accounts with a password: open Profile, choose Delete my account, and enter your current password to immediately delete your user record, tokens, password-reset tokens, to-dos (including soft-deleted to-dos), schedule items, exceptions, check-ins, daily intentions, and account-linked feedback from the app database, and sign out on this device. Separate local browser data or feedback emails already delivered to an inbox are not removed automatically.",
-          "i3": "Google-only accounts (without a password): deleting your account directly in the app is not supported yet, because confirming your identity with Google for deletion is not implemented yet.",
+          "i3": "Google-only accounts (without a password): in-app deletion requires Google verification and a separate final confirmation. Availability depends on whether Google verification is enabled.",
           "i4": "Soft-deleted to-dos: deleting a to-do in an account keeps it soft-deleted so you can undo or restore it for up to 7 days; automatic cleanup of older soft-deleted to-dos is not implemented yet, so those rows remain in the database until your account is deleted."
         }
       },
@@ -383,7 +383,7 @@
       },
       "s3": {
         "title": "Accounts and deletion",
-        "body": "Creating an account is optional. You can sign up with email and password or with Google. Accounts that have a password can be deleted in Profile. Google-only accounts without a password cannot currently be deleted through the app because Google identity confirmation for deletion is not supported yet."
+        "body": "Creating an account is optional. You can sign up with email and password or with Google. Accounts that have a password can be deleted in Profile. Deleting a Google-only account in the app requires Google verification when the feature is enabled, followed by a separate final confirmation."
       },
       "s4": {
         "title": "Early software and offline limits",
@@ -439,7 +439,25 @@
     "deleteAccount": "Delete my account",
     "deleteTitle": "Delete your account",
     "deleteWarning": "This deletes your account, to-dos and schedule for good. It cannot be undone.",
-    "deleteGoogleNote": "Deleting your account requires your password. Confirming your identity with Google is not supported yet.",
+    "googleDeletion": {
+      "intro": "Confirming your identity with Google lets you return here to decide whether to delete your account.",
+      "verify": "Verify with Google",
+      "redirecting": "Opening Google…",
+      "verifying": "Checking Google verification…",
+      "verified": "Google verification complete.",
+      "deleted": "Your Loomora account was deleted.",
+      "done": "Done",
+      "back": "Back to Profile",
+      "cancelled": "Google verification was cancelled.",
+      "expired": "Google verification expired. Start again from Profile.",
+      "invalid": "Google verification could not be confirmed. Start again from Profile.",
+      "offline": "You are offline. Reconnect and start again.",
+      "rateLimited": "Too many attempts. Wait before trying again.",
+      "sessionChanged": "Your Loomora session ended or changed. Sign in to the account you want to delete and start again.",
+      "unavailable": "Google verification is currently unavailable.",
+      "requestRejected": "Google verification is unavailable from this page. Open Loomora from its usual address and try again.",
+      "failed": "The request could not be confirmed. Check your connection and start again."
+    },
     "deleteLookupLoading": "Checking whether you can delete your account…",
     "deleteLookupError": "Could not check whether you can delete your account.",
     "deletePassword": "Your password",

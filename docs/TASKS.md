@@ -521,3 +521,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Lint, typecheck, Knip, LF Prettier, Vitest (`--maxWorkers=1`), build, phone-375 Playwright, npm audits, Redocly OpenAPI lint, and `git diff --check` pass.
   - [ ] **Open release blockers:** Q21 (planner decision on SW update prompt vs `autoUpdate`), Q23 (Google-only deletion), Q25 (backend infra), QA-004 (legal owner approvals), QA-009 (paired staging integration), QA-016 (owner Vercel promotion of latest `v2-rebuild` & settings check).
 - **Files:** `src/components/ui/Sheet.tsx`, `src/components/ui/Sheet.test.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/CopyDaySheet.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/NowNext.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/pwa.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-030: Google account deletion frontend
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Backend B-042, [PR #45](https://github.com/danishsary8/loomora_back/pull/45).
+- **Scope:** Offer Google verification in Profile for Google-only accounts, require an explicit final confirmation, and clear the matching account session after HTTP 204. Preserve password deletion and guest data.
+- **Verification:** See the [F-030 progress entry](PROGRESS.md#2026-11-22-f-030-google-account-deletion-frontend) for the backend contract, regression evidence, and staging checks.
+- **Release gates:** Q23, Q25, QA-004, QA-009, and production approval remain open. The backend Google deletion capability defaults to disabled.
