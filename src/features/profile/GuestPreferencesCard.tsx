@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useUnsavedDraft } from '@/app/pwaUpdate'
 import { Button, Card } from '@/components/ui'
 import { FormError } from '@/features/auth/FormError'
 import type { TimePreferences } from '@/lib/time/time'
@@ -15,6 +16,7 @@ export function GuestPreferencesCard() {
   const formatChanged = values.time_format !== prefs.values.time_format
   const weekChanged = values.week_starts_on !== prefs.values.week_starts_on
   const changed = formatChanged || weekChanged
+  useUnsavedDraft('guest-preferences', changed || save.pending)
 
   function submit(event: FormEvent) {
     event.preventDefault()

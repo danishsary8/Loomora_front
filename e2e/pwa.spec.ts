@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import fs from 'node:fs'
 import http from 'node:http'
@@ -37,16 +38,22 @@ async function startSwUpdateServer(repoRoot: string) {
       if (version === 2) {
         sw = sw.replace(/revision:"([0-9a-f]+)"/, 'revision:"22222222222222222222222222222222"')
       }
-      res.end(sw)
+      const body = Buffer.from(sw, 'utf8')
+      res.setHeader('Content-Length', body.byteLength)
+      res.end(body)
       return
     }
     if (filePath.endsWith('index.html')) {
       let html = fs.readFileSync(filePath, 'utf8')
       if (version === 2) html = html.replace('</body>', '<!-- v2 --></body>')
-      res.end(html)
+      const body = Buffer.from(html, 'utf8')
+      res.setHeader('Content-Length', body.byteLength)
+      res.end(body)
       return
     }
-    fs.createReadStream(filePath).pipe(res)
+    const body = fs.readFileSync(filePath)
+    res.setHeader('Content-Length', body.byteLength)
+    res.end(body)
   })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
@@ -116,6 +123,13 @@ test.describe('PWA', () => {
     await page.reload()
     await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
     await expect(page.getByText(/You are offline/)).toBeVisible()
+
+    // Offline navigation to Week continues working cleanly.
+    await page.getByRole('link', { name: 'Week' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Week' })).toBeVisible()
+    await expect(page.getByText(/You are offline/)).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('heading', { level: 1, name: 'Week' })).toBeVisible()
 
     // Missing static assets and API URLs must not resolve to cached HTML offline.
     const missingAssetFailed = await page.evaluate(async () => {
@@ -208,13 +222,14 @@ test.describe('PWA', () => {
     await context.setOffline(false)
   })
 
-  test('Q21: autoUpdate service worker reloads open tab and drops unsaved form state while preserving IndexedDB data', async ({
+  test('Q21: prompt-based SW update preserves open drafts, defers via Later, and activates v2 only on explicit Update now confirmation', async ({
     page,
-  }, testInfo) => {
-    testInfo.fail(
-      true,
-      'Q21: registerType autoUpdate forces window.location.reload() on SW activation, discarding unsaved form input pending planner approval for an update prompt',
-    )
+  }) => {
+    const problems: string[] = []
+    page.on('pageerror', (err) => problems.push(err.message))
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') problems.push(msg.text())
+    })
     const server = await startSwUpdateServer(path.resolve('.'))
     try {
       await page.goto(`${server.baseUrl}/today`)
@@ -234,6 +249,11 @@ test.describe('PWA', () => {
       await expect(sheet).toBeHidden()
       await expect(page.getByText('Persisted before update')).toBeVisible()
 
+      // Mark the current window context so any unexpected reload is caught immediately.
+      await page.evaluate(() => {
+        ;(window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow = true
+      })
+
       // Open sheet and type unsaved input before a new SW version ships.
       await page.getByRole('button', { name: 'Add a to-do' }).click()
       sheet = page.getByRole('dialog', { name: 'Add a to-do' })
@@ -245,11 +265,128 @@ test.describe('PWA', () => {
         await reg?.update()
       })
 
-      // Wait for autoUpdate reload to settle, verify persisted IndexedDB data survived,
-      // then assert unsaved form state was not interrupted (fails under autoUpdate).
-      await page.waitForTimeout(2000)
+      // Update notification appears without auto-reloading or discarding the open form.
+      const updateRegion = page.getByRole('region', { name: 'App update' })
+      await expect(updateRegion).toBeVisible()
+      await expect(updateRegion.getByRole('status')).toContainText(
+        'A new version of Loomora is available.',
+      )
+      await page.waitForTimeout(1500)
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow === true,
+        ),
+      ).toBe(true)
+      await expect(sheet).toBeVisible()
+      await expect(sheet.getByLabel('Title')).toHaveValue('Unsaved draft during SW update')
+
+      // Selecting Later dismisses the notification and preserves the form and unsaved input.
+      await updateRegion.getByRole('button', { name: 'Later' }).click()
+      await expect(updateRegion).toBeHidden()
+      await expect(sheet).toBeVisible()
+      await expect(sheet.getByLabel('Title')).toHaveValue('Unsaved draft during SW update')
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow === true,
+        ),
+      ).toBe(true)
       await expect(page.getByText('Persisted before update')).toBeVisible()
-      await expect(page.getByRole('dialog', { name: 'Add a to-do' })).toBeVisible()
+
+      // Save the draft so guest IndexedDB also retains it across the eventual update.
+      await sheet.getByRole('button', { name: 'Add', exact: true }).click()
+      await expect(sheet).toBeHidden()
+      await expect(page.getByText('Unsaved draft during SW update')).toBeVisible()
+      expect(problems).toEqual([])
+    } finally {
+      await server.close()
+    }
+  })
+
+  test('Q21: Update now confirms before discarding an open draft, activates v2, passes a11y, and preserves guest data', async ({
+    page,
+  }) => {
+    const problems: string[] = []
+    page.on('pageerror', (err) => problems.push(err.message))
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') problems.push(msg.text())
+    })
+    const server = await startSwUpdateServer(path.resolve('.'))
+    try {
+      await page.goto(`${server.baseUrl}/today`)
+      await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+      await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
+      if (await page.evaluate(() => navigator.serviceWorker.controller === null)) {
+        await page.reload()
+      }
+      await expect
+        .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+        .toBe(true)
+
+      await page.getByRole('button', { name: 'Add a to-do' }).click()
+      let sheet = page.getByRole('dialog', { name: 'Add a to-do' })
+      await sheet.getByLabel('Title').fill('Saved guest task')
+      await sheet.getByRole('button', { name: 'Add', exact: true }).click()
+      await expect(sheet).toBeHidden()
+
+      await page.evaluate(() => {
+        ;(window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow = true
+      })
+
+      // Open a form with unsaved input, then ship v2.
+      await page.getByRole('button', { name: 'Add a to-do' }).click()
+      sheet = page.getByRole('dialog', { name: 'Add a to-do' })
+      await sheet.getByLabel('Title').fill('Draft needing confirmation')
+
+      server.shipV2()
+      await page.evaluate(async () => {
+        const reg = await navigator.serviceWorker.getRegistration()
+        await reg?.update()
+      })
+
+      const updateRegion = page.getByRole('region', { name: 'App update' })
+      await expect(updateRegion).toBeVisible()
+
+      // Clicking Update now while an editable sheet is open asks for confirmation instead of silently discarding.
+      await updateRegion.getByRole('button', { name: 'Update now' }).click()
+      await expect(updateRegion.getByRole('button', { name: 'Discard and update' })).toBeVisible()
+      await expect(updateRegion.getByRole('button', { name: 'Keep editing' })).toBeVisible()
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow === true,
+        ),
+      ).toBe(true)
+      await expect(sheet.getByLabel('Title')).toHaveValue('Draft needing confirmation')
+
+      // Keep editing returns to editing with draft preserved.
+      await updateRegion.getByRole('button', { name: 'Keep editing' }).click()
+      await expect(sheet.getByLabel('Title')).toHaveValue('Draft needing confirmation')
+
+      // Close sheet so keyboard Tab order reaches the update banner directly, then test keyboard activation + axe.
+      await sheet.getByRole('button', { name: 'Close' }).click()
+      await expect(sheet).toBeHidden()
+
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze()
+      expect(violations).toEqual([])
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= 375)).toBe(true)
+
+      // Keyboard Tab reaches Update now and Enter triggers activation + reload to v2.
+      const updateBtn = updateRegion.getByRole('button', { name: 'Update now' })
+      for (let i = 0; i < 15; i += 1) {
+        await page.keyboard.press('Tab')
+        if (await updateBtn.evaluate((el) => el === document.activeElement)) break
+      }
+      await expect(updateBtn).toBeFocused()
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'load' }),
+        page.keyboard.press('Enter'),
+      ])
+
+      // Confirm new v2 HTML is served after explicit update reload and saved guest data survives.
+      expect(await page.content()).toContain('<!-- v2 -->')
+      await expect(page.getByText('Saved guest task')).toBeVisible()
+      expect(problems).toEqual([])
     } finally {
       await server.close()
     }

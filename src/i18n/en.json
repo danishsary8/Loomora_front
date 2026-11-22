@@ -567,5 +567,17 @@
   },
   "routeError": {
     "goToToday": "Go to Today"
+  },
+  "pwaUpdate": {
+    "regionLabel": "App update",
+    "available": "A new version of Loomora is available.",
+    "updating": "Updating Loomora…",
+    "error": "Could not update right now. Your work is safe.",
+    "confirmDiscard": "You have an open form or unsaved changes. Updating now will reload the app and discard them.",
+    "updateNow": "Update now",
+    "later": "Later",
+    "retry": "Try again",
+    "confirmUpdate": "Discard and update",
+    "keepEditing": "Keep editing"
   }
 }

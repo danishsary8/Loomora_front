@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Loomora',
@@ -32,6 +32,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Claim the initial uncontrolled tab so first-visit offline mode works before a reload,
+        // while keeping skipWaiting prompt-controlled so updates never silently reload active work.
+        clientsClaim: true,
         // The whole app shell (JS, CSS, fonts, icons) is cached so it opens offline.
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
         navigateFallback: '/index.html',

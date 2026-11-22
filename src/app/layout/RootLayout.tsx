@@ -5,6 +5,7 @@ import { LoadingState } from '@/components/states'
 import { ReminderWatcher } from '@/features/reminders/ReminderWatcher'
 import { SavePlanImport } from '@/features/auth/SavePlanImport'
 import { OfflineBanner } from './OfflineBanner'
+import { PwaUpdateBanner } from './PwaUpdateBanner'
 import { ServiceDownBanner } from './ServiceDownBanner'
 
 export function RootLayout() {
@@ -17,6 +18,7 @@ export function RootLayout() {
       >
         {t('common.skipToContent')}
       </a>
+      <PwaUpdateBanner />
       <OfflineBanner />
       <ServiceDownBanner />
       <SavePlanImport />

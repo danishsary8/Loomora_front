@@ -621,6 +621,35 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   - **QA-016:** Owner Vercel settings check & promotion of latest `v2-rebuild` (`98a9b79` + QA-018) to `https://loomora-craft.vercel.app`.
   - **F-018 / F-029 mobile Performance:** Lighthouse mobile scores (`75–87` on `/`, `58–70` on `/today`) remain below `90` / `85` targets.
 
+### 2026-11-22: QA-019 Safe PWA update experience (Q21 fix)
+
+- **Prerequisite & approval:** Verified QA-018 (`PR #44`) merged on `origin/v2-rebuild` at `d177047` before branching `feat/QA-019-safe-pwa-updates` in isolated worktree `loomora-front-QA-019`. Implements planner-approved Q21 migration off `registerType: 'autoUpdate'`.
+- **Plan:**
+  1. Read PWA config, `registerServiceWorker.ts`, `RootLayout.tsx`, sheets/forms, `en.json`, `e2e/pwa.spec.ts`, and project docs.
+  2. Write RED Vitest (`src/app/pwaUpdate.test.tsx`) and Chromium Q21 regressions before implementation.
+  3. Switch `vite.config.ts` to `registerType: 'prompt'` with `workbox.clientsClaim: true` (for immediate first-visit offline control without silent update activation), implement `usePwaUpdate` + `hasUnsavedEditableWork` + `useUnsavedDraft`, and handle `onNeedRefresh`, `onNeedReload`, `onRegisterError`, and same-session `controllerchange` in `registerServiceWorker.ts`.
+  4. Render accessible, non-blocking `PwaUpdateBanner` in `RootLayout` using existing `Button`, design tokens, and `pwaUpdate.*` keys in `src/i18n/en.json`, wiring `useUnsavedDraft` into `DailyIntention`, `AccountCard`, `GuestPreferencesCard`, and `CopyDaySheet`.
+  5. Convert Q21 `test.fail` in `e2e/pwa.spec.ts` into passing two-version `v1 -> v2` E2E coverage, run full verification, and keep `QA-016`, `QA-004`, `Q23`, `Q25`, and `QA-009` open without claiming production readiness.
+- **Verified service-worker & update behavior:**
+  - `dist/sw.js` (`PWA v2.0.0 generateSW`, `49` precache entries, `1007.54 KiB`) uses `clientsClaim()` for initial uncontrolled visits and listens for `{ type: 'SKIP_WAITING' }` messages instead of unconditional `self.skipWaiting()`.
+  - When `v2` arrives in `waiting`, `PwaUpdateBanner` displays `"A new version of Loomora is available."` (`role="status"`, `aria-live="polite"`, `App update` region) with **Update now** and **Later** buttons, never reloading the page automatically.
+  - **Later** dismisses the prompt for that waiting worker and keeps open forms/drafts untouched; repeated registration events for the same waiting worker are deduplicated.
+  - **Update now** checks `hasUnsavedEditableWork()` (covering open `[role="dialog"]` forms, inline dirty form inputs, and `useUnsavedDraft` editors) and requires explicit **Discard and update** / **Keep editing** (`Escape` returns to `available` and preserves drafts) before sending `SKIP_WAITING` and reloading; same-session `controllerchange` ensures reloads succeed even when `Workbox._isUpdate` started `false` prior to initial `clientsClaim()`, while ignoring initial first-visit claim transitions and deferring cross-tab activations safely.
+  - Registration/activation errors and stalled `5 s` activations transition to a recoverable error banner (`Try again` / `Later`) without reload loops; persisted guest IndexedDB records and offline Today/Week navigation survive across updates.
+- **RED → GREEN evidence:**
+  - **Unit (`src/app/pwaUpdate.test.tsx`):** RED before implementation (`Failed to resolve import '@/app/pwaUpdate'`) → GREEN (`9/9` passing tests covering deduplication, **Later**, **Update now**, unsaved sheet/inline-form discard confirmation, `Escape` handling, cross-tab safe deferral, initial `clientsClaim` vs same-session update `controllerchange`, failure recovery, and 5 s timeout).
+  - **E2E (`e2e/pwa.spec.ts`):** RED under `registerType: 'autoUpdate'` (both Q21 tests failed when `App update` region never rendered) → GREEN (`2/2` Q21 two-version Chromium tests + `3/3` existing PWA/offline/installability tests passing, `0` console/page errors, `0` axe violations at `375 px`, guest IndexedDB preserved, `<!-- v2 -->` active only after explicit confirmation).
+- **Verification results:**
+  - `npm ci`: exited 0 (`added 746 packages, and audited 747 packages`).
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`: all exited 0.
+  - `npm test -- --maxWorkers=1`: **59 test files / 600 tests passed** (exited 0).
+  - `npm run build` (`VITE_API_URL=https://loomora-api.onrender.com/api/v1`): exited 0 (`49` precache entries, `1007.54 KiB`).
+  - `npm run e2e -- --project=phone-375 --workers=1`: **64/64 passed** (`2.4 m`; note under default 4 parallel workers `cross-tab-session.spec.ts` and Q21 Test 2 hit 30 s timeouts at `47.8 s` / `40.0 s` due to Windows worker CPU contention and both passed cleanly at `6.6 s` / `5.4 s` with `--workers=1`).
+  - `npm audit --omit=dev`: exited 0 (`found 0 vulnerabilities`). `npm audit`: exited 1 with only the 4 existing QA-014 dev-only moderate findings (`glob`, `minimatch`, `workbox-build`, `vite-plugin-pwa`).
+  - `npx --yes @redocly/cli lint docs/openapi.yaml`: exited 0 (valid with 4 existing warnings).
+  - `git diff --check`: exited 0.
+- **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, and QA-009 remain open; the app is not declared production-ready.
+
 ## 2026-11-22 F-030 Google account deletion frontend
 
 - Fetched frontend base `d177047b545c02472c4c09d72f64d07596689f31` from `origin/v2-rebuild` in the existing `loomora_front_v2` clone. Isolated F-030 in `loomora-front-F-030` on `feat/F-030-google-account-deletion`. QA-019 has separate edits in the translation and Vite files in its own worktree.

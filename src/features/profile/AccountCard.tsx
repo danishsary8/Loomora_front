@@ -1,6 +1,7 @@
 import { useIsMutating, useMutation } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useUnsavedDraft } from '@/app/pwaUpdate'
 import { Button, Card, Input } from '@/components/ui'
 import { ResendVerification } from '@/features/auth/ResendVerification'
 import { FormError } from '@/features/auth/FormError'
@@ -46,6 +47,7 @@ export function AccountCard({ user }: { user: User }) {
     timezone !== user.timezone ||
     values.time_format !== prefs.values.time_format ||
     values.week_starts_on !== prefs.values.week_starts_on
+  useUnsavedDraft('account-card', changed || saving)
 
   function submit(event: FormEvent) {
     event.preventDefault()

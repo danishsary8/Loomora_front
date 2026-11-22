@@ -504,8 +504,9 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-018: Mobile, PWA & production quality verification
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
+- **Merge:** [PR #44](https://github.com/danishsary8/Loomora_front/pull/44) at `d177047`.
 - **Source:** QA-001 / QA-008 / F-018 / F-029 mobile responsiveness, accessibility, Lighthouse performance, PWA/offline, and live deployment verification on `v2-rebuild` (`98a9b79`).
 - **Plan:**
   1. Set up isolated QA-018 worktree from `origin/v2-rebuild` (`98a9b79`, PR #43) and run read-only HTTP and Chromium checks against `https://loomora-craft.vercel.app`.
@@ -519,8 +520,28 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] PWA installability, manifest/icons, offline guest/account behavior, and Q21 `autoUpdate` service-worker update risk verified and covered in `e2e/pwa.spec.ts` (`test.fail` for Q21 unsaved draft loss pending planner decision).
   - [x] Actual Lighthouse 11.7.1 mobile runs on `/` and `/today` recorded in `docs/PROGRESS.md` (Performance targets from F-018/F-029 remain unmet under mobile CPU throttling; documented without overclaiming).
   - [x] Lint, typecheck, Knip, LF Prettier, Vitest (`--maxWorkers=1`), build, phone-375 Playwright, npm audits, Redocly OpenAPI lint, and `git diff --check` pass.
-  - [ ] **Open release blockers:** Q21 (planner decision on SW update prompt vs `autoUpdate`), Q23 (Google-only deletion), Q25 (backend infra), QA-004 (legal owner approvals), QA-009 (paired staging integration), QA-016 (owner Vercel promotion of latest `v2-rebuild` & settings check).
+  - [ ] **Open release blockers:** Q21 (addressed in QA-019 following planner approval), Q23 (Google-only deletion), Q25 (backend infra), QA-004 (legal owner approvals), QA-009 (paired staging integration), QA-016 (owner Vercel promotion of latest `v2-rebuild` & settings check).
 - **Files:** `src/components/ui/Sheet.tsx`, `src/components/ui/Sheet.test.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/CopyDaySheet.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/NowNext.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/pwa.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-019: Safe PWA update experience
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Planner-approved Q21 fix from QA-018 (`PR #44`, merged at `d177047`).
+- **Plan:**
+  1. Verify QA-018 PR #44 merge on `v2-rebuild` (`d177047`), isolate worktree `loomora-front-QA-019` on `feat/QA-019-safe-pwa-updates`, and inspect PWA config, SW registration, layouts, sheets/forms, i18n, and `e2e/pwa.spec.ts`.
+  2. Write RED Vitest (`src/app/pwaUpdate.test.tsx`) and Playwright (`e2e/pwa.spec.ts`) regressions before implementing controlled updates.
+  3. Switch `vite.config.ts` from `registerType: 'autoUpdate'` to `registerType: 'prompt'` and implement `usePwaUpdate` + `registerServiceWorker` (`src/app/pwaUpdate.ts`, `src/app/registerServiceWorker.ts`) with prompt deduplication, explicit-confirmation reload gating, cross-tab safe deferral, and error/timeout handling without reload loops.
+  4. Build an accessible, non-blocking `PwaUpdateBanner` (`src/app/layout/PwaUpdateBanner.tsx`) in `RootLayout` using existing tokens and `en.json` i18n keys, offering **Update now** and **Later** plus explicit discard confirmation when an editable sheet or unsaved draft (`DailyIntention`, `AccountCard`, `GuestPreferencesCard`, `CopyDaySheet`, or open form) is active.
+  5. Verify GREEN across Vitest, two-version Chromium `e2e/pwa.spec.ts`, full phone-375 Playwright, static checks, audits, OpenAPI lint, and `git diff --check`; update docs while keeping QA-016, QA-004, Q23, Q25, and QA-009 open.
+- **Done when:**
+  - [x] `vite.config.ts` uses `registerType: 'prompt'` while preserving offline precaching, `navigateFallbackDenylist`, and installability.
+  - [x] New waiting SW displays a small, accessible, non-blocking i18n banner (`PwaUpdateBanner`) with **Update now** and **Later** actions and never auto-reloads open work.
+  - [x] **Later** dismisses the prompt for that waiting worker and preserves open forms/drafts; **Update now** prompts for confirmation before discarding an open editable sheet or unsaved draft, and activates + reloads only after explicit user confirmation.
+  - [x] Duplicate registration/update events are deduplicated, update failures/stalls transition to a recoverable error state without reload loops, and persisted guest IndexedDB + offline Today/Week flows survive.
+  - [x] RED/GREEN Vitest (`src/app/pwaUpdate.test.tsx`) and two-version Chromium `e2e/pwa.spec.ts` (with Q21 `test.fail` converted to passing regression) pass alongside `npm ci`, lint, typecheck, Knip, LF Prettier, full Vitest (`--maxWorkers=1`), build, phone-375 Playwright, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`.
+  - [ ] **Remaining open blockers (out of scope):** QA-016, QA-004, Q23, Q25, QA-009.
+- **Files:** `vite.config.ts`, `src/app/pwaUpdate.ts`, `src/app/pwaUpdate.test.tsx`, `src/app/registerServiceWorker.ts`, `src/app/layout/PwaUpdateBanner.tsx`, `src/app/layout/RootLayout.tsx`, `src/features/today/DailyIntention.tsx`, `src/features/profile/AccountCard.tsx`, `src/features/profile/GuestPreferencesCard.tsx`, `src/features/schedule/week/CopyDaySheet.tsx`, `src/i18n/en.json`, `e2e/pwa.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-030: Google account deletion frontend
 
