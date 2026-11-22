@@ -28,6 +28,22 @@ export default defineConfig({
       name: 'desktop-1280',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
+    {
+      name: 'firefox-375',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 375, height: 812 }, hasTouch: true },
+    },
+    {
+      name: 'firefox-1280',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: 'webkit-375',
+      use: { ...devices['Desktop Safari'], viewport: { width: 375, height: 812 }, hasTouch: true },
+    },
+    {
+      name: 'webkit-1280',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 800 } },
+    },
   ],
   webServer: {
     command: `npm run build && npx vite preview --port ${PORT} --strictPort`,

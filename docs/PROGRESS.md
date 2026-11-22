@@ -694,3 +694,28 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - `npm run e2e -- --project=phone-375` exited 0 with 71 cases meeting expectations, including the existing Q21 expected failure. The QA-019 preview occupied port 4173 during the first targeted attempt. An isolated F-030 preview reproduced the late-204 failure, and the final full run used the default port after it became free.
 - `npm audit --omit=dev` reported zero vulnerabilities. The install reported the existing deprecated `glob` and four moderate development dependency findings. Redocly validated the synced OpenAPI with the four existing warnings for the localhost server, health response, and two Google sign-in redirects.
 - Q23 requires real Google account eligibility and signed fresh `auth_time` evidence using synthetic staging accounts. Q25 requires the canonical origin and callback, shared lock-capable rate limiting, trusted ingress, and query and body redaction checks. QA-009 needs paired staging verification on the exact frontend and backend SHAs, including real callback headers, older-worker upgrade behavior, and the provider round trip. The callback requires a network navigation, so an outage before its document loads can surface as a browser error. QA-004 and public release still require Danish's approval.
+
+### 2026-11-22: QA-021 Cross-browser and offline regression
+
+- **Prerequisite:** Started from merged `origin/v2-rebuild` (`93959cb`, PR #46 QA-019) in isolated worktree `loomora-front-QA-021` on `feat/QA-021-cross-browser-release-regression` (later merged `origin/v2-rebuild` at `40ab685` / PR #47 QA-020 and `00a6d01` / PR #45 F-030).
+- **Plan:**
+  1. Add `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` projects to `playwright.config.ts` alongside `phone-375` and `desktop-1280`.
+  2. Author `e2e/cross-browser.spec.ts` covering all 12 required scenarios across Chromium, Firefox, and WebKit and `320`, `375`, `768`, and `1280` px viewports.
+  3. Run `e2e/cross-browser.spec.ts` across all 6 projects and `e2e/a11y.spec.ts` across Firefox/WebKit; distinguish browser/harness limitations from application defects.
+  4. Document compatibility matrix, run full verification checks, and keep QA-004, QA-009, QA-016, Q23, and Q25 open without claiming hosted staging sign-off.
+- **Browser & viewport compatibility matrix (`e2e/cross-browser.spec.ts` 30/30 + `e2e/a11y.spec.ts` 30/30 on Firefox/WebKit):**
+  - **Chromium (`phone-375`, `desktop-1280`)**: All 12 scenarios pass across `320`, `375`, `768`, and `1280` px (`0` horizontal overflow, full SW offline reload, `Page.getInstallabilityErrors` `[]`, cross-tab sync, keyboard focus trap/restoration, `prefers-reduced-motion: 0.01ms`, SPA routes/404, manifest/icons).
+  - **Firefox (`firefox-375`, `firefox-1280`)**: All 12 scenarios pass across `320`, `375`, `768`, and `1280` px (`0` horizontal overflow, full SW offline reload, cross-tab sync, keyboard focus trap/restoration, `prefers-reduced-motion: 1e-05s`, SPA routes/404, manifest/icons, `15/15` route axe checks). Harness note: Playwright Firefox `context.setOffline(false)` updates `navigator.onLine` without firing `window` `online` event automatically.
+  - **WebKit (`webkit-375`, `webkit-1280`)**: Core flows, `320`/`375`/`768`/`1280` px responsive sheets (`0` overflow), IndexedDB persistence, cross-tab sync (with `serviceWorkers: 'block'` in `browser.newContext`), keyboard focus trap/restoration, `prefers-reduced-motion: 0.00001s`, SPA routes/404, manifest/icons, SW registration, and `15/15` route axe checks pass.
+- **Browser-specific limitations (not masked):**
+  - **WebKit mouse/touch button focus:** In Safari/WebKit, clicking a `<button>` with mouse/touch does not focus the button (`document.activeElement` remains `document.body`), so `Sheet` focus restoration returns to the opener when activated via keyboard (`Enter`/`Space`), and to `body` on pointer click.
+  - **Playwright WebKit offline reload:** Playwright's `context.setOffline(true)` aborts requests at the WebKit network process before Service Worker interception, so offline reload (`page.reload()`) fails in Playwright WebKit; offline in-page SPA navigation (`Today <-> Week` after route pre-warm) and offline IndexedDB persistence + reconnect are verified instead.
+  - **Chromium-only CDP installability:** `Page.getInstallabilityErrors` is Chromium CDP-only (tested in `e2e/pwa.spec.ts`); Firefox and WebKit verify manifest, icons, and SW registration.
+- **Verification (post-merge with `origin/v2-rebuild` `40ab685` and `00a6d01`):**
+  - `npm ci` (`npm@10.9.4` & `npm@11.6.1`): exited 0.
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`: exited 0.
+  - `npm test -- --maxWorkers=1`: **60 test files / 603 tests passed** (exited 0).
+  - `npm run build`: exited 0.
+  - `npm run e2e -- --project=phone-375 --workers=1`: **69/69 passed**.
+  - `npx playwright test e2e/cross-browser.spec.ts --workers=1`: **30/30 passed** across `phone-375`, `desktop-1280`, `firefox-375`, `firefox-1280`, `webkit-375`, `webkit-1280`.
+- **Remaining open blockers (out of scope):** QA-004, QA-009, QA-016, Q23, and Q25 remain open; hosted staging sign-off is not claimed from local/mocked runs.

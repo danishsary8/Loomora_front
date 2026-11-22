@@ -569,3 +569,22 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Offer Google verification in Profile for Google-only accounts, require an explicit final confirmation, and clear the matching account session after HTTP 204. Preserve password deletion and guest data.
 - **Verification:** See the [F-030 progress entry](PROGRESS.md#2026-11-22-f-030-google-account-deletion-frontend) for the backend contract, regression evidence, and staging checks.
 - **Release gates:** Q23, Q25, QA-004, QA-009, and production approval remain open. The backend Google deletion capability defaults to disabled.
+
+### QA-021: Cross-browser and offline regression
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`, merged with `00a6d01`).
+- **Plan:**
+  1. Verify `origin/v2-rebuild` (`93959cb`) in isolated worktree `loomora-front-QA-021` on `feat/QA-021-cross-browser-release-regression` without depending on QA-020.
+  2. Configure `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` projects in `playwright.config.ts` alongside `phone-375` and `desktop-1280`.
+  3. Add `e2e/cross-browser.spec.ts` covering all 12 required scenarios across Chromium, Firefox, and WebKit and viewports `320`, `375`, `768`, and `1280` px.
+  4. Run `e2e/cross-browser.spec.ts` (30/30 across 6 projects) and `e2e/a11y.spec.ts` (Firefox & WebKit route axe checks), distinguishing browser-specific capabilities/Playwright harness behavior from application defects.
+  5. Document browser compatibility matrix and limitations in `docs/PROGRESS.md`, keep QA-004, QA-009, QA-016, Q23, and Q25 open, and run all required verification commands.
+- **Done when:**
+  - [x] `e2e/cross-browser.spec.ts` passes **30/30** across `phone-375`, `desktop-1280`, `firefox-375`, `firefox-1280`, `webkit-375`, and `webkit-1280` (`320`, `375`, `768`, `1280` px viewports).
+  - [x] `e2e/a11y.spec.ts` passes **30/30** route axe-core checks across `firefox-375` and `webkit-375` (plus full `phone-375` suite).
+  - [x] Browser-specific behaviors (WebKit mouse-click button focus vs keyboard focus restoration, Playwright WebKit `setOffline(true)` network-process abort before SW interception, Playwright Firefox/WebKit `online`/`offline` event dispatch) documented accurately without masking failures.
+  - [x] `npm ci`, lint, typecheck, Knip, LF Prettier, Vitest (`--maxWorkers=1`), build, `phone-375` Playwright (`--workers=1`), `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+  - [ ] **Remaining open blockers (out of scope):** QA-004, QA-009, QA-016, Q23, Q25.
+- **Files:** `playwright.config.ts`, `e2e/cross-browser.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
