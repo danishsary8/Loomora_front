@@ -569,3 +569,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Offer Google verification in Profile for Google-only accounts, require an explicit final confirmation, and clear the matching account session after HTTP 204. Preserve password deletion and guest data.
 - **Verification:** See the [F-030 progress entry](PROGRESS.md#2026-11-22-f-030-google-account-deletion-frontend) for the backend contract, regression evidence, and staging checks.
 - **Release gates:** Q23, Q25, QA-004, QA-009, and production approval remain open. The backend Google deletion capability defaults to disabled.
+
+### QA-022: Paired staging integration preparation
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Prepare a guarded Playwright suite for the exact frontend and API candidates. Cover auth, guest import, planner data, account isolation, and Google deletion's disabled and callback behavior. Record provider and deletion steps for an approved manual run.
+- **Evidence:** [QA-022 staging evidence and runbook](QA-022-staging-evidence.md).
+- **Release gates:** Live staging and provider verification are blocked pending owner approval of the disposable pair and synthetic identities. QA-009 stays blocked pending paired execution and sign-off. Q23, Q25, QA-004, and QA-016 remain open.
