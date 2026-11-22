@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useUnsavedDraft } from '@/app/pwaUpdate'
 import { Button, Input } from '@/components/ui'
 import { guestPlanKey } from '@/features/auth/useGuestPlan'
 import type { LocalDate } from '@/features/todos/types'
@@ -210,6 +211,10 @@ function IntentionEditor({
   const [draft, setDraft] = useState(recoveredDraft)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>(
     recoveredDraft === null ? 'idle' : 'error',
+  )
+  useUnsavedDraft(
+    `intention:${previousDateLabel ?? 'current'}`,
+    draft !== null || status === 'saving' || status === 'error',
   )
   const latest = useRef(recoveredDraft)
   const timer = useRef<ReturnType<typeof setTimeout>>()
