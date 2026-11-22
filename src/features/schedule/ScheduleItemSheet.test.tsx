@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { AppProviders } from '@/app/AppProviders'
@@ -238,11 +238,19 @@ describe('delete with a 5-second undo', () => {
   it('Undo brings the item back and writes nothing', async () => {
     await setup([math])
     await userEvent.click(await screen.findByRole('button', { name: 'edit week Math' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Undo' }))
 
-    expect(await screen.findByText('Math 09:00-10:00')).toBeInTheDocument()
-    await new Promise((resolve) => setTimeout(resolve, UNDO_MS * 2))
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+      expect(screen.queryByText('Math 09:00-10:00')).not.toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+      act(() => {
+        vi.advanceTimersByTime(UNDO_MS * 2)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+
     expect(await repo.listItems()).toHaveLength(1)
     expect(screen.getByText('Math 09:00-10:00')).toBeInTheDocument()
   })

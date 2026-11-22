@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
+import { localHeaderValue } from './local-api'
 
 interface VercelHeaderRule {
   source: string
@@ -47,7 +48,7 @@ function serveFile(
   for (const rule of headerRules) {
     if (new RegExp(`^${rule.source}$`).test(pathname)) {
       for (const header of rule.headers) {
-        res.setHeader(header.key, header.value)
+        res.setHeader(header.key, localHeaderValue(header.key, header.value))
       }
     }
   }

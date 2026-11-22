@@ -588,3 +588,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm ci`, lint, typecheck, Knip, LF Prettier, Vitest (`--maxWorkers=1`), build, `phone-375` Playwright (`--workers=1`), `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
   - [ ] **Remaining open blockers (out of scope):** QA-004, QA-009, QA-016, Q23, Q25.
 - **Files:** `playwright.config.ts`, `e2e/cross-browser.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-022: Paired staging integration preparation
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Prepare a guarded Playwright suite for the exact frontend and API candidates. Cover auth, guest import, planner data, account isolation, and Google deletion's disabled and callback behavior. Record provider and deletion steps for an approved manual run.
+- **Evidence:** [QA-022 staging evidence and runbook](QA-022-staging-evidence.md).
+- **Release gates:** Live staging and provider verification are blocked pending owner approval of the disposable pair and synthetic identities. QA-009 stays blocked pending paired execution and sign-off. Q23, Q25, QA-004, and QA-016 remain open.
