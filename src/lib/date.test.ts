@@ -1,4 +1,4 @@
-import { isLocalDate, localDateIn, previousDay, toLocalDate } from './date'
+import { daysBetweenLocalDates, isLocalDate, localDateIn, previousDay, toLocalDate } from './date'
 
 describe('date helpers', () => {
   it('formats the device-local calendar date', () => {
@@ -27,5 +27,12 @@ describe('date helpers', () => {
     expect(localDateIn(instant, 'UTC')).toBe('2026-10-25')
     expect(localDateIn(instant, 'Asia/Phnom_Penh')).toBe('2026-10-26')
     expect(localDateIn(instant, 'America/Los_Angeles')).toBe('2026-10-25')
+  })
+
+  it('counts calendar days between YYYY-MM-DD dates across DST and leap years', () => {
+    expect(daysBetweenLocalDates('2026-10-24', '2026-10-24')).toBe(0)
+    expect(daysBetweenLocalDates('2026-11-24', '2026-10-24')).toBe(31)
+    expect(daysBetweenLocalDates('2028-03-01', '2028-02-28')).toBe(2)
+    expect(daysBetweenLocalDates('2026-10-20', '2026-10-24')).toBe(-4)
   })
 })

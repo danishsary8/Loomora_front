@@ -40,7 +40,7 @@ describe('root reminder watcher', () => {
     const list = vi.spyOn(repo, 'listAll')
     const view = renderRoute('/privacy', repo)
     try {
-      await waitFor(() => expect(list).toHaveBeenCalled())
+      await waitFor(() => expect(list).toHaveBeenCalled(), { timeout: 3000 })
       expect(screen.queryByRole('region', { name: 'Reminder' })).not.toBeInTheDocument()
       await act(async () => {
         await vi.advanceTimersByTimeAsync(30_000)

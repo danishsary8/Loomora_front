@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { daysBetweenLocalDates } from '@/lib/date'
 import type { LocalDate } from '@/features/todos/types'
 
 const KEY = 'loomora.savePlanDismissedOn'
@@ -23,5 +23,5 @@ export function writeDismissedOn(date: LocalDate) {
 
 export function isSnoozed(dismissedOn: LocalDate | null, today: LocalDate): boolean {
   if (!dismissedOn) return false
-  return differenceInCalendarDays(parseISO(today), parseISO(dismissedOn)) < RETURN_AFTER_DAYS
+  return daysBetweenLocalDates(today, dismissedOn) < RETURN_AFTER_DAYS
 }
