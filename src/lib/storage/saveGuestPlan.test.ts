@@ -1,4 +1,3 @@
-import { MAX_TODOS } from '@/features/todos/types'
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
@@ -159,18 +158,11 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     expect(isEmptyPlan(await readGuestPlan(guest))).toBe(true)
   })
 
-  it('frees capacity used by old tombstones after an intention-only import succeeds', async () => {
+  it('clears a soft-deleted to-do after an intention-only import succeeds', async () => {
     const todo = await guest.todos.create({ title: 'Old task' })
     await guest.todos.delete(todo.id)
-    const deleted = await db.todos.get(todo.id)
-    if (!deleted?.deleted_at) throw new Error('Expected a soft-deleted to-do')
-    await db.todos.bulkAdd(
-      Array.from({ length: MAX_TODOS - 1 }, () => ({ ...deleted, id: crypto.randomUUID() })),
-    )
+    expect((await db.todos.get(todo.id))?.deleted_at).toEqual(expect.any(String))
     await db.dailyIntentions.put({ date: '2026-11-19', text: 'One intention' })
-    await expect(guest.todos.create({ title: 'At capacity' })).rejects.toMatchObject({
-      field: 'title',
-    })
     let payload: ImportBody | undefined
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
@@ -181,10 +173,7 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
 
     await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
     expect(payload?.todos).toEqual([])
-    expect(await db.todos.count()).toBe(0)
-    await expect(guest.todos.create({ title: 'Room again' })).resolves.toMatchObject({
-      title: 'Room again',
-    })
+    expect(await db.todos.get(todo.id)).toBeUndefined()
   })
 
   it.each([200, 422])(

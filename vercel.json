@@ -7,6 +7,7 @@
     "deploymentEnabled": {
       "feat/QA-021-cross-browser-release-regression": false,
       "feat/QA-022-staging-integration-prep": false,
+      "feat/F-031-guest-repeat-capacity": false,
       "v2-rebuild": false
     }
   },

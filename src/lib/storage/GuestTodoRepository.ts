@@ -77,7 +77,6 @@ export class GuestTodoRepository implements TodoRepository {
   }
 
   async listForDate(date: LocalDate): Promise<TodayTodo[]> {
-    // R1 caps guests at 500 to-dos, so filtering in memory is fine.
     const all = await (await this.open()).todos.toArray()
     return buildTodayList(all, date)
   }
@@ -136,7 +135,9 @@ export class GuestTodoRepository implements TodoRepository {
       if (parent?.parent_id)
         throw new ValidationError('parent_id', 'Subtasks cannot have subtasks.')
       if (parent) checkSubtaskFields(input)
-      await this.checkCapacity(db, 1)
+      const activeCount = await db.todos.filter((row) => !row.deleted_at).count()
+      if (activeCount >= MAX_TODOS)
+        throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
 
       const row: Todo = {
         id: newId(),
@@ -268,11 +269,6 @@ export class GuestTodoRepository implements TodoRepository {
     })
   }
 
-  private async checkCapacity(db: GuestDatabase, added: number): Promise<void> {
-    if ((await db.todos.count()) + added > MAX_TODOS)
-      throw new ValidationError('title', `You can keep at most ${MAX_TODOS} to-dos.`)
-  }
-
   private async createNext(
     db: GuestDatabase,
     parent: Todo,
@@ -281,8 +277,7 @@ export class GuestTodoRepository implements TodoRepository {
     stamp: string,
     subtasks: Todo[],
   ): Promise<string> {
-    // Check capacity for the whole occurrence inside the completion transaction.
-    await this.checkCapacity(db, 1 + subtasks.length)
+    // Repeat completion follows backend decision I5, which allows successors at capacity.
     const id = newId()
     // Date-only ISO strings use UTC midnight, so this delta counts whole days across DST.
     const shift = Date.parse(dueDate) - Date.parse(previousDueDate)

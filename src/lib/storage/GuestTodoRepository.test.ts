@@ -314,7 +314,8 @@ describe('GuestTodoRepository', () => {
       ).resolves.toMatchObject({ due_date: null, repeat_rule: null })
     })
 
-    it('copies active subtasks with new IDs, preserves their order and reuses the next ID', async () => {
+    it('completes a repeat at capacity and copies its active subtasks and reminder only once', async () => {
+      repo = new GuestTodoRepository({ db, now: () => clock, timeZone: 'Asia/Phnom_Penh' })
       const parent = await repo.create({
         title: 'Repeat',
         category: 'work',
@@ -322,6 +323,7 @@ describe('GuestTodoRepository', () => {
         priority: 'high',
         notes: 'Parent notes',
         repeat_rule: daily,
+        remind_at: '2026-10-24T07:00:00Z',
       })
       const child = await repo.create({
         title: 'First',
@@ -334,6 +336,17 @@ describe('GuestTodoRepository', () => {
       const deleted = await repo.create({ title: 'Deleted', parent_id: parent.id })
       await repo.delete(deleted.id)
       await repo.setDone(child.id, true)
+      await repo.dismissReminder(parent.id)
+      clock = new Date('2026-10-24T10:00:00Z')
+      await db.todos.bulkAdd(
+        Array.from({ length: MAX_TODOS - 3 }, (_, i) => ({
+          ...child,
+          id: `seed-${i}`,
+          parent_id: null,
+          due_date: '2026-10-26',
+        })),
+      )
+      expect(await db.todos.filter((row) => !row.deleted_at).count()).toBe(MAX_TODOS)
       const [firstSave, concurrentSave] = await Promise.all([
         repo.setDone(parent.id, true),
         repo.setDone(parent.id, true),
@@ -341,9 +354,16 @@ describe('GuestTodoRepository', () => {
       const nextId = firstSave.next_todo_id
       expect(nextId).toMatch(UUID_V4)
       expect(concurrentSave.next_todo_id).toBe(nextId)
+      expect(firstSave).toMatchObject({
+        done_at: clock.toISOString(),
+        subtasks: [
+          { id: child.id, done_at: '2026-10-24T09:00:00.000Z' },
+          { id: second.id, done_at: clock.toISOString() },
+        ],
+      })
       await repo.setDone(parent.id, false)
       expect((await repo.setDone(parent.id, true)).next_todo_id).toBe(nextId)
-      expect(await db.todos.count()).toBe(7)
+      expect(await db.todos.count()).toBe(MAX_TODOS + 4)
       const [next] = await repo.listForDate('2026-10-25')
       expect(next).toMatchObject({
         id: nextId,
@@ -354,7 +374,8 @@ describe('GuestTodoRepository', () => {
         repeat_rule: daily,
         done_at: null,
         next_todo_id: null,
-        remind_at: null,
+        remind_at: '2026-10-25T07:00:00.000Z',
+        remind_dismissed_at: null,
         subtasks: [
           {
             title: child.title,
@@ -371,24 +392,20 @@ describe('GuestTodoRepository', () => {
       expect(next?.subtasks[1]?.id).not.toBe(second.id)
     })
 
-    it('rolls back the parent and subtask completion when the full copy would exceed the limit', async () => {
+    it('rolls back the successor and subtask completion when saving the parent fails', async () => {
       const parent = await repo.create({
         title: 'Repeat',
         repeat_rule: daily,
         due_date: '2026-10-24',
       })
       const child = await repo.create({ title: 'Child', parent_id: parent.id })
-      await db.todos.bulkAdd(
-        Array.from({ length: MAX_TODOS - 3 }, (_, i) => ({
-          ...child,
-          id: `seed-${i}`,
-          parent_id: null,
-        })),
-      )
-      await expect(repo.setDone(parent.id, true)).rejects.toBeInstanceOf(ValidationError)
+      db.todos.hook('updating', (_changes, key) => {
+        if (key === parent.id) throw new Error('Parent write failed')
+      })
+      await expect(repo.setDone(parent.id, true)).rejects.toThrow('Parent write failed')
       expect(await db.todos.get(parent.id)).toEqual(parent)
       expect(await db.todos.get(child.id)).toEqual(child)
-      expect(await db.todos.count()).toBe(MAX_TODOS - 1)
+      expect(await db.todos.count()).toBe(2)
     })
 
     it('migrates a v4 soft-deleted child in place, preserving parent, notes and priority', async () => {
@@ -448,7 +465,7 @@ describe('GuestTodoRepository', () => {
       await expectInvalid(repo.create({ title: 'x', due_date: '2026-02-30' }), 'due_date')
     })
 
-    it(`allows at most ${MAX_TODOS} to-dos`, async () => {
+    it(`caps manual creation at ${MAX_TODOS} active to-dos and ignores soft-deleted rows`, async () => {
       const stamp = clock.toISOString()
       const rows: Todo[] = Array.from({ length: MAX_TODOS }, (_, i) => ({
         id: `seed-${i}`,
@@ -468,6 +485,14 @@ describe('GuestTodoRepository', () => {
       await db.todos.bulkAdd(rows)
       await expectInvalid(repo.create({ title: 'One too many' }), 'title')
       expect(await db.todos.count()).toBe(MAX_TODOS)
+
+      await repo.delete('seed-0')
+      await expect(repo.create({ title: 'Replacement' })).resolves.toMatchObject({
+        title: 'Replacement',
+      })
+      await expectInvalid(repo.create({ title: 'One too many again' }), 'title')
+      expect(await repo.listAll()).toHaveLength(MAX_TODOS)
+      expect(await repo.listAll({ includeDeleted: true })).toHaveLength(MAX_TODOS + 1)
     })
   })
 })
