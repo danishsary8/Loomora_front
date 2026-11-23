@@ -199,7 +199,9 @@ export class GuestTodoRepository implements TodoRepository {
       const updated = { ...current, done_at: doneAt, updated_at: stamp }
       if (!current.parent_id && doneAt) {
         const subtasks = await this.activeSubtasks(db, id)
-        if (current.repeat_rule && current.due_date && !current.next_todo_id) {
+        // Older guest plans may still link to a successor that was soft-deleted.
+        const successor = current.next_todo_id ? await db.todos.get(current.next_todo_id) : null
+        if (current.repeat_rule && current.due_date && (!successor || successor.deleted_at)) {
           updated.next_todo_id = await this.createNext(
             db,
             current,
@@ -259,6 +261,9 @@ export class GuestTodoRepository implements TodoRepository {
       const deleted = { ...current, deleted_at: stamp, updated_at: stamp }
       await db.todos.put(deleted)
       if (!current.parent_id) {
+        await db.todos
+          .filter((row) => !row.deleted_at && row.next_todo_id === id)
+          .modify({ next_todo_id: null, updated_at: stamp })
         await db.todos
           .where('parent_id')
           .equals(id)

@@ -166,6 +166,7 @@ describe('GuestTodoRepository', () => {
     const first = await repo.create({ title: 'First', parent_id: parent.id })
     clock = new Date('2026-10-24T09:00:00.000Z')
     const second = await repo.create({ title: 'Second', parent_id: parent.id })
+    await repo.update(first.id, { title: 'First edited', priority: 'high', notes: 'First note' })
     const checked = await repo.setDone(first.id, true)
     clock = new Date('2026-10-24T10:00:00.000Z')
     await repo.setDone(parent.id, true)
@@ -177,6 +178,9 @@ describe('GuestTodoRepository', () => {
         subtasks: [
           expect.objectContaining({
             id: first.id,
+            title: 'First edited',
+            priority: 'high',
+            notes: 'First note',
             category: 'work',
             due_date: null,
             done_at: checked.done_at,
@@ -391,6 +395,41 @@ describe('GuestTodoRepository', () => {
       expect(next?.subtasks[0]?.id).not.toBe(child.id)
       expect(next?.subtasks[1]?.id).not.toBe(second.id)
     })
+
+    it.each(['new deletion', 'existing tombstone'])(
+      'allows one replacement for a deleted successor (%s)',
+      async (scenario) => {
+        const parent = await repo.create({
+          title: 'Daily',
+          due_date: '2026-10-24',
+          repeat_rule: daily,
+        })
+        const first = await repo.setDone(parent.id, true)
+        const original = first.next_todo_id
+        if (!original) throw new Error('The first check-off did not create a successor')
+
+        if (scenario === 'existing tombstone') {
+          await db.todos.update(original, { deleted_at: clock.toISOString() })
+        } else {
+          await repo.delete(original)
+          expect(await db.todos.get(parent.id)).toMatchObject({ next_todo_id: null })
+        }
+
+        await repo.setDone(parent.id, false)
+        const [completed, repeated] = await Promise.all([
+          repo.setDone(parent.id, true),
+          repo.setDone(parent.id, true),
+        ])
+        expect(completed.next_todo_id).toMatch(UUID_V4)
+        expect(completed.next_todo_id).not.toBe(original)
+        expect(repeated.next_todo_id).toBe(completed.next_todo_id)
+        expect((await repo.listAll()).map(({ id }) => id)).toEqual(
+          expect.arrayContaining([parent.id, completed.next_todo_id]),
+        )
+        expect(await repo.listAll()).toHaveLength(2)
+        expect(await db.todos.get(original)).toMatchObject({ deleted_at: clock.toISOString() })
+      },
+    )
 
     it('rolls back the successor and subtask completion when saving the parent fails', async () => {
       const parent = await repo.create({
