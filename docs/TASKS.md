@@ -682,3 +682,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Full iOS safe areas (`top`, `bottom`, `left`, `right`), 320–1440 px responsive nav switching, 44 px touch targets, and 200% text scaling verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, `git diff --check`, layout unit tests, and 18/18 viewport checks pass.
 - **Files:** `src/app/layout/AppLayout.tsx`, `src/app/layout/TopBar.tsx`, `src/app/layout/BottomNav.tsx`, `src/app/layout/Sidebar.tsx`, `src/app/layout/OfflineBanner.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/PwaUpdateBanner.tsx`, `src/app/layout/AppShell.test.tsx`, `src/components/page/PageHeading.tsx`, `src/components/states/LoadingState.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-02A — Deterministic Focus Timer Core
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
+- **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
+- **Follow-up:** Focus runtime owns lifecycle, persisted snapshots, cross-tab coordination, and finalization. Session API work follows the approved backend contract. See the [progress entry](PROGRESS.md#2026-11-23-f-r3-02a--deterministic-focus-timer-core) for open decisions.
