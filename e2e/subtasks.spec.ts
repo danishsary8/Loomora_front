@@ -16,6 +16,7 @@ test('guest adds and completes subtasks, with progress, persistence and accessib
   await page.getByRole('button', { name: 'Add a to-do' }).click()
   const sheet = page.getByRole('dialog')
   await sheet.getByLabel('Title').fill('Read chapter 3')
+  await sheet.getByRole('button', { name: 'More options' }).click()
   await sheet.getByLabel('Priority').selectOption('high')
   await sheet.getByLabel('Notes', { exact: true }).fill('Use the library copy.')
   await sheet.getByRole('button', { name: 'Add', exact: true }).click()

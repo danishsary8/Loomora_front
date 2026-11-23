@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input } from '@/components/ui'
 import { ClockInput } from '@/components/ui/ClockInput'
@@ -27,6 +27,7 @@ export interface ScheduleFormProps {
   /** Throw a ValidationError to show its message on the matching field. */
   onSubmit: (values: ScheduleFormValues) => Promise<void>
   onDelete?: () => void
+  titleRef?: RefObject<HTMLInputElement>
 }
 
 type Errors = Partial<Record<'title' | 'time' | 'days' | 'form', string>>
@@ -38,10 +39,13 @@ export function ScheduleForm({
   submitLabel,
   onSubmit,
   onDelete,
+  titleRef: externalTitleRef,
 }: ScheduleFormProps) {
   const { t } = useTranslation()
   const { values: preferences } = useTimePreferences()
-  const titleRef = useRef<HTMLInputElement>(null)
+  const internalTitleRef = useRef<HTMLInputElement>(null)
+  const titleRef = externalTitleRef ?? internalTitleRef
+  const startTimeRef = useRef<HTMLInputElement>(null)
   const [values, setValues] = useState(initial)
   const [timeDraft, setTimeDraft] = useState<
     Partial<Pick<ScheduleFormValues, 'start_time' | 'end_time'>>
@@ -93,6 +97,7 @@ export function ScheduleForm({
     setErrors(found)
     if (Object.keys(found).length > 0) {
       if (found.title) titleRef.current?.focus()
+      else if (found.time) startTimeRef.current?.focus()
       return
     }
     setSaving(true)
@@ -105,7 +110,7 @@ export function ScheduleForm({
   }
 
   return (
-    <form noValidate onSubmit={submit} className="flex flex-col gap-5">
+    <form noValidate onSubmit={submit} className="flex flex-col gap-4">
       <Input
         ref={titleRef}
         label={t('scheduleForm.title')}
@@ -113,12 +118,14 @@ export function ScheduleForm({
         value={values.title}
         maxLength={200}
         autoComplete="off"
+        enterKeyHint="done"
         error={errors.title}
         onChange={(e) => change({ title: e.target.value }, 'title')}
       />
-      <div className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-2 gap-3 [&>div]:min-w-0">
+      <div className="flex flex-col gap-2 rounded-md border-hairline border-border-subtle bg-subtle/40 p-3.5">
+        <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 [&>div]:min-w-0">
           <ClockInput
+            ref={startTimeRef}
             label={t('scheduleForm.start')}
             format={preferences.time_format}
             wallTime={values.start_time}
@@ -142,7 +149,7 @@ export function ScheduleForm({
       {!onlyToday && (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-bold">{t('scheduleForm.repeat')}</legend>
+            <legend className="mb-2 text-sm font-bold text-ink">{t('scheduleForm.repeat')}</legend>
             <div className="flex flex-wrap gap-1.5">
               {orderedWeekdays(preferences.week_starts_on).map((day) => (
                 <DayToggle
@@ -161,7 +168,7 @@ export function ScheduleForm({
             )}
           </fieldset>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-bold">{t('todoForm.category')}</legend>
+            <legend className="mb-2 text-sm font-bold text-ink">{t('todoForm.category')}</legend>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
                 <Chip
@@ -178,18 +185,23 @@ export function ScheduleForm({
         </>
       )}
       {errors.form && (
-        <p role="alert" className="font-semibold text-danger">
+        <p
+          role="alert"
+          className="rounded-sm border-control border-danger/30 bg-danger/5 px-3 py-2 text-sm font-semibold text-danger"
+        >
           {errors.form}
         </p>
       )}
-      <Button type="submit" size="lg" fullWidth disabled={saving}>
-        {saving ? t('scheduleForm.saving') : submitLabel}
-      </Button>
-      {onDelete && (
-        <Button variant="danger" fullWidth onClick={onDelete}>
-          {t('scheduleForm.delete')}
+      <div className="mt-1 flex flex-col gap-2.5">
+        <Button type="submit" size="lg" fullWidth disabled={saving}>
+          {saving ? t('scheduleForm.saving') : submitLabel}
         </Button>
-      )}
+        {onDelete && (
+          <Button variant="danger" fullWidth onClick={onDelete}>
+            {t('scheduleForm.delete')}
+          </Button>
+        )}
+      </div>
     </form>
   )
 }

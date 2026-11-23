@@ -92,6 +92,7 @@ describe('Today screen', () => {
       await openToday()
       await userEvent.click(await screen.findByRole('button', { name: 'Add a to-do' }))
       const dialog = within(screen.getByRole('dialog'))
+      await userEvent.click(dialog.getByRole('button', { name: 'More options' }))
       const repeat = dialog.getByRole('combobox', { name: 'Repeat' })
       expect(repeat).toHaveDisplayValue('None')
       await userEvent.type(dialog.getByLabelText('Title'), 'Gym')

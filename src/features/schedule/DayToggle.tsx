@@ -17,8 +17,10 @@ export function DayToggle({ label, text, selected, onClick }: DayToggleProps) {
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'min-h-touch min-w-touch flex-1 select-none rounded-md border-thick border-ink px-1 text-sm font-bold',
-        selected ? 'bg-ink text-cream' : 'bg-paper text-ink',
+        'min-h-touch min-w-touch flex-1 select-none rounded-sm border-control px-2 text-sm font-semibold transition-[background-color,color,border-color,box-shadow] duration-fast ease-elemental',
+        selected
+          ? 'border-primary bg-primary text-white shadow-soft-sm'
+          : 'border-border-control bg-paper text-ink hover:bg-subtle',
         pressSm,
       )}
     >
