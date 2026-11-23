@@ -707,3 +707,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `AddTodoSheet.test.tsx` added; unit and Playwright `phone-375` E2E suites pass; 320–1440 px (`0 px` overflow) and 200% text scaling verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/ScheduleForm.tsx`, `src/features/schedule/ScheduleItemSheet.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/today/AddTodoSheet.test.tsx`, `src/features/today/TodayPage.tsx`, `src/features/today/TodayPage.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/offline-todos.spec.ts`, `e2e/r2-account.spec.ts`, `e2e/reminders.spec.ts`, `e2e/repeat.spec.ts`, `e2e/subtasks.spec.ts`, `vercel.json`, `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-01 — Focus session repository and API integration
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Merged B-043 contract from backend PR #47 and frontend base including PR #55.
+- **Acceptance:** Guest and account repositories record finished sessions, retrieve one by UUID, and list by starting local date. Millisecond precision, owner-scoped retries, and all existing guest data survive reload and schema upgrade.
+- **Follow-up:** Focus runtime will allocate and persist the UUID at timer start and call the repository on finalization. Transferring guest Focus history requires an approved import policy.

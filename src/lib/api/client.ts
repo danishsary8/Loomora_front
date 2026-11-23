@@ -17,7 +17,7 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** Send the bearer token (default true). */
   auth?: boolean
-  expectedStatus?: number
+  expectedStatus?: number | readonly number[]
   /** Let the caller show a failure without clearing the session on a 401. */
   preserveSessionOnUnauthorized?: boolean
   /** An optional capability can return 503 while the rest of the API is healthy. */
@@ -97,7 +97,11 @@ export function createApiClient({
 
     const data = await readBody(response)
     signal?.throwIfAborted()
-    if (response.ok && (expectedStatus === undefined || response.status === expectedStatus)) {
+    const expected =
+      typeof expectedStatus === 'number'
+        ? response.status === expectedStatus
+        : (expectedStatus?.includes(response.status) ?? true)
+    if (response.ok && expected) {
       return data as T
     }
 

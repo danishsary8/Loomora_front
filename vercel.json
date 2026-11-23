@@ -14,6 +14,7 @@
       "feat/UX-005-elemental-app-shell": false,
       "feat/F-R3-02A-focus-timer-core": false,
       "feat/UX-006-elemental-quick-add": false,
+      "feat/F-R3-01-focus-session-repository": false,
       "v2-rebuild": false
     }
   },
