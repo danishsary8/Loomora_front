@@ -854,6 +854,18 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
 - **Tests:** Expanded `src/components/ui/Sheet.test.tsx` (9/9) with root-level notification region isolation/restoration and overlapping multi-sheet ref-counting tests; aligned `e2e/pwa.spec.ts` (5/5) to verify `#root` `inert` modal isolation while the sheet is open, restoration on close, and unsaved-draft confirmation on `GuestPreferencesCard`.
 - **Verified:** Clean `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid), `git diff --check`, `Sheet.test.tsx` (9/9), `pwaUpdate.test.tsx` (9/9), `e2e/pwa.spec.ts` (5/5), and full GitHub Actions CI (`Lint, typecheck, test, build` + `End-to-end (375 px)`).
 
+### 2026-11-24: UX-005 Elemental Edition app shell & navigation
+
+- **Base & Isolation:** Branched `feat/UX-005-elemental-app-shell` from `origin/v2-rebuild` (`4544b8e`, PR #54 `UX-004`) in isolated worktree `loomora-front-UX-005`. `RootLayout.tsx`, `src/features/focus/*`, repositories, API clients, Dexie, and Codex worktrees untouched.
+- **Changed:**
+  - `src/app/layout/AppLayout.tsx`, `TopBar.tsx`, `BottomNav.tsx`, `Sidebar.tsx`: Restyled the mobile/tablet/desktop app shell to Elemental Edition — frosted elevated paper `BottomNav` (`1 px` `#E1E8E1` border, `shadow-soft-sheet`, full iOS `bottom/left/right` safe areas), `TopBar` with `env(safe-area-inset-top/left/right)` and refined forest-tinted active Profile avatar, `Sidebar` with `1 px` hairline divider and `bg-primary-soft text-primary` active states.
+  - `src/app/layout/OfflineBanner.tsx`, `ServiceDownBanner.tsx`, `PwaUpdateBanner.tsx`: Replaced legacy `category-work`/`category-study` thick-bordered banners with semantic `warning-surface`/`warning` and `primary-soft` Elemental banners.
+  - `src/components/page/PageHeading.tsx`, `src/components/states/LoadingState.tsx`: Refined heading scale (`font-heading text-4xl`) and soft Elemental skeleton cards.
+  - `src/app/layout/AppShell.test.tsx`, `vercel.json`, `docs/TASKS.md`: Added shell active-state/avatar unit tests, disabled auto Vercel deploys for `feat/UX-005-elemental-app-shell`, and marked `UX-004` done / `UX-005` review.
+- **Verified:**
+  - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid), `git diff --check`, and `src/app/layout/` unit tests: all passed.
+  - 6-viewport responsive shell sweep (`320, 375, 390, 768, 1024, 1440 px` × `/today, /week, /profile`): **18/18 passed** (`0 px` overflow, exact `BottomNav`/`Sidebar` breakpoint switching, `0` page errors) + 200% text scaling at 375 px (`0 px` overflow) + 375 px & 1440 px screenshots inspected.
+
 ### 2026-11-23 F-R3-02A — Deterministic Focus Timer Core
 
 - **Changed:** Added `src/features/focus/timerMath.ts` and its deterministic Vitest suite on a dedicated worktree from `ad168e8` (merged PRs #51 and #53). Added a Vercel auto-deployment opt-out for this task branch so the PR can run GitHub Actions without a preview deployment.
@@ -872,3 +884,8 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
 
 - Merged `origin/v2-rebuild` at `4544b8e` (UX-004, PR #54) into the existing F-R3-02A branch for PR #55. Kept both task and progress records and both branch-specific Vercel opt-outs. The timer implementation and tests match the original PR head byte for byte.
 - Clean `npm ci`, lint, Knip, formatting, typecheck, production build, Git whitespace checks, and all 79 `phone-375` Playwright tests passed. The production audit found zero vulnerabilities, and Redocly reported the same four warnings. Full Windows Vitest passed 704 of 707 tests on the first run, including all Focus cases. The Profile, auth, and session failures passed on a one-worker rerun. A different Profile case hit its five-second timeout on that rerun and passed when run alone after Playwright finished.
+
+#### Integration with UX-005
+
+- Merged `origin/v2-rebuild` at `87c34e0` (UX-005, PR #56) into the existing F-R3-02A branch for PR #55. Preserved the task and progress entries for both changes and their Vercel preview opt-outs. The timer implementation and its 42 tests match the previous PR head byte for byte.
+- Clean `npm ci`, lint, Knip, formatting, typecheck, production build, Git whitespace checks, and all 79 `phone-375` Playwright tests passed. Full Windows Vitest passed 709 tests across 65 files with a three-worker limit and one retry allowed. The production audit found zero vulnerabilities, and Redocly reported four existing warnings.

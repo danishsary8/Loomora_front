@@ -10,7 +10,7 @@ export function OfflineBanner() {
   return (
     <div role="status" aria-live="polite">
       {!online && (
-        <p className="border-b-thick border-ink bg-category-work px-4 py-2 text-center text-sm font-bold">
+        <p className="border-b border-warning/20 bg-warning-surface px-4 py-2 text-center text-sm font-semibold text-warning">
           {t(signedIn ? 'offline.bannerAccount' : 'offline.banner')}
         </p>
       )}

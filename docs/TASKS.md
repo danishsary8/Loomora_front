@@ -652,9 +652,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-004: Elemental Edition shared UI primitives, unified icons & accessible sheets
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52) and `UX-003` foundation (PR #53 @ `ad168e8`).
+- **Merge:** [PR #54](https://github.com/danishsary8/Loomora_front/pull/54) at `4544b8e`.
 - **Plan:**
   1. Branch `feat/UX-004-elemental-ui-primitives` from `origin/v2-rebuild` (`ad168e8`) in isolated worktree `loomora-front-UX-004` without touching `RootLayout.tsx`, Focus logic, repositories, or Codex/retired worktrees.
   2. Migrate shared primitives (`Button`/`buttonStyles`, `Card`, `Chip`, `Checkbox`, `fieldClasses`, `Input`, `Textarea`, `ClockInput`, `ProgressRing`, `Toast`, `FloatingAddButton`, `press.ts`) to Elemental Edition (`#1D5039` forest primary, `#FCFBF8` elevated paper, `#E1E8E1` hairlines, `#7B8C82` control borders, `8/14/22 px` radii, soft elevation) while preserving all existing props, translations, behavior, and the 6 documented category hexes pending original reference assets.
@@ -666,6 +667,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `Sheet` enforces focus trap/restoration, `aria-modal`, safe-area padding, and scoped `inert`/`aria-hidden` background blocking without interfering with `PwaUpdateBanner`.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, full Vitest, `build`, `phone-375` Playwright (79/79), 320–1440 px sweep, 200% text scaling, reduced motion, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/components/ui/*`, `src/features/styleguide/StyleguidePage.tsx`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-005: Elemental Edition app shell & navigation
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-003` (PR #53), and `UX-004` (PR #54 @ `4544b8e`).
+- **Plan:**
+  1. Branch `feat/UX-005-elemental-app-shell` from `origin/v2-rebuild` (`4544b8e`) in isolated worktree `loomora-front-UX-005` without touching `RootLayout.tsx`, `src/features/focus/*`, repositories, API clients, Dexie, or Codex worktrees.
+  2. Restyle `AppLayout`, `TopBar`, `BottomNav`, `Sidebar`, `OfflineBanner`, `ServiceDownBanner`, `PwaUpdateBanner`, `PageHeading`, and `LoadingState` to Elemental Edition (frosted paper bottom nav with `1 px` `#E1E8E1` border & soft sheet shadow, `bg-primary-soft text-primary` active navigation states, semantic `warning-surface`/`warning` status banners, full iOS top/bottom/side safe areas).
+  3. Add `src/app/layout/AppShell.test.tsx`, verify 320–1440 px responsive navigation, 200% text scaling, reduced motion, 375 px & 1440 px screenshots, static/security/OpenAPI checks, and full GitHub Actions CI.
+- **Done when:**
+  - [x] `TopBar`, `BottomNav`, `Sidebar`, `AppLayout`, status banners, `PageHeading`, and `LoadingState` follow `DEC-003` with zero behavior or route regressions.
+  - [x] Full iOS safe areas (`top`, `bottom`, `left`, `right`), 320–1440 px responsive nav switching, 44 px touch targets, and 200% text scaling verified.
+  - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, `git diff --check`, layout unit tests, and 18/18 viewport checks pass.
+- **Files:** `src/app/layout/AppLayout.tsx`, `src/app/layout/TopBar.tsx`, `src/app/layout/BottomNav.tsx`, `src/app/layout/Sidebar.tsx`, `src/app/layout/OfflineBanner.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/PwaUpdateBanner.tsx`, `src/app/layout/AppShell.test.tsx`, `src/components/page/PageHeading.tsx`, `src/components/states/LoadingState.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-R3-02A — Deterministic Focus Timer Core
 
