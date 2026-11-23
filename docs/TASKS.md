@@ -731,3 +731,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Full Vitest (**714/714** across 66 files) and Playwright `phone-375` (**80/80**) pass; 320–1440 px (`0 px` overflow) and 200% text scaling at 375 px (`0 px` overflow) verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-02B — Focus timer runtime and recovery
+
+- **Status:** review
+- **Owner:** codex
+- **Prerequisites:** F-R3-02A timer math and F-R3-01 Focus repositories are merged. B-043 supplies the finished-session API contract.
+- **Scope:** Implement countdown and stopwatch lifecycle, durable recovery, cross-tab and account isolation, and idempotent finalization through the existing Focus repositories.
+- **Approved behavior:** [DEC-004](DECISIONS.md#dec-004-focus-timer-runtime-and-recovery-2026-11-24).
