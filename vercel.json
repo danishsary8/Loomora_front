@@ -9,6 +9,7 @@
       "feat/QA-022-staging-integration-prep": false,
       "feat/F-031-guest-repeat-capacity": false,
       "feat/QA-023-r2-parity": false,
+      "feat/UX-003-elemental-design-foundation": false,
       "v2-rebuild": false
     }
   },
@@ -24,7 +25,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-f5dF16tVBt10PewzxCqqrvCGvvv2PnzQeGugOFK59oQ='; img-src 'self'; font-src 'self'; connect-src 'self' https://loomora-api.onrender.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-n8m+JR7H5jNX0RAhTH5VNyd/9a9y7cErnSXB6ERWgZU='; img-src 'self'; font-src 'self'; connect-src 'self' https://loomora-api.onrender.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
         {
           "key": "X-Content-Type-Options",

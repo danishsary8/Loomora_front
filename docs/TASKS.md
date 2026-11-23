@@ -607,9 +607,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-002: Elemental Edition design decision (DEC-003, docs-only)
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Owner approval (2026-11-23) following read-only `UX-001` Elemental Edition UI/UX audit.
+- **Merge:** [PR #52](https://github.com/danishsary8/Loomora_front/pull/52) at `a45d3f6`.
 - **Plan:**
   1. Fetch `origin/v2-rebuild` (`b84a977`), inspect existing unmerged local `EL-01` and `UI-01` worktrees read-only without modifying or reusing them, and branch `feat/UX-002-elemental-design-decision` in isolated worktree `loomora-front-UX-002`.
   2. Record `DEC-003` in `docs/DECISIONS.md` superseding `DEC-001`/`DEC-002` with WCAG 2.2 AA-verified Elemental Edition tokens reconciled with the `EL-01` alignment record, self-hosted Inter typography, 6 pastel category colors, safe-area rules, and single-theme / R1–R4 guardrails.
@@ -630,3 +631,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Outstanding R2 import blocker:** Full-plan import remains blocked when repeat-generated rows exceed the request limit or available account capacity. The planner separated this work from PR #51. The existing 500-active-row manual-creation limit and failed-import recovery are preserved.
 - **Backend follow-up:** [Proposed B-043](PROGRESS.md#proposed-b-043-lossless-import-of-repeat-generated-todos) covers capacity, atomicity, UUID references, retries, and lossless guest recovery. The ID is provisional pending backend assignment.
 - **Evidence:** [QA-023 parity matrix](PROGRESS.md#2026-11-23-qa-023-r2-guestaccount-parity-verification) and [planner review](PROGRESS.md#2026-11-23-qa-023-planner-review).
+
+### UX-003: Elemental Edition design foundation (tokens, typography, base styles)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52 @ `a45d3f6`).
+- **Plan:**
+  1. Branch `feat/UX-003-elemental-design-foundation` from `origin/v2-rebuild` (`a45d3f6`) in isolated worktree `loomora-front-UX-003` without touching `EL-01`, `UI-01`, `UX-002`, or Codex `QA-023`.
+  2. Replace `@fontsource-variable/caveat` and `@fontsource-variable/space-grotesk` with self-hosted `@fontsource-variable/inter` (updating `knip.json`).
+  3. Update `src/styles/tokens.ts`, `tailwind.config.ts`, `src/styles/index.css`, `index.html`, `vite.config.ts`, and `vercel.json` (CSP boot-style SHA-256 hash) with approved `DEC-003` colors, borders, radii, elevation, motion tokens, `scroll-padding-bottom`, and `-0.025em` display heading tracking (fixing 320 px `/` overflow), while preserving the 6 documented category hexes pending reconciliation against missing reference assets.
+  4. Expand `src/styles/tokens.test.ts` for WCAG 2.2 AA text (`>= 4.5:1`) and non-text control border (`>= 3:1`) contrast, run all required checks + 320–1440 px viewport verification, and update `docs/TASKS.md`, `docs/PROGRESS.md`, and `docs/screenshots/styleguide-375.png`.
+- **Done when:**
+  - [x] Approved `DEC-003` palette, borders, radii, elevation, motion tokens, and self-hosted Inter variable font wired cleanly with zero duplicate token systems.
+  - [x] Offline font precaching, PWA manifest theme/background (`#F7F5EF`), and `vercel.json` CSP inline boot-style SHA-256 hash verified.
+  - [x] 6 documented category identities preserved without guessing unverified pastel hexes (blocker recorded pending original reference assets).
+  - [x] `lint`, `typecheck`, `knip`, `format:check` (`--end-of-line auto`), full Vitest suite, `build`, `phone-375` Playwright (78/78), Redocly OpenAPI lint, `git diff --check`, and 320–1440 px zero-overflow verification pass.
+- **Files:** `package.json`, `package-lock.json`, `knip.json`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `tailwind.config.ts`, `src/styles/index.css`, `index.html`, `vite.config.ts`, `vercel.json`, `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
