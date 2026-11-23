@@ -39,6 +39,7 @@ test('guest save survives an offline reload and reconnect without duplicates', a
   const sheet = page.getByRole('dialog', { name: 'Add a to-do' })
   const date = await sheet.getByLabel('Due date (optional)').inputValue()
   await sheet.getByLabel('Title').fill(title)
+  await sheet.getByRole('button', { name: 'More options' }).click()
   await sheet.getByLabel('Notes', { exact: true }).fill(notes)
   await sheet.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(sheet).toBeHidden()

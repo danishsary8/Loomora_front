@@ -18,6 +18,7 @@ test('a mobile guest can set, snooze and persistently dismiss a reminder', async
   const sheet = page.getByRole('dialog')
   await expect(sheet.getByLabel('Title')).toBeFocused()
   await sheet.getByLabel('Title').fill('Call the bank')
+  await sheet.getByRole('button', { name: 'More options' }).click()
   await sheet.getByLabel('Reminder date', { exact: true }).fill('2026-11-20')
   await sheet.getByLabel('Reminder time', { exact: true }).fill('00:01')
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375)

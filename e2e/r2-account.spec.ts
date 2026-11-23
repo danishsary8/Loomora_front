@@ -159,6 +159,7 @@ test('account Today uses the account date and renders the API repeat lifecycle',
   const sheet = page.getByRole('dialog')
   await expect(sheet.getByLabel('Due date (optional)')).toHaveValue(today)
   await sheet.getByLabel('Title').fill(created.title)
+  await sheet.getByRole('button', { name: 'More options' }).click()
   await sheet.getByLabel('Priority').selectOption('high')
   await sheet.getByLabel('Notes', { exact: true }).fill(notes)
   await sheet.getByRole('combobox', { name: 'Repeat' }).selectOption('weekly')

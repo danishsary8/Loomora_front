@@ -45,6 +45,7 @@ test('daily repeat creates tomorrow once and persists on mobile', async ({ page 
   await page.keyboard.type('Daily reading')
   const due = sheet.getByLabel('Due date (optional)')
   await expect(due).toHaveValue('2026-11-19')
+  await sheet.getByRole('button', { name: 'More options' }).click()
   const repeat = sheet.getByRole('combobox', { name: 'Repeat' })
   await expect(repeat).toHaveValue('none')
   await repeat.focus()

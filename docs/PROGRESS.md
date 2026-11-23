@@ -865,3 +865,20 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
 - **Verified:**
   - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid), `git diff --check`, and `src/app/layout/` unit tests: all passed.
   - 6-viewport responsive shell sweep (`320, 375, 390, 768, 1024, 1440 px` × `/today, /week, /profile`): **18/18 passed** (`0 px` overflow, exact `BottomNav`/`Sidebar` breakpoint switching, `0` page errors) + 200% text scaling at 375 px (`0 px` overflow) + 375 px & 1440 px screenshots inspected.
+
+### 2026-11-24: UX-006 Elemental Quick Add & Form Experience
+
+- **Base & Isolation:** Branched `feat/UX-006-elemental-quick-add` from `origin/v2-rebuild` (`87c34e0`, PR #56 `UX-005`) in isolated worktree `loomora-front-UX-006`. Focus logic, timer math, API clients, repositories, Dexie, and Codex worktrees untouched.
+- **Changed:**
+  - `src/components/ui/icons.tsx`: Added `ChevronDownIcon` (`1.75 px` round-cap stroke) for progressive disclosure.
+  - `src/features/schedule/DayToggle.tsx`: Migrated from legacy neo-brutalist thick black borders to Elemental Edition (`border-control`, `bg-primary text-white` selected, `bg-paper text-ink` unselected, `duration-fast ease-elemental`).
+  - `src/features/today/AddTodoSheet.tsx`: Reordered primary quick-add fields (`Title`, `Due date`, `Category`) above a collapsible `More options` disclosure (`Remind me`, `Repeat`, `Priority`, `Notes` using UX-004 `Textarea`). Displays active option count when collapsed, auto-opens when editing a to-do with advanced fields or on validation errors, and shows `Priority`/`Notes` directly for subtasks.
+  - `src/features/schedule/ScheduleForm.tsx`, `ScheduleItemSheet.tsx`: Added `initialFocusRef` on `Title`, focus-on-error for time range validation, grouped `Starts`/`Ends` container (`bg-subtle/40`, `border-hairline`), and refined Elemental alert/button spacing.
+  - `src/i18n/en.json`, `vercel.json`: Added `todoForm.moreOptions`, `moreOptionsCount`, `hideOptions`, `notesPlaceholder`; disabled auto Vercel deploys for `feat/UX-006-elemental-quick-add`.
+  - `src/features/today/AddTodoSheet.test.tsx`, `TodayPage.test.tsx`, `e2e/{offline-todos,r2-account,reminders,repeat,subtasks}.spec.ts`: Added progressive-disclosure and accessibility unit tests; updated existing tests to expand `More options` when setting advanced fields.
+  - `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`: Updated screenshots and marked `UX-005` done / `UX-006` review.
+- **Verified:**
+  - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 0 errors), and `git diff --check`: all passed.
+  - Targeted Vitest (`AddTodoSheet.test.tsx`, `TodayPage.test.tsx`, `ScheduleItemSheet.test.tsx`): **34/34 passed**.
+  - Playwright `phone-375` (`a11y`, `offline-todos`, `r2-account`, `reminders`, `repeat`, `subtasks`): **21/21 passed**.
+  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `AddTodoSheet` collapsed/expanded & `ScheduleItemSheet`): **0 px overflow** and `0` page errors across all widths; 200% text scaling at 375 px verified (`0 px` overflow on `ScheduleItemSheet`, `+15 px` on `Today` page under 200% root font-size).
