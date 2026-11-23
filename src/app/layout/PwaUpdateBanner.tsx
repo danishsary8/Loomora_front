@@ -41,12 +41,14 @@ export function PwaUpdateBanner() {
         }
       }}
       className={cn(
-        'relative z-[60] border-b-thick border-ink px-4 py-2',
-        status === 'error' ? 'bg-paper text-danger' : 'bg-category-study text-ink',
+        'relative z-[60] border-b px-4 py-2.5 shadow-soft-sm',
+        status === 'error'
+          ? 'border-danger/25 bg-paper text-danger'
+          : 'border-primary/20 bg-primary-soft text-ink',
       )}
     >
       <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-3">
-        <p role="status" aria-live="polite" className="text-sm font-bold">
+        <p role="status" aria-live="polite" className="text-sm font-semibold">
           {announcement}
         </p>
         <div className="flex flex-wrap items-center gap-2">
