@@ -17,44 +17,37 @@ export interface SheetProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-/**
- * Mark background content `inert` while the modal is open (blocking pointer, keyboard, and
- * assistive-tech traversal in browsers) without disabling the dialog itself or top-level
- * notification regions (e.g. PWA update / reminder banners). Restores prior state on close.
- */
-function lockBackground(portalRoot: HTMLElement | null): () => void {
-  const isNotificationRegion = (el: HTMLElement) =>
-    el.matches('section[aria-label], [role="region"]')
-  const targets: HTMLElement[] = []
+const PORTAL_ATTR = 'data-sheet-portal'
+
+// Reference-counted background lock state so overlapping/sequential sheets and exit animations
+// never prematurely unlock `#root` or leave stale `inert` attributes behind.
+const lockCounts = new Map<HTMLElement, { count: number; hadInert: boolean }>()
+
+function lockBackground(): () => void {
+  const locked: HTMLElement[] = []
   for (const child of Array.from(document.body.children)) {
     if (!(child instanceof HTMLElement)) continue
-    if (portalRoot && (child === portalRoot || child.contains(portalRoot))) continue
-    if (
-      child.id === 'root' ||
-      Array.from(child.children).some(
-        (grandchild) => grandchild instanceof HTMLElement && isNotificationRegion(grandchild),
-      )
-    ) {
-      for (const rootChild of Array.from(child.children)) {
-        if (!(rootChild instanceof HTMLElement)) continue
-        if (isNotificationRegion(rootChild)) continue
-        targets.push(rootChild)
-      }
+    if (child.hasAttribute(PORTAL_ATTR)) continue
+    const existing = lockCounts.get(child)
+    if (existing) {
+      existing.count += 1
     } else {
-      targets.push(child)
+      const hadInert = child.hasAttribute('inert')
+      lockCounts.set(child, { count: 1, hadInert })
+      if (!hadInert) child.setAttribute('inert', '')
     }
+    locked.push(child)
   }
 
-  const saved = targets.map((el) => ({
-    el,
-    hadInert: el.hasAttribute('inert'),
-  }))
-  for (const { el } of saved) {
-    el.setAttribute('inert', '')
-  }
   return () => {
-    for (const { el, hadInert } of saved) {
-      if (!hadInert) el.removeAttribute('inert')
+    for (const el of locked) {
+      const entry = lockCounts.get(el)
+      if (!entry) continue
+      entry.count -= 1
+      if (entry.count <= 0) {
+        lockCounts.delete(el)
+        if (!entry.hadInert) el.removeAttribute('inert')
+      }
     }
   }
 }
@@ -64,7 +57,6 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
   const titleId = useId()
-  const portalRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   // Latest onClose for the key handler, without re-running the open effect.
   const onCloseRef = useRef(onClose)
@@ -77,7 +69,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     const previouslyFocused = document.activeElement as HTMLElement | null
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const unlockBackground = lockBackground(portalRef.current)
+    const unlockBackground = lockBackground()
 
     const panel = panelRef.current
     const first = initialFocusRef?.current ?? panel?.querySelector<HTMLElement>(FOCUSABLE)
@@ -123,7 +115,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div ref={portalRef} className="fixed inset-0 z-50 flex items-end justify-center">
+        <div data-sheet-portal="true" className="fixed inset-0 z-50 flex items-end justify-center">
           <m.div
             data-testid="sheet-backdrop"
             className="absolute inset-0 bg-ink/40 backdrop-blur-[1px]"
