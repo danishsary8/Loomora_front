@@ -37,7 +37,7 @@ export function ServiceDownBanner() {
   return (
     <div role="status" aria-live="polite">
       {visible && (
-        <div className="flex flex-wrap items-center justify-center gap-3 border-b-thick border-ink bg-category-work px-4 py-2 text-sm font-bold">
+        <div className="flex flex-wrap items-center justify-center gap-3 border-b border-warning/20 bg-warning-surface px-4 py-2 text-sm font-semibold text-warning">
           <p>{t('serviceDown.banner')}</p>
           <Button variant="secondary" onClick={() => void check()}>
             {t('serviceDown.retry')}

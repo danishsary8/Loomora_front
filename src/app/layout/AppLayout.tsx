@@ -19,7 +19,7 @@ export function AppLayout() {
           id="main"
           tabIndex={-1}
           className={cn(
-            'mx-auto w-full flex-1 px-4 pb-28 pt-4 focus-visible:outline-none md:pb-10',
+            'mx-auto w-full flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-3 focus-visible:outline-none md:px-6 md:pb-12 md:pt-4',
             wide ? 'max-w-6xl' : 'max-w-2xl',
           )}
         >
