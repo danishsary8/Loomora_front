@@ -596,3 +596,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Prepare a guarded Playwright suite for the exact frontend and API candidates. Cover auth, guest import, planner data, account isolation, and Google deletion's disabled and callback behavior. Record provider and deletion steps for an approved manual run.
 - **Evidence:** [QA-022 staging evidence and runbook](QA-022-staging-evidence.md).
 - **Release gates:** Live staging and provider verification are blocked pending owner approval of the disposable pair and synthetic identities. QA-009 stays blocked pending paired execution and sign-off. Q23, Q25, QA-004, and QA-016 remain open.
+
+### F-031: Complete guest repeating to-dos at capacity
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Match backend decisions I4, I5, I7 and I8. Allow repeat completion to create one successor with undone subtasks in the same transaction. Keep the 500-active-item limit for manual creation and exclude soft-deleted rows.
+- **Verification:** Repeat at capacity, toggle idempotence, reminder carryover, manual creation after soft deletion, and rollback on a failed write. Run the frontend static checks, unit suite, build, and phone Playwright coverage for repeats, subtasks, and reminders.
+- **Evidence:** [F-031 progress and verification](PROGRESS.md#2026-11-23-f-031-complete-guest-repeating-to-dos-at-capacity).
