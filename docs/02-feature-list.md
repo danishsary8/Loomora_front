@@ -52,7 +52,7 @@ Priority: **Must** = needed for that release to ship. **Should** = planned in th
 Khmer language, accessibility and performance polish, push notifications, quick-add by typing ("Gym 6pm Mon-Fri"), shareable stamp card, data export.
 
 ## Out of scope
-Multiple themes (one neo-brutalism identity), teams/sharing, native mobile apps.
+Multiple themes (one Elemental Edition identity; see `docs/DECISIONS.md` DEC-003), teams/sharing, native mobile apps.
 
 ## Added 2026-11-19 (from the Daycraft analysis, docs/research/)
 | Feature | Priority | Release |

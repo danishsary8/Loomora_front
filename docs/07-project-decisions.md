@@ -16,7 +16,7 @@
 | S12 | Drop page-view analytics endpoint and the Faith category |
 | S13 | Feedback: stored in DB + emailed to Danish |
 | S14 | Delete account: confirm, then delete everything immediately |
-| S15 | Branding chosen by planner with ui-ux-pro-max (neo-brutalism, cream #F5EDE6, script headings, 6 category colors) |
+| S15 | Branding superseded on 2026-11-23 by Elemental Edition (`docs/DECISIONS.md` DEC-003: warm ivory `#F7F5EF`, deep forest green `#1D5039`, self-hosted Inter, 6 pastel category colors; one theme only), replacing initial neo-brutalism (`DEC-001`/`DEC-002`) |
 | S16 | First task: security cleanup (secret scan, remove mail-test endpoints, rotate Google secret) |
 | S17 | Danish already has Vercel, Neon and Render. Brevo account still needed |
-| S18 | NOTE (style, to resolve in B1): Danish added 'Neo-skeuomorphism / retro-digital hybrid' as a style idea. Current decision remains neo-brutalism until B1 compares them |
+| S18 | Resolved in `DEC-001` (2026-10-24) and superseded on 2026-11-23 by `DEC-003` (Elemental Edition) |
