@@ -1,6 +1,7 @@
 import { createAuthApi } from './auth'
 import { createAccountDataApi } from './account'
 import { createApiClient } from './client'
+import { createFocusSessionsApi } from './focusSessions'
 import { createHealthApi, useServiceStatus } from './health'
 import { createScheduleApi } from './schedule'
 import { useSession } from './session'
@@ -31,4 +32,5 @@ export const authApi = createAuthApi(client)
 export const todosApi = createTodosApi(client)
 export const scheduleApi = createScheduleApi(client)
 export const accountDataApi = createAccountDataApi(client)
+export const focusSessionsApi = createFocusSessionsApi(client)
 export const healthApi = createHealthApi(client)

@@ -1,7 +1,14 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { LazyMotion } from 'framer-motion'
-import { useEffect, useState, type ReactNode } from 'react'
-import { accountDataApi, scheduleApi, todosApi, useServiceStatus, useSession } from '@/lib/api'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  accountDataApi,
+  focusSessionsApi,
+  scheduleApi,
+  todosApi,
+  useServiceStatus,
+  useSession,
+} from '@/lib/api'
 import {
   GuestScheduleRepository,
   GuestStorageContext,
@@ -16,6 +23,9 @@ import {
   type GuestStorage,
 } from '@/lib/storage'
 import { GuestDailyIntentionRepository } from '@/lib/storage/GuestDailyIntentionRepository'
+import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
+import { ServerFocusSessionRepository } from '@/lib/storage/ServerFocusSessionRepository'
+import { FocusSessionRepositoryContext } from '@/lib/storage/focusSessionContext'
 import type { GuestDatabase } from '@/lib/storage/db'
 import { GuestPreferenceDatabaseContext } from '@/lib/storage/guestPreferences'
 import { createQueryClient } from './queryClient'
@@ -53,6 +63,12 @@ export function AppProviders({
     streak: new ServerStreakRepository(accountDataApi),
   }))
 
+  const [guestFocus] = useState(() => new GuestFocusSessionRepository({ db: guestDatabase }))
+  const generation = useSession((s) => s.generation)
+  const accountFocus = useMemo(
+    () => new ServerFocusSessionRepository(focusSessionsApi, guestDatabase, generation),
+    [generation, guestDatabase],
+  )
   const signedIn = useSession((s) => s.token !== null)
   useEffect(() => {
     let seenGeneration = useSession.getState().generation
@@ -78,7 +94,11 @@ export function AppProviders({
             <ScheduleRepositoryContext.Provider value={active.schedule}>
               <StreakRepositoryContext.Provider value={active.streak}>
                 <GuestPreferenceDatabaseContext.Provider value={guestDatabase}>
-                  {children}
+                  <FocusSessionRepositoryContext.Provider
+                    value={signedIn ? accountFocus : guestFocus}
+                  >
+                    {children}
+                  </FocusSessionRepositoryContext.Provider>
                 </GuestPreferenceDatabaseContext.Provider>
               </StreakRepositoryContext.Provider>
             </ScheduleRepositoryContext.Provider>

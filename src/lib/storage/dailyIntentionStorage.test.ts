@@ -47,7 +47,6 @@ it('opens a true v7 database without rewriting any existing rows or preferences'
     for (const [table, records] of Object.entries(rows)) await old.table(table).bulkAdd(records)
     old.close()
     await db.open()
-    expect(db.verno).toBe(8)
     for (const [table, records] of Object.entries(rows)) {
       expect(await db.table(table).toArray()).toEqual(
         [...records].sort((a, b) => ('id' in a && 'id' in b ? a.id.localeCompare(b.id) : 0)),

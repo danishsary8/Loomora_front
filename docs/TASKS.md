@@ -690,3 +690,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
 - **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
 - **Follow-up:** Focus runtime owns lifecycle, persisted snapshots, cross-tab coordination, and finalization. Session API work follows the approved backend contract. See the [progress entry](PROGRESS.md#2026-11-23-f-r3-02a--deterministic-focus-timer-core) for open decisions.
+
+### F-R3-01 — Focus session repository and API integration
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Merged B-043 contract from backend PR #47 and frontend base including PR #55.
+- **Acceptance:** Guest and account repositories record finished sessions, retrieve one by UUID, and list by starting local date. Millisecond precision, owner-scoped retries, and all existing guest data survive reload and schema upgrade.
+- **Follow-up:** Focus runtime will allocate and persist the UUID at timer start and call the repository on finalization. Transferring guest Focus history requires an approved import policy.

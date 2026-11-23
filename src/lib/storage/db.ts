@@ -1,14 +1,19 @@
-import Dexie, { type EntityTable } from 'dexie'
+import Dexie, { type EntityTable, type Table } from 'dexie'
+import type { FocusSession } from '@/features/focus/types'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import { DEFAULT_PRIORITY, type Todo } from '@/features/todos/types'
 
 import type { DailyIntentionRecord } from '@/lib/api/types'
 import type { TimePreferences } from '@/lib/time/time'
 
+import type { FocusOutboxRecord } from './ServerFocusSessionRepository'
+
 export const GUEST_DB_NAME = 'loomora-guest'
 
 /** Guest data in IndexedDB (A8-4). Rows keep their client UUIDs for the later import. */
 export class GuestDatabase extends Dexie {
+  focus_sessions!: EntityTable<FocusSession, 'id'>
+  focus_outbox!: Table<FocusOutboxRecord, [string, string]>
   meta!: EntityTable<{ key: string; value: TimePreferences }, 'key'>
   dailyIntentions!: EntityTable<DailyIntentionRecord, 'date'>
   todos!: EntityTable<Todo, 'id'>
@@ -49,5 +54,9 @@ export class GuestDatabase extends Dexie {
     )
     this.version(7).stores({ meta: 'key' })
     this.version(8).stores({ dailyIntentions: 'date' })
+    this.version(9).stores({
+      focus_sessions: 'id, local_date',
+      focus_outbox: '[ownerId+id], ownerId',
+    })
   }
 }
