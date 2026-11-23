@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Sheet } from '@/components/ui'
 import { ScheduleForm, type ScheduleFormValues } from './ScheduleForm'
@@ -37,10 +37,11 @@ const NEW_ITEM_DEFAULTS: ScheduleFormValues = {
 /** S7 Add / edit a schedule item. From Today it first asks "Only today" or "All repeats". */
 export function ScheduleItemSheet({ open, onClose, target, onDelete }: ScheduleItemSheetProps) {
   const { t } = useTranslation()
+  const titleRef = useRef<HTMLInputElement>(null)
   const title = target.type === 'create' ? t('scheduleForm.addTitle') : t('scheduleForm.editTitle')
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
-      <SheetBody target={target} onClose={onClose} onDelete={onDelete} />
+    <Sheet open={open} onClose={onClose} title={title} initialFocusRef={titleRef}>
+      <SheetBody target={target} onClose={onClose} onDelete={onDelete} titleRef={titleRef} />
     </Sheet>
   )
 }
@@ -50,7 +51,10 @@ function SheetBody({
   target,
   onClose,
   onDelete,
-}: Pick<ScheduleItemSheetProps, 'target' | 'onClose' | 'onDelete'>) {
+  titleRef,
+}: Pick<ScheduleItemSheetProps, 'target' | 'onClose' | 'onDelete'> & {
+  titleRef: RefObject<HTMLInputElement>
+}) {
   const { t } = useTranslation()
   const [step, setStep] = useState<Step>(
     target.type === 'occurrence'
@@ -133,6 +137,7 @@ function SheetBody({
       onlyToday={onlyToday}
       submitLabel={t(target.type === 'create' ? 'scheduleForm.add' : 'scheduleForm.save')}
       onSubmit={onSubmit}
+      titleRef={titleRef}
       {...(target.type !== 'create' && onDelete
         ? {
             onDelete: () =>

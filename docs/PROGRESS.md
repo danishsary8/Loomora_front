@@ -890,6 +890,23 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
 - Merged `origin/v2-rebuild` at `87c34e0` (UX-005, PR #56) into the existing F-R3-02A branch for PR #55. Preserved the task and progress entries for both changes and their Vercel preview opt-outs. The timer implementation and its 42 tests match the previous PR head byte for byte.
 - Clean `npm ci`, lint, Knip, formatting, typecheck, production build, Git whitespace checks, and all 79 `phone-375` Playwright tests passed. Full Windows Vitest passed 709 tests across 65 files with a three-worker limit and one retry allowed. The production audit found zero vulnerabilities, and Redocly reported four existing warnings.
 
+### 2026-11-24: UX-006 Elemental Quick Add & Form Experience
+
+- **Base & Isolation:** Branched `feat/UX-006-elemental-quick-add` from `origin/v2-rebuild` (`87c34e0`, PR #56 `UX-005`) in isolated worktree `loomora-front-UX-006`, then merged latest `origin/v2-rebuild` (`3b8611e`, PR #55 `F-R3-02A`). Focus logic, timer math, API clients, repositories, Dexie, and Codex worktrees untouched.
+- **Changed:**
+  - `src/components/ui/icons.tsx`: Added `ChevronDownIcon` (`1.75 px` round-cap stroke) for progressive disclosure.
+  - `src/features/schedule/DayToggle.tsx`: Migrated from legacy neo-brutalist thick black borders to Elemental Edition (`border-control`, `bg-primary text-white` selected, `bg-paper text-ink` unselected, `duration-fast ease-elemental`).
+  - `src/features/today/AddTodoSheet.tsx`: Reordered primary quick-add fields (`Title`, `Due date`, `Category`) above a collapsible `More options` disclosure (`Remind me`, `Repeat`, `Priority`, `Notes` using UX-004 `Textarea`). Displays active option count when collapsed, auto-opens when editing a to-do with advanced fields or on validation errors, and shows `Priority`/`Notes` directly for subtasks.
+  - `src/features/schedule/ScheduleForm.tsx`, `ScheduleItemSheet.tsx`: Added `initialFocusRef` on `Title`, focus-on-error for time range validation, grouped `Starts`/`Ends` container (`bg-subtle/40`, `border-hairline`), and refined Elemental alert/button spacing.
+  - `src/i18n/en.json`, `vercel.json`: Added `todoForm.moreOptions`, `moreOptionsCount`, `hideOptions`, `notesPlaceholder`; disabled auto Vercel deploys for `feat/UX-006-elemental-quick-add`.
+  - `src/features/today/AddTodoSheet.test.tsx`, `TodayPage.test.tsx`, `e2e/{offline-todos,r2-account,reminders,repeat,subtasks}.spec.ts`: Added progressive-disclosure and accessibility unit tests; updated existing tests to expand `More options` when setting advanced fields.
+  - `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`: Updated screenshots and marked `UX-005` done / `UX-006` review.
+- **Verified:**
+  - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 0 errors), and `git diff --check`: all passed.
+  - Targeted Vitest (`AddTodoSheet.test.tsx`, `TodayPage.test.tsx`, `ScheduleItemSheet.test.tsx`): **34/34 passed**.
+  - Playwright `phone-375` (`a11y`, `offline-todos`, `r2-account`, `reminders`, `repeat`, `subtasks`): **21/21 passed**.
+  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `AddTodoSheet` collapsed/expanded & `ScheduleItemSheet`): **0 px overflow** and `0` page errors across all widths; 200% text scaling at 375 px verified (`0 px` overflow on `ScheduleItemSheet`, `0 px` on `Today` page + `AddTodoSheet` (collapsed/expanded/errors) after adding `flex-wrap` to `TodayPage` header and 200% E2E regression test).
+
 ### 2026-11-24 F-R3-01 — Focus session repository and API integration
 
 - Copied `docs/openapi.yaml` from merged backend B-043 commit `2dfc976` (PR #47), Git blob `8e7abd97855e1daa4517b981a08c59d688ed07c5`. The repositories expose `record`, `get`, and `listForDate` through the Focus repository context. Lists use the session's starting local date. Durations and laps stay in whole milliseconds.

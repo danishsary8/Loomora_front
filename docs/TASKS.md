@@ -670,9 +670,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-005: Elemental Edition app shell & navigation
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-003` (PR #53), and `UX-004` (PR #54 @ `4544b8e`).
+- **Merge:** [PR #56](https://github.com/danishsary8/Loomora_front/pull/56) at `87c34e0`.
 - **Plan:**
   1. Branch `feat/UX-005-elemental-app-shell` from `origin/v2-rebuild` (`4544b8e`) in isolated worktree `loomora-front-UX-005` without touching `RootLayout.tsx`, `src/features/focus/*`, repositories, API clients, Dexie, or Codex worktrees.
   2. Restyle `AppLayout`, `TopBar`, `BottomNav`, `Sidebar`, `OfflineBanner`, `ServiceDownBanner`, `PwaUpdateBanner`, `PageHeading`, and `LoadingState` to Elemental Edition (frosted paper bottom nav with `1 px` `#E1E8E1` border & soft sheet shadow, `bg-primary-soft text-primary` active navigation states, semantic `warning-surface`/`warning` status banners, full iOS top/bottom/side safe areas).
@@ -690,6 +691,22 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
 - **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
 - **Follow-up:** Focus runtime owns lifecycle, persisted snapshots, cross-tab coordination, and finalization. Session API work follows the approved backend contract. See the [progress entry](PROGRESS.md#2026-11-23-f-r3-02a--deterministic-focus-timer-core) for open decisions.
+
+### UX-006: Elemental Quick Add & Form Experience
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-004` (PR #54), and `UX-005` (PR #56 @ `87c34e0`).
+- **Plan:**
+  1. Branch `feat/UX-006-elemental-quick-add` from `origin/v2-rebuild` (`87c34e0`) in isolated worktree `loomora-front-UX-006` without touching Focus logic, repositories, API clients, Dexie, or Codex worktrees.
+  2. Refine `AddTodoSheet` with progressive disclosure (`More options` / active count / smart auto-open on edit and validation errors) using UX-004 shared primitives (`Input`, `Textarea`, `Chip`, `Button`, `Sheet`, `ChevronDownIcon`) while preserving subtasks, priority, notes, repeats, reminders, and translations.
+  3. Refine `ScheduleForm`, `ScheduleItemSheet`, and `DayToggle` to Elemental Edition (`#1D5039` selected day pills, grouped time-range surface, initial focus on `Title`, focus-on-error for time validation).
+  4. Add `AddTodoSheet.test.tsx`, update affected unit/E2E tests for progressive disclosure, verify 320–1440 px viewports and 200% text scaling, update screenshots (`today-add-sheet-375.png`, `schedule-sheet-375.png`), and open one PR targeting `v2-rebuild`.
+- **Done when:**
+  - [x] `AddTodoSheet`, `ScheduleForm`, `ScheduleItemSheet`, and `DayToggle` follow `DEC-003` with progressive disclosure for advanced to-do options and zero feature regressions.
+  - [x] `AddTodoSheet.test.tsx` added; unit and Playwright `phone-375` E2E suites pass; 320–1440 px (`0 px` overflow) and 200% text scaling verified.
+  - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/ScheduleForm.tsx`, `src/features/schedule/ScheduleItemSheet.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/today/AddTodoSheet.test.tsx`, `src/features/today/TodayPage.tsx`, `src/features/today/TodayPage.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/offline-todos.spec.ts`, `e2e/r2-account.spec.ts`, `e2e/reminders.spec.ts`, `e2e/repeat.spec.ts`, `e2e/subtasks.spec.ts`, `vercel.json`, `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-R3-01 — Focus session repository and API integration
 

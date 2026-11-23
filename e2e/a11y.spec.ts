@@ -114,3 +114,35 @@ test('populated Today, Week, DaySheet, and 320px CopyDaySheet pass axe, overflow
     [],
   )
 })
+
+test('Today and AddTodoSheet have zero horizontal overflow at 375px and 200% text scaling', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/today')
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '32px'
+  })
+
+  const docOverflow = () =>
+    page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+
+  expect(await docOverflow()).toBeLessThanOrEqual(0)
+
+  await page.getByRole('button', { name: 'Add a to-do' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Add a to-do' })
+  await expect(dialog).toBeVisible()
+  expect(await docOverflow()).toBeLessThanOrEqual(0)
+  expect(await dialog.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+
+  await dialog.getByRole('button', { name: 'More options' }).click()
+  await expect(dialog.getByLabel('Notes')).toBeVisible()
+  expect(await docOverflow()).toBeLessThanOrEqual(0)
+  expect(await dialog.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+
+  // Trigger validation errors (empty title) and verify no overflow.
+  await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(dialog.getByText('Please enter a title.')).toBeVisible()
+  expect(await docOverflow()).toBeLessThanOrEqual(0)
+  expect(await dialog.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+})
