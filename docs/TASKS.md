@@ -694,7 +694,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-006: Elemental Quick Add & Form Experience
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-004` (PR #54), and `UX-005` (PR #56 @ `87c34e0`).
 - **Plan:**
@@ -715,3 +715,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Source:** Merged B-043 contract from backend PR #47 and frontend base including PR #55.
 - **Acceptance:** Guest and account repositories record finished sessions, retrieve one by UUID, and list by starting local date. Millisecond precision, owner-scoped retries, and all existing guest data survive reload and schema upgrade.
 - **Follow-up:** Focus runtime will allocate and persist the UUID at timer start and call the repository on finalization. Transferring guest Focus history requires an approved import policy.
+
+### UX-007: Elemental Today Screen Refinement
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-003`, `UX-004` (PR #54), `UX-005` (PR #56), and `UX-006` (PR #57 @ `e284ad6`).
+- **Plan:**
+  1. Branch `feat/UX-007-elemental-today` from `origin/v2-rebuild` (`e284ad6`) in isolated worktree `loomora-front-UX-007` without touching Focus logic, repositories, Dexie migrations, API clients, AddTodoSheet, ScheduleForm, or Codex worktrees.
+  2. Refine `TodoRow`, `DoneStamp`, and `StreakBadge` from legacy neo-brutalist thick black borders/hard shadows to Elemental Edition (`border-hairline border-border-subtle`, soft ambient elevation, `44×44 px` `border-control` action buttons, muted completed surface, semantic `danger` overdue pill, `tabular-nums`, and reduced-motion-safe celebrations).
+  3. Refine `TodayPage`, `NowNextStrip`, `TodayEmpty`, and `LoadingState` visual hierarchy, spacing, typography, touch feedback, contrast on pastel category surfaces, and `motion-reduce:animate-none` skeleton behavior.
+  4. Add unit tests for keyboard completion, accessible touch targets, and Elemental surfaces; verify full Vitest, Playwright `phone-375`, 6-viewport sweep (`320–1440 px`), and 200% text scaling at `375 px`; capture `today-375.png` and `today-1440.png` screenshots.
+- **Done when:**
+  - [x] `TodayPage`, `TodoRow`, `DoneStamp`, `StreakBadge`, `NowNextStrip`, `TodayEmpty`, and `LoadingState` follow `DEC-003` with zero feature regressions.
+  - [x] Full Vitest (**714/714** across 66 files) and Playwright `phone-375` (**80/80**) pass; 320–1440 px (`0 px` overflow) and 200% text scaling at 375 px (`0 px` overflow) verified.
+  - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+- **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

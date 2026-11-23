@@ -6,7 +6,7 @@ export interface DoneStampProps {
   className?: string
 }
 
-/** Neo-brutalist "Done!" stamp shown on a checked row (docs/04 check-off path). */
+/** Elemental "Done!" badge shown on a checked row (docs/04 check-off path). */
 export function DoneStamp({ className }: DoneStampProps = {}) {
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
@@ -14,16 +14,16 @@ export function DoneStamp({ className }: DoneStampProps = {}) {
     <m.span
       aria-hidden="true"
       className={cn(
-        'pointer-events-none select-none rounded-sm border-thick border-success bg-paper px-2 py-0.5 text-sm font-bold uppercase tracking-wide text-success',
+        'pointer-events-none inline-flex select-none items-center rounded-full border-hairline border-success/40 bg-primary-soft px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-success',
         className ?? 'absolute right-3 top-1/2 -translate-y-1/2',
       )}
-      initial={reduceMotion ? { opacity: 0, rotate: -12 } : { opacity: 0, scale: 2.2, rotate: -28 }}
-      animate={reduceMotion ? { opacity: 1, rotate: -12 } : { opacity: 1, scale: 1, rotate: -12 }}
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.35, rotate: -10 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, rotate: -4 }}
       exit={{ opacity: 0 }}
       transition={
         reduceMotion
-          ? { duration: 0.15 }
-          : { type: 'spring', stiffness: 520, damping: 22, mass: 0.7 }
+          ? { duration: 0.14 }
+          : { type: 'spring', stiffness: 460, damping: 24, mass: 0.7 }
       }
     >
       {t('today.doneStamp')}

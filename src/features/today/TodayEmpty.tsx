@@ -10,12 +10,12 @@ export interface TodayEmptyProps {
 export function TodayEmpty({ onAddTodo, onAddSchedule }: TodayEmptyProps) {
   const { t } = useTranslation()
   return (
-    <Card className="flex flex-col gap-4 py-6">
-      <div className="flex flex-col gap-1 text-center">
-        <h2 className="text-xl font-bold">{t('today.emptyTitle')}</h2>
-        <p className="text-muted">{t('today.emptyMessage')}</p>
+    <Card className="flex flex-col gap-5 px-5 py-7">
+      <div className="flex flex-col gap-1.5 text-center">
+        <h2 className="text-lg font-semibold tracking-tight text-ink">{t('today.emptyTitle')}</h2>
+        <p className="text-sm leading-relaxed text-muted">{t('today.emptyMessage')}</p>
       </div>
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Button size="lg" fullWidth onClick={onAddTodo}>
           {t('today.addTodo')}
         </Button>

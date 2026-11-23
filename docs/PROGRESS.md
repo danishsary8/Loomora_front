@@ -907,6 +907,22 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
   - Playwright `phone-375` (`a11y`, `offline-todos`, `r2-account`, `reminders`, `repeat`, `subtasks`): **21/21 passed**.
   - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `AddTodoSheet` collapsed/expanded & `ScheduleItemSheet`): **0 px overflow** and `0` page errors across all widths; 200% text scaling at 375 px verified (`0 px` overflow on `ScheduleItemSheet`, `0 px` on `Today` page + `AddTodoSheet` (collapsed/expanded/errors) after adding `flex-wrap` to `TodayPage` header and 200% E2E regression test).
 
+### 2026-11-24: UX-007 Elemental Today Screen Refinement
+
+- **Base & Isolation:** Branched `feat/UX-007-elemental-today` from `origin/v2-rebuild` (`e284ad6`, PR #57 `UX-006`) in isolated worktree `loomora-front-UX-007`. Focus timer logic, Focus repositories, Dexie migrations, API clients, `AddTodoSheet`, `ScheduleForm`, and Codex's `F-R3-01` worktree untouched.
+- **Changed:**
+  - `src/features/today/TodoRow.tsx`: Migrated from legacy thick black borders/hard shadows to Elemental `border-hairline border-border-subtle bg-paper shadow-soft-sm` (`bg-subtle/60` when done), refined `44×44 px` `border-control` action buttons with subtle press feedback, clean metadata pills (preserving all 6 documented pastel category colors, semantic `danger` overdue pill, subtle priority/old pills), `tabular-nums` subtask progress, and hairline subtask connector.
+  - `src/features/today/DoneStamp.tsx`: Refined to Elemental pill badge (`border-hairline border-success/40 bg-primary-soft text-success`) with reduced-motion-safe entrance.
+  - `src/features/streak/StreakBadge.tsx`: Migrated to Elemental pill (`border-hairline shadow-soft-sm tabular-nums`, `bg-accent text-ink` when counted vs `bg-paper text-ink` when open) with gentler reduced-motion-safe celebration.
+  - `src/features/today/TodayPage.tsx`, `NowNextStrip.tsx`, `TodayEmpty.tsx`, `src/components/states/LoadingState.tsx`: Refined vertical rhythm, date subtitle typography, `NowNextStrip` hover/press feedback with `text-ink` on pastel category surfaces (WCAG AA verified by axe-core) and `tabular-nums` times, responsive `TodayEmpty` button grid, and `motion-reduce:animate-none` on loading skeletons.
+  - `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`: Added tests for keyboard completion, accessible `44×44 px` action targets, and Elemental surfaces/tabular numerals.
+  - `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`: Disabled auto Vercel deploy for `feat/UX-007-elemental-today`, captured 375 px and 1440 px screenshots, marked `UX-006` done and `UX-007` review.
+- **Verified:**
+  - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings), and `git diff --check`: all passed.
+  - Full Vitest (`npx vitest run --maxWorkers=3 --retry=1`): **714/714 passed** across **66** test files.
+  - Playwright `phone-375`: **80/80 passed** (including all 17 `e2e/a11y.spec.ts` checks after fixing `NowNextStrip` pastel contrast).
+  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px`) + 200% text scaling at `375 px`: **0 px overflow** and `0` page errors across all widths.
+
 ### 2026-11-24 F-R3-01 — Focus session repository and API integration
 
 - Copied `docs/openapi.yaml` from merged backend B-043 commit `2dfc976` (PR #47), Git blob `8e7abd97855e1daa4517b981a08c59d688ed07c5`. The repositories expose `record`, `get`, and `listForDate` through the Focus repository context. Lists use the session's starting local date. Durations and laps stay in whole milliseconds.

@@ -36,4 +36,13 @@ describe('StreakBadge', () => {
       vi.useRealTimers()
     }
   })
+
+  it('uses Elemental surfaces and tabular numerals for open and counted states', () => {
+    const { rerender } = render(<StreakBadge count={4} todayCounted={false} />)
+    const badge = screen.getByTestId('streak-badge')
+    expect(badge).toHaveClass('bg-paper', 'tabular-nums', 'text-ink')
+
+    rerender(<StreakBadge count={5} todayCounted />)
+    expect(badge).toHaveClass('bg-accent', 'tabular-nums', 'text-ink')
+  })
 })
