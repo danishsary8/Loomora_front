@@ -648,3 +648,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] 6 documented category identities preserved without guessing unverified pastel hexes (blocker recorded pending original reference assets).
   - [x] `lint`, `typecheck`, `knip`, `format:check` (`--end-of-line auto`), full Vitest suite, `build`, `phone-375` Playwright (78/78), Redocly OpenAPI lint, `git diff --check`, and 320–1440 px zero-overflow verification pass.
 - **Files:** `package.json`, `package-lock.json`, `knip.json`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `tailwind.config.ts`, `src/styles/index.css`, `index.html`, `vite.config.ts`, `vercel.json`, `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-02A — Deterministic Focus Timer Core
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
+- **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
+- **Follow-up:** Focus runtime owns lifecycle, persisted snapshots, cross-tab coordination, and finalization. Session API work follows the approved backend contract. See the [progress entry](PROGRESS.md#2026-11-23-f-r3-02a--deterministic-focus-timer-core) for open decisions.
