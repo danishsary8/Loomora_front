@@ -754,3 +754,22 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
   1. The four raw reference files (`LOOMORA_ELEMENTAL_CORE_SCREENS`, `LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, `LOOMORA_ELEMENTAL_MORE_SCREENS`, `LOOMORA_ELEMENTAL_UI_UX_ALIGNMENT_V3.md`) are not present in this workspace; core tokens and Inter typography were reconciled with the prior local `EL-01` alignment record, while exact pastel category hexes should be confirmed against those assets before `UX-003`.
   2. Confirm whether to retire/remove the unpushed local `EL-01` and `UI-01` worktrees once `UX-002` merges.
   3. Confirm whether `/settings` should stay embedded in `/profile` for R1/R2 or split to a dedicated `/settings` route as drafted in `EL-01`.
+
+### 2026-11-23: UX-003 Elemental Edition design foundation (tokens, typography, base styles)
+
+- **Base & Isolation:** Branched `feat/UX-003-elemental-design-foundation` from `origin/v2-rebuild` (`a45d3f6`, PR #52 `UX-002`) in isolated worktree `loomora-front-UX-003`. Existing `EL-01`, `UI-01`, `UX-002`, and Codex `QA-023` worktrees untouched.
+- **Changed (foundation-only, 0 page/primitive redesigns or behavior changes):**
+  - `package.json`, `package-lock.json`, `knip.json`: Replaced `@fontsource-variable/caveat` and `@fontsource-variable/space-grotesk` with self-hosted `@fontsource-variable/inter` (offline-precached by Workbox).
+  - `src/styles/tokens.ts`, `tailwind.config.ts`: Implemented exact approved `DEC-003` colors (`#F7F5EF` canvas, `#FCFBF8` paper, `#EFECE3` subtle, `#132A23` ink, `#54685B` muted, `#1D5039` primary, `#194631` pressed, `#E6F0EB` soft tint, `#E99A63` accent paired with `#132A23`, `#E1E8E1` decorative hairline, `#7B8C82` control border, `#18703F` success, `#9A5B04`/`#FEF4E4` warning, `#C62F36` danger), radii (`8/14/22 px`), soft elevation (`soft-sm/md/sheet`), motion tokens (`160/200/240 ms`), and `Inter Variable` stacks (aliasing `script` to Inter so existing heading classes adopt Inter immediately with zero duplicate token systems). Preserved the 6 existing category hexes (`study`, `work`, `health`, `life`, `rest`, `other`) without guessing unverified pastel values while the raw reference assets remain unavailable.
+  - `src/styles/index.css`: Switched font import to `@fontsource-variable/inter`, updated `:focus-visible` to `outline-primary`, added `scroll-padding-bottom` (WCAG 2.2 SC 2.4.11 Focus Not Obscured), and added `-0.025em` display tracking on `.font-heading, .font-script` (fixing a `+5 px` 320 px overflow on `/` caused by Inter being wider than Caveat at `text-7xl`).
+  - `index.html`, `vite.config.ts`, `vercel.json`: Updated boot shell & PWA manifest theme/background to `#F7F5EF`, updated CSP `style-src` SHA-256 hash (`sha256-n8m+JR7H5jNX0RAhTH5VNyd/9a9y7cErnSXB6ERWgZU=`), and disabled automatic Vercel deploys for `feat/UX-003-elemental-design-foundation`.
+  - `src/styles/tokens.test.ts`: Expanded to 34 assertions covering WCAG 2.2 AA text contrast (`>= 4.5:1`), SC 1.4.11 control border contrast (`>= 3:1`), Inter stacks, and `DEC-003` radii/motion.
+  - `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`: Updated styleguide screenshot and task status (`UX-002` done, `UX-003` review).
+- **Verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), `git diff --check`: all exited 0.
+  - `npm run test -- --maxWorkers=1 --pool=threads`: **62 test files / 653 tests passed** (0 failures).
+  - `npm run build`: exited 0; PWA precache 33 entries (`944.25 KiB`, including self-hosted `inter-*-wght-normal-*.woff2`).
+  - `npm run e2e -- --project=phone-375 --workers=1`: **78/78 passed** (axe a11y, CSP, PWA offline, cross-browser, Today/Week/R2 flows).
+  - `npx @redocly/cli lint docs/openapi.yaml`: valid (0 errors, 4 baseline warnings).
+  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `/, /today, /week, /profile, /styleguide`): **30/30 passed** with `0 px` horizontal overflow, `rgb(247, 245, 239)` canvas, `Inter Variable` loaded, and `0` page errors.
+- **Unresolved blocker / questions:** The 4 original reference assets (`LOOMORA_ELEMENTAL_CORE_SCREENS`, `LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, `LOOMORA_ELEMENTAL_MORE_SCREENS`, `LOOMORA_ELEMENTAL_UI_UX_ALIGNMENT_V3.md`) are still absent from the workspace; exact pastel category hexes are held on the existing 6 documented hexes until reconciled against those assets (can land cleanly before or at the start of `UX-004`).

@@ -4,5 +4,5 @@
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "scripts/*.mjs"],
   "ignore": ["legacy/**"],
   "ignoreExportsUsedInFile": true,
-  "ignoreDependencies": ["@fontsource-variable/caveat", "@fontsource-variable/space-grotesk"]
+  "ignoreDependencies": ["@fontsource-variable/inter"]
 }
