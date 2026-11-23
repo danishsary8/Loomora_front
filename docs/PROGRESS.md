@@ -741,3 +741,45 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Planner question:** A repeat can take a guest plan over 500 active rows. The account import API caps both the request and the resulting account total. Decide how to import such plans without dropping guest data before closing broader R2 parity. The existing guest behavior when deleting an already-linked successor is separate from this change.
 - **Delivery safety:** Added the exact F-031 branch to the repository's Vercel Git deployment suppression rules. The `v2-rebuild` suppression remains in place.
 - **Verification:** `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, and `npm run build` passed. `npm run test -- --maxWorkers=1 --pool=threads` passed 638 tests in 62 files after a parallel run timed out in an existing cross-tab Profile test. `npm run e2e -- --project=phone-375 --workers=1 e2e/repeat.spec.ts e2e/subtasks.spec.ts e2e/reminders.spec.ts e2e/offline-todos.spec.ts` passed all four tests on the local preview.
+
+### 2026-11-23 QA-023 R2 guest/account parity verification
+
+- Frontend base `b84a9777f965fe2e5ab99fe5d09150c255471d6e` includes F-031. Backend contract and decisions I4, I5, I7, I8, Q21 and Q22 reviewed at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d`. The checked-in roadmap identifies R2 in P9. QA-023 was absent from the queue and its detailed scope comes from the planner assignment.
+- Fixed guest successor deletion to clear the active predecessor link in the same Dexie transaction. Completion also recognizes older links to deleted or missing rows. Tests reproduce both stale-link cases on the base behavior and verify that concurrent re-checks create only one replacement and preserve the original tombstone. This follows the approved I5 deletion exception. A normal uncheck/recheck reuses the existing successor.
+
+| Criterion | Guest evidence | Account evidence | Result |
+| --- | --- | --- | --- |
+| Subtask create, edit, complete, delete and order | Guest repository lifecycle, nested list and soft deletion. Phone subtask flow and reload. | Adapter CRUD and ordered nesting, backend `TodoSubtaskTest` and `TodoRestoreTest`. Phone renders ordered API rows. | Verified |
+| Priority and notes | Guest edits and reload. Import carries metadata and UUIDs. | Adapter request/response, backend CRUD and import. Phone persists edited repeat with metadata and renders it on the successor. | Verified |
+| Repeat create, edit and complete | Guest repeat and repository validation. Concurrent completion, rollback and deleted-successor replacement covered in Dexie. | Backend `RepeatTodoTest` and adapter. Phone creates weekly, edits to daily, then checks off, undoes and re-checks. | Verified |
+| One successor and incomplete successor subtasks | Dexie concurrent and repeated completion at 500, active children only, original child timestamps preserved. | Backend completion and copy tests. Phone renders a single successor with two open children. | Verified |
+| Reminder scheduling, dismissal and repeat carryover | Guest reminder tests and phone schedule/snooze/dismiss/reload. F-031 tests UTC shift and reset of dismissal. | Backend `ReminderTest` and `RepeatTodoTest`. Phone sends UTC instant, dismisses the original and displays the successor reminder. | Verified |
+| Timezone and date boundary | Local-date fixtures and Phnom Penh repeat/reminder phone tests. | Local-date and repeat backend tests. Phone uses Phnom Penh account date and reminder input with a UTC device. Existing UTC-day reminder shift follows Q22, including a one-hour local shift across DST where applicable. | Verified |
+| Offline guest persistence | Phone edits offline, reloads and reconnects with the same stored row. Guest repeat and reminder persistence also exercised on reload. | Account persistence exercised with the API fixture and backend. Offline criterion applies to guests. | Verified |
+| Import and recovery within available capacity | Snapshot tests cover UUIDs, child/repeat links, notes, priority, dismissals, tombstone exclusion, partial failure and retry. | Backend import tests cover validation, atomicity per request and idempotent UUID retry. | Verified |
+| Manual limit and automatic overflow | F-031 and boundary snapshots cover manual creation up to 500, soft-deleted rows excluded, and automatic successors at capacity, including their children. | Manual account limit is 500. Decision I5 permits automatic account successors beyond the limit as well. | Verified |
+| Complete import for over-capacity guest plans | All active rows are sent and the local snapshot, including tombstones, survives a 422. | Backend rejects a payload over 500 rows and an import whose combined active total would exceed 500. | **Blocked** |
+| Validation and errors | Tests cover invalid title, priority, notes, dates, repeat rules, subtask fields and reminders. Save Plan tests cover retry after an error. | Adapter maps field errors. Backend tests cover 422 validation and missing or unauthorized records. | Verified |
+
+#### Import capacity and recovery
+
+| Active guest rows sent after repeat completion | Existing active account rows with distinct UUIDs | Result |
+| --- | --- | --- |
+| 499 | 0 or 1 | Accepted |
+| 500 | 0 | Accepted |
+| 500 | 1 | HTTP 422 on the combined account limit |
+| 501 | 0 | HTTP 422 on the request limit |
+
+- The guest cap counts all active rows including completed to-dos and subtasks. Automatic completion can add one parent plus its active subtasks past that cap. Soft-deleted guest rows and links to those rows are excluded from the payload. Existing active account rows consume capacity, including completed rows and subtasks. Matching active account UUIDs are skipped on retry. Existing server tombstones do not consume active capacity, although a submitted UUID matching a tombstone can count as new in validation because the duplicate offset uses the active query.
+- `POST /import` also caps schedule items at 100 per request and per account, exceptions at 5000 per request, check-ins at 10000 and daily intentions at 1000. The client puts all to-dos and schedule items in the first request and chunks the other arrays.
+- Splitting to-dos can avoid the request-size check but cannot increase available account capacity. Parent and successor references must already exist or be included in the request. Separate successful requests remain committed after a later 422. A disposable backend check submitted 501 rows with repeat/subtask references, verified zero writes on that 422, then committed 499 rows, rejected a second two-row chunk, retried the first 499 UUIDs as skips, and accepted one more row. A preexisting tombstone remained intact.
+- The frontend retains the complete guest snapshot when any request fails, even when a prior request succeeds. The user can dismiss the error and access the plan again in guest mode on the same device. Retry sends the same UUIDs, and local cleanup starts only after every request succeeds. Repeating an over-capacity upload under the current contract still returns 422.
+- **Planner decision needed:** What rule should let users save a complete plan when a valid repeat series exceeds the request limit or the account's remaining capacity? Proposed separate backend task: define the approved capacity and import contract for repeat-generated rows, including reference preservation and idempotent retry. Update backend tests and OpenAPI before changing the frontend import behavior.
+
+#### Local evidence
+
+- Backend SQLite in memory: `php -d extension=pdo_sqlite vendor/bin/pest --filter 'TodoTest|TodoSubtaskTest|TodoRestoreTest|RepeatTodoTest|ReminderTest|LocalDateTest|ImportTest'` passed 178 tests (690 assertions). The disposable capacity case passed with 18 assertions.
+- Browser account coverage uses intercepted API responses at the reserved test origin. Backend behavior was checked independently with the local suite and capacity case.
+- Focused Vitest passed 52 tests across `GuestTodoRepository.test.ts` and `saveGuestPlan.test.ts`. The first full run passed 643 of 645 tests, with two existing Profile tests hitting the 5-second timeout under concurrent local verification. The repeat lifecycle browser test passed after using the checkbox's keyboard interaction. All 78 existing phone tests passed in the preceding full run.
+- `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`, and `git diff --check` passed. Formatting ran on LF checkout files to match CI. Knip emitted its existing CSS configuration hint.
+- `npm audit --omit=dev` found zero vulnerabilities. `npx --yes @redocly/cli lint docs/openapi.yaml` passed with four existing warnings. The frontend OpenAPI snapshot has the same Git blob as the backend contract at the reviewed base.

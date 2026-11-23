@@ -604,3 +604,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Match backend decisions I4, I5, I7 and I8. Allow repeat completion to create one successor with undone subtasks in the same transaction. Keep the 500-active-item limit for manual creation and exclude soft-deleted rows.
 - **Verification:** Repeat at capacity, toggle idempotence, reminder carryover, manual creation after soft deletion, and rollback on a failed write. Run the frontend static checks, unit suite, build, and phone Playwright coverage for repeats, subtasks, and reminders.
 - **Evidence:** [F-031 progress and verification](PROGRESS.md#2026-11-23-f-031-complete-guest-repeating-to-dos-at-capacity).
+
+### QA-023: R2 guest/account parity verification
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Verify R2 subtasks, priority, notes, repeats, reminders, date boundaries, offline guest persistence, import and recovery, and validation using disposable local data.
+- **Acceptance:** Cover one successor per occurrence, incomplete successor subtasks, reminder carryover, and 499, 500, and more than 500 active guest to-dos including soft deletion. Record any import-capacity decision needed without changing policy or discarding guest data.
+- **Blocked acceptance:** A complete guest plan must be importable when automatic successors exceed the account's available capacity. Backend policy and contract approval are pending.
+- **Evidence:** [QA-023 parity matrix and planner questions](PROGRESS.md#2026-11-23-qa-023-r2-guestaccount-parity-verification).
