@@ -18,7 +18,7 @@ Status: planning. Stage A (Plan) in progress. No code until A1 to A8 are agreed.
 
 **Platform:** mobile-first web app, installable (PWA).
 **Languages:** English first. Khmer in phase 4. Translation system built in from day one.
-**Visual identity:** own neo-brutalism on a cream base (thick borders, hard offset shadows, press-down interactions, flat category colors, script headings).
+**Visual identity:** Elemental Edition on warm ivory `#F7F5EF` with deep forest green `#1D5039`, restrained warm terracotta accent `#E99A63`, self-hosted Inter typography, and 6 pastel category colors (supersedes earlier neo-brutalism; see `docs/DECISIONS.md` DEC-003). One theme only.
 
 ## 2. Scope and releases
 
@@ -96,3 +96,4 @@ Extras beyond daycraft.live: streaks, Now/Next, Overdue carry-over, subtasks, re
 | D27 | 'Save your plan' prompt after 3+ check-offs or the first full day; dismissible; always in Profile |
 | D28 | Week screen = fixed schedule only; add/edit/copy/delete there |
 | D29 | A5 screen map drafted (13 screens, bottom nav Today/Week/Focus/Insights). Claude Code prompt 00 (docs setup) written |
+| D30 | Visual identity updated to Elemental Edition (warm ivory `#F7F5EF`, deep forest green `#1D5039`, restrained terracotta `#E99A63`, Inter typography, 6 pastel category colors; one theme only), superseding neo-brutalism (`docs/DECISIONS.md` DEC-003, owner approved 2026-11-23) |

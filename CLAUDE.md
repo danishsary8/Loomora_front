@@ -18,8 +18,8 @@
 - If a task needs a secret, billing, or a destructive action, mark it `blocked` with a clear question and move to the next task.
 
 ## UI rules
-- Mobile-first: design for 375 px wide first, then tablet and desktop.
-- Neo-brutalism on cream `#F5EDE6`: thick black borders, hard offset shadows, press-down states, flat category colors. One theme only.
+- Mobile-first: design for 375 px wide first (checking 320–1440 px and iOS safe areas), then tablet and desktop.
+- Elemental Edition on warm ivory `#F7F5EF` (`docs/DECISIONS.md` DEC-003): paper `#FCFBF8`, forest ink `#132A23`, deep forest primary `#1D5039`, subtle card hairlines `#E1E8E1`, accessible control borders `#7B8C82` (`>= 3:1`), restrained `#E99A63` accent (dark ink foreground only), pastel category colors, self-hosted Inter typography. One theme only.
 - Use the `ui-ux-pro-max` skill for any UI work.
 - All user-facing text goes through the translation system (English now, Khmer later). No hardcoded UI strings.
 

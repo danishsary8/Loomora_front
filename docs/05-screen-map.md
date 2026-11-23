@@ -27,7 +27,7 @@ Landing -> Today (empty) -> Today -> [To-do sheet | Day schedule sheet | Week | 
 Week -> [Schedule item sheet | Copy day]. Profile -> [Sign up, Feedback, Delete]. Save your plan -> Sign up -> Today.
 
 ## States every screen needs
-Loading (skeleton), empty, error with retry, offline. Phone first (375 px), then tablet and desktop.
+Loading (skeleton), empty, error with retry, offline. Phone first (375 px, checking 320–1440 px and respecting iOS safe areas), then tablet and desktop.
 
 ## Later releases (placeholders)
 Focus: timer, countdown, stopwatch, history (R3). Insights: analytics, weekly recap, notes (R4). Subtask and repeat controls inside S4 (R2).

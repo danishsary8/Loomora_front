@@ -604,3 +604,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Scope:** Match backend decisions I4, I5, I7 and I8. Allow repeat completion to create one successor with undone subtasks in the same transaction. Keep the 500-active-item limit for manual creation and exclude soft-deleted rows.
 - **Verification:** Repeat at capacity, toggle idempotence, reminder carryover, manual creation after soft deletion, and rollback on a failed write. Run the frontend static checks, unit suite, build, and phone Playwright coverage for repeats, subtasks, and reminders.
 - **Evidence:** [F-031 progress and verification](PROGRESS.md#2026-11-23-f-031-complete-guest-repeating-to-dos-at-capacity).
+
+### UX-002: Elemental Edition design decision (DEC-003, docs-only)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Owner approval (2026-11-23) following read-only `UX-001` Elemental Edition UI/UX audit.
+- **Plan:**
+  1. Fetch `origin/v2-rebuild` (`b84a977`), inspect existing unmerged local `EL-01` and `UI-01` worktrees read-only without modifying or reusing them, and branch `feat/UX-002-elemental-design-decision` in isolated worktree `loomora-front-UX-002`.
+  2. Record `DEC-003` in `docs/DECISIONS.md` superseding `DEC-001`/`DEC-002` with WCAG 2.2 AA-verified Elemental Edition tokens reconciled with the `EL-01` alignment record, self-hosted Inter typography, 6 pastel category colors, safe-area rules, and single-theme / R1–R4 guardrails.
+  3. Reconcile `AGENTS.md`, `CLAUDE.md`, `docs/01-product-brief.md` (`D30`), `docs/02-feature-list.md`, `docs/05-screen-map.md`, `docs/07-project-decisions.md` (`S15`/`S18`), and `docs/10-tech-and-structure.md`.
+  4. Record `UX-002` in `docs/TASKS.md` and `docs/PROGRESS.md`, verify strictly docs-only diff (`git diff --check`, zero code files touched), and open a docs-only PR targeting `v2-rebuild`.
+- **Done when:**
+  - [x] `DEC-003` explicitly supersedes `DEC-001` and `DEC-002` with WCAG 2.2 AA contrast-verified tokens, single-theme rule, self-hosted Inter typography, iOS safe areas, and R1–R4 feature boundaries.
+  - [x] `AGENTS.md`, `CLAUDE.md`, `docs/01-product-brief.md`, `docs/02-feature-list.md`, `docs/05-screen-map.md`, `docs/07-project-decisions.md`, and `docs/10-tech-and-structure.md` align with `DEC-003`.
+  - [x] Existing local `EL-01` and `UI-01` worktrees inspected read-only and reported without modification; zero application code changed; `git diff --check` passes.
+  - [ ] Owner shares missing raw reference assets (`LOOMORA_ELEMENTAL_*` / `LOOMORA_PREMIUM_*`) to confirm exact pastel category hexes before `UX-003`.
+- **Files:** `AGENTS.md`, `CLAUDE.md`, `docs/01-product-brief.md`, `docs/02-feature-list.md`, `docs/05-screen-map.md`, `docs/07-project-decisions.md`, `docs/10-tech-and-structure.md`, `docs/DECISIONS.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
