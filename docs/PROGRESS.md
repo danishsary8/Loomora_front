@@ -866,9 +866,33 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
   - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid), `git diff --check`, and `src/app/layout/` unit tests: all passed.
   - 6-viewport responsive shell sweep (`320, 375, 390, 768, 1024, 1440 px` × `/today, /week, /profile`): **18/18 passed** (`0 px` overflow, exact `BottomNav`/`Sidebar` breakpoint switching, `0` page errors) + 200% text scaling at 375 px (`0 px` overflow) + 375 px & 1440 px screenshots inspected.
 
+### 2026-11-23 F-R3-02A — Deterministic Focus Timer Core
+
+- **Changed:** Added `src/features/focus/timerMath.ts` and its deterministic Vitest suite on a dedicated worktree from `ad168e8` (merged PRs #51 and #53). Added a Vercel auto-deployment opt-out for this task branch so the PR can run GitHub Actions without a preview deployment.
+- **Timing model:** A snapshot holds accumulated active milliseconds and a nullable timestamp for the current active interval. The same functions read foreground and recovered snapshots using a supplied timestamp in the same clock domain. Pausing freezes active time, resuming opens one interval, and repeated calls in the same state preserve the result. A countdown reading caps elapsed at the configured duration and reports zero remaining and expiry at or after the deadline. Read the capped countdown elapsed at finish, or the active elapsed for a stopwatch. Early finish retains partial elapsed. Lap splits and totals keep integer milliseconds. The formatter truncates to completed centiseconds and uses total minutes in `MM:SS.cc`.
+- **Local verification:** Clean `npm ci`, lint, typecheck, Knip, formatting, production build, and Git whitespace checks passed. Full Vitest passed 702 tests in 63 files, including all 42 Focus cases. An exact-integer reference check matched 5,500 countdown readings at numeric boundaries. All 79 `phone-375` Playwright cases passed. `npm audit --omit=dev` found zero vulnerabilities. Redocly validated `docs/openapi.yaml` with four existing warnings.
+
+#### Open product decisions and handoff
+
+- **Custom duration:** Approve Loomora's minimum, maximum, and input granularity. The 1 second to 24 hours in the DayCraft comparison describes the reference product. The core currently validates positive, safe whole milliseconds.
+- **Clock changes:** Agree on clock source and recovery behavior for manual or network clock corrections, sleep, and stale or out-of-order observations. The core throws `RangeError` for invalid numeric fields or a sample before the active anchor. A forward sample is evaluated as supplied, and a single snapshot cannot identify a jump or compare against a previous observation.
+- **Display:** Confirm the stopwatch's hour display for long runs and the countdown's whole-second rounding. The core exposes exact remaining milliseconds and a total-minute centisecond formatter.
+- **Focus runtime:** Own the lifecycle phase and event ordering, snapshot format/version and storage, cross-tab ownership, and one-time completion when recovering an expired countdown. Decide how to handle corrupt snapshots and same-timestamp lap actions. The runtime must preserve the timing snapshot's clock domain or translate timestamps before reading it.
+- **Finalization and backend:** Coordinate the approved session API/OpenAPI contract before wiring clients or repositories. Agree on session identity and idempotency, actual start/end timestamps and units for elapsed and laps, save eligibility for partial sessions, offline retries, and guest/account parity. Use the capped countdown reading and preserve the stopwatch's millisecond lap values when mapping to that contract.
+
+#### Final integration with UX-004
+
+- Merged `origin/v2-rebuild` at `4544b8e` (UX-004, PR #54) into the existing F-R3-02A branch for PR #55. Kept both task and progress records and both branch-specific Vercel opt-outs. The timer implementation and tests match the original PR head byte for byte.
+- Clean `npm ci`, lint, Knip, formatting, typecheck, production build, Git whitespace checks, and all 79 `phone-375` Playwright tests passed. The production audit found zero vulnerabilities, and Redocly reported the same four warnings. Full Windows Vitest passed 704 of 707 tests on the first run, including all Focus cases. The Profile, auth, and session failures passed on a one-worker rerun. A different Profile case hit its five-second timeout on that rerun and passed when run alone after Playwright finished.
+
+#### Integration with UX-005
+
+- Merged `origin/v2-rebuild` at `87c34e0` (UX-005, PR #56) into the existing F-R3-02A branch for PR #55. Preserved the task and progress entries for both changes and their Vercel preview opt-outs. The timer implementation and its 42 tests match the previous PR head byte for byte.
+- Clean `npm ci`, lint, Knip, formatting, typecheck, production build, Git whitespace checks, and all 79 `phone-375` Playwright tests passed. Full Windows Vitest passed 709 tests across 65 files with a three-worker limit and one retry allowed. The production audit found zero vulnerabilities, and Redocly reported four existing warnings.
+
 ### 2026-11-24: UX-006 Elemental Quick Add & Form Experience
 
-- **Base & Isolation:** Branched `feat/UX-006-elemental-quick-add` from `origin/v2-rebuild` (`87c34e0`, PR #56 `UX-005`) in isolated worktree `loomora-front-UX-006`. Focus logic, timer math, API clients, repositories, Dexie, and Codex worktrees untouched.
+- **Base & Isolation:** Branched `feat/UX-006-elemental-quick-add` from `origin/v2-rebuild` (`87c34e0`, PR #56 `UX-005`) in isolated worktree `loomora-front-UX-006`, then merged latest `origin/v2-rebuild` (`3b8611e`, PR #55 `F-R3-02A`). Focus logic, timer math, API clients, repositories, Dexie, and Codex worktrees untouched.
 - **Changed:**
   - `src/components/ui/icons.tsx`: Added `ChevronDownIcon` (`1.75 px` round-cap stroke) for progressive disclosure.
   - `src/features/schedule/DayToggle.tsx`: Migrated from legacy neo-brutalist thick black borders to Elemental Edition (`border-control`, `bg-primary text-white` selected, `bg-paper text-ink` unselected, `duration-fast ease-elemental`).
@@ -881,4 +905,4 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
   - `npx npm@10.9.4 ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `npx prettier --check --end-of-line auto .`, `npm run build` (PWA precache 33 entries), `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 0 errors), and `git diff --check`: all passed.
   - Targeted Vitest (`AddTodoSheet.test.tsx`, `TodayPage.test.tsx`, `ScheduleItemSheet.test.tsx`): **34/34 passed**.
   - Playwright `phone-375` (`a11y`, `offline-todos`, `r2-account`, `reminders`, `repeat`, `subtasks`): **21/21 passed**.
-  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `AddTodoSheet` collapsed/expanded & `ScheduleItemSheet`): **0 px overflow** and `0` page errors across all widths; 200% text scaling at 375 px verified (`0 px` overflow on `ScheduleItemSheet`, `+15 px` on `Today` page under 200% root font-size).
+  - 6-viewport Playwright sweep (`320, 375, 390, 768, 1024, 1440 px` × `AddTodoSheet` collapsed/expanded & `ScheduleItemSheet`): **0 px overflow** and `0` page errors across all widths; 200% text scaling at 375 px verified (`0 px` overflow on `ScheduleItemSheet`, `0 px` on `Today` page + `AddTodoSheet` (collapsed/expanded/errors) after adding `flex-wrap` to `TodayPage` header and 200% E2E regression test).

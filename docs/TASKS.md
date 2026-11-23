@@ -684,6 +684,14 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, `git diff --check`, layout unit tests, and 18/18 viewport checks pass.
 - **Files:** `src/app/layout/AppLayout.tsx`, `src/app/layout/TopBar.tsx`, `src/app/layout/BottomNav.tsx`, `src/app/layout/Sidebar.tsx`, `src/app/layout/OfflineBanner.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/PwaUpdateBanner.tsx`, `src/app/layout/AppShell.test.tsx`, `src/components/page/PageHeading.tsx`, `src/components/states/LoadingState.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R3-02A — Deterministic Focus Timer Core
+
+- **Status:** review
+- **Owner:** codex
+- **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
+- **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
+- **Follow-up:** Focus runtime owns lifecycle, persisted snapshots, cross-tab coordination, and finalization. Session API work follows the approved backend contract. See the [progress entry](PROGRESS.md#2026-11-23-f-r3-02a--deterministic-focus-timer-core) for open decisions.
+
 ### UX-006: Elemental Quick Add & Form Experience
 
 - **Status:** review
@@ -698,4 +706,4 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `AddTodoSheet`, `ScheduleForm`, `ScheduleItemSheet`, and `DayToggle` follow `DEC-003` with progressive disclosure for advanced to-do options and zero feature regressions.
   - [x] `AddTodoSheet.test.tsx` added; unit and Playwright `phone-375` E2E suites pass; 320–1440 px (`0 px` overflow) and 200% text scaling verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
-- **Files:** `src/components/ui/icons.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/ScheduleForm.tsx`, `src/features/schedule/ScheduleItemSheet.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/today/AddTodoSheet.test.tsx`, `src/features/today/TodayPage.test.tsx`, `src/i18n/en.json`, `e2e/offline-todos.spec.ts`, `e2e/r2-account.spec.ts`, `e2e/reminders.spec.ts`, `e2e/repeat.spec.ts`, `e2e/subtasks.spec.ts`, `vercel.json`, `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+- **Files:** `src/components/ui/icons.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/ScheduleForm.tsx`, `src/features/schedule/ScheduleItemSheet.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/today/AddTodoSheet.test.tsx`, `src/features/today/TodayPage.tsx`, `src/features/today/TodayPage.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/offline-todos.spec.ts`, `e2e/r2-account.spec.ts`, `e2e/reminders.spec.ts`, `e2e/repeat.spec.ts`, `e2e/subtasks.spec.ts`, `vercel.json`, `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
