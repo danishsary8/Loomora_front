@@ -621,3 +621,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Existing local `EL-01` and `UI-01` worktrees inspected read-only and reported without modification; zero application code changed; `git diff --check` passes.
   - [ ] Owner shares missing raw reference assets (`LOOMORA_ELEMENTAL_*` / `LOOMORA_PREMIUM_*`) to confirm exact pastel category hexes before `UX-003`.
 - **Files:** `AGENTS.md`, `CLAUDE.md`, `docs/01-product-brief.md`, `docs/02-feature-list.md`, `docs/05-screen-map.md`, `docs/07-project-decisions.md`, `docs/10-tech-and-structure.md`, `docs/DECISIONS.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-023: R2 guest/account parity verification
+
+- **Status:** review
+- **Owner:** codex
+- **Planner-approved scope:** R2 subtasks, priority, notes, repeats, reminders, date boundaries, offline guest persistence, validation, and import and recovery within available account capacity. Includes the tested guest repeat-successor deletion fix and the 499, 500, and 501 active-row boundary cases.
+- **Outstanding R2 import blocker:** Full-plan import remains blocked when repeat-generated rows exceed the request limit or available account capacity. The planner separated this work from PR #51. The existing 500-active-row manual-creation limit and failed-import recovery are preserved.
+- **Backend follow-up:** [Proposed B-043](PROGRESS.md#proposed-b-043-lossless-import-of-repeat-generated-todos) covers capacity, atomicity, UUID references, retries, and lossless guest recovery. The ID is provisional pending backend assignment.
+- **Evidence:** [QA-023 parity matrix](PROGRESS.md#2026-11-23-qa-023-r2-guestaccount-parity-verification) and [planner review](PROGRESS.md#2026-11-23-qa-023-planner-review).

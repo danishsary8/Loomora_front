@@ -1,4 +1,5 @@
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
+import { MAX_TODOS } from '@/features/todos/types'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
@@ -47,6 +48,74 @@ beforeEach(() => {
 afterEach(() => db.delete())
 
 describe('saveGuestPlan (docs/08 rule 9)', () => {
+  it.each([
+    { active: 499, account: 0, accepted: true },
+    { active: 499, account: 1, accepted: true },
+    { active: 500, account: 0, accepted: true },
+    { active: 500, account: 1, accepted: false },
+    { active: 501, account: 0, accepted: false },
+  ])(
+    'imports $active active rows into an account with $account existing rows (accepted: $accepted)',
+    async ({ active, account, accepted }) => {
+      const parent = await guest.todos.create({
+        title: 'Daily',
+        due_date: '2026-10-26',
+        repeat_rule: { type: 'daily' },
+      })
+      const deleted = await guest.todos.create({ title: 'Soft-deleted' })
+      await guest.todos.delete(deleted.id)
+      await db.todos.bulkAdd(
+        Array.from({ length: active - 2 }, () => ({
+          ...deleted,
+          id: crypto.randomUUID(),
+          deleted_at: null,
+        })),
+      )
+      const completed = await guest.todos.setDone(parent.id, true)
+      const before = await guest.todos.listAll({ includeDeleted: true })
+      expect(before).toHaveLength(active + 1)
+      if (active >= MAX_TODOS) {
+        await expect(guest.todos.create({ title: 'Over limit' })).rejects.toMatchObject({
+          field: 'title',
+        })
+      }
+
+      const bodies: ImportBody[] = []
+      server.use(
+        http.post(`${API}/import`, async ({ request }) => {
+          const body = (await request.json()) as ImportBody
+          bodies.push(body)
+          // Mirrors ImportRequest's per-request and aggregate caps for fresh UUIDs.
+          if (body.todos.length > MAX_TODOS || body.todos.length + account > MAX_TODOS) {
+            return HttpResponse.json(
+              { message: 'Invalid', errors: { todos: ['Too many to-dos'] } },
+              { status: 422 },
+            )
+          }
+          return HttpResponse.json({ data: RESULT })
+        }),
+      )
+
+      if (accepted) {
+        await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+        expect(await guest.todos.listAll({ includeDeleted: true })).toEqual([])
+      } else {
+        await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 422 })
+        expect(await guest.todos.listAll({ includeDeleted: true })).toEqual(before)
+      }
+      expect(bodies).toHaveLength(1)
+      const sent = bodies[0]?.todos ?? []
+      expect(sent).toHaveLength(active)
+      expect(sent).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: parent.id, next_todo_id: completed.next_todo_id }),
+          expect.objectContaining({ id: completed.next_todo_id, done_at: null }),
+        ]),
+      )
+      expect(sent.some(({ id }) => id === deleted.id)).toBe(false)
+    },
+  )
+
   it('imports parents and subtasks together with their original UUIDs and keeps them after rejection', async () => {
     const parent = await guest.todos.create({ title: 'Parent', priority: 'high', notes: 'Book' })
     const child = await guest.todos.create({
