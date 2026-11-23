@@ -634,9 +634,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-003: Elemental Edition design foundation (tokens, typography, base styles)
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52 @ `a45d3f6`).
+- **Merge:** [PR #53](https://github.com/danishsary8/Loomora_front/pull/53) at `ad168e8`.
 - **Plan:**
   1. Branch `feat/UX-003-elemental-design-foundation` from `origin/v2-rebuild` (`a45d3f6`) in isolated worktree `loomora-front-UX-003` without touching `EL-01`, `UI-01`, `UX-002`, or Codex `QA-023`.
   2. Replace `@fontsource-variable/caveat` and `@fontsource-variable/space-grotesk` with self-hosted `@fontsource-variable/inter` (updating `knip.json`).
@@ -648,6 +649,23 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] 6 documented category identities preserved without guessing unverified pastel hexes (blocker recorded pending original reference assets).
   - [x] `lint`, `typecheck`, `knip`, `format:check` (`--end-of-line auto`), full Vitest suite, `build`, `phone-375` Playwright (78/78), Redocly OpenAPI lint, `git diff --check`, and 320–1440 px zero-overflow verification pass.
 - **Files:** `package.json`, `package-lock.json`, `knip.json`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `tailwind.config.ts`, `src/styles/index.css`, `index.html`, `vite.config.ts`, `vercel.json`, `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-004: Elemental Edition shared UI primitives, unified icons & accessible sheets
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52) and `UX-003` foundation (PR #53 @ `ad168e8`).
+- **Plan:**
+  1. Branch `feat/UX-004-elemental-ui-primitives` from `origin/v2-rebuild` (`ad168e8`) in isolated worktree `loomora-front-UX-004` without touching `RootLayout.tsx`, Focus logic, repositories, or Codex/retired worktrees.
+  2. Migrate shared primitives (`Button`/`buttonStyles`, `Card`, `Chip`, `Checkbox`, `fieldClasses`, `Input`, `Textarea`, `ClockInput`, `ProgressRing`, `Toast`, `FloatingAddButton`, `press.ts`) to Elemental Edition (`#1D5039` forest primary, `#FCFBF8` elevated paper, `#E1E8E1` hairlines, `#7B8C82` control borders, `8/14/22 px` radii, soft elevation) while preserving all existing props, translations, behavior, and the 6 documented category hexes pending original reference assets.
+  3. Unify all shared icons in `src/components/ui/icons.tsx` to `1.75 px` round-cap/round-join strokes, add reusable `SegmentedControl`, and upgrade `Sheet.tsx` with safe-area padding, `overscroll-contain`, and scoped `inert`/`aria-hidden` background locking (keeping `#root` top-level notification regions like `PwaUpdateBanner` accessible).
+  4. Update `/styleguide`, primitive unit tests (`Button`, `Card`, `Input`, `Sheet`, `SegmentedControl`), `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, and `docs/PROGRESS.md`; verify all CI checks, 320–1440 px viewports, 200% text scaling, reduced motion, and touch targets.
+- **Done when:**
+  - [x] All shared primitives in `src/components/ui/` follow `DEC-003` with zero duplicate components or behavior changes.
+  - [x] Unified `1.75 px` round-cap icons replace inconsistent icon strokes; reusable `SegmentedControl` added and tested.
+  - [x] `Sheet` enforces focus trap/restoration, `aria-modal`, safe-area padding, and scoped `inert`/`aria-hidden` background blocking without interfering with `PwaUpdateBanner`.
+  - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, full Vitest, `build`, `phone-375` Playwright (79/79), 320–1440 px sweep, 200% text scaling, reduced motion, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+- **Files:** `src/components/ui/*`, `src/features/styleguide/StyleguidePage.tsx`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/styleguide-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-R3-02A — Deterministic Focus Timer Core
 

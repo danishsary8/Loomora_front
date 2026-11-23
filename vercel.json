@@ -10,6 +10,7 @@
       "feat/F-031-guest-repeat-capacity": false,
       "feat/QA-023-r2-parity": false,
       "feat/UX-003-elemental-design-foundation": false,
+      "feat/UX-004-elemental-ui-primitives": false,
       "feat/F-R3-02A-focus-timer-core": false,
       "v2-rebuild": false
     }

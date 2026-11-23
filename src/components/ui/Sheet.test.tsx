@@ -97,4 +97,113 @@ describe('Sheet', () => {
       expect(dialog).toContainElement(document.activeElement as HTMLElement)
     }
   })
+
+  it('marks background siblings inert while open without disabling the dialog', async () => {
+    const { container } = render(<Harness />)
+    expect(container).not.toHaveAttribute('inert')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add a to-do' })
+    expect(container).toHaveAttribute('inert')
+    expect(dialog).not.toHaveAttribute('inert')
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(container).not.toHaveAttribute('inert')
+  })
+
+  it('isolates root-level notification regions containing buttons while open and restores them on close', async () => {
+    function RootNotificationHarness() {
+      const [open, setOpen] = useState(false)
+      return (
+        <>
+          <section aria-label="App update">
+            <button type="button">Update now</button>
+            <button type="button">Later</button>
+          </section>
+          <section aria-label="Reminder">
+            <button type="button">Done</button>
+          </section>
+          <main id="main" tabIndex={-1}>
+            <button type="button" onClick={() => setOpen(true)}>
+              Open sheet
+            </button>
+          </main>
+          <Sheet open={open} onClose={() => setOpen(false)} title="Modal sheet">
+            <input aria-label="Field" />
+          </Sheet>
+        </>
+      )
+    }
+
+    const root = document.createElement('div')
+    root.id = 'root'
+    document.body.appendChild(root)
+    try {
+      render(<RootNotificationHarness />, { container: root })
+      expect(root).not.toHaveAttribute('inert')
+
+      const opener = screen.getByRole('button', { name: 'Open sheet' })
+      await userEvent.click(opener)
+
+      const dialog = screen.getByRole('dialog', { name: 'Modal sheet' })
+      expect(root).toHaveAttribute('inert')
+      expect(dialog).not.toHaveAttribute('inert')
+      expect(dialog.closest('[inert]')).toBeNull()
+      // Notification regions stay mounted/visible in the DOM, but locked inside inert #root.
+      expect(root.querySelector('section[aria-label="App update"]')).toBeInTheDocument()
+      expect(root.querySelector('section[aria-label="Reminder"]')).toBeInTheDocument()
+
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(root).not.toHaveAttribute('inert')
+      expect(opener).toHaveFocus()
+    } finally {
+      root.remove()
+    }
+  })
+
+  it('keeps background inert while overlapping sheets exist and unlocks only when the last closes', async () => {
+    function MultiSheetHarness() {
+      const [firstOpen, setFirstOpen] = useState(false)
+      const [secondOpen, setSecondOpen] = useState(false)
+      return (
+        <>
+          <button type="button" onClick={() => setFirstOpen(true)}>
+            Open first
+          </button>
+          <Sheet open={firstOpen} onClose={() => setFirstOpen(false)} title="First sheet">
+            <button type="button" onClick={() => setSecondOpen(true)}>
+              Open second
+            </button>
+            <button type="button" onClick={() => setFirstOpen(false)}>
+              Close first
+            </button>
+          </Sheet>
+          <Sheet open={secondOpen} onClose={() => setSecondOpen(false)} title="Second sheet">
+            <button type="button" onClick={() => setSecondOpen(false)}>
+              Close second
+            </button>
+          </Sheet>
+        </>
+      )
+    }
+
+    const { container } = render(<MultiSheetHarness />)
+    await userEvent.click(screen.getByRole('button', { name: 'Open first' }))
+    expect(container).toHaveAttribute('inert')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open second' }))
+    expect(container).toHaveAttribute('inert')
+    expect(screen.getByRole('dialog', { name: 'Second sheet' }).closest('[inert]')).toBeNull()
+
+    // Closing the first sheet while the second is still open keeps the background inert.
+    await userEvent.click(screen.getByRole('button', { name: 'Close first' }))
+    expect(container).toHaveAttribute('inert')
+
+    // Closing the second sheet unlocks the background cleanly.
+    await userEvent.click(screen.getByRole('button', { name: 'Close second' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(container).not.toHaveAttribute('inert')
+  })
 })

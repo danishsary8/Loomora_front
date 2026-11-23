@@ -23,8 +23,9 @@ export function Card({ tone = 'paper', compact = false, className, ...rest }: Ca
   return (
     <div
       className={cn(
-        'rounded-lg border-thick border-ink text-ink shadow-hard-md',
-        compact ? 'p-3' : 'p-4',
+        'border-hairline text-ink shadow-soft-sm',
+        tone === 'paper' ? 'border-border-subtle' : 'border-ink/15',
+        compact ? 'rounded-md p-3' : 'rounded-lg p-4',
         toneClasses[tone],
         className,
       )}
