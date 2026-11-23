@@ -694,7 +694,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-006: Elemental Quick Add & Form Experience
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-004` (PR #54), and `UX-005` (PR #56 @ `87c34e0`).
 - **Plan:**
@@ -707,3 +707,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `AddTodoSheet.test.tsx` added; unit and Playwright `phone-375` E2E suites pass; 320–1440 px (`0 px` overflow) and 200% text scaling verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/ScheduleForm.tsx`, `src/features/schedule/ScheduleItemSheet.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/today/AddTodoSheet.test.tsx`, `src/features/today/TodayPage.tsx`, `src/features/today/TodayPage.test.tsx`, `src/i18n/en.json`, `e2e/a11y.spec.ts`, `e2e/offline-todos.spec.ts`, `e2e/r2-account.spec.ts`, `e2e/reminders.spec.ts`, `e2e/repeat.spec.ts`, `e2e/subtasks.spec.ts`, `vercel.json`, `docs/screenshots/today-add-sheet-375.png`, `docs/screenshots/schedule-sheet-375.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-007: Elemental Today Screen Refinement
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-003`, `UX-004` (PR #54), `UX-005` (PR #56), and `UX-006` (PR #57 @ `e284ad6`).
+- **Plan:**
+  1. Branch `feat/UX-007-elemental-today` from `origin/v2-rebuild` (`e284ad6`) in isolated worktree `loomora-front-UX-007` without touching Focus logic, repositories, Dexie migrations, API clients, AddTodoSheet, ScheduleForm, or Codex worktrees.
+  2. Refine `TodoRow`, `DoneStamp`, and `StreakBadge` from legacy neo-brutalist thick black borders/hard shadows to Elemental Edition (`border-hairline border-border-subtle`, soft ambient elevation, `44×44 px` `border-control` action buttons, muted completed surface, semantic `danger` overdue pill, `tabular-nums`, and reduced-motion-safe celebrations).
+  3. Refine `TodayPage`, `NowNextStrip`, `TodayEmpty`, and `LoadingState` visual hierarchy, spacing, typography, touch feedback, contrast on pastel category surfaces, and `motion-reduce:animate-none` skeleton behavior.
+  4. Add unit tests for keyboard completion, accessible touch targets, and Elemental surfaces; verify full Vitest, Playwright `phone-375`, 6-viewport sweep (`320–1440 px`), and 200% text scaling at `375 px`; capture `today-375.png` and `today-1440.png` screenshots.
+- **Done when:**
+  - [x] `TodayPage`, `TodoRow`, `DoneStamp`, `StreakBadge`, `NowNextStrip`, `TodayEmpty`, and `LoadingState` follow `DEC-003` with zero feature regressions.
+  - [x] Full Vitest (**714/714** across 66 files) and Playwright `phone-375` (**80/80**) pass; 320–1440 px (`0 px` overflow) and 200% text scaling at 375 px (`0 px` overflow) verified.
+  - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
+- **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

@@ -76,11 +76,11 @@ export function TodayPage() {
   const closeSchedule = () => setPanel((current) => (current === panel ? null : current))
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <PageHeading>{t('pages.today.title')}</PageHeading>
-          <p className="font-semibold text-muted">
+          <p className="text-sm font-medium text-muted">
             {formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
@@ -109,7 +109,7 @@ export function TodayPage() {
         />
       ) : (
         <>
-          <div className="flex justify-center">
+          <div className="flex justify-center py-1">
             <ProgressRing
               value={doneCount}
               max={list.length}
@@ -135,7 +135,10 @@ export function TodayPage() {
               ))}
             </ul>
             {setDone.isError && (
-              <p role="alert" className="font-semibold text-danger">
+              <p
+                role="alert"
+                className="rounded-md border-hairline border-danger/30 bg-paper px-3.5 py-2.5 text-sm font-medium text-danger"
+              >
                 {t('today.saveError')}
               </p>
             )}

@@ -346,3 +346,27 @@ describe('delete with undo (F-022)', () => {
     expect(screen.queryByText('Deleted “Delete me”')).not.toBeInTheDocument()
   })
 })
+
+describe('Elemental Today accessibility & interactions (UX-007)', () => {
+  it('supports keyboard completion, accessible action targets, and Elemental row styling', async () => {
+    const user = userEvent.setup()
+    await repo.create({ title: 'Keyboard task', due_date: today, category: 'study' })
+    await openToday()
+
+    const row = await screen.findByTestId('todo-row')
+    expect(row).toHaveClass('border-border-subtle', 'bg-paper', 'shadow-soft-sm')
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Mark “Keyboard task” done' })
+    checkbox.focus()
+    await user.keyboard(' ')
+
+    await waitFor(() => expect(row).toHaveAttribute('data-done', 'true'))
+    expect(row).toHaveClass('bg-subtle/60')
+    expect(screen.getByText('Done!')).toBeInTheDocument()
+
+    const editBtn = screen.getByRole('button', { name: 'Edit “Keyboard task”' })
+    const deleteBtn = screen.getByRole('button', { name: 'Delete “Keyboard task”' })
+    expect(editBtn).toHaveClass('size-11')
+    expect(deleteBtn).toHaveClass('size-11')
+  })
+})
