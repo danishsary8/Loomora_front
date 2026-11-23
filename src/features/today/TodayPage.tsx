@@ -77,7 +77,7 @@ export function TodayPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <PageHeading>{t('pages.today.title')}</PageHeading>
           <p className="font-semibold text-muted">
