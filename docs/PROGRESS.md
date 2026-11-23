@@ -742,6 +742,19 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Delivery safety:** Added the exact F-031 branch to the repository's Vercel Git deployment suppression rules. The `v2-rebuild` suppression remains in place.
 - **Verification:** `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, and `npm run build` passed. `npm run test -- --maxWorkers=1 --pool=threads` passed 638 tests in 62 files after a parallel run timed out in an existing cross-tab Profile test. `npm run e2e -- --project=phone-375 --workers=1 e2e/repeat.spec.ts e2e/subtasks.spec.ts e2e/reminders.spec.ts e2e/offline-todos.spec.ts` passed all four tests on the local preview.
 
+### 2026-11-23: UX-002 Elemental Edition design decision (DEC-003, docs-only)
+
+- **Base & Isolation:** Branched `feat/UX-002-elemental-design-decision` from `origin/v2-rebuild` (`b84a977`, PR #50) in isolated worktree `loomora-front-UX-002`. Codex `QA-023` worktree untouched. Existing unmerged local worktrees `loomora-front-EL-01` (`docs/EL-01-elemental-design-decision` @ `41974ae`, 1 commit ahead / 2 behind `origin/v2-rebuild`, 8 docs files) and `loomora-front-UI-01` (`feat/UI-01-primitives-and-icons` @ `8f9dd06`, 1 commit ahead / 2 behind `origin/v2-rebuild`, 26 files of neo-brutalist primitives) were inspected read-only and left untouched.
+- **Changed (docs only, 0 code files modified):**
+  - `docs/DECISIONS.md`: Added `DEC-003` superseding `DEC-001` and `DEC-002` with owner-approved Elemental Edition tokens (`#F7F5EF` ivory canvas, `#FCFBF8` paper, `#EFECE3` subtle surface, `#132A23` forest ink, `#54685B` muted, `#1D5039`/`#194631` deep forest primary, `#E6F0EB` soft brand tint, `#E99A63` terracotta accent paired strictly with `#132A23`, `#E1E8E1` decorative hairlines, `#7B8C82` control borders `>= 3.26:1`, semantic `success #18703F`, `warning #9A5B04` on `#FEF4E4`, `danger #C62F36`, 6 pastel category surfaces with `#132A23` ink, self-hosted `Inter` typography, unified `1.75 px` icons, iOS safe areas, WCAG 2.2 AA `Focus Not Obscured` & `inert` sheets, single-theme and R1–R4 guardrails).
+  - `AGENTS.md`, `CLAUDE.md`, `docs/01-product-brief.md` (`D30`), `docs/02-feature-list.md`, `docs/05-screen-map.md`, `docs/07-project-decisions.md` (`S15`/`S18`), `docs/10-tech-and-structure.md`: Reconciled all active visual rules to `DEC-003` without altering product features or R1–R4 boundaries.
+  - `docs/TASKS.md`: Added `UX-002` (`review`).
+- **Verified:** `git diff --check` clean (0 whitespace/conflict issues); `git status` and `git diff --stat` confirm strictly documentation files changed (10 markdown files, 0 code/config files); Python WCAG 2.2 AA contrast verification confirmed all text pairs `>= 4.97:1` and control borders `>= 3.26:1`.
+- **Open questions / prerequisites before UX-003:**
+  1. The four raw reference files (`LOOMORA_ELEMENTAL_CORE_SCREENS`, `LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, `LOOMORA_ELEMENTAL_MORE_SCREENS`, `LOOMORA_ELEMENTAL_UI_UX_ALIGNMENT_V3.md`) are not present in this workspace; core tokens and Inter typography were reconciled with the prior local `EL-01` alignment record, while exact pastel category hexes should be confirmed against those assets before `UX-003`.
+  2. Confirm whether to retire/remove the unpushed local `EL-01` and `UI-01` worktrees once `UX-002` merges.
+  3. Confirm whether `/settings` should stay embedded in `/profile` for R1/R2 or split to a dedicated `/settings` route as drafted in `EL-01`.
+
 ### 2026-11-23 QA-023 R2 guest/account parity verification
 
 - Frontend base `b84a9777f965fe2e5ab99fe5d09150c255471d6e` includes F-031. Backend contract and decisions I4, I5, I7, I8, Q21 and Q22 reviewed at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d`. The checked-in roadmap identifies R2 in P9. QA-023 was absent from the queue and its detailed scope comes from the planner assignment.

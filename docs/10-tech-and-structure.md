@@ -38,7 +38,7 @@ legacy/                        old code, reference only, deleted at the end of R
 src/app/            router, providers, layout, bottom nav
 src/features/       todos/, schedule/, today/, auth/, profile/, streak/
 src/lib/            api client, storage adapter (guest vs server), date helpers
-src/components/ui/  Button, Card, Sheet, Chip, Ring, Checkbox, Input (neo-brutalism)
+src/components/ui/  Button, Card, Sheet, Chip, Ring, Checkbox, Input (Elemental Edition, see DEC-003)
 src/i18n/           en.json (km.json later)
 src/styles/         design tokens, tailwind layers
 e2e/                Playwright tests
