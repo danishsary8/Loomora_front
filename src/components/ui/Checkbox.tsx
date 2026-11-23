@@ -24,15 +24,15 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       <span
         aria-hidden="true"
         className={cn(
-          'grid size-7 shrink-0 place-items-center rounded-sm border-thick border-ink bg-paper text-paper shadow-hard-sm',
-          'transition-[transform,box-shadow,background-color] duration-100 ease-out',
-          'peer-checked:bg-success peer-checked:[&>svg]:opacity-100',
-          'peer-active:translate-x-press-sm peer-active:translate-y-press-sm peer-active:shadow-none',
-          'peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink',
-          'peer-disabled:opacity-50 peer-disabled:peer-active:translate-x-0 peer-disabled:peer-active:translate-y-0 peer-disabled:peer-active:shadow-hard-sm',
+          'grid size-6 shrink-0 place-items-center rounded-sm border-control border-border-control bg-paper text-white shadow-soft-sm',
+          'transition-[transform,background-color,border-color] duration-fast ease-elemental',
+          'peer-checked:border-primary peer-checked:bg-primary peer-checked:[&>svg]:opacity-100',
+          'peer-active:scale-95 motion-reduce:peer-active:scale-100',
+          'peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary',
+          'peer-disabled:opacity-50 peer-disabled:peer-active:scale-100',
         )}
       >
-        <CheckIcon className="size-5 opacity-0" />
+        <CheckIcon className="size-4 opacity-0 transition-opacity duration-fast" />
       </span>
       <span className={cn(hideLabel && 'sr-only', 'peer-disabled:opacity-50')}>{label}</span>
     </label>

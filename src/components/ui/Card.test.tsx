@@ -2,9 +2,14 @@ import { render, screen } from '@testing-library/react'
 import { Card } from './Card'
 
 describe('Card', () => {
-  it('renders children on paper by default', () => {
+  it('renders children on paper by default with Elemental elevation', () => {
     render(<Card>Hello</Card>)
-    expect(screen.getByText('Hello')).toHaveClass('bg-paper', 'border-thick', 'shadow-hard-md')
+    expect(screen.getByText('Hello')).toHaveClass(
+      'bg-paper',
+      'border-hairline',
+      'border-border-subtle',
+      'shadow-soft-sm',
+    )
   })
 
   it('uses a flat category color when given a tone', () => {

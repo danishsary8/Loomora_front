@@ -23,11 +23,12 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('applies the press-down and 44 px touch classes', () => {
+  it('applies Elemental tactile press and 44 px touch classes', () => {
     render(<Button variant="danger">Delete</Button>)
     const button = screen.getByRole('button', { name: 'Delete' })
     expect(button.className).toContain('min-h-touch')
-    expect(button.className).toContain('enabled:active:translate-y-press-md')
+    expect(button.className).toContain('enabled:active:scale-[0.98]')
+    expect(button.className).toContain('motion-reduce:enabled:active:scale-100')
     expect(button.className).toContain('bg-danger')
   })
 })

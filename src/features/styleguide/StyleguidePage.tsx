@@ -1,39 +1,89 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Card, Checkbox, Chip, Input, ProgressRing, Sheet } from '@/components/ui'
+import {
+  Button,
+  Card,
+  Checkbox,
+  Chip,
+  Input,
+  ProgressRing,
+  SegmentedControl,
+  Sheet,
+  Textarea,
+  Toast,
+} from '@/components/ui'
+import { ClockInput } from '@/components/ui/ClockInput'
+import {
+  CheckIcon,
+  CloseIcon,
+  FocusIcon,
+  InsightsIcon,
+  PencilIcon,
+  ProfileIcon,
+  RepeatIcon,
+  StreakIcon,
+  TodayIcon,
+  TrashIcon,
+  WeekIcon,
+} from '@/components/ui/icons'
 import { ScheduleItemSheet } from '@/features/schedule/ScheduleItemSheet'
 import { CATEGORIES, colors, type Category } from '@/styles/tokens'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-script text-4xl font-bold leading-none">{title}</h2>
+      <h2 className="font-heading text-2xl font-bold leading-tight text-ink">{title}</h2>
       {children}
     </section>
   )
 }
 
 const swatches: [string, string][] = [
-  ['cream', colors.cream],
+  ['canvas', colors.cream],
   ['paper', colors.paper],
+  ['subtle', colors.subtle],
   ['ink', colors.ink],
   ['muted', colors.muted],
+  ['primary', colors.primary],
+  ['primary-soft', colors.primarySoft],
   ['accent', colors.accent],
+  ['border-subtle', colors.borderSubtle],
+  ['border-control', colors.borderControl],
   ['success', colors.success],
+  ['warning', colors.warning],
   ['danger', colors.danger],
   ...CATEGORIES.map((c): [string, string] => [c, colors.category[c]]),
 ]
 
+const ICON_SHOWCASE = [
+  { name: 'Today', Icon: TodayIcon },
+  { name: 'Week', Icon: WeekIcon },
+  { name: 'Focus', Icon: FocusIcon },
+  { name: 'Insights', Icon: InsightsIcon },
+  { name: 'Profile', Icon: ProfileIcon },
+  { name: 'Streak', Icon: StreakIcon },
+  { name: 'Check', Icon: CheckIcon },
+  { name: 'Close', Icon: CloseIcon },
+  { name: 'Edit', Icon: PencilIcon },
+  { name: 'Repeat', Icon: RepeatIcon },
+  { name: 'Delete', Icon: TrashIcon },
+] as const
+
 export function StyleguidePage() {
   const { t } = useTranslation()
   const [picked, setPicked] = useState<Category>('study')
+  const [clockFormat, setClockFormat] = useState<'12h' | '24h'>('24h')
+  const [clockDraft, setClockDraft] = useState<string>()
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
 
   return (
     <main className="mx-auto flex w-full max-w-[375px] flex-col gap-10 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <h1 className="font-script text-5xl font-bold leading-none">{t('styleguide.title')}</h1>
+        <h1 className="font-heading text-4xl font-bold leading-tight text-ink">
+          {t('styleguide.title')}
+        </h1>
         <p className="text-muted">{t('styleguide.intro')}</p>
       </header>
 
@@ -42,22 +92,36 @@ export function StyleguidePage() {
           {swatches.map(([name, hex]) => (
             <li key={name} className="flex flex-col gap-1 text-xs">
               <span
-                className="h-12 rounded-md border-thick border-ink"
+                className="h-12 rounded-sm border-hairline border-border-control/40 shadow-soft-sm"
                 style={{ backgroundColor: hex }}
               />
-              <span className="font-semibold">{name}</span>
-              <span className="text-muted">{hex}</span>
+              <span className="font-semibold text-ink">{name}</span>
+              <span className="tabular-nums text-muted">{hex}</span>
             </li>
           ))}
         </ul>
       </Section>
 
       <Section title={t('styleguide.typography')}>
-        <p className="font-script text-5xl font-bold leading-none">
+        <p className="font-heading text-4xl font-bold leading-tight text-ink">
           {t('styleguide.scriptSample')}
         </p>
-        <p className="text-base">{t('styleguide.bodySample')}</p>
+        <p className="text-base text-ink">{t('styleguide.bodySample')}</p>
         <p className="text-sm text-muted">{t('styleguide.bodySample')}</p>
+      </Section>
+
+      <Section title={t('styleguide.icons')}>
+        <ul className="grid grid-cols-4 gap-2">
+          {ICON_SHOWCASE.map(({ name, Icon }) => (
+            <li
+              key={name}
+              className="flex flex-col items-center gap-1.5 rounded-md border-hairline border-border-subtle bg-paper p-2.5 text-xs text-muted shadow-soft-sm"
+            >
+              <Icon className="size-5 text-ink" />
+              <span>{name}</span>
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section title={t('styleguide.buttons')}>
@@ -78,6 +142,18 @@ export function StyleguidePage() {
         </div>
       </Section>
 
+      <Section title={t('styleguide.segmented')}>
+        <SegmentedControl
+          label={t('styleguide.segmentedLabel')}
+          value={clockFormat}
+          onChange={setClockFormat}
+          options={[
+            { value: '12h', label: t('styleguide.segmentedFirst') },
+            { value: '24h', label: t('styleguide.segmentedSecond') },
+          ]}
+        />
+      </Section>
+
       <Section title={t('styleguide.cards')}>
         <Card>
           <h3 className="text-lg font-bold">{t('styleguide.cardTitle')}</h3>
@@ -85,7 +161,7 @@ export function StyleguidePage() {
         </Card>
         <div className="grid grid-cols-2 gap-3">
           {CATEGORIES.map((c) => (
-            <Card key={c} tone={c} className="font-semibold">
+            <Card key={c} tone={c} compact className="font-semibold">
               {t(`categories.${c}`)}
             </Card>
           ))}
@@ -93,13 +169,13 @@ export function StyleguidePage() {
       </Section>
 
       <Section title={t('styleguide.chips')}>
-        <h3 className="font-bold">{t('styleguide.chipsStatic')}</h3>
+        <h3 className="text-sm font-semibold text-muted">{t('styleguide.chipsStatic')}</h3>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <Chip key={c} category={c} />
           ))}
         </div>
-        <h3 className="font-bold">{t('styleguide.chipsPicker')}</h3>
+        <h3 className="text-sm font-semibold text-muted">{t('styleguide.chipsPicker')}</h3>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <Chip key={c} category={c} selected={picked === c} onClick={() => setPicked(c)} />
@@ -123,6 +199,17 @@ export function StyleguidePage() {
         />
         <Input label={t('styleguide.inputErrorLabel')} error={t('styleguide.inputError')} />
         <Input label={t('styleguide.inputDisabled')} disabled />
+        <Textarea
+          label={t('styleguide.textareaLabel')}
+          placeholder={t('styleguide.textareaPlaceholder')}
+        />
+        <ClockInput
+          label={t('styleguide.clockLabel')}
+          format={clockFormat}
+          wallTime="14:30"
+          draft={clockDraft}
+          onChange={setClockDraft}
+        />
       </Section>
 
       <Section title={t('styleguide.progressRing')}>
@@ -148,6 +235,18 @@ export function StyleguidePage() {
         </div>
       </Section>
 
+      <Section title={t('styleguide.toast')}>
+        <Button
+          variant="secondary"
+          onClick={() =>
+            setToastMessage((current) => (current ? null : t('styleguide.toastSample')))
+          }
+        >
+          {t('styleguide.showToast')}
+        </Button>
+        <Toast message={toastMessage} />
+      </Section>
+
       <Section title={t('styleguide.sheet')}>
         <Button variant="secondary" onClick={() => setSheetOpen(true)}>
           {t('styleguide.openSheet')}
@@ -158,7 +257,7 @@ export function StyleguidePage() {
           title={t('styleguide.sheetTitle')}
         >
           <div className="flex flex-col gap-4">
-            <p>{t('styleguide.sheetBody')}</p>
+            <p className="text-muted">{t('styleguide.sheetBody')}</p>
             <Input
               label={t('styleguide.inputLabel')}
               placeholder={t('styleguide.inputPlaceholder')}

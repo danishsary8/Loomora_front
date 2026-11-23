@@ -7,19 +7,20 @@ export function FloatingAddButton({ onClick, label }: { onClick: () => void; lab
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-30 grid size-16 place-items-center rounded-full border-thick border-ink bg-accent md:bottom-8 md:right-8 ${pressMd}`}
+      className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-30 grid size-14 place-items-center rounded-full border-control border-transparent bg-primary text-white shadow-soft-md hover:bg-primary-pressed md:bottom-8 md:right-8 ${pressMd}`}
     >
       <svg
         viewBox="0 0 24 24"
-        className="size-8"
+        className="size-7"
         fill="none"
         stroke="currentColor"
-        strokeWidth={3.5}
-        strokeLinecap="square"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
         aria-hidden="true"
         focusable="false"
       >
-        <path d="M12 4v16M4 12h16" />
+        <path d="M12 5v14M5 12h14" />
       </svg>
     </button>
   )

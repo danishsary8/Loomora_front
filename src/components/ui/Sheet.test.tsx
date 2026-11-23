@@ -97,4 +97,18 @@ describe('Sheet', () => {
       expect(dialog).toContainElement(document.activeElement as HTMLElement)
     }
   })
+
+  it('marks background siblings inert while open without disabling the dialog', async () => {
+    const { container } = render(<Harness />)
+    expect(container).not.toHaveAttribute('inert')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add a to-do' })
+    expect(container).toHaveAttribute('inert')
+    expect(dialog).not.toHaveAttribute('inert')
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(container).not.toHaveAttribute('inert')
+  })
 })

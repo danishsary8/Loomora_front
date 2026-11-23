@@ -26,12 +26,18 @@ const fillClasses: Record<Category, string> = {
 export function Chip({ category, label, onClick, selected = false, className }: ChipProps) {
   const { t } = useTranslation()
   const text = label ?? t(`categories.${category}`)
-  const base =
-    'inline-flex select-none items-center gap-1.5 rounded-full border-thin border-ink font-semibold text-ink'
+  const base = 'inline-flex select-none items-center gap-1.5 rounded-full font-medium text-ink'
 
   if (!onClick) {
     return (
-      <span className={cn(base, 'min-h-7 px-3 text-sm', fillClasses[category], className)}>
+      <span
+        className={cn(
+          base,
+          'min-h-7 border-hairline border-ink/15 px-3 text-sm',
+          fillClasses[category],
+          className,
+        )}
+      >
         {text}
       </span>
     )
@@ -44,8 +50,10 @@ export function Chip({ category, label, onClick, selected = false, className }: 
       onClick={onClick}
       className={cn(
         base,
-        'min-h-touch px-4 text-base',
-        selected ? cn(fillClasses[category], pressSm) : 'bg-paper',
+        'min-h-touch border-control px-4 text-sm font-semibold',
+        selected
+          ? cn('border-ink/40', fillClasses[category], pressSm)
+          : cn('border-border-control bg-paper hover:bg-subtle', pressSm),
         className,
       )}
     >
@@ -54,7 +62,7 @@ export function Chip({ category, label, onClick, selected = false, className }: 
       ) : (
         <span
           aria-hidden="true"
-          className={cn('size-3 rounded-full border-thin border-ink', fillClasses[category])}
+          className={cn('size-3 rounded-full border-hairline border-ink/30', fillClasses[category])}
         />
       )}
       {text}
