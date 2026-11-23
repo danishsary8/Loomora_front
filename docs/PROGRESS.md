@@ -787,7 +787,7 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - `POST /import` also caps schedule items at 100 per request and per account, exceptions at 5000 per request, check-ins at 10000 and daily intentions at 1000. The client puts all to-dos and schedule items in the first request and chunks the other arrays.
 - Splitting to-dos can avoid the request-size check but cannot increase available account capacity. Parent and successor references must already exist or be included in the request. Separate successful requests remain committed after a later 422. A disposable backend check submitted 501 rows with repeat/subtask references, verified zero writes on that 422, then committed 499 rows, rejected a second two-row chunk, retried the first 499 UUIDs as skips, and accepted one more row. A preexisting tombstone remained intact.
 - The frontend retains the complete guest snapshot when any request fails, even when a prior request succeeds. The user can dismiss the error and access the plan again in guest mode on the same device. Retry sends the same UUIDs, and local cleanup starts only after every request succeeds. Repeating an over-capacity upload under the current contract still returns 422.
-- **Planner decision needed:** What rule should let users save a complete plan when a valid repeat series exceeds the request limit or the account's remaining capacity? Proposed separate backend task: define the approved capacity and import contract for repeat-generated rows, including reference preservation and idempotent retry. Update backend tests and OpenAPI before changing the frontend import behavior.
+- The planner moved the capacity decision to [proposed B-043](#proposed-b-043-lossless-import-of-repeat-generated-todos). Full R2 import parity remains blocked.
 
 #### Local evidence
 
@@ -796,3 +796,18 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - Focused Vitest passed 52 tests across `GuestTodoRepository.test.ts` and `saveGuestPlan.test.ts`. The first full run passed 643 of 645 tests, with two existing Profile tests hitting the 5-second timeout under concurrent local verification. The repeat lifecycle browser test passed after using the checkbox's keyboard interaction. All 78 existing phone tests passed in the preceding full run.
 - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`, and `git diff --check` passed. Formatting ran on LF checkout files to match CI. Knip emitted its existing CSS configuration hint.
 - `npm audit --omit=dev` found zero vulnerabilities. `npx --yes @redocly/cli lint docs/openapi.yaml` passed with four existing warnings. The frontend OpenAPI snapshot has the same Git blob as the backend contract at the reviewed base.
+
+### 2026-11-23 QA-023 planner review
+
+- The planner approved the tested guest repeat-successor deletion fix and parity evidence for PR #51, including import and recovery within available account capacity. The over-capacity import blocker moves to a backend follow-up.
+- Merged `origin/v2-rebuild` at `a45d3f67ce4cafca4864d00ce79719a219bf5c31` (UX-002, PR #52) into the existing branch at `86b4a4a6aa10dbee397484f36d62a24a36400416`. Kept both task and progress entries. Application code, tests, the guest data model, manual limits, import behavior, and deployment configuration are identical to the previously tested QA-023 head.
+- After integration, lint, typecheck, Knip, Prettier, the production build, and Git whitespace checks passed. All five targeted `phone-375` cases passed (account repeat lifecycle, guest subtasks, repeats, reminders, and offline to-dos). The production dependency audit reported zero vulnerabilities, and Redocly validated OpenAPI with the four existing warnings.
+
+#### Proposed B-043 Lossless import of repeat-generated to-dos
+
+The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B-043 is provisional pending assignment in the backend repository.
+
+- Obtain planner approval for how `POST /import` handles repeat-generated rows beyond 500 and plans that exceed remaining active account capacity. Specify how existing account rows, matching UUIDs, and soft-deleted rows count. Preserve the existing 500-active-row manual-creation limit.
+- Define atomicity for a single request and for a multi-request import. Specify what a later rejection leaves committed, how retries handle partial success or a lost response, and how UUIDs, subtask parent links, and repeat successor links survive without overwriting existing account data.
+- Specify lossless guest recovery after any rejection, interruption, or partial server success. Keep the complete device snapshot available until confirmed success, with no silent truncation or cleanup on failure.
+- Update backend tests and OpenAPI after policy approval and before frontend changes. Cover 499, 500, and 501 or more active rows, existing account content, soft deletion, repeat successors with subtasks, partial failure, and idempotent retry.
