@@ -8,13 +8,13 @@ export interface ProgressRingProps {
   size?: number
 }
 
-const STROKE = 10
+const STROKE = 8
 
 export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProps) {
   const clamped = Math.min(Math.max(value, 0), Math.max(max, 0))
   const ratio = max > 0 ? clamped / max : 0
   const center = size / 2
-  const radius = center - STROKE / 2 - 3
+  const radius = center - STROKE / 2 - 2
   const circumference = 2 * Math.PI * radius
 
   return (
@@ -35,7 +35,7 @@ export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProp
             cy={center}
             r={radius}
             fill="none"
-            stroke={colors.paper}
+            stroke={colors.borderSubtle}
             strokeWidth={STROKE}
           />
           <circle
@@ -43,38 +43,23 @@ export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProp
             cy={center}
             r={radius}
             fill="none"
-            stroke={colors.success}
+            stroke={colors.primary}
             strokeWidth={STROKE}
+            strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={circumference * (1 - ratio)}
             transform={`rotate(-90 ${center} ${center})`}
-            className="transition-[stroke-dashoffset] duration-500 ease-out"
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r={radius + STROKE / 2}
-            fill="none"
-            stroke={colors.ink}
-            strokeWidth={3}
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r={radius - STROKE / 2}
-            fill="none"
-            stroke={colors.ink}
-            strokeWidth={3}
+            className="transition-[stroke-dashoffset] duration-slow ease-elemental"
           />
         </svg>
         <span
-          className="absolute inset-0 grid place-items-center text-2xl font-bold"
+          className="absolute inset-0 grid place-items-center text-2xl font-bold tabular-nums text-ink"
           aria-hidden="true"
         >
           {clamped}/{max}
         </span>
       </div>
-      <figcaption className="text-sm font-semibold" aria-hidden="true">
+      <figcaption className="text-sm font-medium text-muted" aria-hidden="true">
         {label}
       </figcaption>
     </figure>

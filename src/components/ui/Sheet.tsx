@@ -17,7 +17,42 @@ export interface SheetProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-/** Bottom sheet dialog: Escape and backdrop close it, focus stays inside while open. */
+const PORTAL_ATTR = 'data-sheet-portal'
+
+// Reference-counted background lock state so overlapping/sequential sheets and exit animations
+// never prematurely unlock `#root` or leave stale `inert` attributes behind.
+const lockCounts = new Map<HTMLElement, { count: number; hadInert: boolean }>()
+
+function lockBackground(): () => void {
+  const locked: HTMLElement[] = []
+  for (const child of Array.from(document.body.children)) {
+    if (!(child instanceof HTMLElement)) continue
+    if (child.hasAttribute(PORTAL_ATTR)) continue
+    const existing = lockCounts.get(child)
+    if (existing) {
+      existing.count += 1
+    } else {
+      const hadInert = child.hasAttribute('inert')
+      lockCounts.set(child, { count: 1, hadInert })
+      if (!hadInert) child.setAttribute('inert', '')
+    }
+    locked.push(child)
+  }
+
+  return () => {
+    for (const el of locked) {
+      const entry = lockCounts.get(el)
+      if (!entry) continue
+      entry.count -= 1
+      if (entry.count <= 0) {
+        lockCounts.delete(el)
+        if (!entry.hadInert) el.removeAttribute('inert')
+      }
+    }
+  }
+}
+
+/** Bottom sheet dialog: Escape and backdrop close it, background is inert, focus stays inside. */
 export function Sheet({ open, onClose, title, children, initialFocusRef }: SheetProps) {
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
@@ -34,6 +69,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     const previouslyFocused = document.activeElement as HTMLElement | null
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const unlockBackground = lockBackground()
 
     const panel = panelRef.current
     const first = initialFocusRef?.current ?? panel?.querySelector<HTMLElement>(FOCUSABLE)
@@ -63,6 +99,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
+      unlockBackground()
       if (previouslyFocused?.isConnected) {
         previouslyFocused.focus()
       } else {
@@ -78,14 +115,14 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div data-sheet-portal="true" className="fixed inset-0 z-50 flex items-end justify-center">
           <m.div
             data-testid="sheet-backdrop"
-            className="absolute inset-0 bg-ink/40"
+            className="absolute inset-0 bg-ink/40 backdrop-blur-[1px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.16 }}
             onClick={onClose}
           />
           <m.div
@@ -94,20 +131,23 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-t-lg border-thick border-b-0 border-ink bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_0_0_#111111] focus-visible:outline-none"
+            className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-lg border-t border-border-subtle bg-paper pb-[max(1.25rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-3 shadow-soft-sheet focus-visible:outline-none"
             {...panelMotion}
             transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            <div aria-hidden="true" className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink" />
+            <div
+              aria-hidden="true"
+              className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border-control/50"
+            />
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 id={titleId} className="font-script text-4xl font-bold leading-none">
+              <h2 id={titleId} className="font-heading text-2xl font-bold leading-tight text-ink">
                 {title}
               </h2>
               <button
                 type="button"
                 onClick={onClose}
                 aria-label={t('common.close')}
-                className={`grid size-11 shrink-0 place-items-center rounded-md border-thick border-ink bg-paper ${pressSm}`}
+                className={`grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control bg-paper text-ink hover:bg-subtle ${pressSm}`}
               >
                 <CloseIcon className="size-5" />
               </button>

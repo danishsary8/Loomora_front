@@ -265,12 +265,12 @@ test.describe('PWA', () => {
         await reg?.update()
       })
 
-      // Update notification appears without auto-reloading or discarding the open form.
-      const updateRegion = page.getByRole('region', { name: 'App update' })
-      await expect(updateRegion).toBeVisible()
-      await expect(updateRegion.getByRole('status')).toContainText(
-        'A new version of Loomora is available.',
-      )
+      // Update notification is visually shown without auto-reloading or discarding the open form,
+      // while the modal keeps the background inert until the sheet closes.
+      const updateBanner = page.locator('section[aria-label="App update"]')
+      await expect(updateBanner).toBeVisible()
+      await expect(updateBanner).toContainText('A new version of Loomora is available.')
+      await expect(page.locator('#root')).toHaveAttribute('inert', '')
       await page.waitForTimeout(1500)
       expect(
         await page.evaluate(
@@ -280,22 +280,23 @@ test.describe('PWA', () => {
       await expect(sheet).toBeVisible()
       await expect(sheet.getByLabel('Title')).toHaveValue('Unsaved draft during SW update')
 
-      // Selecting Later dismisses the notification and preserves the form and unsaved input.
+      // Save the draft so guest IndexedDB retains it and the sheet closes, restoring background access.
+      await sheet.getByRole('button', { name: 'Add', exact: true }).click()
+      await expect(sheet).toBeHidden()
+      await expect(page.locator('#root')).not.toHaveAttribute('inert', '')
+      await expect(page.getByText('Unsaved draft during SW update')).toBeVisible()
+
+      // Selecting Later dismisses the notification without reloading.
+      const updateRegion = page.getByRole('region', { name: 'App update' })
+      await expect(updateRegion).toBeVisible()
       await updateRegion.getByRole('button', { name: 'Later' }).click()
       await expect(updateRegion).toBeHidden()
-      await expect(sheet).toBeVisible()
-      await expect(sheet.getByLabel('Title')).toHaveValue('Unsaved draft during SW update')
       expect(
         await page.evaluate(
           () => (window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow === true,
         ),
       ).toBe(true)
       await expect(page.getByText('Persisted before update')).toBeVisible()
-
-      // Save the draft so guest IndexedDB also retains it across the eventual update.
-      await sheet.getByRole('button', { name: 'Add', exact: true }).click()
-      await expect(sheet).toBeHidden()
-      await expect(page.getByText('Unsaved draft during SW update')).toBeVisible()
       expect(problems).toEqual([])
     } finally {
       await server.close()
@@ -343,10 +344,24 @@ test.describe('PWA', () => {
         await reg?.update()
       })
 
+      const updateBanner = page.locator('section[aria-label="App update"]')
+      await expect(updateBanner).toBeVisible()
+      await expect(page.locator('#root')).toHaveAttribute('inert', '')
+      await expect(sheet.getByLabel('Title')).toHaveValue('Draft needing confirmation')
+
+      // Close sheet so background interaction is restored, then create an unsaved inline draft on Profile.
+      await sheet.getByRole('button', { name: 'Close' }).click()
+      await expect(sheet).toBeHidden()
+      await expect(page.locator('#root')).not.toHaveAttribute('inert', '')
+
+      await page.getByRole('link', { name: 'Profile' }).click()
+      await expect(page.getByRole('heading', { level: 1, name: 'Profile' })).toBeVisible()
+      await page.getByLabel('Time format').selectOption('12h')
+
       const updateRegion = page.getByRole('region', { name: 'App update' })
       await expect(updateRegion).toBeVisible()
 
-      // Clicking Update now while an editable sheet is open asks for confirmation instead of silently discarding.
+      // Clicking Update now while an unsaved draft is active asks for confirmation instead of silently discarding.
       await updateRegion.getByRole('button', { name: 'Update now' }).click()
       await expect(updateRegion.getByRole('button', { name: 'Discard and update' })).toBeVisible()
       await expect(updateRegion.getByRole('button', { name: 'Keep editing' })).toBeVisible()
@@ -355,15 +370,15 @@ test.describe('PWA', () => {
           () => (window as unknown as { __qa019SameWindow?: boolean }).__qa019SameWindow === true,
         ),
       ).toBe(true)
-      await expect(sheet.getByLabel('Title')).toHaveValue('Draft needing confirmation')
+      await expect(page.getByLabel('Time format')).toHaveValue('12h')
 
-      // Keep editing returns to editing with draft preserved.
+      // Keep editing returns to editing with the unsaved draft preserved.
       await updateRegion.getByRole('button', { name: 'Keep editing' }).click()
-      await expect(sheet.getByLabel('Title')).toHaveValue('Draft needing confirmation')
+      await expect(page.getByLabel('Time format')).toHaveValue('12h')
 
-      // Close sheet so keyboard Tab order reaches the update banner directly, then test keyboard activation + axe.
-      await sheet.getByRole('button', { name: 'Close' }).click()
-      await expect(sheet).toBeHidden()
+      // Navigate back to Today to clear the unsaved draft, then test keyboard activation + axe.
+      await page.getByRole('link', { name: 'Today' }).click()
+      await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
 
       const { violations } = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

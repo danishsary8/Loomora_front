@@ -11,25 +11,25 @@ export interface ButtonStyleOptions {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: `border-thick border-ink bg-accent text-ink ${pressMd}`,
-  secondary: `border-thick border-ink bg-paper text-ink ${pressMd}`,
-  danger: `border-thick border-ink bg-danger text-paper ${pressMd}`,
+  primary: `border-control border-transparent bg-primary text-white enabled:hover:bg-primary-pressed enabled:active:bg-primary-pressed ${pressMd}`,
+  secondary: `border-control border-border-control bg-paper text-ink enabled:hover:bg-subtle enabled:active:bg-subtle ${pressMd}`,
+  danger: `border-control border-transparent bg-danger text-white enabled:hover:brightness-95 enabled:active:brightness-90 ${pressMd}`,
   ghost:
-    'border-thick border-transparent bg-transparent text-ink underline-offset-4 enabled:hover:underline enabled:active:translate-y-px',
+    'border-control border-transparent bg-transparent text-ink transition-colors duration-fast ease-elemental enabled:hover:bg-subtle/80 enabled:active:bg-subtle',
 }
 
-// Links have no :enabled state, so they press with plain `active:`.
+// Links have no :enabled state, so they use plain hover:/active:.
 const linkVariantClasses: Record<ButtonVariant, string> = {
-  primary: `border-thick border-ink bg-accent text-ink ${pressMdAny}`,
-  secondary: `border-thick border-ink bg-paper text-ink ${pressMdAny}`,
-  danger: `border-thick border-ink bg-danger text-paper ${pressMdAny}`,
+  primary: `border-control border-transparent bg-primary text-white hover:bg-primary-pressed active:bg-primary-pressed ${pressMdAny}`,
+  secondary: `border-control border-border-control bg-paper text-ink hover:bg-subtle active:bg-subtle ${pressMdAny}`,
+  danger: `border-control border-transparent bg-danger text-white hover:brightness-95 active:brightness-90 ${pressMdAny}`,
   ghost:
-    'border-thick border-transparent bg-transparent text-ink underline-offset-4 hover:underline active:translate-y-px',
+    'border-control border-transparent bg-transparent text-ink transition-colors duration-fast ease-elemental hover:bg-subtle/80 active:bg-subtle',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
   md: 'min-h-touch px-5 text-base',
-  lg: 'min-h-[52px] px-6 text-lg',
+  lg: 'min-h-[52px] px-6 text-base',
 }
 
 /** Button look for other elements, e.g. a router Link that should look like a button. */
@@ -40,7 +40,7 @@ export function buttonClasses({
   as = 'button',
 }: ButtonStyleOptions & { as?: 'button' | 'link' } = {}): string {
   return cn(
-    'inline-flex select-none items-center justify-center gap-2 rounded-md font-bold',
+    'inline-flex select-none items-center justify-center gap-2 rounded-md font-semibold',
     'disabled:cursor-not-allowed disabled:opacity-50',
     (as === 'link' ? linkVariantClasses : variantClasses)[variant],
     sizeClasses[size],

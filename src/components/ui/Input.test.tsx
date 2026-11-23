@@ -16,12 +16,12 @@ describe('Input', () => {
     expect(field).toHaveAttribute('aria-invalid', 'true')
     expect(field).toHaveAccessibleDescription('Please enter a title. Up to 200 characters.')
     expect(field).toHaveClass('border-danger')
-    expect(field).not.toHaveClass('border-ink')
+    expect(field).not.toHaveClass('border-border-control')
   })
 
   it('is not marked invalid without an error', () => {
     render(<Input label="Title" />)
     expect(screen.getByLabelText('Title')).not.toHaveAttribute('aria-invalid')
-    expect(screen.getByLabelText('Title')).toHaveClass('border-ink')
+    expect(screen.getByLabelText('Title')).toHaveClass('border-border-control')
   })
 })
