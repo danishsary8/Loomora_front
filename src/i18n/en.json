@@ -103,6 +103,18 @@
   },
   "focus": {
     "muteSound": "Mute timer sound",
+    "alarm": {
+      "title": "Timer alarm",
+      "sound": "Alarm sound",
+      "volume": "Alarm volume",
+      "volumeValue": "{{volume}}%",
+      "mode": "Alarm play mode",
+      "limit": "The alarm stops automatically after two minutes.",
+      "active": "Timer alarm is active.",
+      "stop": "Stop alarm",
+      "sounds": { "chime": "Chime", "wood": "Wood", "bell": "Bell" },
+      "modes": { "once": "Once", "repeat": "Repeat 3×", "loop": "Until I stop" }
+    },
     "presentation": {
       "title": "Focus timer",
       "expand": "Expand timer",
