@@ -1090,6 +1090,17 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
 - The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.
 
+### 2026-11-24 F-R3-05 — Timer-End Sound & Mute
+
+- Started from `f277c0f` in the `loomora-front-F-R3-05` worktree after confirming F-R3-04 merged in PR #64 and F-R3-05 was unused.
+- A committed expiry of a started countdown phase, including a short or long break, can play one original 320 ms Web Audio chime. The runtime that commits the expiry plays it if audio is enabled, or relays it to the last audio-enabled document in the same owner scope. Manual endings, ordinary pause and resume, stopwatch finishes, and outbox retries are silent.
+- The localized **Mute timer sound** toggle uses the Elemental Button and remembers a browser-local preference shared by guest and account mode. Audio opens on a Focus interaction. Playback failure is silent and independent of the timer. The deadline check suppresses audio for phases already expired at unlock, including expired reload recovery.
+- The sound trigger uses the existing transaction and DEC-004's verified expiry. Vercel branch previews are disabled.
+- Playwright `phone-375` passed 91/91, including the real Chromium chime, keyboard mute, reload and reduced-motion checks. Focus passed axe and the 320, 375, 390, 768, 1024 and 1440 px sweep at 100% and 200% text size.
+- Lint, typecheck, Knip, Prettier, and the production build passed. The production audit found zero vulnerabilities. Redocly validated the OpenAPI contract with four existing warnings.
+- Full Vitest passed 792/792 across 73 files with `--pool=forks --maxWorkers=4`. An earlier threads run reported two account-runtime fixture failures. Both passed in the focused forked run and the full forked rerun.
+- Git diff checks passed. GitHub CLI authentication is unavailable. The planner can open the PR into `v2-rebuild` and verify CI and mergeability.
+
 ### 2026-11-24: UX-009 Elemental Profile & Settings Refinement
 
 - **Base & Isolation:** Claude Code CLI 2 branched `feat/UX-009-elemental-profile` from `origin/v2-rebuild` (`7056a4e`, PR #61 `UX-008` merged) in isolated worktree `loomora-front-UX-009`. The `UX-009` ID was unused and is now registered in `docs/TASKS.md` (`UX-008` marked done). Guest import and migration (`QA-024`, which only changes `src/lib/storage/*`), Focus, Week, backend, auth contracts, API clients, Dexie, `DeleteAccountSheet`, `FeedbackSheet`, `SavePlanSheet`, and the Google deletion flow were not touched. No documentation conflict was found.
@@ -1115,3 +1126,10 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 
 - **Changed:** Merged `origin/v2-rebuild` (`f277c0f`, PR #64 `F-R3-04`) into `feat/UX-009-elemental-profile` with a merge commit (no rebase, no force-push). Only the append-only entries in `docs/TASKS.md`, `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted, and both sides were kept. `src/i18n/en.json` merged automatically with both the Focus history and Profile keys. The diff against `v2-rebuild` still contains only UX-009 files.
 - **Verified:** `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings), `git diff --check`, full Vitest (`--maxWorkers=2`) **795/795** across 72 files, and Playwright `phone-375` **92/92**. The first Playwright attempt timed out in the 120 s web-server start because the production build took about 100 s under machine load. The retry passed unchanged.
+
+#### 2026-11-24 F-R3-05 — PR #66 planner follow-up
+
+- Merged `origin/v2-rebuild` at `a6fd1db` after UX-009 merged in PR #65. Kept both task and progress records, both Vercel branch preview exclusions, and the Focus and Profile translations.
+- [CI run 45366276310](https://github.com/danishsary8/Loomora_front/actions/runs/45366276310) failed the Focus History focus-position assertion at 320 px with 200% text on both attempts. The test now uses keyboard Tab navigation with the real browser clock and checks that the focused date field settles in the viewport above the fixed navigation.
+- The same run reported 0.065 seconds in the overnight stopwatch-history test on its first attempt. The test now waits for the corresponding Start and Pause commands to settle before advancing time, so the assertions still verify elapsed time and the starting local date.
+- Local lint, typecheck, Knip, Prettier, production build and Git diff checks passed. The production audit reported zero vulnerabilities, and Redocly passed with four existing warnings. Both Focus History tests and the countdown audio test passed in the full local Playwright run. The initial Windows runs also reported three PWA timeouts and two Vitest worker startup timeouts.

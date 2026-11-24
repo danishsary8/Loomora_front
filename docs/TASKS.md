@@ -796,6 +796,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   3. Use Elemental components and localized content for the total, session details, links, and loading, empty, offline, and retry states.
   4. Verify the guest and account flows, accessibility, six viewport widths and 200% text size, then run the full checks and open the review PR.
 
+### F-R3-05 — Timer-End Sound & Mute
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** R3 feature list, DEC-003 and DEC-004. F-R3-04 merged in PR #64 at `f277c0f`. Task ID was unused at registration.
+- **PR:** [#66](https://github.com/danishsary8/Loomora_front/pull/66).
+- **Plan:**
+  1. Test the committed expiry signal for each started countdown phase, including the long-break finalization, command races and repeat reconciliation.
+  2. Route each committed expiry to the Focus tab that enabled audio. Use a short original Web Audio chime, unlocked by Focus interactions, and skip deadlines already elapsed at unlock.
+  3. Add a keyboard-accessible Elemental mute toggle with an i18next label and a device-local preference.
+  4. Verify audio, silent paths, browser restrictions and cross-tab delivery with automated tests. Run all required checks and the six-width and reduced-motion sweep before handing off the PR.
+
 ### UX-009: Elemental Profile & Settings Refinement
 
 - **Status:** review

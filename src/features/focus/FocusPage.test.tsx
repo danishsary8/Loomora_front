@@ -72,3 +72,21 @@ it('persists a paused stopwatch and its lap when the screen is reopened', async 
   expect(screen.getByText('Lap 1')).toBeVisible()
   expect(screen.getByRole('button', { name: 'Resume' })).toBeVisible()
 })
+
+it('lets keyboard users mute and unmute with a stable name and pressed state', async () => {
+  const user = userEvent.setup()
+  const initial = openFocus()
+  const mute = await screen.findByRole('button', { name: 'Mute timer sound', pressed: false })
+  mute.focus()
+  await user.keyboard(' ')
+  expect(mute).toHaveAttribute('aria-pressed', 'true')
+  expect(mute).toHaveFocus()
+  initial.unmount()
+
+  openFocus()
+  const restored = await screen.findByRole('button', { name: 'Mute timer sound', pressed: true })
+  restored.focus()
+  await user.keyboard('{Enter}')
+  expect(restored).toHaveAttribute('aria-pressed', 'false')
+  expect(screen.getByRole('button', { name: 'Start' })).toBeVisible()
+})

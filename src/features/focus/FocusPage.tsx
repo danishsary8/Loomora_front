@@ -1,7 +1,15 @@
-import { useContext, useEffect, useRef, useState, type FormEvent } from 'react'
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { Button, Card, Input, SegmentedControl } from '@/components/ui'
+import { CheckIcon } from '@/components/ui/icons'
 import { useSession } from '@/lib/api'
 import { FocusAttachment } from './FocusAttachment'
 import { FocusHistory } from './FocusHistory'
@@ -9,6 +17,7 @@ import { FocusReadout, LapList } from './FocusReadout'
 import { MissingScheduleRecovery } from './MissingScheduleRecovery'
 import { FocusRuntimeContext } from './focusRuntimeContext'
 import type { FocusRuntime } from './focusRuntime'
+import { isFocusSoundMuted, setFocusSoundMuted, subscribeToFocusSoundMute } from './focusSound'
 import {
   customDurationLimits,
   isCountdownMinutes,
@@ -61,6 +70,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const running = snapshot?.phase.status === 'running'
   const paused = snapshot?.phase.status === 'paused'
   const activeMode = snapshot?.config.mode ?? mode
+  const muted = useSyncExternalStore(subscribeToFocusSoundMute, isFocusSoundMuted)
   const command: TimerCommand = running ? 'pause' : paused ? 'resume' : 'next'
   const duration = Number(preset === 'custom' ? minutes : preset)
   const durationError = t('focus.durationError', { min: minMinutes, max: maxMinutes })
@@ -145,6 +155,9 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   return (
     <form
       className="flex min-w-0 flex-col gap-4 [&_button[aria-disabled=true]]:cursor-not-allowed [&_button[aria-disabled=true]]:opacity-50"
+      onClick={() => {
+        if (activeMode === 'countdown') runtime.unlockCountdownSound()
+      }}
       onSubmit={submit}
       noValidate
     >
@@ -241,6 +254,17 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
         {snapshot?.config.todo_id || snapshot?.config.schedule_item_id ? (
           <FocusAttachment active={snapshot.config} />
         ) : null}
+        {activeMode === 'countdown' && (
+          <Button
+            variant="secondary"
+            className="max-w-full self-center"
+            aria-pressed={muted}
+            onClick={() => setFocusSoundMuted(!muted)}
+          >
+            {muted && <CheckIcon className="size-5 shrink-0" />}
+            {t('focus.muteSound')}
+          </Button>
+        )}
         <Button ref={primaryButton} type="submit" size="lg" fullWidth aria-disabled={Boolean(busy)}>
           {primaryLabel}
         </Button>
