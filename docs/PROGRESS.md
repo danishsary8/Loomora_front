@@ -1126,6 +1126,13 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Playback uses the existing committed countdown expiry. A Focus tab with activated audio can ring and show Stop alarm in the normal or expanded view. Leaving Focus closes the audio context while the timer continues. Scope cancellation uses BroadcastChannel and a storage-event fallback. Alarm delivery remains optional when audio is unavailable.
 - Vitest covers playback counts and spacing, the cutoff, sound and volume, preference restoration, mute, browser restrictions, and cross-tab cancellation. Playwright covers keyboard settings, restored preferences, dismissal, phase changes, navigation, reload, and the responsive and accessibility checks.
 
+#### F-R3-07 verification (2026-11-25)
+
+- Full Vitest passed 818/818 across 73 files with `--pool=threads --maxWorkers=3 --retry=1`. An earlier Windows run timed out in an unchanged offline guest-plan test.
+- Playwright `phone-375` passed 103/103 against the standalone production preview after the Windows launcher hit its startup limit. The alarm settings passed axe and keyboard checks and had no horizontal overflow at 320, 375, 390, 768, 1024, and 1440 px with 100% and 200% text and reduced motion.
+- Lint, typecheck, Knip, Prettier, the production build, and `git diff --check` passed. The production dependency audit reported zero vulnerabilities. Redocly validated the OpenAPI contract with four existing warnings.
+- The local conflict check against `v2-rebuild` at `7bd5b52` passed. Vercel previews are disabled. GitHub CLI authentication is unavailable, so the planner can open the PR and verify its two required CI jobs and mergeability.
+
 ### 2026-11-24: UX-009 Elemental Profile & Settings Refinement
 
 - **Base & Isolation:** Claude Code CLI 2 branched `feat/UX-009-elemental-profile` from `origin/v2-rebuild` (`7056a4e`, PR #61 `UX-008` merged) in isolated worktree `loomora-front-UX-009`. The `UX-009` ID was unused and is now registered in `docs/TASKS.md` (`UX-008` marked done). Guest import and migration (`QA-024`, which only changes `src/lib/storage/*`), Focus, Week, backend, auth contracts, API clients, Dexie, `DeleteAccountSheet`, `FeedbackSheet`, `SavePlanSheet`, and the Google deletion flow were not touched. No documentation conflict was found.
