@@ -1162,3 +1162,7 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
   - Playwright `phone-375`: **97/97 passed**.
   - Full Vitest runs were affected by machine load from other agents' Node processes. One run had 2 failures and a second run had 12. They hit different unrelated tests each time (Profile, Today, Week, session), all timeouts or missed waits. Every affected file passed when rerun alone. For example, `ProfilePage` passed 43/43 twice and `TimePreferences` passed 7/7. The Linux CI unit job is the authoritative full-suite run.
 - Merged `origin/v2-rebuild` again at `fede106` (PR #66, F-R3-05 timer-end sound) with a merge commit. Only the appended `docs/PROGRESS.md` entries conflicted, and both were kept. `docs/TASKS.md` and `vercel.json` (all three branch preview opt-outs) merged automatically.
+- Verification after the `fede106` merge on Windows:
+  - `npm ci`, lint, typecheck, Knip, Prettier, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, with 4 existing warnings) all passed.
+  - Playwright `phone-375`: **98/98 passed**.
+  - Full Vitest with 4 workers: 805/807. The two failures were in `auth` (a missed label wait) and `session` (a load-timing assertion). Both passed 44/44 when rerun alone. The Linux CI unit job is the authoritative full-suite run.
