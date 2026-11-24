@@ -797,7 +797,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-010: Elemental Landing Page Refinement
 
-- **Status:** doing
+- **Status:** review
 - **Owner:** claude (CLI 1)
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52) and the merged Elemental Today (`UX-007`, PR #59) and Week (`UX-008`, PR #61) screens. Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md` and remote branches. Planner approved Option A (safe-area insets in the shared `StandalonePage`) and removing the legacy `font-script` alias once nothing references it.
 - **Scope:** Visual refinement of S1 Landing only (`docs/05` S1). Keep the tagline, all existing copy, the `Try it now` → `/today` guest entry, `Sign in` → `/sign-in`, the three highlights and their category tones. No auth, API, Dexie, Focus, Profile, or guest-import changes. Landing has no data, so it has no loading, empty or error states.
@@ -805,10 +805,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   1. Branch `feat/UX-010-elemental-landing` from `origin/v2-rebuild` (`f277c0f`) in isolated worktree `loomora-front-UX-010`, and disable Vercel previews for it.
   2. Add top/bottom/left/right safe-area insets to the shared `StandalonePage` using the existing spacing scale, then check Landing, Sign in/up, Privacy, Terms and 404 for regressions.
   3. Restyle the Landing hero with `font-heading` Inter (fluid size, tight tracking), the muted no-signup note, one forest-green primary action plus a secondary Sign in, and a two-column hero/highlights composition from `md`.
-  4. Refine the three highlight cards with the shared `Card` (category tones unchanged), a category name in text, and Inter headings; then remove the unused `font-script` alias from `tokens.ts`, `tailwind.config.ts`, `index.css` and `tokens.test.ts`.
+  4. Refine the three highlight cards with the shared `Card` (category tones unchanged), Inter headings and the existing decorative nav icons (Week, Today, Streak) for the screens each highlight describes; then remove the unused `font-script` alias from `tokens.ts`, `tailwind.config.ts`, `index.css` and `tokens.test.ts`.
   5. Update `LandingPage` unit tests (structure, touch targets, no `font-script`) and add a Playwright landing spec (guest and sign-in routing, 0 px overflow at 320–1440 px and 200% text, axe), then run every required check and capture `landing-375.png` / `landing-1440.png`.
 - **Done when:**
-  - [ ] Landing follows `DEC-003` with zero behavior or route changes; `font-script` is gone from source, config and tests.
-  - [ ] Standalone pages respect all four safe-area insets with no visual regression at normal insets.
-  - [ ] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
+  - [x] Landing follows `DEC-003` with zero behavior or route changes; `font-script` is gone from source, config and tests.
+  - [x] Standalone pages respect all four safe-area insets with no visual regression at normal insets.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
 - **Files:** `src/features/landing/LandingPage.tsx`, `src/features/landing/LandingPage.test.tsx`, `src/components/page/StandalonePage.tsx`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `src/styles/index.css`, `tailwind.config.ts`, `e2e/landing.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/landing-375.png`, `docs/screenshots/landing-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

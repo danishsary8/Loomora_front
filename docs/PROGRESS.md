@@ -1089,3 +1089,23 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Merged v2-rebuild at edefad4 through a69c832, including QA-024. The merge preserves both task and progress entries and both branch preview exclusions.
 - Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
 - The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.
+
+### 2026-11-24 UX-010 — Elemental Landing Page Refinement
+
+- **Planner decisions:** Option A (safe-area insets in the shared `StandalonePage`) and removing the legacy `font-script` alias once nothing referenced it. Both were approved in the UX-010 session on 2026-11-24.
+- **Changes:**
+  - `src/features/landing/LandingPage.tsx`: The hero uses `font-heading` Inter at a fluid `clamp(2.125rem, 14vw, 3.75rem)` size instead of `font-script`. The promise is shown as a large ink subtitle. `Try it now` stays the only forest-green primary action. The muted `No signup needed.` note and the secondary `Sign in` button are kept. From `md` the hero and the highlights sit in two columns. The three highlight cards keep the shared `Card` with unchanged `study` / `work` / `life` tones and copy. Each card adds the existing decorative nav icon (`WeekIcon`, `TodayIcon`, `StreakIcon`) for the screen it describes. When space is tight, the card text wraps below the icon.
+  - `src/components/page/StandalonePage.tsx`: Top, bottom, left and right padding now use `max(<previous spacing>, env(safe-area-inset-*))`, so layouts without insets are unchanged. The footer wraps instead of overflowing its box at 320 px with 200% text.
+  - `src/styles/tokens.ts`, `tokens.test.ts`, `tailwind.config.ts`, `src/styles/index.css`: Removed the `script` font alias, its Tailwind family, its letter-spacing rule and its test assertion. A repo search found no other production, config or test references.
+  - `src/features/landing/LandingPage.test.tsx`, `e2e/landing.spec.ts`: Added tests for the Inter heading, a single primary action, 44 px targets, keyboard order, guest `Try it now` → empty Today, `Sign in` → sign-in, highlight tones and decorative icons, axe, and 0 px overflow at 320/375/390/768/1024/1440 px at 100% and 200% text. Sign in, Sign up, Privacy, Terms and 404 are also checked for 0 px overflow at 320 px.
+  - `docs/screenshots/landing-375.png` and `landing-1440.png` are new. `landing-1280.png` is kept for history.
+  - `vercel.json`: Previews are disabled for `feat/UX-010-elemental-landing`.
+- **States:** The landing page has no data, so it has no loading, empty or error states.
+- **Out of scope, unchanged:** routes, copy, category colors, auth, API, Dexie, Focus, Profile and guest import.
+- **Verification (Windows, `f277c0f` base):**
+  - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `prettier --check --end-of-line auto .`, `npm run build` and `git diff --check` all passed.
+  - Full Vitest (threads pool): 789/790. The one failure was the unchanged `ProfilePage` test "ignores a pending deletion response with status 204 after sign-in", a timing failure under parallel load. The file passed 33/33 when rerun alone, and this task does not touch Profile.
+  - Playwright `phone-375`: **95/95 passed**, including the 6 new landing tests and the existing legal tests.
+  - `npm audit --omit=dev`: 0 vulnerabilities. `npx @redocly/cli lint docs/openapi.yaml`: valid, with the 4 existing warnings.
+  - Landing showed 0 px overflow at 320, 375, 390, 768, 1024 and 1440 px at 100% and 200% text, with zero axe violations. Sign in, Sign up, Privacy, Terms and 404 showed 0 px overflow at 320 px.
+- GitHub CLI is not authenticated. The branch is pushed so the planner can open the PR into `v2-rebuild` and start the two required CI jobs.
