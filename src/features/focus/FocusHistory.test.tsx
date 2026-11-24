@@ -240,16 +240,25 @@ it('resolves supported plan titles for an older account session using existing p
   const today = toLocalDate(new Date(), 'Asia/Phnom_Penh')
   const todo = { id: crypto.randomUUID(), title: 'Read book' }
   const schedule = { id: crypto.randomUUID(), title: 'Morning work' }
+  const startedAt = '2026-01-05T16:59:00Z'
+  const endedAt = '2026-01-05T17:09:00Z'
+  const record = {
+    local_date: past,
+    started_at: startedAt,
+    ended_at: endedAt,
+    created_at: endedAt,
+    segments: [
+      { type: 'focus' as const, started_at: startedAt, ended_at: endedAt, active_ms: 4_500 },
+    ],
+  }
+  const saved = [
+    session({ ...record, todo_id: todo.id }),
+    session({ ...record, schedule_item_id: schedule.id }),
+  ]
   server.use(
     http.get(endpoint, ({ request }) =>
       HttpResponse.json({
-        data:
-          new URL(request.url).searchParams.get('date') === past
-            ? [
-                session({ local_date: past, todo_id: todo.id }),
-                session({ local_date: past, schedule_item_id: schedule.id }),
-              ]
-            : [],
+        data: new URL(request.url).searchParams.get('date') === past ? saved : [],
       }),
     ),
     http.get(`${API}/todos`, ({ request }) =>
@@ -261,6 +270,8 @@ it('resolves supported plan titles for an older account session using existing p
   )
   const { history } = openHistory()
   fireEvent.change(history.getByLabelText('Session date'), { target: { value: past } })
-  expect(await history.findByText(/Read book/)).toBeVisible()
-  expect(await history.findByText(/Morning work/)).toBeVisible()
+  await waitFor(() => {
+    expect(history.getByText(/Read book/)).toBeVisible()
+    expect(history.getByText(/Morning work/)).toBeVisible()
+  })
 })

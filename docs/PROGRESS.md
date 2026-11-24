@@ -1082,3 +1082,10 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Verified on v2-rebuild at 7056a4e. Full Vitest passed 770/770 with the threads pool after a Windows fork startup timeout. Full Playwright phone-375 passed 90/90 against a standalone production preview. The Playwright axe scan found zero violations, and the history layout and touch targets passed at 320, 375, 390, 768, 1024 and 1440 px at 100% and 200% text size.
 - Lint, typecheck, Knip, Prettier with automatic Windows line endings, the production build, and git diff checks passed. The production audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings.
 - Vercel previews are disabled for this branch. GitHub CLI authentication is unavailable. The planner can open the PR into v2-rebuild and start the two required CI jobs.
+
+#### PR #64 planner follow-up
+
+- GitHub Actions run 45350270141 failed in Unit tests when the schedule-title assertion received a detached element. The historical-session fixture now reuses the same session UUIDs on refetch and checks both linked titles in the current render.
+- Merged v2-rebuild at edefad4 through a69c832, including QA-024. The merge preserves both task and progress entries and both branch preview exclusions.
+- Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
+- The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.

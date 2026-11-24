@@ -788,6 +788,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Status:** review
 - **Owner:** codex
 - **Source:** F-R3-03 (PR #62), the B-043 Focus session contract, and DEC-003.
+- **PR:** [#64](https://github.com/danishsary8/Loomora_front/pull/64).
 - **Plan:**
   1. Add tests for the starting local date, chronological order, both modes and outcomes, and totals from unique saved records.
   2. Add a dated History section below the timer using owner-scoped repository reads, account reconnection, and refresh after saves.
