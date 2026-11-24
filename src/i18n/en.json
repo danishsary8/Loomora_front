@@ -346,15 +346,22 @@
     "allRepeats": "All repeats"
   },
   "week": {
+    "subtitle": "Your routine, repeated every week.",
+    "viewMode": "Schedule view",
+    "today": "Today",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
     "overview": "Week overview",
     "singleDay": "Single day",
     "addItem": "Add to my schedule",
     "dayStrip": "Days of the week",
+    "columns": "Week schedule, scroll sideways for more days",
     "nothingPlanned": "Nothing planned.",
     "emptyTitle": "Build your week",
     "emptyMessage": "Add what repeats: classes, work, workouts.",
     "timeRange": "{{start}} to {{end}}",
-    "editItem": "Edit {{title}}, {{start}} to {{end}}"
+    "editItem": "Edit {{title}}, {{start}} to {{end}}",
+    "editItemWithCategory": "Edit {{title}}, {{start}} to {{end}}, {{category}}"
   },
   "copyDay": {
     "button": "Copy",

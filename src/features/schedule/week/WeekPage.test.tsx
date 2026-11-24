@@ -43,8 +43,8 @@ describe('Week screen', () => {
     const monday = await screen.findByRole('region', { name: 'Monday' })
     const buttons = within(monday).getAllByRole('button', { name: /^Edit / })
     expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
-      'Edit Gym, 07:00 to 08:00',
-      'Edit Lecture, 10:00 to 11:00',
+      'Edit Gym, 07:00 to 08:00, Other',
+      'Edit Lecture, 10:00 to 11:00, Other',
     ])
     expect(within(day('Wednesday')).getByText('Lecture')).toBeInTheDocument()
     expect(within(day('Tuesday')).getByText('Nothing planned.')).toBeInTheDocument()
@@ -139,12 +139,130 @@ describe('Week screen', () => {
         'aria-pressed',
         'true',
       )
-      const toggle = screen.getByRole('button', { name: 'Week overview' })
-      await userEvent.click(toggle)
-      expect(screen.getByRole('button', { name: 'Single day' })).toHaveAttribute(
+      const view = screen.getByRole('group', { name: 'Schedule view' })
+      expect(within(view).getByRole('button', { name: 'Single day' })).toHaveAttribute(
         'aria-pressed',
         'true',
       )
+      await userEvent.click(within(view).getByRole('button', { name: 'Week overview' }))
+      expect(within(view).getByRole('button', { name: 'Week overview' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(within(view).getByRole('button', { name: 'Single day' })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      )
+      expect(strip).toHaveClass('hidden')
+      for (const name of ['Monday', 'Tuesday', 'Sunday'])
+        expect(day(name)).not.toHaveClass('hidden')
+    })
+
+    it('marks today in the strip and its day panel', async () => {
+      await seed('Lecture', [0])
+      await openWeek()
+      const strip = await screen.findByRole('group', { name: 'Days of the week' })
+      const current = within(strip)
+        .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-current') === 'date')
+      expect(current).toHaveLength(1)
+      expect(current[0]).toHaveAttribute('aria-pressed', 'true')
+      const name = current[0]?.textContent?.match(/[A-Z][a-z]+day/)?.[0] ?? ''
+      expect(day(name)).toHaveAttribute('aria-current', 'date')
+      expect(within(day(name)).getByText('Today')).toBeInTheDocument()
+      expect(
+        screen.getAllByRole('region').filter((r) => r.getAttribute('aria-current') === 'date'),
+      ).toHaveLength(1)
+    })
+
+    it('keeps day strip and view controls at touch size', async () => {
+      await seed('Lecture', [0])
+      await openWeek()
+      const strip = await screen.findByRole('group', { name: 'Days of the week' })
+      for (const button of within(strip).getAllByRole('button')) {
+        expect(button).toHaveClass('min-h-touch', 'min-w-touch')
+      }
+      const view = screen.getByRole('group', { name: 'Schedule view' })
+      for (const button of within(view).getAllByRole('button')) {
+        expect(button).toHaveClass('min-h-touch')
+      }
+      expect(screen.getByRole('button', { name: 'Copy Monday to…' })).toHaveClass('min-h-touch')
+    })
+  })
+
+  describe('Elemental schedule cards', () => {
+    it('shows the time range in tabular numerals and names the category in text', async () => {
+      await schedule.create({
+        title: 'Run',
+        start_time: '06:30',
+        end_time: '07:15',
+        days: [0],
+        category: 'health',
+      })
+      await openWeek()
+      const monday = await findDay('Monday')
+      const time = await within(monday).findByText('06:30 to 07:15')
+      expect(time).toHaveClass('tabular-nums')
+      expect(within(monday).getByText('Health')).toBeInTheDocument()
+      expect(within(monday).getByText('1 item')).toBeInTheDocument()
+      const card = within(monday).getByRole('button', { name: 'Edit Run, 06:30 to 07:15, Health' })
+      expect(card.firstElementChild).toHaveClass('bg-category-health', 'border-hairline')
+      expect(card).toHaveClass('motion-reduce:active:scale-100')
+    })
+
+    it('counts items per day and shows a placeholder on free days', async () => {
+      await seed('Lecture', [0])
+      await seed('Gym', [0])
+      await openWeek()
+      expect(await within(await findDay('Monday')).findByText('2 items')).toBeInTheDocument()
+      expect(within(day('Tuesday')).getByText('0 items')).toBeInTheDocument()
+      expect(within(day('Tuesday')).getByText('Nothing planned.')).toBeInTheDocument()
+    })
+  })
+
+  describe('keyboard', () => {
+    it('opens an item and copies a day without a pointer', async () => {
+      await seed('Lecture', [0])
+      await openWeek()
+      const card = await within(await findDay('Monday')).findByRole('button', {
+        name: /^Edit Lecture/,
+      })
+      card.focus()
+      await userEvent.keyboard('{Enter}')
+      const sheet = await screen.findByRole('dialog', { name: 'Edit schedule item' })
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() => expect(sheet).not.toBeInTheDocument())
+
+      screen.getByRole('button', { name: 'Copy Monday to…' }).focus()
+      await userEvent.keyboard('{Enter}')
+      const copy = await screen.findByRole('dialog', { name: 'Copy Monday to…' })
+      within(copy).getByRole('button', { name: 'Thursday' }).focus()
+      await userEvent.keyboard(' ')
+      within(copy).getByRole('button', { name: 'Copy' }).focus()
+      await userEvent.keyboard('{Enter}')
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(await within(day('Thursday')).findByText('Lecture')).toBeInTheDocument()
+    })
+  })
+
+  describe('states', () => {
+    it('shows a loading skeleton while the schedule loads', async () => {
+      vi.spyOn(schedule, 'listItems').mockReturnValue(new Promise(() => {}))
+      await openWeek()
+      expect(screen.getByRole('status', { busy: true })).toHaveTextContent('Loading…')
+      expect(screen.queryByRole('group', { name: 'Days of the week' })).not.toBeInTheDocument()
+    })
+
+    it('shows an error with a working retry', async () => {
+      const list = vi.spyOn(schedule, 'listItems').mockRejectedValue(new Error('boom'))
+      await openWeek()
+      expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent(
+        'Something went wrong',
+      )
+      list.mockRestore()
+      await seed('Lecture', [0])
+      await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+      expect(await within(await findDay('Monday')).findByText('Lecture')).toBeInTheDocument()
     })
   })
 })

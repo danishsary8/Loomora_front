@@ -718,9 +718,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-007: Elemental Today Screen Refinement
 
-- **Status:** review
+- **Status:** done
 - **Owner:** antigravity
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-003`, `UX-004` (PR #54), `UX-005` (PR #56), and `UX-006` (PR #57 @ `e284ad6`).
+- **Merge:** [PR #59](https://github.com/danishsary8/Loomora_front/pull/59) at `e6486d4`.
 - **Plan:**
   1. Branch `feat/UX-007-elemental-today` from `origin/v2-rebuild` (`e284ad6`) in isolated worktree `loomora-front-UX-007` without touching Focus logic, repositories, Dexie migrations, API clients, AddTodoSheet, ScheduleForm, or Codex worktrees.
   2. Refine `TodoRow`, `DoneStamp`, and `StreakBadge` from legacy neo-brutalist thick black borders/hard shadows to Elemental Edition (`border-hairline border-border-subtle`, soft ambient elevation, `44×44 px` `border-control` action buttons, muted completed surface, semantic `danger` overdue pill, `tabular-nums`, and reduced-motion-safe celebrations).
@@ -731,6 +732,24 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Full Vitest (**714/714** across 66 files) and Playwright `phone-375` (**80/80**) pass; 320–1440 px (`0 px` overflow) and 200% text scaling at 375 px (`0 px` overflow) verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-008: Elemental Week Screen Refinement
+
+- **Status:** review
+- **Owner:** claude (CLI 2, covering for antigravity)
+- **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-004` (PR #54), `UX-005` (PR #56), `UX-006` (PR #57), and `UX-007` (PR #59 @ `e6486d4`). Planner-proposed 2026-11-24; ID confirmed unused in `docs/TASKS.md` and `docs/PROGRESS.md`.
+- **Scope:** Visual refinement of S6 Week only, matching the merged Elemental Today screen. Keep the mobile day strip with week overview toggle and the tablet/desktop 7-column layout (`docs/04` Flow 4, `docs/05` S6). Keep the six category meanings, every Week interaction (select day, add, edit, delete with undo, repeat weekdays, Copy day, one-day exceptions from Today), guest/account parity, offline guest behavior, and loading/empty/error states. No domain, data contract, Dexie, API, Focus, auth/import, `AddTodoSheet`, or `ScheduleForm` changes.
+- **Plan:**
+  1. Branch `feat/UX-008-elemental-week` from `origin/v2-rebuild` (`e6486d4`) in isolated worktree `loomora-front-UX-008` without touching other agents' worktrees.
+  2. Refine the Week header (Inter heading + muted subtitle), replace the phone overview flip button with the shared `SegmentedControl` (Single day / Week overview), and present the day strip as a hairline paper rail with an `aria-current="date"` marker for today (additive optional `current` prop on `DayToggle`).
+  3. Restyle `DayColumn` as Elemental day panels (Inter heading, `tabular-nums` item count, tinted today panel with a "Today" pill, dashed free-day placeholder, full-width Copy) and the schedule cards (time first in `tabular-nums`, category name in text and in the accessible name, hover elevation, reduced-motion-safe press, focus ring following the card radius).
+  4. Add Week unit tests for states, keyboard use, today marker, touch targets and card visuals; run all required checks, a 6-width sweep with 200% text at 375 px, and capture `week-375.png` / `week-1440.png`.
+- **Done when:**
+  - [x] Week header, day strip, overview toggle, day panels, and schedule cards follow `DEC-003` with zero behavior or data changes.
+  - [x] Unit tests cover loading, error + retry, empty, keyboard open/copy, today marker, touch targets, `tabular-nums` times and category text; existing Week, Copy day, edit and delete tests still pass.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text at 375 px show `0 px` overflow.
+  - [x] Planner fix (PR #61): from 768 px the seven columns keep a `8rem` minimum and scroll inside their own focusable `Week schedule` region when the screen is narrower (768 and 1024 px); all seven fit without scrolling at 1280 and 1440 px; sidebar unchanged; regression test at 768 px with long titles.
+- **Files:** `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/WeekPage.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/schedule/week/useHorizontalOverflow.ts`, `src/features/schedule/week/WeekPage.test.tsx`, `e2e/week.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/week-375.png`, `docs/screenshots/week-768.png`, `docs/screenshots/week-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-R3-02B — Focus timer runtime and recovery
 
