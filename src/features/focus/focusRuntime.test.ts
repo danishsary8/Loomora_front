@@ -337,7 +337,7 @@ describe('Focus timer runtime', () => {
     expect(await tab.read()).toBeNull()
   })
 
-  it('recovers an explicitly amended schedule payload after a failed save', async () => {
+  it('amends a missing schedule only on explicit request and retries the same replacement after reload', async () => {
     const { runtime, elapse, db } = setup()
     useSession.setState({
       token: 'test-token',
@@ -364,15 +364,29 @@ describe('Focus timer runtime', () => {
     )
     const options = { scope: 'account:owner', login: 'sign-in', repository }
     const tab = runtime(options)
-    const { id } = await tab.start({ mode: 'stopwatch', schedule_item_id: crypto.randomUUID() })
+    const { id } = await tab.start({
+      mode: 'stopwatch',
+      schedule_item_id: crypto.randomUUID(),
+      label: 'Original Focus label',
+    })
     elapse(145)
     await command(tab, 'finish')
 
     await tab.retryPending()
     expect(received).toHaveLength(1)
-    expect(await tab.pending()).toMatchObject([{ id, blockedStatus: 422 }])
+    const [rejected] = await tab.pending()
+    if (!rejected) throw new Error('Expected a rejected timer')
+    expect(rejected).toMatchObject({ id, blockedStatus: 422 })
 
-    await expect(repository.saveWithoutSchedule(id)).rejects.toMatchObject({ status: 503 })
+    await Promise.all([tab.saveWithoutSchedule(id), runtime(options).saveWithoutSchedule(id)])
+    expect(received).toHaveLength(2)
+    expect(received[1]).toEqual({ ...received[0], schedule_item_id: null })
+    expect(await tab.pending()).toMatchObject([{ id, attempts: 2, blockedStatus: undefined }])
+    expect(await repository.getLocalRecord(id)).toMatchObject({
+      status: 'pending',
+      original: received[0],
+      replacement: received[1],
+    })
     await runtime(options).retryPending()
     expect(received).toHaveLength(3)
     expect(received[2]).toEqual({ ...received[0], schedule_item_id: null })
@@ -380,7 +394,21 @@ describe('Focus timer runtime', () => {
     expect(await repository.getLocalRecord(id)).toMatchObject({
       status: 'saved',
       original: received[0],
+      replacement: received[1],
     })
+
+    // A crash after saving can leave the old queue row on disk until the next retry.
+    await db.focus_timer_pending.put(rejected)
+    const onChange = vi.fn()
+    const observed = tab.observePending(onChange, () => {})
+    try {
+      await vi.waitFor(() => expect(onChange).toHaveBeenLastCalledWith([]))
+    } finally {
+      observed.unsubscribe()
+    }
+    await tab.retryPending()
+    expect(await tab.pending()).toEqual([])
+    expect(received).toHaveLength(3)
   })
 
   it('suspends at sign-out and only recovers for the original account', async () => {

@@ -12,7 +12,7 @@ import { AppProviders } from './AppProviders'
 it('binds the application runtime to the active auth session and isolates the guest timer', async () => {
   vi.stubGlobal('crypto', webcrypto)
   const db = new GuestDatabase(crypto.randomUUID())
-  let runtime: FocusRuntime | null = null
+  let runtime: FocusRuntime | null | undefined
   function Probe() {
     runtime = useContext(FocusRuntimeContext)
     return null
