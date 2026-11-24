@@ -1101,6 +1101,31 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Full Vitest passed 792/792 across 73 files with `--pool=forks --maxWorkers=4`. An earlier threads run reported two account-runtime fixture failures. Both passed in the focused forked run and the full forked rerun.
 - Git diff checks passed. GitHub CLI authentication is unavailable. The planner can open the PR into `v2-rebuild` and verify CI and mergeability.
 
+### 2026-11-24 F-R3-07 — Focus Alarm Customization
+
+- Verified PR #68 merged into `v2-rebuild` and created `feat/F-R3-07-alarm-customization` at `087bf51` in the new isolated `loomora-front-F-R3-07` worktree. The task ID was unused in the task and progress logs and in local and remote branches. The task queue and open PRs showed no active alarm-settings owner.
+- Reviewed the R3 feature list, DEC-003, DEC-004, the current chime, mute and expiry routing, and the expanded Focus view and tests. The feature list names play mode. [Research prompt DC-34](research/daycraft-task-prompts.md#dc-34--audio-service-unlock-mute-synth-sounds-exact-repeat) describes one play, exactly three plays by default, and looping until stopped. [DC-40](research/daycraft-task-prompts.md#dc-40--sound-settings-picker-preview-volume-play-mode) names the choices Once, Repeat 3× and Until I stop. The approved R3 documents leave the default, repeat cadence and stop behavior open.
+- **Planner question:** Should Loomora adopt Once (one play and the default), Repeat 3× (three total plays), and Until I stop (loop until Stop alarm), and what pause between plays and automatic stop conditions should apply to the repeating modes?
+- Registered the task as blocked and disabled Vercel previews for its branch. Implementation and feature verification are pending the planner's decision.
+
+
+#### F-R3-07 planner decision
+
+- Once is the default and plays one time.
+- Repeat 3× plays exactly three times.
+- Until I stop repeats until dismissed, subject to a two-minute safety limit.
+- Leave two seconds of silence between consecutive plays.
+- Stop playback automatically when the user selects Stop alarm, enables mute, starts another timer phase or session, leaves Focus, signs out or changes account, reloads or unmounts the page, or reaches the two-minute safety limit.
+- Show an accessible Stop alarm control while an alarm is active and explain the two-minute limit in localized UI text.
+- Preserve browser audio activation restrictions and cross-tab duplicate prevention. Recovery and reload never replay alarms. Save sound, volume and play mode locally.
+- The planner approved this decision on 2026-11-24. Implementation continues on the existing branch and worktree.
+
+#### F-R3-07 implementation
+
+- The Countdown view offers three original synthesized sounds named Chime, Wood, and Bell. Chime and 50% volume preserve the previous default sound and level. Sound, volume, and play mode persist in this browser for guest and account use. The existing mute preference takes precedence.
+- Playback uses the existing committed countdown expiry. A Focus tab with activated audio can ring and show Stop alarm in the normal or expanded view. Leaving Focus closes the audio context while the timer continues. Scope cancellation uses BroadcastChannel and a storage-event fallback. Alarm delivery remains optional when audio is unavailable.
+- Vitest covers playback counts and spacing, the cutoff, sound and volume, preference restoration, mute, browser restrictions, and cross-tab cancellation. Playwright covers keyboard settings, restored preferences, dismissal, phase changes, navigation, reload, and the responsive and accessibility checks.
+
 ### 2026-11-24: UX-009 Elemental Profile & Settings Refinement
 
 - **Base & Isolation:** Claude Code CLI 2 branched `feat/UX-009-elemental-profile` from `origin/v2-rebuild` (`7056a4e`, PR #61 `UX-008` merged) in isolated worktree `loomora-front-UX-009`. The `UX-009` ID was unused and is now registered in `docs/TASKS.md` (`UX-008` marked done). Guest import and migration (`QA-024`, which only changes `src/lib/storage/*`), Focus, Week, backend, auth contracts, API clients, Dexie, `DeleteAccountSheet`, `FeedbackSheet`, `SavePlanSheet`, and the Google deletion flow were not touched. No documentation conflict was found.
@@ -1186,10 +1211,3 @@ The planner approved the presentation scope on 2026-11-24. The expanded view wil
 - Verification covers native and fallback fullscreen, keyboard and focus behavior, phase transitions, navigation, reload, linked guest and account sessions, history, and audio. The Playwright sweep covers 320, 375, 390, 768, 1024, and 1440 px at 100% and 200% text with reduced motion. The production audit found zero vulnerabilities, and Redocly validated the unchanged OpenAPI file with four existing warnings. The review PR carries the final suite results. Vercel previews are disabled for this branch.
 
 The first GitHub browser run exposed two test assumptions. The midnight scenario now uses Week for its navigation step to keep the guest save prompt out of the scenario. The normal layout sweep tabs to the primary control and checks its final position above the mobile navigation. Both revised cases passed against the standalone production preview.
-
-### 2026-11-24 F-R3-07 — Focus Alarm Customization
-
-- Verified PR #68 merged into `v2-rebuild` and created `feat/F-R3-07-alarm-customization` at `087bf51` in the new isolated `loomora-front-F-R3-07` worktree. The task ID was unused in the task and progress logs and in local and remote branches. The task queue and open PRs showed no active alarm-settings owner.
-- Reviewed the R3 feature list, DEC-003, DEC-004, the current chime, mute and expiry routing, and the expanded Focus view and tests. The feature list names play mode. [Research prompt DC-34](research/daycraft-task-prompts.md#dc-34--audio-service-unlock-mute-synth-sounds-exact-repeat) describes one play, exactly three plays by default, and looping until stopped. [DC-40](research/daycraft-task-prompts.md#dc-40--sound-settings-picker-preview-volume-play-mode) names the choices Once, Repeat 3× and Until I stop. The approved R3 documents leave the default, repeat cadence and stop behavior open.
-- **Planner question:** Should Loomora adopt Once (one play and the default), Repeat 3× (three total plays), and Until I stop (loop until Stop alarm), and what pause between plays and automatic stop conditions should apply to the repeating modes?
-- Registered the task as blocked and disabled Vercel previews for its branch. Implementation and feature verification are pending the planner's decision.

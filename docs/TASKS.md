@@ -859,10 +859,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-07 — Focus Alarm Customization
 
-- **Status:** blocked
+- **Status:** review
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003, DEC-004, and PR #68 merged at `087bf51`.
-- **Blocker:** Planner confirmation of the play-mode behavior. See [PROGRESS](PROGRESS.md#2026-11-24-f-r3-07--focus-alarm-customization).
+- **Planner decision:** Once, Repeat 3×, and Until I stop, with two seconds between plays and a two-minute cutoff. See [PROGRESS](PROGRESS.md#f-r3-07-planner-decision).
 - **Plan:**
   1. Confirm the play modes, default, repeat cadence and stop behavior with the planner. Record the approved contract in PROGRESS.
   2. Add original synthesized sound choices, including the current chime, and save the selected sound, volume and play mode in browser-local preferences alongside the existing mute preference.
