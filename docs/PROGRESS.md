@@ -1090,6 +1090,32 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
 - The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.
 
+### 2026-11-24: UX-009 Elemental Profile & Settings Refinement
+
+- **Base & Isolation:** Claude Code CLI 2 branched `feat/UX-009-elemental-profile` from `origin/v2-rebuild` (`7056a4e`, PR #61 `UX-008` merged) in isolated worktree `loomora-front-UX-009`. The `UX-009` ID was unused and is now registered in `docs/TASKS.md` (`UX-008` marked done). Guest import and migration (`QA-024`, which only changes `src/lib/storage/*`), Focus, Week, backend, auth contracts, API clients, Dexie, `DeleteAccountSheet`, `FeedbackSheet`, `SavePlanSheet`, and the Google deletion flow were not touched. No documentation conflict was found.
+- **Changed:**
+  - `src/features/profile/ProfilePage.tsx`: Today/Week-style header (Inter heading + muted subtitle, separate guest and account wording). Order: guest data notice, streak, settings card, `Help` group, `Account actions` group. The "Your data" notices moved from the `work` category fill to the DEC-003 warning surface (`bg-warning-surface`, `border-warning/30`). Save your plan is the only primary button for guests. Feedback, Sign out and Delete my account are now 52 px settings rows with unchanged accessible names. Delete is in danger text with a description in its own group. Sign out is disabled with `aria-busy` while its request runs, so a second press cannot start a second request. Sign-out behavior is otherwise unchanged.
+  - `src/features/profile/StreakCard.tsx` (new): streak summary with `tabular-nums` count and the existing `StreakBadge`, plus a reduced-motion-safe skeleton, an error with Try again, and an offline message for accounts. Before, the streak card disappeared in these states.
+  - `src/features/profile/SettingsList.tsx` (new): `SettingsGroup` (titled hairline list) and `SettingsRow` (full-width row with chevron, inset focus ring, optional description via `aria-describedby`, `danger` tone).
+  - `src/features/profile/AccountCard.tsx`: Inter headings, email wraps at any width, a warning-surface unverified-email notice, a left-aligned primary-text "Use this device's time zone" link button, and a hairline-divided `Display settings` fieldset.
+  - `src/features/profile/GuestPreferencesCard.tsx`, `PreferenceFields.tsx`: Inter heading, secondary Save settings (one primary per screen), a skeleton for loading preferences, and a shared success-colored `SavedStatus` with a check icon.
+  - `src/i18n/en.json`: `profile.subtitle`, `subtitleGuest`, `streakLoadError`, `streakOffline`, `feedbackRowHint`, `supportTitle`, `accountActionsTitle`, `deleteHint`.
+  - `e2e/profile.spec.ts` (new), `src/features/profile/ProfilePage.test.tsx` (10 new tests), `vercel.json` (branch preview opt-out), `docs/screenshots/profile-375.png` (guest) and new `profile-1440.png` (account).
+- **Verified:** Full Vitest (`--maxWorkers=3`) **775/775** across 70 files and Playwright `phone-375` **90/90** passed. `lint`, `typecheck`, `knip`, `prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings), and `git diff --check` passed locally. The new Playwright Profile spec sweeps 320, 375, 390, 768, 1024 and 1440 px plus 200% root text at 375 px for guests and accounts (0 px overflow, smallest visible main button at least 44 px), runs axe (WCAG 2.0–2.2 A/AA), opens and closes the feedback and delete sheets from the keyboard, checks that focus returns to the row, and asserts that no write request (delete, feedback, logout, PATCH) is sent.
+- **Notes for the planner:**
+  - `FormError` (`src/features/auth/FormError.tsx`) still uses the legacy `border-thick` danger box. It is shared with every auth screen, so it was left for a shared-component task.
+  - Category fills remain the six documented hexes. Profile no longer uses a category fill for system warnings. The existing `docs/screenshots/profile-1280.png` predates this task and was left untouched.
+
+#### UX-009 planner follow-up: merge latest `v2-rebuild` after QA-024 (PR #65)
+
+- **Changed:** Merged `origin/v2-rebuild` (`edefad4`, PR #63 `QA-024`) into `feat/UX-009-elemental-profile` with a merge commit. Only the append-only entries in `docs/TASKS.md`, `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted, and both sides were kept. Guest import files (`src/lib/storage/*`, `src/test/importBackend.ts`, `docs/openapi.yaml`, `docs/08-data-model.md`) are identical to `v2-rebuild`.
+- **Verified:** `lint`, `typecheck`, `knip`, `prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings), `git diff --check`, full Vitest (`--maxWorkers=2`) **790/790** across 71 files, and Playwright `phone-375` (including the build) **90/90**. The first Vitest run shared the machine with the lint and knip jobs and hit 5 s timeouts in 7 tests. Each of those files then passed on its own, and the full rerun passed.
+
+#### UX-009 planner follow-up: merge latest `v2-rebuild` after F-R3-04 (PR #65)
+
+- **Changed:** Merged `origin/v2-rebuild` (`f277c0f`, PR #64 `F-R3-04`) into `feat/UX-009-elemental-profile` with a merge commit (no rebase, no force-push). Only the append-only entries in `docs/TASKS.md`, `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted, and both sides were kept. `src/i18n/en.json` merged automatically with both the Focus history and Profile keys. The diff against `v2-rebuild` still contains only UX-009 files.
+- **Verified:** `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings), `git diff --check`, full Vitest (`--maxWorkers=2`) **795/795** across 72 files, and Playwright `phone-375` **92/92**. The first Playwright attempt timed out in the 120 s web-server start because the production build took about 100 s under machine load. The retry passed unchanged.
+
 ### 2026-11-24 UX-010 — Elemental Landing Page Refinement
 
 - **Planner decisions:** Option A (safe-area insets in the shared `StandalonePage`) and removing the legacy `font-script` alias once nothing referenced it. Both were approved in the UX-010 session on 2026-11-24.
@@ -1109,3 +1135,7 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
   - `npm audit --omit=dev`: 0 vulnerabilities. `npx @redocly/cli lint docs/openapi.yaml`: valid, with the 4 existing warnings.
   - Landing showed 0 px overflow at 320, 375, 390, 768, 1024 and 1440 px at 100% and 200% text, with zero axe violations. Sign in, Sign up, Privacy, Terms and 404 showed 0 px overflow at 320 px.
 - GitHub CLI is not authenticated. The branch is pushed so the planner can open the PR into `v2-rebuild` and start the two required CI jobs.
+
+#### PR #67 planner follow-up: merge of `origin/v2-rebuild`
+
+- Merged `origin/v2-rebuild` at `a6fd1db` (PR #65, UX-009 Profile) with a merge commit. There was no rebase and no force-push. Only the appended entries in `docs/TASKS.md` and `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted, and both sides were kept, including both preview opt-outs. UX-009 and UX-010 share no other files, and no new `font-script` reference arrived.

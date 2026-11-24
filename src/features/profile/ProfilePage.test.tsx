@@ -1,5 +1,6 @@
 /// <reference types="node" />
 
+import { onlineManager } from '@tanstack/react-query'
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { webcrypto } from 'node:crypto'
 import { onTestFinished } from 'vitest'
@@ -528,5 +529,133 @@ describe('Profile resend verification', () => {
     await openProfile()
     const button = screen.queryByRole('button', { name: 'Send the confirmation email again' })
     expect(Boolean(button)).toBe(shows)
+  })
+})
+
+describe('Profile Elemental layout (UX-009)', () => {
+  it('shows a guest header and the device notice on the warning surface with one primary action', async () => {
+    await openProfile()
+    expect(screen.getByText('You are using Loomora as a guest on this device.')).toBeInTheDocument()
+    const notice = screen.getByRole('region', { name: 'Your data' })
+    expect(notice).toHaveClass('bg-warning-surface')
+    expect(notice).not.toHaveClass('bg-category-work')
+    const primary = screen
+      .getAllByRole('button')
+      .filter((button) => button.classList.contains('bg-primary'))
+    expect(primary.map((button) => button.textContent)).toEqual(['Save your plan'])
+  })
+
+  it('shows the streak with tabular figures once it loads', async () => {
+    await openProfile()
+    expect(screen.getByRole('heading', { name: 'Your streak' })).toBeInTheDocument()
+    expect(await screen.findByText('0 days')).toHaveClass('tabular-nums')
+  })
+
+  it('keeps feedback in its own Help group as a 52 px row with a description', async () => {
+    await openProfile()
+    const help = screen.getByRole('region', { name: 'Help' })
+    const row = within(help).getByRole('button', { name: 'Send feedback' })
+    expect(row).toHaveClass('min-h-[52px]', 'w-full')
+    expect(row).toHaveAccessibleDescription('Report a problem or share what would help.')
+    expect(screen.queryByRole('region', { name: 'Account actions' })).not.toBeInTheDocument()
+  })
+
+  it('confirms saved guest settings with a success status', async () => {
+    await openProfile()
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'Time format' }),
+      '12h',
+    )
+    const save = screen.getByRole('button', { name: 'Save settings' })
+    expect(save).not.toHaveClass('bg-primary')
+    await userEvent.click(save)
+    expect((await screen.findByText('Saved.')).closest('p')).toHaveClass('text-success')
+  })
+})
+
+describe('Profile Elemental layout for accounts (UX-009)', () => {
+  beforeEach(() => {
+    signIn(makeUser({ name: 'Sokha', survey_done: true }))
+    server.use(...accountProfile())
+  })
+
+  it('groups sign out and delete as account actions, with delete in danger text', async () => {
+    await openProfile()
+    expect(screen.getByText('Your streak, settings and account.')).toBeInTheDocument()
+    const actions = screen.getByRole('region', { name: 'Account actions' })
+    const rows = within(actions).getAllByRole('button')
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'Sign out',
+      'Delete my accountRemoves your account, to-dos and schedule for good.',
+    ])
+    for (const row of rows) expect(row).toHaveClass('min-h-[52px]')
+    const remove = within(actions).getByRole('button', { name: 'Delete my account' })
+    expect(within(remove).getByText('Delete my account')).toHaveClass('text-danger')
+    expect(remove).toHaveAccessibleDescription(
+      'Removes your account, to-dos and schedule for good.',
+    )
+  })
+
+  it('groups display settings inside the account card', async () => {
+    await openProfile()
+    const group = await screen.findByRole('group', { name: 'Display settings' })
+    expect(within(group).getByRole('combobox', { name: 'Time format' })).toBeInTheDocument()
+    expect(within(group).getByRole('combobox', { name: 'Week starts on' })).toBeInTheDocument()
+  })
+
+  it('opens the delete sheet from the keyboard and closes it without deleting', async () => {
+    const remove = vi.fn(() => new HttpResponse(null, { status: 204 }))
+    server.use(http.delete(`${API}/me`, remove))
+    await openProfile()
+    const row = screen.getByRole('button', { name: 'Delete my account' })
+    row.focus()
+    await userEvent.keyboard('{Enter}')
+    const sheet = await screen.findByRole('dialog', { name: 'Delete your account' })
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(remove).not.toHaveBeenCalled()
+    expect(useSession.getState().token).not.toBeNull()
+  })
+
+  it('disables Sign out while the server request runs', async () => {
+    const logout = deferredResponse()
+    server.use(http.post(`${API}/auth/logout`, () => logout.promise))
+    await openProfile()
+    const row = screen.getByRole('button', { name: 'Sign out' })
+    await userEvent.click(row)
+    await waitFor(() => expect(row).toBeDisabled())
+    expect(row).toHaveAttribute('aria-busy', 'true')
+    logout.resolve(new HttpResponse(null, { status: 204 }))
+    expect(await screen.findByRole('link', { name: 'Try it now' })).toBeInTheDocument()
+    expect(useSession.getState().token).toBeNull()
+  })
+
+  it('shows a streak error with a working retry', async () => {
+    let calls = 0
+    server.use(
+      http.get(`${API}/streak`, () => {
+        calls += 1
+        return calls <= 2
+          ? HttpResponse.json({ message: 'Down' }, { status: 500 })
+          : HttpResponse.json({
+              data: { current_streak: 3, longest_streak: 3, today_counted: false },
+            })
+      }),
+    )
+    await openProfile()
+    expect(
+      await screen.findByText('Could not load your streak.', {}, { timeout: 4000 }),
+    ).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('3 days')).toBeInTheDocument()
+  })
+
+  it('says the streak returns when the account is back online', async () => {
+    onlineManager.setOnline(false)
+    onTestFinished(() => onlineManager.setOnline(true))
+    await openProfile()
+    expect(
+      await screen.findByText('Your streak shows again when you are back online.'),
+    ).toBeInTheDocument()
   })
 })

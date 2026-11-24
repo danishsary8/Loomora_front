@@ -499,6 +499,10 @@
   },
   "profile": {
     "streakTitle": "Your streak",
+    "subtitle": "Your streak, settings and account.",
+    "subtitleGuest": "You are using Loomora as a guest on this device.",
+    "streakLoadError": "Could not load your streak.",
+    "streakOffline": "Your streak shows again when you are back online.",
     "streakDays_one": "{{count}} day",
     "streakDays_other": "{{count}} days",
     "streakTodayCounted": "Today counted.",
@@ -509,6 +513,9 @@
     "savePlan": "Save your plan",
     "savePlanLeft": "Your plan is still on this device. Save it to your account so you do not lose it.",
     "feedback": "Send feedback",
+    "feedbackRowHint": "Report a problem or share what would help.",
+    "supportTitle": "Help",
+    "accountActionsTitle": "Account actions",
     "feedbackTitle": "Send feedback",
     "feedbackMessage": "Your message",
     "feedbackHint": "Tell us what went wrong or what would help.",
@@ -535,6 +542,7 @@
     "saved": "Saved.",
     "signOut": "Sign out",
     "deleteAccount": "Delete my account",
+    "deleteHint": "Removes your account, to-dos and schedule for good.",
     "deleteTitle": "Delete your account",
     "deleteWarning": "This deletes your account, to-dos and schedule for good. It cannot be undone.",
     "googleDeletion": {
