@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { PageHeading } from '@/components/page'
-import { Button, Card } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { SavePlanSheet } from '@/features/auth/SavePlanSheet'
 import { useSavePlanIntent } from '@/features/auth/savePlanIntent'
 import { useGuestPlan } from '@/features/auth/useGuestPlan'
-import { StreakBadge, useStreak } from '@/features/streak'
 import { authApi, useSession } from '@/lib/api'
 import { isEmptyPlan } from '@/lib/storage'
 import { toLocalDate } from '@/lib/date'
@@ -14,6 +13,8 @@ import { AccountCard } from './AccountCard'
 import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { FeedbackSheet } from './FeedbackSheet'
 import { GuestPreferencesCard } from './GuestPreferencesCard'
+import { SettingsGroup, SettingsRow } from './SettingsList'
+import { StreakCard } from './StreakCard'
 
 /** S9 Profile: account (name, time zone, sign out, delete), streak, Save your plan, feedback. */
 export function ProfilePage() {
@@ -22,10 +23,10 @@ export function ProfilePage() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const navigate = useNavigate()
   const user = useSession((s) => s.user)
   const generation = useSession((s) => s.generation)
-  const streak = useStreak(toLocalDate(openedAt, user?.timezone)).data
   const signOut = useSession((s) => s.signOut)
   const isGuest = useSession((s) => s.token === null)
   const requestSave = useSavePlanIntent((s) => s.request)
@@ -42,12 +43,15 @@ export function ProfilePage() {
 
   /** Revoke the token on the server (best effort), then forget it on this device. */
   async function leave() {
+    if (signingOut) return
+    setSigningOut(true)
     const startGeneration = useSession.getState().generation
     try {
       await authApi.logout()
     } catch {
       // Offline or already revoked: signing out on this device still has to work.
     }
+    setSigningOut(false)
     const current = useSession.getState()
     if (current.generation === startGeneration) {
       signOut()
@@ -58,62 +62,78 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeading>{t('pages.profile.title')}</PageHeading>
+    <div className="flex flex-col gap-5 pb-4">
+      <header className="flex min-w-0 flex-col gap-0.5">
+        <PageHeading>{t('pages.profile.title')}</PageHeading>
+        <p className="text-sm font-medium text-muted">
+          {t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
+        </p>
+      </header>
+
+      {isGuest && (
+        <DeviceDataNotice onSave={() => setSaveOpen(true)}>
+          <p className="font-semibold">{t('profile.deviceOnly')}</p>
+          <p className="text-sm">{t('profile.deviceWarning')}</p>
+        </DeviceDataNotice>
+      )}
+      {leftOnDevice && (
+        <DeviceDataNotice onSave={requestSave}>
+          <p className="text-sm">{t('profile.savePlanLeft')}</p>
+        </DeviceDataNotice>
+      )}
+
+      <StreakCard today={toLocalDate(openedAt, user?.timezone)} />
 
       {user && <AccountCard key={generation} user={user} />}
       {isGuest && <GuestPreferencesCard />}
 
-      {streak && (
-        <Card className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold">{t('profile.streakTitle')}</h2>
-            <p className="font-semibold">{t('profile.streakDays', { count: streak.count })}</p>
-            <p className="text-sm text-muted">
-              {t(streak.todayCounted ? 'profile.streakTodayCounted' : 'profile.streakTodayOpen')}
-            </p>
-          </div>
-          <StreakBadge {...streak} />
-        </Card>
-      )}
+      <SettingsGroup title={t('profile.supportTitle')}>
+        <SettingsRow
+          label={t('profile.feedback')}
+          description={t('profile.feedbackRowHint')}
+          onClick={() => setFeedbackOpen(true)}
+        />
+      </SettingsGroup>
 
-      {isGuest && (
-        <Card tone="work" className="flex flex-col gap-3">
-          <h2 className="text-lg font-bold">{t('profile.deviceTitle')}</h2>
-          <p className="font-semibold">{t('profile.deviceOnly')}</p>
-          <p>{t('profile.deviceWarning')}</p>
-          <Button size="lg" fullWidth onClick={() => setSaveOpen(true)}>
-            {t('profile.savePlan')}
-          </Button>
-        </Card>
-      )}
-
-      {leftOnDevice && (
-        <Card tone="work" className="flex flex-col gap-3">
-          <h2 className="text-lg font-bold">{t('profile.deviceTitle')}</h2>
-          <p>{t('profile.savePlanLeft')}</p>
-          <Button size="lg" fullWidth onClick={requestSave}>
-            {t('profile.savePlan')}
-          </Button>
-        </Card>
-      )}
-
-      <Button variant="secondary" size="lg" fullWidth onClick={() => setFeedbackOpen(true)}>
-        {t('profile.feedback')}
-      </Button>
       {user && (
-        <>
-          <Button variant="secondary" size="lg" fullWidth onClick={() => void leave()}>
-            {t('profile.signOut')}
-          </Button>
-          <Button variant="ghost" onClick={() => setDeleteOpen(true)}>
-            {t('profile.deleteAccount')}
-          </Button>
-          <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
-        </>
+        <SettingsGroup title={t('profile.accountActionsTitle')}>
+          <SettingsRow
+            label={t('profile.signOut')}
+            disabled={signingOut}
+            aria-busy={signingOut}
+            onClick={() => void leave()}
+          />
+          <SettingsRow
+            label={t('profile.deleteAccount')}
+            description={t('profile.deleteHint')}
+            tone="danger"
+            onClick={() => setDeleteOpen(true)}
+          />
+        </SettingsGroup>
       )}
+      {user && <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />}
       <FeedbackSheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <SavePlanSheet open={saveOpen} onClose={() => setSaveOpen(false)} />
     </div>
+  )
+}
+
+/** Guest data warning: the plan lives only on this device until it is saved to an account. */
+function DeviceDataNotice({ onSave, children }: { onSave: () => void; children: ReactNode }) {
+  const { t } = useTranslation()
+  const id = useId()
+  return (
+    <section
+      aria-labelledby={id}
+      className="flex flex-col gap-3 rounded-lg border-hairline border-warning/30 bg-warning-surface p-4 text-ink shadow-soft-sm"
+    >
+      <h2 id={id} className="text-lg font-semibold tracking-tight">
+        {t('profile.deviceTitle')}
+      </h2>
+      {children}
+      <Button size="lg" fullWidth onClick={onSave}>
+        {t('profile.savePlan')}
+      </Button>
+    </section>
   )
 }
