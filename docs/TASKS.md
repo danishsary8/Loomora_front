@@ -846,7 +846,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-011: Elemental Authentication Screen Refinement
 
-- **Status:** doing
+- **Status:** review
 - **Owner:** claude (CLI 1)
 - **Source:** Approved `DEC-003` and the merged Elemental Profile (`UX-009`, PR #65) and Landing (`UX-010`, PR #67 @ `4de84ff`) screens. Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md` and remote branches.
 - **Scope:** Visual refinement of S10 Sign in / Sign up and the related auth screens (forgot password, reset password, verify email, the sign-up survey and the Google callback). Keep email and Google sign-in/up, password validation, verification, reset, server errors, pending states and the guest Save your plan → Sign up route. No auth contract, token, Google OAuth, API, Dexie, guest import, Focus, Landing, Profile or shared `StandalonePage` changes, and no legal/404 changes (`UX-012`).
@@ -857,7 +857,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   4. Refine Sign in / Sign up (hairline "or" divider, subtitle, `aria-busy` while a request runs), then apply the layout to Forgot, Reset, Verify, Survey and the resend outcome, with pending labels on Forgot and Reset.
   5. Add unit tests and `e2e/auth.spec.ts` (mocked API: errors, navigation, keyboard, guest Save your plan → Sign up, axe, 0 px overflow at 320–1440 px and 200% text), run every required check, and capture `auth-375.png` / `auth-1440.png`.
 - **Done when:**
-  - [ ] Auth screens follow `DEC-003` with no behavior, route, API or data changes.
-  - [ ] Loading, disabled, error and success states look the same across the auth screens and are covered by unit tests.
-  - [ ] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
-- **Files:** `src/features/auth/*`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/auth.spec.ts`, `vercel.json`, `docs/screenshots/auth-375.png`, `docs/screenshots/auth-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+  - [x] Auth screens follow `DEC-003` with no behavior, route, API or data changes.
+  - [x] Loading, disabled, error and success states look the same across the auth screens and are covered by unit tests.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
+- **Files:** `src/features/auth/AuthLayout.tsx`, `AuthPage.tsx`, `SignInForm.tsx`, `SignUpForm.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`, `VerifyEmailPage.tsx`, `SurveyPage.tsx`, `ResendVerification.tsx`, `FormError.tsx`, `authPresentation.test.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/auth.spec.ts`, `vercel.json`, `docs/screenshots/auth-375.png`, `docs/screenshots/auth-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

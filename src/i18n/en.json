@@ -197,10 +197,12 @@
     },
     "signIn": {
       "title": "Sign in",
+      "subtitle": "Welcome back. Pick up your plan where you left it.",
       "switch": "New here? Create an account"
     },
     "signUp": {
       "title": "Create an account",
+      "subtitle": "Keep your plan safe and use it on every device.",
       "switch": "Already have an account? Sign in"
     },
     "privacy": {
@@ -636,12 +638,14 @@
       "title": "Forgot password",
       "intro": "Enter your email and we will send a reset link.",
       "submit": "Send reset link",
+      "sending": "Sending…",
       "sent": "If an account exists for that email, we sent a reset link. It works for 60 minutes."
     },
     "reset": {
       "title": "New password",
       "newPassword": "New password",
       "submit": "Save password",
+      "saving": "Saving…",
       "done": "Your password is changed. Sign in with the new one.",
       "invalidLink": "This reset link is not valid or has expired.",
       "requestNew": "Get a new link"
