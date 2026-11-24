@@ -925,17 +925,17 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-025: Page heading overflow at 320 px and 200% text
 
-- **Status:** doing
+- **Status:** review
 - **Owner:** claude
 - **Source:** UX-011 regression reported in `docs/PROGRESS.md` (UX-012 planner question): `/forgot-password` overflows by 43 px at 320 px and 200% text. Registered from `origin/v2-rebuild` at `5fe3192` (PR #70 merged) after verifying the task ID was unused in `docs/TASKS.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md` and remote branches.
 - **Scope:** The shared `PageHeading` and the overflow regressions only. No API, auth behavior, routing, data, copy or design-token changes.
 - **Plan:**
   1. Branch `fix/QA-025-auth-heading-overflow` from `origin/v2-rebuild` (`5fe3192`) in isolated worktree `loomora-front-QA-025`.
   2. RED: `e2e/page-heading.spec.ts` checks every `PageHeading` screen at 320, 375, 390, 768, 1024 and 1440 px, at 100% and 200% text, after fonts load and layout settles: the `h1` fits its box and the page has 0 px horizontal overflow. It also checks keyboard focus on `/forgot-password` at 320 px and 200% text.
-  3. Make the existing `e2e/auth.spec.ts` 200% sweep wait for layout, so it can no longer pass before the overflow is measured.
+  3. Measure only after the `h1` is laid out at the requested width and text size. Chromium can report the previous layout for a few frames after a live resize and root text-size change, which is why the UX-011 page-level sweep passed intermittently.
   4. GREEN: let long words in `PageHeading` wrap with `[overflow-wrap:anywhere]`. Size, weight, tracking and font stay the same.
   5. Run every required check and record the evidence in `docs/PROGRESS.md`.
 - **Done when:**
-  - [ ] No `PageHeading` screen overflows at 320–1440 px at 100% or 200% text after fonts load.
-  - [ ] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
-- **Files:** `src/components/page/PageHeading.tsx`, `e2e/page-heading.spec.ts`, `e2e/auth.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+  - [x] No `PageHeading` screen overflows at 320–1440 px at 100% or 200% text after fonts load.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+- **Files:** `src/components/page/PageHeading.tsx`, `e2e/page-heading.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
