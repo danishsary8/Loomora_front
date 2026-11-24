@@ -101,6 +101,21 @@
     }
   },
   "focus": {
+    "history": {
+      "title": "Focus history",
+      "date": "Session date",
+      "chooseDate": "Choose a date to see your sessions.",
+      "total": "Total focus time",
+      "loading": "Loading Focus history…",
+      "empty": "No saved Focus sessions for this date.",
+      "error": "Could not load Focus history.",
+      "offline": "Focus history is unavailable offline.",
+      "offlineCached": "Offline. Showing previously loaded sessions.",
+      "completed": "Completed",
+      "ended_early": "Ended early",
+      "todoUnavailable": "To-do unavailable",
+      "scheduleUnavailable": "Schedule item unavailable"
+    },
     "loading": "Loading your timer…",
     "unavailable": "Your timer is unavailable.",
     "retry": "Try again",

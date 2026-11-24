@@ -784,6 +784,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **PR:** [#63](https://github.com/danishsary8/Loomora_front/pull/63).
 - **Files:** `src/lib/storage/guestImportOrder.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `docs/openapi.yaml`, `docs/08-data-model.md`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R3-04 — Focus History & Time Tracking
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** F-R3-03 (PR #62), the B-043 Focus session contract, and DEC-003.
+- **PR:** [#64](https://github.com/danishsary8/Loomora_front/pull/64).
+- **Plan:**
+  1. Add tests for the starting local date, chronological order, both modes and outcomes, and totals from unique saved records.
+  2. Add a dated History section below the timer using owner-scoped repository reads, account reconnection, and refresh after saves.
+  3. Use Elemental components and localized content for the total, session details, links, and loading, empty, offline, and retry states.
+  4. Verify the guest and account flows, accessibility, six viewport widths and 200% text size, then run the full checks and open the review PR.
+
 ### UX-009: Elemental Profile & Settings Refinement
 
 - **Status:** review
