@@ -15,6 +15,7 @@ import {
   type TimerCommand,
   type TimerConfig,
 } from './focusTimerState'
+import type { CountdownSound } from './focusSound'
 import type { FocusSessionInput } from './types'
 
 export interface PendingFocusTimer {
@@ -28,6 +29,7 @@ export interface PendingFocusTimer {
 export type PendingFocusSave = PendingFocusTimer & { missingSchedule?: true }
 
 type Repository = FocusSessionRepository | ServerFocusSessionRepository
+type TimerTransition = ReturnType<typeof updateTimer> & { phaseStartedAt?: number }
 
 interface RuntimeOptions {
   db: () => Promise<GuestDatabase>
@@ -38,7 +40,7 @@ interface RuntimeOptions {
   clock: () => TimerClock
   lock: <T>(name: string, operation: () => Promise<T>) => Promise<T>
   onCountdownExpired?: (deadline: number) => void
-  unlockCountdownSound?: () => void
+  countdownSound?: CountdownSound
 }
 
 function checkedSnapshot(row: FocusTimerSnapshot | undefined): FocusTimerSnapshot | null {
@@ -84,7 +86,7 @@ export class FocusRuntime {
     const copy = structuredClone(config)
     validateFocusSessionLink(copy)
     const db = await open()
-    return db.transaction('rw', db.focus_timers, async () => {
+    const timer = await db.transaction('rw', db.focus_timers, async () => {
       this.assertCurrent()
       if (await db.focus_timers.get(scope)) throw new ApiError(409)
       const timer = startTimer(copy, scope, login, clock())
@@ -92,6 +94,8 @@ export class FocusRuntime {
       this.assertCurrent()
       return timer
     })
+    this.countdownSound?.phaseStarted(timer.checkpoint.mono)
+    return timer
   }
 
   command(expected: Pick<FocusTimerSnapshot, 'id' | 'revision'>, command: TimerCommand) {
@@ -102,8 +106,8 @@ export class FocusRuntime {
     return this.transition()
   }
 
-  unlockCountdownSound() {
-    this.options.unlockCountdownSound?.()
+  get countdownSound() {
+    return this.options.countdownSound
   }
 
   /** Called with the old account binding when authentication has already changed. */
@@ -126,7 +130,7 @@ export class FocusRuntime {
     const { db: open, scope, login, clock } = this.options
     const db = await open()
     const { focus_timers: timers, focus_timer_pending: pending } = db
-    const result = await db.transaction('rw', timers, pending, async () => {
+    const result = await db.transaction<TimerTransition>('rw', timers, pending, async () => {
       if (!suspending) this.assertCurrent()
       let previous = checkedSnapshot(await timers.get(scope))
       if (!previous) return { timer: null }
@@ -168,11 +172,20 @@ export class FocusRuntime {
         await timers.delete(scope)
       }
       if (!suspending) this.assertCurrent()
-      return next
+      const phaseStartedAt =
+        command === 'next' &&
+        previous.phase.status === 'waiting' &&
+        next.timer?.phase.status === 'running'
+          ? next.timer.checkpoint.mono
+          : undefined
+      return { ...next, phaseStartedAt }
     })
 
     if (!suspending) {
       this.assertCurrent()
+      if (result.phaseStartedAt !== undefined) {
+        this.countdownSound?.phaseStarted(result.phaseStartedAt)
+      }
       if (result.countdownDeadline !== undefined) {
         this.options.onCountdownExpired?.(result.countdownDeadline)
       }

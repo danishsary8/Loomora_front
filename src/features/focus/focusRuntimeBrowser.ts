@@ -55,7 +55,7 @@ export async function connectFocusRuntime(
     repository,
     clock,
     onCountdownExpired: sound.notify,
-    unlockCountdownSound: sound.unlock,
+    countdownSound: sound,
     lock: async (name, operation) =>
       navigator.locks ? await navigator.locks.request(name, operation) : operation(),
   })
