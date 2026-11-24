@@ -843,3 +843,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Standalone pages respect all four safe-area insets with no visual regression at normal insets.
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
 - **Files:** `src/features/landing/LandingPage.tsx`, `src/features/landing/LandingPage.test.tsx`, `src/components/page/StandalonePage.tsx`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `src/styles/index.css`, `tailwind.config.ts`, `e2e/landing.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/landing-375.png`, `docs/screenshots/landing-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-012: Elemental Legal & Error Page Refinement
+
+- **Status:** review
+- **Owner:** claude (CLI 2)
+- **Source:** Approved `DEC-003` and the merged Elemental Landing (`UX-010`, PR #67 @ `4de84ff`). Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md`, local and remote branches.
+- **Scope:** Visual and navigation refinement of S13 only (`docs/05` S13): Privacy, Terms, Not found and the router error screen. Privacy and Terms copy stays word-for-word (no `legal.*` translation changes; QA-004 publication blockers stay open). Routes, retry behavior and data are unchanged. No auth (`UX-011`), Focus, Landing, Profile, guest-import, API or shared `StandalonePage` changes.
+- **Plan:**
+  1. Branch `feat/UX-012-elemental-legal` from `origin/v2-rebuild` (`4de84ff`) in isolated worktree `loomora-front-UX-012`, and disable Vercel previews for it.
+  2. Legal pages: a back link to Loomora (standalone PWAs have no browser back button), the existing heading, date and intro as a header, an "On this page" contents list with in-page links, and hairline-separated sections at a ~65-character measure with relaxed leading. From `lg`, the contents list becomes a sticky side column using the existing `wide` StandalonePage option.
+  3. Not found and router error: one shared Elemental recovery layout inside `StandalonePage` (safe areas, footer legal links) with a real `h1`. Not found keeps `Go to Today` and adds `Back to Loomora`; the router error keeps the friendly message (role `alert`), `Try again` (reload) as the primary action and `Go to Today`.
+  4. Unit tests: every Privacy/Terms translation string is still rendered, contents links match section ids, and heading levels, actions and touch targets are correct for Not found and router error. Playwright: contents navigation and focus, back links, 404 and error recovery, 0 px overflow at 320–1440 px and 200% text, and axe.
+  5. Run every required check, capture `legal-375.png` / `legal-1440.png`, and record verification in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] Privacy, Terms, Not found and router error follow `DEC-003` with zero route, retry, data or legal-copy changes.
+  - [x] Unit and Playwright regressions cover the copy, navigation, recovery actions, accessibility, overflow and 200% text.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+- **Files:** `src/features/legal/LegalPage.tsx`, `src/features/legal/LegalPage.test.tsx`, `src/components/page/RecoveryPage.tsx`, `src/components/page/index.ts`, `src/app/NotFoundPage.tsx`, `src/app/NotFoundPage.test.tsx`, `src/app/layout/RouteError.tsx`, `src/app/layout/RouteError.test.tsx`, `e2e/legal.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/legal-375.png`, `docs/screenshots/legal-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
