@@ -51,6 +51,7 @@ export interface FocusTimerSnapshot {
 interface Transition {
   timer: FocusTimerSnapshot | null
   payload?: FocusSessionInput
+  countdownDeadline?: number
 }
 
 export const customDurationLimits = [1, 240] as const
@@ -231,8 +232,12 @@ export function updateTimer(
       // Close this phase at its verified deadline, even when the page wakes up much later.
       const deadline = at - (getElapsedMs(phase.timing, at) - reading.elapsedMs)
       const segments = [...current.segments, segmentFor(phase, deadline, reading.elapsedMs)]
+      const countdownDeadline =
+        command === 'finish' || command === 'endEarly' || command === 'suspend'
+          ? undefined
+          : clock.mono - (at - deadline)
       if (phase.index === LONG_BREAK_INDEX)
-        return finishTimer(current, segments, deadline, 'completed')
+        return { ...finishTimer(current, segments, deadline, 'completed'), countdownDeadline }
       const waiting: FocusTimerSnapshot = {
         ...current,
         phase: { index: phase.index + 1, status: 'waiting' },
@@ -242,7 +247,7 @@ export function updateTimer(
       if (command === 'finish' || command === 'endEarly') {
         return finishTimer(waiting, segments, at, 'ended_early')
       }
-      return { timer: waiting }
+      return { timer: waiting, countdownDeadline }
     }
   }
 
