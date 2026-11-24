@@ -874,3 +874,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   3. Present the existing timer and essential controls in an accessible expanded view. Support browser fullscreen, in-app fallback, keyboard exit, and focus restoration.
   4. Add tests for preset selection, supported and unsupported fullscreen, exit, keyboard focus, navigation, and timer continuity through phase changes and recovery.
   5. Run the required frontend checks and verify 320, 375, 390, 768, 1024, and 1440 px widths at 100% and 200% text with reduced motion and zero horizontal page overflow.
+
+### F-R3-07 — Focus Alarm Customization
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** R3 feature list, DEC-003, DEC-004, and PR #68 merged at `087bf51`.
+- **Planner decision:** Once, Repeat 3×, and Until I stop, with two seconds between plays and a two-minute cutoff. See [PROGRESS](PROGRESS.md#f-r3-07-planner-decision).
+- **Plan:**
+  1. Confirm the play modes, default, repeat cadence and stop behavior with the planner. Record the approved contract in PROGRESS.
+  2. Add original synthesized sound choices, including the current chime, and save the selected sound, volume and play mode in browser-local preferences alongside the existing mute preference.
+  3. Add keyboard-accessible Elemental controls with i18next labels and preserve access to alarm controls in expanded Focus.
+  4. Apply the preferences to the existing committed-expiry audio path. Test preference persistence, mute precedence, volume, sound choices, playback counts and cancellation, browser activation, unsupported audio, recovery and cross-tab deduplication.
+  5. Run the required frontend checks and verify 320, 375, 390, 768, 1024 and 1440 px at 100% and 200% text size, keyboard navigation and reduced motion.

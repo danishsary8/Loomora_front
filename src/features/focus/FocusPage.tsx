@@ -16,13 +16,18 @@ import { Button, Card, Input, SegmentedControl } from '@/components/ui'
 import { CheckIcon } from '@/components/ui/icons'
 import { useSession } from '@/lib/api'
 import { ExpandedFocus } from './ExpandedFocus'
+import { FocusAlarmSettings } from './FocusAlarmSettings'
 import { FocusAttachment } from './FocusAttachment'
 import { FocusHistory } from './FocusHistory'
 import { FocusReadout, LapList } from './FocusReadout'
 import { MissingScheduleRecovery } from './MissingScheduleRecovery'
 import { FocusRuntimeContext } from './focusRuntimeContext'
 import type { FocusRuntime } from './focusRuntime'
-import { isFocusSoundMuted, setFocusSoundMuted, subscribeToFocusSoundMute } from './focusSound'
+import {
+  isFocusSoundMuted,
+  setFocusSoundMuted,
+  subscribeToAlarmPreferences,
+} from './focusAlarmPreferences'
 import {
   customDurationLimits,
   isCountdownMinutes,
@@ -36,6 +41,8 @@ import { useRefreshFocusHistory } from './useFocusHistory'
 
 const presets = Object.keys(countdownPresetsMs)
 const [minMinutes, maxMinutes] = customDurationLimits
+const subscribeToNoAlarm = () => () => undefined
+const isNoAlarmActive = () => false
 
 export function FocusPage() {
   const { t } = useTranslation()
@@ -74,6 +81,11 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const wasExpanded = useRef(false)
   const minutesField = useRef<HTMLInputElement>(null)
   const primaryButton = useRef<HTMLButtonElement>(null)
+  const stopButton = useRef<HTMLButtonElement | null>(null)
+  const trackStopButton = useCallback((button: HTMLButtonElement | null) => {
+    if (!button && stopButton.current === document.activeElement) primaryButton.current?.focus()
+    stopButton.current = button
+  }, [])
   const restorePrimary = useRef<'end' | 'retry' | { recoveringId: string }>()
   const snapshot = observed?.snapshot
   const expanded = expandedId !== undefined && expandedId === snapshot?.id
@@ -82,7 +94,13 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const running = snapshot?.phase.status === 'running'
   const paused = snapshot?.phase.status === 'paused'
   const activeMode = snapshot?.config.mode ?? mode
-  const muted = useSyncExternalStore(subscribeToFocusSoundMute, isFocusSoundMuted)
+  const muted = useSyncExternalStore(subscribeToAlarmPreferences, isFocusSoundMuted)
+  const alarm = runtime.countdownSound
+  const alarmActive = useSyncExternalStore(
+    alarm?.subscribe ?? subscribeToNoAlarm,
+    alarm?.isActive ?? isNoAlarmActive,
+  )
+  useLayoutEffect(() => alarm?.enterFocus(), [alarm])
   const command: TimerCommand = running ? 'pause' : paused ? 'resume' : 'next'
   const duration = Number(preset === 'custom' ? minutes : preset)
   const durationError = t('focus.durationError', { min: minMinutes, max: maxMinutes })
@@ -115,7 +133,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
     if (!snapshot) return
     // Fullscreen can consume the activation that the form normally uses to unlock audio.
     event.stopPropagation()
-    if (snapshot.config.mode === 'countdown') runtime.unlockCountdownSound()
+    if (snapshot.config.mode === 'countdown') alarm?.unlock()
     // Mount the surface while the click still grants transient user activation.
     flushSync(() => setExpandedId(snapshot.id))
     if (document.fullscreenEnabled && !document.fullscreenElement) {
@@ -223,6 +241,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
             </span>
           </p>
         )}
+        {alarmActive && <p className="sr-only">{t('focus.alarm.active')}</p>}
         {(saving || finishing || busy === 'retry') && <p>{t('focus.saving')}</p>}
       </div>
       {!snapshot && mode === 'countdown' && (
@@ -285,6 +304,16 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
           {t('focus.muteSound')}
         </Button>
       )}
+      {alarmActive && (
+        <Button
+          variant="secondary"
+          className="max-w-full self-center"
+          ref={trackStopButton}
+          onClick={() => alarm?.stop()}
+        >
+          {t('focus.alarm.stop')}
+        </Button>
+      )}
       <Button ref={primaryButton} type="submit" size="lg" fullWidth aria-disabled={Boolean(busy)}>
         {primaryLabel}
       </Button>
@@ -328,7 +357,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
     <form
       className="flex min-w-0 flex-col gap-4 [&_button[aria-disabled=true]]:cursor-not-allowed [&_button[aria-disabled=true]]:opacity-50"
       onClick={() => {
-        if (activeMode === 'countdown') runtime.unlockCountdownSound()
+        if (activeMode === 'countdown') alarm?.unlock()
       }}
       onSubmit={submit}
       noValidate
@@ -366,6 +395,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
             </Button>
           )}
           {commandAlert}
+          {activeMode === 'countdown' && <FocusAlarmSettings />}
         </>
       )}
       {(failed || rejected || retryable) && (

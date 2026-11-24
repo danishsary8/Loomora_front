@@ -1,5 +1,5 @@
 ﻿import { webcrypto } from 'node:crypto'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { AppProviders } from '@/app/AppProviders'
@@ -152,4 +152,27 @@ it('restores the active timer in the normal layout after a timer read error', as
       else Reflect.deleteProperty(prototype, key)
     }
   }
+})
+
+it('restores alarm sound, volume, and play mode after remount', async () => {
+  const user = userEvent.setup()
+  const initial = openFocus()
+  const sound = await screen.findByRole('combobox', { name: 'Alarm sound' })
+  const volume = screen.getByRole('slider', { name: 'Alarm volume' })
+  const mode = screen.getByRole('combobox', { name: 'Alarm play mode' })
+  expect(sound).toHaveDisplayValue('Chime')
+  expect(volume).toHaveValue('50')
+  expect(mode).toHaveDisplayValue('Once')
+  await user.selectOptions(sound, 'wood')
+  fireEvent.change(volume, { target: { value: '55' } })
+  await user.selectOptions(mode, 'loop')
+  expect(mode).toHaveAccessibleDescription('The alarm stops automatically after two minutes.')
+  initial.unmount()
+
+  openFocus()
+  expect(await screen.findByRole('combobox', { name: 'Alarm sound' })).toHaveDisplayValue('Wood')
+  expect(screen.getByRole('slider', { name: 'Alarm volume' })).toHaveValue('55')
+  expect(screen.getByRole('combobox', { name: 'Alarm play mode' })).toHaveDisplayValue(
+    'Until I stop',
+  )
 })
