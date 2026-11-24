@@ -294,6 +294,7 @@
     "singleDay": "Single day",
     "addItem": "Add to my schedule",
     "dayStrip": "Days of the week",
+    "columns": "Week schedule, scroll sideways for more days",
     "nothingPlanned": "Nothing planned.",
     "emptyTitle": "Build your week",
     "emptyMessage": "Add what repeats: classes, work, workouts.",

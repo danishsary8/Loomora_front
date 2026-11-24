@@ -14,6 +14,7 @@ import { useScheduleItems } from '../useSchedule'
 import { useUndoableDelete } from '../useUndoableDelete'
 import { CopyDaySheet } from './CopyDaySheet'
 import { DayColumn } from './DayColumn'
+import { useHorizontalOverflow } from './useHorizontalOverflow'
 import { itemsOnWeekday, todayWeekday } from './weekPlan'
 
 type WeekView = 'day' | 'week'
@@ -38,6 +39,8 @@ function WeekSchedule() {
   const overview = view === 'week'
   const [target, setTarget] = useState<ScheduleTarget | null>(null)
   const [copyFrom, setCopyFrom] = useState<Weekday | null>(null)
+  const [columns, setColumns] = useState<HTMLDivElement | null>(null)
+  const scrollable = useHorizontalOverflow(columns)
 
   const list = (items.data ?? []).filter((item) => !del.isDeleting(item.id))
   const openAdd = () => setTarget({ type: 'create' })
@@ -99,19 +102,36 @@ function WeekSchedule() {
           </div>
 
           {/* pb-20: room to scroll the last item clear of the floating + */}
-          <div className="flex flex-col gap-4 pb-20 md:grid md:grid-cols-7 md:items-start md:gap-1.5 lg:gap-3">
-            {weekdays.map((day) => (
-              <DayColumn
-                key={day}
-                day={day}
-                items={itemsOnWeekday(list, day)}
-                formatTime={formatTime}
-                isToday={day === today}
-                className={overview || day === selected ? undefined : 'hidden md:flex'}
-                onOpenItem={openItem}
-                onCopy={setCopyFrom}
-              />
-            ))}
+          <div className="pb-20">
+            {/* 768 px and up: 7 readable columns that scroll inside this box when the screen is narrower. */}
+            <div
+              ref={setColumns}
+              // Chromium leaves a partly visible control cut off at the scroller edge on Tab.
+              onFocus={(event) => {
+                if (scrollable && event.target !== event.currentTarget) {
+                  event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+                }
+              }}
+              {...(scrollable && {
+                role: 'region',
+                'aria-label': t('week.columns'),
+                tabIndex: 0,
+              })}
+              className="flex flex-col gap-4 md:-mx-2 md:grid md:grid-cols-[repeat(7,minmax(8rem,1fr))] md:items-start md:gap-2 md:overflow-x-auto md:overscroll-x-contain md:scroll-px-2 md:px-2 md:pb-2 lg:gap-3"
+            >
+              {weekdays.map((day) => (
+                <DayColumn
+                  key={day}
+                  day={day}
+                  items={itemsOnWeekday(list, day)}
+                  formatTime={formatTime}
+                  isToday={day === today}
+                  className={overview || day === selected ? undefined : 'hidden md:flex'}
+                  onOpenItem={openItem}
+                  onCopy={setCopyFrom}
+                />
+              ))}
+            </div>
           </div>
           <FloatingAddButton onClick={openAdd} label={t('week.addItem')} />
         </>
