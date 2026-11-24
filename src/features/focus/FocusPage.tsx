@@ -1,16 +1,21 @@
 import {
+  useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
   type FormEvent,
+  type MouseEvent,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { Button, Card, Input, SegmentedControl } from '@/components/ui'
 import { CheckIcon } from '@/components/ui/icons'
 import { useSession } from '@/lib/api'
+import { ExpandedFocus } from './ExpandedFocus'
 import { FocusAttachment } from './FocusAttachment'
 import { FocusHistory } from './FocusHistory'
 import { FocusReadout, LapList } from './FocusReadout'
@@ -63,10 +68,17 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const [preset, setPreset] = useState(presets[0])
   const [minutes, setMinutes] = useState(presets[0])
   const [invalid, setInvalid] = useState(false)
+  const [expandedId, setExpandedId] = useState<string>()
+  const expandButton = useRef<HTMLButtonElement>(null)
+  const fullscreenSurface = useRef<HTMLDivElement>(null)
+  const wasExpanded = useRef(false)
   const minutesField = useRef<HTMLInputElement>(null)
   const primaryButton = useRef<HTMLButtonElement>(null)
   const restorePrimary = useRef<'end' | 'retry' | { recoveringId: string }>()
   const snapshot = observed?.snapshot
+  const expanded = expandedId !== undefined && expandedId === snapshot?.id
+  if (expandedId !== undefined && !expanded) setExpandedId(undefined)
+  const closeExpanded = useCallback(() => setExpandedId(undefined), [])
   const running = snapshot?.phase.status === 'running'
   const paused = snapshot?.phase.status === 'paused'
   const activeMode = snapshot?.config.mode ?? mode
@@ -89,6 +101,29 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
       if (document.activeElement === document.body) primaryButton.current?.focus()
     }
   }, [snapshot, pending, retryable])
+
+  useLayoutEffect(() => {
+    if (!expanded && wasExpanded.current) {
+      const target =
+        expandButton.current ?? primaryButton.current ?? document.getElementById('main')
+      target?.focus()
+    }
+    wasExpanded.current = expanded
+  }, [expanded])
+
+  function openExpanded(event: MouseEvent<HTMLButtonElement>) {
+    if (!snapshot) return
+    // Fullscreen can consume the activation that the form normally uses to unlock audio.
+    event.stopPropagation()
+    if (snapshot.config.mode === 'countdown') runtime.unlockCountdownSound()
+    // Mount the surface while the click still grants transient user activation.
+    flushSync(() => setExpandedId(snapshot.id))
+    if (document.fullscreenEnabled && !document.fullscreenElement) {
+      void fullscreenSurface.current?.requestFullscreen?.().catch(() => {
+        // The modal is already open as an in-app fallback.
+      })
+    }
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -152,6 +187,143 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const finishing = busy === 'finish'
   const failed = pending === null
 
+  const timerCard = (
+    <Card className="flex min-w-0 flex-col gap-4 px-[min(1.5rem,3vw)] [container-type:inline-size]">
+      <FocusReadout
+        expanded={expanded}
+        runtime={runtime}
+        snapshot={snapshot ?? null}
+        mode={activeMode}
+        minutes={isCountdownMinutes(duration) ? duration : undefined}
+      />
+      <div
+        role="status"
+        className="space-y-1 text-center text-sm font-medium text-muted empty:-mt-4"
+      >
+        {running && snapshot && (
+          <p className="sr-only">
+            {t('focus.running', {
+              phase:
+                activeMode === 'stopwatch'
+                  ? t('focus.stopwatch')
+                  : t(`focus.phase.${phaseType(snapshot.phase.index)}`),
+            })}
+          </p>
+        )}
+        {snapshot && observed.restoredId === snapshot.id && <p>{t('focus.restored')}</p>}
+        {paused && <p>{t('focus.paused')}</p>}
+        {snapshot?.phase.status === 'waiting' && (
+          <p>
+            {t('focus.waiting')}
+            <span className="sr-only">
+              {' '}
+              {t('focus.nextPhase', {
+                phase: t(`focus.phase.${phaseType(snapshot.phase.index)}`),
+              })}
+            </span>
+          </p>
+        )}
+        {(saving || finishing || busy === 'retry') && <p>{t('focus.saving')}</p>}
+      </div>
+      {!snapshot && mode === 'countdown' && (
+        <>
+          <fieldset className="min-w-0">
+            <legend className="mb-2 text-sm font-semibold">{t('focus.duration')}</legend>
+            <div className="grid grid-cols-2 gap-2 [@container(min-width:24rem)]:grid-cols-4">
+              {[...presets, 'custom'].map((value) => (
+                <label key={value} className="relative min-w-0">
+                  <input
+                    type="radio"
+                    name="countdown-duration"
+                    value={value}
+                    checked={preset === value}
+                    className="peer absolute inset-0 m-0 size-full cursor-pointer opacity-0"
+                    onChange={() => {
+                      setPreset(value)
+                      setInvalid(false)
+                    }}
+                  />
+                  <span className="flex h-full min-h-touch flex-wrap items-center justify-center gap-x-1 rounded-md border-control border-border-control bg-paper px-2 py-1 text-center text-sm font-semibold [overflow-wrap:anywhere] peer-hover:bg-subtle peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary">
+                    {preset === value && <CheckIcon className="size-4 shrink-0" />}
+                    {value === 'custom' ? t('focus.custom') : t('focus.preset', { minutes: value })}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {preset === 'custom' && (
+            <Input
+              ref={minutesField}
+              label={t('focus.minutes')}
+              type="number"
+              inputMode="numeric"
+              min={minMinutes}
+              max={maxMinutes}
+              step={1}
+              value={minutes}
+              error={invalid ? durationError : undefined}
+              onChange={(event) => {
+                setMinutes(event.target.value)
+                setInvalid(false)
+              }}
+            />
+          )}
+        </>
+      )}
+      {!snapshot && <FocusAttachment />}
+      {snapshot?.config.todo_id || snapshot?.config.schedule_item_id ? (
+        <FocusAttachment active={{ ...snapshot.config, startedAt: snapshot.startedAt }} />
+      ) : null}
+      {activeMode === 'countdown' && (
+        <Button
+          variant="secondary"
+          className="max-w-full self-center"
+          aria-pressed={muted}
+          onClick={() => setFocusSoundMuted(!muted)}
+        >
+          {muted && <CheckIcon className="size-5 shrink-0" />}
+          {t('focus.muteSound')}
+        </Button>
+      )}
+      <Button ref={primaryButton} type="submit" size="lg" fullWidth aria-disabled={Boolean(busy)}>
+        {primaryLabel}
+      </Button>
+      {snapshot && (
+        <div className="flex flex-wrap gap-2 [&>button]:min-w-11 [&>button]:max-w-full [&>button]:flex-auto [&>button]:px-3">
+          {activeMode === 'stopwatch' && (
+            <>
+              <Button
+                variant="secondary"
+                aria-disabled={!running || Boolean(busy)}
+                onClick={() => {
+                  if (running) run(() => runtime.command(snapshot, 'lap'))
+                }}
+              >
+                {t('focus.lap')}
+              </Button>
+              <Button
+                variant="secondary"
+                aria-disabled={Boolean(busy)}
+                onClick={() => end('finish')}
+              >
+                {t('focus.finish')}
+              </Button>
+            </>
+          )}
+          <Button variant="secondary" aria-disabled={Boolean(busy)} onClick={() => end('endEarly')}>
+            {t('focus.endEarly')}
+          </Button>
+        </div>
+      )}
+    </Card>
+  )
+  const commandAlert = actionError && (
+    <p role="alert" className="text-sm text-danger">
+      {t('focus.actionError')}
+    </p>
+  )
+  const lapList = snapshot && snapshot.laps.length > 0 && <LapList laps={snapshot.laps} />
+
   return (
     <form
       className="flex min-w-0 flex-col gap-4 [&_button[aria-disabled=true]]:cursor-not-allowed [&_button[aria-disabled=true]]:opacity-50"
@@ -173,137 +345,28 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
           className="flex-wrap gap-2 [&>button]:min-w-0 [&>button]:px-2 [&>button]:[overflow-wrap:anywhere]"
         />
       )}
-      <Card className="flex min-w-0 flex-col gap-4 px-[min(1.5rem,3vw)] [container-type:inline-size]">
-        <FocusReadout
-          runtime={runtime}
-          snapshot={snapshot ?? null}
-          mode={activeMode}
-          minutes={isCountdownMinutes(duration) ? duration : undefined}
-        />
-        <div
-          role="status"
-          className="space-y-1 text-center text-sm font-medium text-muted empty:-mt-4"
-        >
-          {running && snapshot && (
-            <p className="sr-only">
-              {t('focus.running', {
-                phase:
-                  activeMode === 'stopwatch'
-                    ? t('focus.stopwatch')
-                    : t(`focus.phase.${phaseType(snapshot.phase.index)}`),
-              })}
-            </p>
-          )}
-          {snapshot && observed.restoredId === snapshot.id && <p>{t('focus.restored')}</p>}
-          {paused && <p>{t('focus.paused')}</p>}
-          {snapshot?.phase.status === 'waiting' && (
-            <p>
-              {t('focus.waiting')}
-              <span className="sr-only">
-                {' '}
-                {t('focus.nextPhase', {
-                  phase: t(`focus.phase.${phaseType(snapshot.phase.index)}`),
-                })}
-              </span>
-            </p>
-          )}
-          {(saving || finishing || busy === 'retry') && <p>{t('focus.saving')}</p>}
-        </div>
-        {!snapshot && mode === 'countdown' && (
-          <>
-            <div
-              role="group"
-              aria-label={t('focus.duration')}
-              className="grid grid-cols-2 gap-2 [@container(min-width:24rem)]:grid-cols-4"
-            >
-              {[...presets, 'custom'].map((value) => (
-                <Button
-                  key={value}
-                  aria-pressed={preset === value}
-                  variant={preset === value ? 'primary' : 'secondary'}
-                  className="min-w-0 px-2 [overflow-wrap:anywhere]"
-                  onClick={() => {
-                    setPreset(value)
-                    setInvalid(false)
-                  }}
-                >
-                  {value === 'custom' ? t('focus.custom') : t('focus.preset', { minutes: value })}
-                </Button>
-              ))}
-            </div>
-            {preset === 'custom' && (
-              <Input
-                ref={minutesField}
-                label={t('focus.minutes')}
-                type="number"
-                inputMode="numeric"
-                min={minMinutes}
-                max={maxMinutes}
-                step={1}
-                value={minutes}
-                error={invalid ? durationError : undefined}
-                onChange={(event) => {
-                  setMinutes(event.target.value)
-                  setInvalid(false)
-                }}
-              />
-            )}
-          </>
-        )}
-        {!snapshot && <FocusAttachment />}
-        {snapshot?.config.todo_id || snapshot?.config.schedule_item_id ? (
-          <FocusAttachment active={snapshot.config} />
-        ) : null}
-        {activeMode === 'countdown' && (
-          <Button
-            variant="secondary"
-            className="max-w-full self-center"
-            aria-pressed={muted}
-            onClick={() => setFocusSoundMuted(!muted)}
-          >
-            {muted && <CheckIcon className="size-5 shrink-0" />}
-            {t('focus.muteSound')}
-          </Button>
-        )}
-        <Button ref={primaryButton} type="submit" size="lg" fullWidth aria-disabled={Boolean(busy)}>
-          {primaryLabel}
-        </Button>
-        {snapshot && (
-          <div className="flex flex-wrap gap-2 [&>button]:min-w-11 [&>button]:max-w-full [&>button]:flex-auto [&>button]:px-3">
-            {activeMode === 'stopwatch' && (
-              <>
-                <Button
-                  variant="secondary"
-                  aria-disabled={!running || Boolean(busy)}
-                  onClick={() => {
-                    if (running) run(() => runtime.command(snapshot, 'lap'))
-                  }}
-                >
-                  {t('focus.lap')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  aria-disabled={Boolean(busy)}
-                  onClick={() => end('finish')}
-                >
-                  {t('focus.finish')}
-                </Button>
-              </>
-            )}
+      {expanded ? (
+        <ExpandedFocus surfaceRef={fullscreenSurface} onExit={closeExpanded}>
+          {timerCard}
+          {commandAlert}
+          {lapList}
+        </ExpandedFocus>
+      ) : (
+        <>
+          {timerCard}
+          {snapshot && (
             <Button
+              ref={expandButton}
               variant="secondary"
-              aria-disabled={Boolean(busy)}
-              onClick={() => end('endEarly')}
+              className="max-w-full self-center"
+              aria-haspopup="dialog"
+              onClick={openExpanded}
             >
-              {t('focus.endEarly')}
+              {t('focus.presentation.expand')}
             </Button>
-          </div>
-        )}
-      </Card>
-      {actionError && (
-        <p role="alert" className="text-sm text-danger">
-          {t('focus.actionError')}
-        </p>
+          )}
+          {commandAlert}
+        </>
       )}
       {(failed || rejected || retryable) && (
         <Card className="flex flex-col items-start gap-2">
@@ -341,7 +404,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
           run(() => runtime.saveWithoutSchedule(id), 'retry')
         }}
       />
-      {snapshot && snapshot.laps.length > 0 && <LapList laps={snapshot.laps} />}
+      {!expanded && lapList}
     </form>
   )
 }

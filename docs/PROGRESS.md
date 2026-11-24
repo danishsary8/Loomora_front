@@ -237,7 +237,6 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** lint, typecheck, knip, build exit 0; Vitest 41 files / 377 tests passed; Playwright phone-375 41 passed. `format:check` reports 209 files including untouched ones (e.g. `tsconfig.json`), so it is a local Windows CRLF issue, not this change; CI (Linux) result is the reference.
 - **Questions:** None.
 
-
 ### 2026-11-19: F-023 Subtasks, priority and notes UI
 - **Plan:** Add failing guest, account and phone tests. Migrate Dexie and implement the subtask rules. Map the existing API and import fields. Extend the Today sheet and rows. Verify and open the review PR.
 - **Today:** Reused the existing sheet for adding and editing to-dos and subtasks. Added text priority labels, optional plain-text notes with a translated 2,000-character limit, nested checkboxes, completed/total progress and accessible add, edit and delete controls. Add subtask is available while the parent can remain in Today. Parent and child check-offs run in order so a failed child request after parent completion retains the saved state.
@@ -1185,3 +1184,23 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
   - New unit tests: `authPresentation.test.tsx` 15/15, and all auth tests 64/64.
   - Full Vitest (`--maxWorkers=3`): 806/812. The 6 failures were in `auth`, `LandingPage`, `ProfilePage`, `AddTodoSheet` and `DailyIntention`. They were 5 s timeouts or missed waits while a forks worker also failed to start under machine load. Rerun alone, the 5 files passed **100/100**. The Linux CI unit job is the authoritative full-suite run.
   - Playwright `phone-375`: 105/106. The one failure was `a11y.spec.ts` `/reset-password`, which ended with "Protocol error … session closed" before axe ran. `a11y.spec.ts` then passed **17/17** on its own. The new `e2e/auth.spec.ts` passed **8/8**. It covers field and server errors, a network failure, a Google callback error, links between screens, keyboard order with a visible focus ring, the guest Save your plan → Sign up → back path with no write requests, axe on five auth screens with 44 px targets, and 0 px overflow at 320/375/390/768/1024/1440 px plus 200% text at 320 px. All API calls are route fixtures, so no account is created or changed.
+
+### 2026-11-24 F-R3-06 — Focus Presets & Full-Screen Focus View
+
+- Verified PRs #64 and #66 merged into `v2-rebuild` and their merge commits (`f277c0f` and `fede106`) are ancestors of the fetched base `4de84ff`. F-R3-06 was unused in the task and progress logs and in local and remote branches. Created `feat/F-R3-06-focus-presentation` in the isolated `loomora-front-F-R3-06` worktree.
+- Reviewed the R3 feature list, DEC-003, DEC-004, the Focus page, readout, session hook, app-level runtime, and existing preset, recovery, accessibility, and browser tests. The current picker already offers 25, 50, 90, and Custom. The active timer uses the app-level runtime through page changes.
+- **Planner question:** Should F-R3-06 keep the device screen awake while the timer runs in the expanded view? [Research prompt DC-37](research/daycraft-task-prompts.md#dc-37--full-screen-focus-view) proposes requesting Screen Wake Lock while running and releasing it on pause or exit. The R3 feature list, DEC-004, and the task scope leave that device behavior unspecified. Please confirm whether to include it or limit this task to the presentation.
+- Registered the task and its five-step plan. Implementation and feature verification are pending the planner's decision.
+
+#### F-R3-06 planner decision
+
+The planner approved the presentation scope on 2026-11-24. The expanded view will use browser fullscreen when available and an in-app fallback otherwise. Screen Wake Lock and additional permission requests are outside this task. Implementation resumes in the existing worktree.
+
+#### F-R3-06 implementation and verification
+
+- The countdown picker uses a labeled radio group with arrow-key selection and a visible checked indicator. The documented 25, 50, 90, and Custom durations use the existing timer configuration.
+- The localized expanded view shares the active timer controls, phase readout, linked item, mute, and stopwatch laps. Native fullscreen and the viewport-filling dialog use the same exit control. Escape and browser exit return focus to Expand timer, and session completion returns focus to Start.
+- The presentation closes if the active snapshot disappears. A recovered timer returns in the normal layout. Countdown audio unlock runs before the fullscreen request, and linked to-do lookups use the session's starting date through midnight.
+- Verification covers native and fallback fullscreen, keyboard and focus behavior, phase transitions, navigation, reload, linked guest and account sessions, history, and audio. The Playwright sweep covers 320, 375, 390, 768, 1024, and 1440 px at 100% and 200% text with reduced motion. The production audit found zero vulnerabilities, and Redocly validated the unchanged OpenAPI file with four existing warnings. The review PR carries the final suite results. Vercel previews are disabled for this branch.
+
+The first GitHub browser run exposed two test assumptions. The midnight scenario now uses Week for its navigation step to keep the guest save prompt out of the scenario. The normal layout sweep tabs to the primary control and checks its final position above the mobile navigation. Both revised cases passed against the standalone production preview.

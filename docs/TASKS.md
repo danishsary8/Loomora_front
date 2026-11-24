@@ -861,3 +861,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Loading, disabled, error and success states look the same across the auth screens and are covered by unit tests.
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text show `0 px` overflow.
 - **Files:** `src/features/auth/AuthLayout.tsx`, `AuthPage.tsx`, `SignInForm.tsx`, `SignUpForm.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`, `VerifyEmailPage.tsx`, `SurveyPage.tsx`, `ResendVerification.tsx`, `FormError.tsx`, `authPresentation.test.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/auth.spec.ts`, `vercel.json`, `docs/screenshots/auth-375.png`, `docs/screenshots/auth-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-06 — Focus Presets & Full-Screen Focus View
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** R3 feature list, DEC-003, DEC-004, and merged PRs #64 and #66. Registered from `origin/v2-rebuild` at `4de84ff` after verifying the task ID was unused.
+- **Planner decision:** Browser fullscreen with an in-app fallback. Screen Wake Lock is out of scope. See [PROGRESS](PROGRESS.md#2026-11-24-f-r3-06--focus-presets--full-screen-focus-view).
+- **Plan:**
+  1. Confirm the full-screen presentation contract with the planner and record the decision.
+  2. Refine the 25, 50, 90, and Custom countdown selection using the existing configuration, Elemental styles, and i18next.
+  3. Present the existing timer and essential controls in an accessible expanded view. Support browser fullscreen, in-app fallback, keyboard exit, and focus restoration.
+  4. Add tests for preset selection, supported and unsupported fullscreen, exit, keyboard focus, navigation, and timer continuity through phase changes and recovery.
+  5. Run the required frontend checks and verify 320, 375, 390, 768, 1024, and 1440 px widths at 100% and 200% text with reduced motion and zero horizontal page overflow.
