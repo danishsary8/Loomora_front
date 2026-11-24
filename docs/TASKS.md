@@ -846,10 +846,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-06 — Focus Presets & Full-Screen Focus View
 
-- **Status:** blocked
+- **Status:** review
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003, DEC-004, and merged PRs #64 and #66. Registered from `origin/v2-rebuild` at `4de84ff` after verifying the task ID was unused.
-- **Blocker:** Planner decision on Screen Wake Lock scope. See [PROGRESS](PROGRESS.md#2026-11-24-f-r3-06--focus-presets--full-screen-focus-view).
+- **Planner decision:** Browser fullscreen with an in-app fallback. Screen Wake Lock is out of scope. See [PROGRESS](PROGRESS.md#2026-11-24-f-r3-06--focus-presets--full-screen-focus-view).
 - **Plan:**
   1. Confirm the full-screen presentation contract with the planner and record the decision.
   2. Refine the 25, 50, 90, and Custom countdown selection using the existing configuration, Elemental styles, and i18next.

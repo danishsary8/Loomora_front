@@ -11,6 +11,7 @@ interface ReadoutProps {
   snapshot: FocusTimerSnapshot | null
   mode: TimerConfig['mode']
   minutes?: number
+  expanded?: boolean
 }
 
 function sample(runtime: FocusRuntime, snapshot: FocusTimerSnapshot) {
@@ -22,7 +23,7 @@ function sample(runtime: FocusRuntime, snapshot: FocusTimerSnapshot) {
   }
 }
 
-export function FocusReadout({ runtime, snapshot, mode, minutes }: ReadoutProps) {
+export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: ReadoutProps) {
   const { t } = useTranslation()
   const [reading, setReading] = useState<{
     snapshot: FocusTimerSnapshot
@@ -78,7 +79,12 @@ export function FocusReadout({ runtime, snapshot, mode, minutes }: ReadoutProps)
       <div
         role="timer"
         aria-label={t(stopwatch ? 'focus.elapsed' : 'focus.remaining')}
-        className="max-w-full text-4xl font-bold leading-tight tracking-tight text-ink tabular-nums [overflow-wrap:anywhere] supports-[width:1cqi]:text-[min(3.75rem,18cqi)]"
+        className={cn(
+          'max-w-full text-4xl font-bold leading-tight tracking-tight text-ink tabular-nums [overflow-wrap:anywhere]',
+          expanded
+            ? 'supports-[width:1cqi]:text-[min(5.5rem,16cqi)]'
+            : 'supports-[width:1cqi]:text-[min(3.75rem,18cqi)]',
+        )}
       >
         {value}
       </div>

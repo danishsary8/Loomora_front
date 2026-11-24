@@ -5,15 +5,16 @@ import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { useTodayTodos } from '@/features/todos/useTodos'
 import { useSession } from '@/lib/api'
 import { toLocalDate } from '@/lib/date'
-import type { TimerConfig } from './focusTimerState'
+import type { FocusTimerSnapshot, TimerConfig } from './focusTimerState'
 
-type Link = Pick<TimerConfig, 'todo_id' | 'schedule_item_id'>
+type ActiveLink = Pick<TimerConfig, 'todo_id' | 'schedule_item_id'> &
+  Pick<FocusTimerSnapshot, 'startedAt'>
 
-export function FocusAttachment({ active }: { active?: Link }) {
+export function FocusAttachment({ active }: { active?: ActiveLink }) {
   const { t } = useTranslation()
   const id = useId()
   const zone = useSession((state) => state.user?.timezone)
-  const [date] = useState(() => toLocalDate(new Date(), zone))
+  const [date] = useState(() => toLocalDate(new Date(active?.startedAt ?? Date.now()), zone))
   const todos = useTodayTodos(date)
   const schedule = useScheduleItems()
   const todayItems = (todos.data ?? []).flatMap((todo) => [todo, ...todo.subtasks])
