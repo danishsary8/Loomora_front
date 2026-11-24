@@ -731,3 +731,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Full Vitest (**714/714** across 66 files) and Playwright `phone-375` (**80/80**) pass; 320–1440 px (`0 px` overflow) and 200% text scaling at 375 px (`0 px` overflow) verified.
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-024: Lossless guest import frontend integration
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Merged backend B-044 ([PR #48](https://github.com/danishsary8/loomora_back/pull/48) at `13c64ff`), DECISIONS I9, and the `POST /import` chunk-order contract in `docs/openapi.yaml`.
+- **Scope:** Send guest to-dos in `POST /import` calls of at most 500, in the I9 order. Each repeat chain runs from its newest occurrence down to the original, and each successor's subtasks go right after its predecessor. Other to-dos are each followed by their subtasks. Schedule items, exceptions, check-ins and daily intentions keep their documented caps and dependencies. The whole guest copy stays on the device until every call succeeds.
+- **Verification:** Run a fake `/import` backend that models `ImportRequest`. Cover 499/500/501 rows, 500 manual plus generated rows, multiple chains with subtasks, cross-call links, partial success then failure, replay after reload, near-capacity accounts, ownership, and unchanged small imports. Then run lint, typecheck, Knip, formatting, full Vitest, build, `phone-375` Playwright, the production audit, Redocly and `git diff --check`.
+- **Files:** `src/lib/storage/guestImportOrder.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `docs/openapi.yaml`, `docs/08-data-model.md`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
