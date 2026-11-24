@@ -21,6 +21,7 @@
       "feat/F-R3-03-focus-timer-ui": false,
       "feat/QA-024-lossless-guest-import": false,
       "feat/F-R3-04-focus-history": false,
+      "feat/UX-009-elemental-profile": false,
       "v2-rebuild": false
     }
   },
