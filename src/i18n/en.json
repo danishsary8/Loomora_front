@@ -8,7 +8,8 @@
     "retry": "Try again",
     "clockInputHint": "Enter a time like {{time}}.",
     "comingSoon": "Coming soon",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "backHome": "Back to Loomora"
   },
   "categories": {
     "study": "Study",
@@ -230,6 +231,7 @@
     },
     "notFound": {
       "title": "Page not found",
+      "code": "Error 404",
       "message": "This page does not exist.",
       "home": "Go to Today"
     }
@@ -426,6 +428,7 @@
   },
   "legal": {
     "updated": "Last updated: 20 November 2026",
+    "onThisPage": "On this page",
     "privacy": {
       "intro": "This page explains, in plain words, how Loomora handles your data today in guest mode and with an account.",
       "s1": {
@@ -694,6 +697,7 @@
     "retry": "Retry"
   },
   "routeError": {
+    "title": "This page could not load",
     "goToToday": "Go to Today"
   },
   "pwaUpdate": {

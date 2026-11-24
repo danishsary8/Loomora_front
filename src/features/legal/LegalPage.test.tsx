@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderRoute } from '@/test/renderRoute'
+import en from '@/i18n/en.json'
 
 describe.each([
   ['/privacy', 'Privacy'],
@@ -137,5 +138,69 @@ describe('Legal entry-point links', () => {
     renderRoute('/profile')
     await screen.findByRole('heading', { level: 1, name: 'Profile' })
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  })
+})
+
+// Every string leaf below a translation subtree, e.g. all Privacy section titles, bodies and items.
+function stringLeaves(value: unknown): string[] {
+  if (typeof value === 'string') return [value]
+  return Object.values(value as Record<string, unknown>).flatMap(stringLeaves)
+}
+
+describe.each([
+  ['/privacy', 'Privacy', 'privacy', 7],
+  ['/terms', 'Terms', 'terms', 6],
+] as const)('%s Elemental layout', (path, title, page, sectionCount) => {
+  it('still renders every legal sentence word-for-word', async () => {
+    renderRoute(path)
+    await screen.findByRole('heading', { level: 1, name: title })
+    const mainText = screen.getByRole('main').textContent ?? ''
+    for (const sentence of [en.legal.updated, ...stringLeaves(en.legal[page])]) {
+      expect(mainText).toContain(sentence)
+    }
+  })
+
+  it('lists every section in an "On this page" contents list that links to it', async () => {
+    renderRoute(path)
+    await screen.findByRole('heading', { level: 1, name: title })
+    const contents = screen.getByRole('navigation', { name: 'On this page' })
+    const links = within(contents).getAllByRole('link')
+    const sectionHeadings = screen
+      .getAllByRole('heading', { level: 2 })
+      .filter((heading) => !contents.contains(heading))
+    expect(links).toHaveLength(sectionCount)
+    expect(sectionHeadings).toHaveLength(sectionCount)
+
+    const titles = sectionHeadings.map((heading) => heading.textContent ?? '')
+    expect(links.map((link) => link.textContent)).toEqual(titles)
+    for (const heading of sectionHeadings) {
+      const link = within(contents).getByRole('link', { name: heading.textContent ?? '' })
+      const target = document.getElementById(link.getAttribute('href')?.split('#')[1] ?? '')
+      expect(target).toHaveAccessibleName(heading.textContent ?? '')
+      expect(target).toContainElement(heading)
+    }
+  })
+
+  it('moves keyboard focus to the section a contents link points to', async () => {
+    const { router } = renderRoute(path)
+    await screen.findByRole('heading', { level: 1, name: title })
+    const contents = screen.getByRole('navigation', { name: 'On this page' })
+    const lastLink = within(contents).getAllByRole('link').at(-1)
+    if (!lastLink) throw new Error('No contents links')
+
+    lastLink.focus()
+    await userEvent.keyboard('{Enter}')
+    const section = screen.getByRole('region', { name: lastLink.textContent ?? '' })
+    expect(section).toHaveFocus()
+    expect(router.state.location).toMatchObject({ pathname: path, hash: `#${section.id}` })
+  })
+
+  it('offers a way back to Loomora, which a standalone PWA has no browser button for', async () => {
+    const { router } = renderRoute(path)
+    await screen.findByRole('heading', { level: 1, name: title })
+    const back = screen.getByRole('link', { name: 'Back to Loomora' })
+    expect(back).toHaveAttribute('href', '/')
+    await userEvent.click(back)
+    expect(router.state.location.pathname).toBe('/')
   })
 })
