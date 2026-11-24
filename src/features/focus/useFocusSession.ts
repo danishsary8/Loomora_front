@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FocusRuntime, PendingFocusTimer } from './focusRuntime'
+import type { FocusRuntime, PendingFocusSave } from './focusRuntime'
 import type { FocusTimerSnapshot } from './focusTimerState'
 
 interface Observation {
@@ -12,7 +12,7 @@ type Action = 'update' | 'finish' | 'retry'
 
 export function useFocusSession(runtime: FocusRuntime) {
   const [observed, setObserved] = useState<Observation>()
-  const [pending, setPending] = useState<PendingFocusTimer[] | null>()
+  const [pending, setPending] = useState<PendingFocusSave[] | null>()
   const [busy, setBusy] = useState<Action>()
   const [actionError, setActionError] = useState(false)
   const [subscription, setSubscription] = useState(0)

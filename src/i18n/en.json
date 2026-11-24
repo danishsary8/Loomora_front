@@ -154,6 +154,10 @@
     "saving": "Saving your session…",
     "saveStatusError": "Couldn’t check the session’s save status.",
     "saveFailed": "Couldn’t save your session. It’s kept on this device for retry.",
+    "missingSchedule": "The linked schedule item no longer exists.",
+    "saveWithoutSchedule": "Save without schedule link",
+    "confirmWithoutSchedule": "Save this session and keep its recorded time without linking it to the deleted schedule item?",
+    "sessionStartedAt": "Session started {{time}}",
     "rejected": "The session was rejected and is still kept on this device.",
     "retrySave": "Retry save",
     "actionError": "Couldn’t update your timer. Try again."

@@ -5,6 +5,7 @@ import { Button, Card, Input, SegmentedControl } from '@/components/ui'
 import { useSession } from '@/lib/api'
 import { FocusAttachment } from './FocusAttachment'
 import { FocusReadout, LapList } from './FocusReadout'
+import { MissingScheduleRecovery } from './MissingScheduleRecovery'
 import { FocusRuntimeContext } from './focusRuntimeContext'
 import type { FocusRuntime } from './focusRuntime'
 import {
@@ -51,7 +52,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const [invalid, setInvalid] = useState(false)
   const minutesField = useRef<HTMLInputElement>(null)
   const primaryButton = useRef<HTMLButtonElement>(null)
-  const restorePrimary = useRef<'end' | 'retry'>()
+  const restorePrimary = useRef<'end' | 'retry' | { recoveringId: string }>()
   const snapshot = observed?.snapshot
   const running = snapshot?.phase.status === 'running'
   const paused = snapshot?.phase.status === 'paused'
@@ -64,7 +65,12 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   useEffect(() => {
     const endRemoved = restorePrimary.current === 'end' && snapshot === null
     const retryRemoved = restorePrimary.current === 'retry' && pending && !retryable
-    if (endRemoved || retryRemoved) {
+    const recovery = restorePrimary.current
+    const recoveryRemoved =
+      typeof recovery === 'object' &&
+      pending &&
+      !pending.some((session) => session.id === recovery.recoveringId && session.missingSchedule)
+    if (endRemoved || retryRemoved || recoveryRemoved) {
       restorePrimary.current = undefined
       if (document.activeElement === document.body) primaryButton.current?.focus()
     }
@@ -126,7 +132,8 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
         ? t(running ? 'focus.pause' : 'focus.resume')
         : t('focus.start')
 
-  const rejected = pending?.some((session) => session.blockedStatus)
+  const rejected = pending?.some((session) => session.blockedStatus && !session.missingSchedule)
+  const missingSchedules = pending?.filter((session) => session.missingSchedule) ?? []
   const saving = pending?.some((session) => session.attempts === 0)
   const finishing = busy === 'finish'
   const failed = pending === null
@@ -297,6 +304,15 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
           )}
         </Card>
       )}
+      <MissingScheduleRecovery
+        sessions={missingSchedules}
+        busy={Boolean(busy)}
+        onConfirm={(id) => {
+          if (busy) return
+          restorePrimary.current = { recoveringId: id }
+          run(() => runtime.saveWithoutSchedule(id), 'retry')
+        }}
+      />
       {snapshot && snapshot.laps.length > 0 && <LapList laps={snapshot.laps} />}
     </form>
   )

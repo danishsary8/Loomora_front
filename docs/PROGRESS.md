@@ -972,3 +972,9 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - All 84 phone-375 Playwright tests passed against the standalone production preview after the combined Windows launcher timed out. The Focus checks covered keyboard and touch operation, recovery, phase transitions, early termination, owner isolation, offline retry with the same payload, and all six requested widths at 100% and 200% text size. The Focus axe scan found zero violations.
 - Lint, typecheck, Knip, the production build, and Git whitespace checks passed. The production dependency audit found zero vulnerabilities. The full audit retained four moderate development dependency findings, and Redocly validated OpenAPI with four existing warnings.
 - Full Vitest passed all 758 tests across 70 files on Windows with four workers, a 15-second test timeout, and one retry allowed. Prettier passed with automatic line endings for the Windows checkout.
+
+#### PR #62 planner follow-up
+
+- Focus reads the account outbox's definitive missing-schedule status to offer an explicit confirmation sheet. Confirmation uses the existing repository amendment through the owner-scoped runtime delivery lock. The outbox retains the original and resends the approved replacement by the same UUID after a failure or reload.
+- The runtime ignores stale confirmations and suppresses a stale rejection if the replacement was already saved before queue cleanup. Generic validation and conflict rejections keep their existing feedback.
+- The focused Vitest run passed 43 tests and all 87 phone-375 Playwright tests passed against the standalone Windows production preview. Lint, typecheck, Knip, formatting, build, and Git diff checks passed. The production audit found zero vulnerabilities. The full audit and Redocly retained four existing findings and four existing warnings, respectively.

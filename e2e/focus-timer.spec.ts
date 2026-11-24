@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type BrowserContext, type Page, type Route } from '@playwright/test'
 import type { FocusSession, FocusSessionInput } from '../src/features/focus/types'
 
 test.use({ reducedMotion: 'reduce', serviceWorkers: 'block' })
@@ -107,17 +107,18 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
   await checkWidths()
 })
 
-test('keeps an offline account save with its owner and retries the original linked session', async ({
-  page,
-  context,
-}, testInfo) => {
-  const scheduleId = '2ff729f5-834e-41b5-917f-fbe9d825ddbe'
+const scheduleId = '2ff729f5-834e-41b5-917f-fbe9d825ddbe'
+
+async function mockFocusAccounts(
+  page: Page,
+  context: BrowserContext,
+  save: (
+    route: Route,
+    payload: FocusSessionInput,
+    headers: Record<string, string>,
+  ) => Promise<void>,
+) {
   const requests: FocusSessionInput[] = []
-  let failSaves = true
-  let rejectFirstSave!: () => void
-  const firstSave = new Promise<void>((resolve) => {
-    rejectFirstSave = resolve
-  })
   let loginCount = 0
 
   await context.route(/\/api\/v1\//, async (route) => {
@@ -180,9 +181,7 @@ test('keeps an offline account save with its owner and retries the original link
     if (path.endsWith('/focus-sessions') && request.method() === 'POST') {
       const payload = request.postDataJSON() as FocusSessionInput
       requests.push(payload)
-      if (requests.length === 1) await firstSave
-      if (failSaves) return route.abort('internetdisconnected')
-      return route.fulfill({ status: 201, headers, json: { data: payload } })
+      return save(route, payload, headers)
     }
     return route.fulfill({ headers, json: { data: [] } })
   })
@@ -202,6 +201,28 @@ test('keeps an offline account save with its owner and retries the original link
     await expect(page.getByRole('link', { name: 'Try it now' })).toBeVisible()
     await page.goto('/focus')
   }
+
+  return { requests, signIn, signOut }
+}
+
+test('keeps an offline account save with its owner and retries the original linked session', async ({
+  page,
+  context,
+}, testInfo) => {
+  let failSaves = true
+  let rejectFirstSave!: () => void
+  const firstSave = new Promise<void>((resolve) => {
+    rejectFirstSave = resolve
+  })
+  const { requests, signIn, signOut } = await mockFocusAccounts(
+    page,
+    context,
+    async (route, payload, headers) => {
+      await firstSave
+      if (failSaves) return route.abort('internetdisconnected')
+      return route.fulfill({ status: 201, headers, json: { data: payload } })
+    },
+  )
 
   await page.goto('/today')
   await page.getByRole('button', { name: 'Add a to-do' }).click()
@@ -262,3 +283,105 @@ test('keeps an offline account save with its owner and retries the original link
   await expect(start).toBeFocused()
   expect(requests).toEqual([requests[0], requests[0], requests[0]])
 })
+
+async function finishWithSchedule(page: Page) {
+  await page.getByRole('button', { name: 'Stopwatch' }).click()
+  await page.getByLabel('Link to your plan (optional)').selectOption({ label: 'Deep work block' })
+  await page.getByRole('button', { name: 'Start', exact: true }).click()
+  await expect(page.getByText('Linked to Deep work block')).toBeVisible()
+  await page.getByRole('button', { name: 'Finish', exact: true }).click()
+}
+
+test('confirms recovery for a deleted schedule link and retries the amendment after reload', async ({
+  page,
+  context,
+}) => {
+  let failAmendment = true
+  const { requests, signIn, signOut } = await mockFocusAccounts(
+    page,
+    context,
+    (route, payload, headers) => {
+      if (payload.schedule_item_id) {
+        return route.fulfill({
+          status: 422,
+          headers,
+          json: { errors: { schedule_item_id: ['The selected item was not found.'] } },
+        })
+      }
+      if (failAmendment) return route.abort('internetdisconnected')
+      return route.fulfill({ status: 201, headers, json: { data: payload } })
+    },
+  )
+
+  const actionName = 'Save without schedule link'
+  const recovery = page.getByRole('button', { name: actionName, exact: true })
+  const dialog = page.getByRole('dialog', { name: actionName })
+  const start = page.getByRole('button', { name: 'Start', exact: true })
+
+  await signIn('owner@example.test')
+  await finishWithSchedule(page)
+  await expect(page.getByText('The linked schedule item no longer exists.')).toBeVisible()
+  await recovery.click()
+  await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused()
+  expect(requests).toHaveLength(1)
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(recovery).toBeFocused()
+  expect(requests).toHaveLength(1)
+
+  await signOut()
+  await expect(start).toBeVisible()
+  await expect(recovery).toHaveCount(0)
+  await signIn('other@example.test')
+  await expect(start).toBeVisible()
+  await expect(recovery).toHaveCount(0)
+  expect(requests).toHaveLength(1)
+  await signOut()
+  await signIn('owner@example.test')
+
+  await recovery.click()
+  await dialog.getByRole('button', { name: actionName, exact: true }).click()
+  const retry = page.getByRole('button', { name: 'Retry save', exact: true })
+  await expect(retry).toBeEnabled()
+  await expect(recovery).toHaveCount(0)
+  const original = requests[0]
+  const amended = { ...original, schedule_item_id: null }
+  expect(requests).toEqual([original, amended])
+
+  failAmendment = false
+  await page.reload()
+  await expect.poll(() => requests.length).toBe(3)
+  await expect(start).toBeEnabled()
+  await expect(retry).toHaveCount(0)
+  expect(requests).toEqual([original, amended, amended])
+})
+
+for (const status of [409, 422]) {
+  test(
+    'does not offer schedule recovery for an unrelated ' + status + ' rejection',
+    async ({ page, context }) => {
+      const { requests, signIn } = await mockFocusAccounts(
+        page,
+        context,
+        (route, _payload, headers) =>
+          route.fulfill({
+            status,
+            headers,
+            json: {
+              errors: {
+                schedule_item_id: ['The selected item was not found.'],
+                label: ['Invalid label.'],
+              },
+            },
+          }),
+      )
+      await signIn('owner@example.test')
+      await finishWithSchedule(page)
+      await expect(
+        page.getByText('The session was rejected and is still kept on this device.'),
+      ).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Save without schedule link' })).toHaveCount(0)
+      expect(requests).toHaveLength(1)
+    },
+  )
+}
