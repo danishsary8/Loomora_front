@@ -9,7 +9,7 @@ test('starts by keyboard, waits for the next phase, and resumes a paused break a
 }) => {
   await page.clock.install()
   await page.goto('/focus')
-  await page.getByRole('button', { name: 'Custom' }).click()
+  await page.getByRole('radio', { name: 'Custom' }).click()
   await page.getByRole('spinbutton', { name: 'Duration in minutes' }).fill('1')
   const start = page.getByRole('button', { name: 'Start', exact: true })
   await start.focus()
@@ -61,7 +61,7 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
   await expect(start).toBeVisible()
   const results = await new AxeBuilder({ page }).include('#main').analyze()
   expect(results.violations).toEqual([])
-  await page.getByRole('button', { name: 'Custom' }).click()
+  await page.getByRole('radio', { name: 'Custom' }).click()
 
   async function checkWidths() {
     for (const scale of [100, 200]) {
@@ -87,13 +87,23 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
         ).toBeGreaterThanOrEqual(44)
         if (width >= 768 || scale !== 200) continue
         const primary = page.locator('#main button[type="submit"]')
-        await page.evaluate(() => window.scrollTo(0, 0))
+        const mobileNav = page.getByRole('navigation').filter({ visible: true })
         await primary.focus()
-        const box = await primary.boundingBox()
-        const nav = await page.getByRole('navigation').filter({ visible: true }).boundingBox()
-        if (!box || !nav)
-          throw new Error('The primary control and mobile navigation must be visible')
-        expect(box.y + box.height).toBeLessThanOrEqual(nav.y)
+        await page.keyboard.press('Shift+Tab')
+        await page.keyboard.press('Tab')
+        await expect(primary).toBeFocused()
+        await expect
+          .poll(
+            async () => {
+              const box = await primary.boundingBox()
+              const nav = await mobileNav.boundingBox()
+              if (!box || !nav)
+                throw new Error('The primary control and mobile navigation must be visible')
+              return Math.min(box.y, nav.y - box.y - box.height)
+            },
+            { message: `Primary control at ${width}px and ${scale}% text size` },
+          )
+          .toBeGreaterThanOrEqual(0)
         await primary.blur()
       }
     }
@@ -237,20 +247,29 @@ test('keeps an offline account save with its owner and retries the original link
   if (testInfo.project.use.hasTouch) await start.tap()
   else await start.click()
   await expect(page.getByText('Linked to Guest reading')).toBeVisible()
+  await page.getByRole('button', { name: 'Expand timer' }).click()
+  const expanded = page.getByRole('dialog', { name: 'Focus timer' })
+  await expect(expanded.getByText('Linked to Guest reading')).toBeVisible()
 
   await signIn('owner@example.test')
+  await expect(expanded).toHaveCount(0)
   await expect(start).toBeVisible()
   await expect(page.getByRole('option', { name: 'Guest reading' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Stopwatch' }).click()
   await link.selectOption({ label: 'Deep work block' })
   await start.click()
   await expect(page.getByText('Linked to Deep work block')).toBeVisible()
-  const lap = page.getByRole('button', { name: 'Lap', exact: true })
+  await page.getByRole('button', { name: 'Expand timer' }).click()
+  await expect(expanded.getByText('Linked to Deep work block')).toBeVisible()
+  const lap = expanded.getByRole('button', { name: 'Lap', exact: true })
   if (testInfo.project.use.hasTouch) await lap.tap()
   else await lap.click()
   await expect(page.getByText('Lap 1')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Finish', exact: true }).click()
+  const finish = expanded.getByRole('button', { name: 'Finish', exact: true })
+  await expect(finish).toHaveAttribute('aria-disabled', 'false')
+  await finish.click()
+  await expect(expanded).toHaveCount(0)
   await expect(page.getByText('Saving your session…')).toBeVisible()
   rejectFirstSave()
   const retry = page.getByRole('button', { name: 'Retry save' })
@@ -419,10 +438,16 @@ test('plays a countdown chime once, honors keyboard mute, and stays silent after
     true,
   )
 
-  await page.getByRole('button', { name: 'Custom' }).click()
+  await page.getByRole('radio', { name: 'Custom' }).click()
   await page.getByRole('spinbutton', { name: 'Duration in minutes' }).fill('1')
   await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
   await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByText('Session restored.')).toBeVisible()
+  expect(await audio()).toEqual({ contexts: 0, tones: 0 })
+  await page.getByRole('button', { name: 'Expand timer' }).click()
+  await expect(page.getByRole('dialog', { name: 'Focus timer' })).toBeVisible()
+  await expect.poll(audio).toEqual({ contexts: 1, tones: 0 })
   await page.clock.fastForward(61_000)
   const next = page.getByRole('button', { name: 'Start short break' })
   await expect(next).toBeVisible()

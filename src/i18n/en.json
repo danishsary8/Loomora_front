@@ -103,6 +103,11 @@
   },
   "focus": {
     "muteSound": "Mute timer sound",
+    "presentation": {
+      "title": "Focus timer",
+      "expand": "Expand timer",
+      "exit": "Exit expanded view"
+    },
     "history": {
       "title": "Focus history",
       "date": "Session date",
