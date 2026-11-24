@@ -1139,3 +1139,7 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 #### PR #67 planner follow-up: merge of `origin/v2-rebuild`
 
 - Merged `origin/v2-rebuild` at `a6fd1db` (PR #65, UX-009 Profile) with a merge commit. There was no rebase and no force-push. Only the appended entries in `docs/TASKS.md` and `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted, and both sides were kept, including both preview opt-outs. UX-009 and UX-010 share no other files, and no new `font-script` reference arrived.
+- Verification after the merge on Windows:
+  - `npm ci`, lint, typecheck, Knip, Prettier with automatic line endings, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, with 4 existing warnings) all passed.
+  - Playwright `phone-375`: **97/97 passed**.
+  - Full Vitest runs were affected by machine load from other agents' Node processes. One run had 2 failures and a second run had 12. They hit different unrelated tests each time (Profile, Today, Week, session), all timeouts or missed waits. Every affected file passed when rerun alone. For example, `ProfilePage` passed 43/43 twice and `TimePreferences` passed 7/7. The Linux CI unit job is the authoritative full-suite run.
