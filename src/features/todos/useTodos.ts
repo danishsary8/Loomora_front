@@ -27,11 +27,12 @@ function useTodoStorage() {
   return { repo, generation, networkMode, sameSession, assertSession } as const
 }
 
-export function useTodayTodos(date: LocalDate) {
+export function useTodayTodos(date: LocalDate, enabled = true) {
   const { repo, generation, networkMode, assertSession } = useTodoStorage()
   return useQuery({
     queryKey: todoKeys.today(date, generation),
     networkMode,
+    enabled,
     queryFn: () => {
       assertSession()
       return repo.listForDate(date)

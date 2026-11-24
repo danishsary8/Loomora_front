@@ -771,3 +771,14 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - Verify 320, 375, 390, 768, 1024 and 1440 px at normal and 200% text size.
   - Offer confirmation before saving without a schedule link only when the account outbox records a definitive missing schedule. Retain the original and retry the approved replacement by UUID.
   - Run the full frontend checks and disable branch previews before opening the PR for planner review.
+
+### F-R3-04 — Focus History & Time Tracking
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** F-R3-03 (PR #62), the B-043 Focus session contract, and DEC-003.
+- **Plan:**
+  1. Add tests for the starting local date, chronological order, both modes and outcomes, and totals from unique saved records.
+  2. Add a dated History section below the timer using owner-scoped repository reads, account reconnection, and refresh after saves.
+  3. Use Elemental components and localized content for the total, session details, links, and loading, empty, offline, and retry states.
+  4. Verify the guest and account flows, accessibility, six viewport widths and 200% text size, then run the full checks and open the review PR.

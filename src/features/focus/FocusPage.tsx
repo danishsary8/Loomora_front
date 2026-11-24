@@ -4,6 +4,7 @@ import { PageHeading } from '@/components/page'
 import { Button, Card, Input, SegmentedControl } from '@/components/ui'
 import { useSession } from '@/lib/api'
 import { FocusAttachment } from './FocusAttachment'
+import { FocusHistory } from './FocusHistory'
 import { FocusReadout, LapList } from './FocusReadout'
 import { MissingScheduleRecovery } from './MissingScheduleRecovery'
 import { FocusRuntimeContext } from './focusRuntimeContext'
@@ -17,6 +18,7 @@ import {
 } from './focusTimerState'
 import { countdownPresetsMs } from './timerMath'
 import { useFocusSession } from './useFocusSession'
+import { useRefreshFocusHistory } from './useFocusHistory'
 
 const presets = Object.keys(countdownPresetsMs)
 const [minMinutes, maxMinutes] = customDurationLimits
@@ -39,6 +41,7 @@ export function FocusPage() {
           )}
         </Card>
       )}
+      <FocusHistory />
     </div>
   )
 }
@@ -46,6 +49,7 @@ export function FocusPage() {
 function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const { t } = useTranslation()
   const { observed, pending, busy, actionError, run, reload } = useFocusSession(runtime)
+  useRefreshFocusHistory(pending)
   const [mode, setMode] = useState<TimerConfig['mode']>('countdown')
   const [preset, setPreset] = useState(presets[0])
   const [minutes, setMinutes] = useState(presets[0])
