@@ -1212,3 +1212,21 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npm ci`, lint, typecheck, Knip, Prettier, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, 4 existing warnings) passed.
   - Full Vitest (`--maxWorkers=2`): **823/823 passed**.
   - Playwright `phone-375`: the first attempt hit the 120 s web-server start timeout during the production build under machine load, and no tests ran. The retry passed 108/109. The failure was `cross-browser.spec.ts` "6: cross-tab session synchronization", where the browser context had already closed ("Target page, context or browser has been closed"). `cross-browser.spec.ts` then passed **5/5** on its own.
+
+### 2026-11-25 DOC-001 — Professional frontend README
+
+- **Changed:** Rewrote the root `README.md` as a portfolio-ready project README. It covers identity, the Plan / Focus / Review overview (implemented, merged and planned), committed screenshots, the live demo with a staleness note, the stack, the architecture with a Mermaid data-flow diagram, getting started, environment variables, scripts, testing and CI, guest and account modes, PWA and Vercel configuration, API integration, the roadmap and the author. Registered DOC-001 in `docs/TASKS.md`. No application code, tests, dependencies, `vercel.json` or OpenAPI files changed.
+- **Sources checked:** `package.json`, `.env.example`, `src/lib/api/index.ts`, `src/app/routes.tsx`, `src/app/AppProviders.tsx`, `src/lib/storage/saveGuestPlan.ts`, `vite.config.ts`, `vercel.json`, `playwright.config.ts`, `playwright.staging.config.ts`, `.github/workflows/ci.yml` and `src/i18n/en.json` (Focus strings). Only the screenshots updated on 2026-11-23 and 2026-11-24 (Elemental Edition) are used. The October screenshots still show the old design.
+- **Verified:**
+  - All 47 unique relative links, image paths and in-page anchors in `README.md` resolve.
+  - All 25 unique external links and badges return HTTP 200, including the CI badge, both GitHub repositories and the backend's `docs/openapi.yaml`. The backend's OpenAPI file matches `docs/openapi.yaml` apart from line endings.
+  - All 12 documented scripts match `package.json`.
+  - `git diff --check` passed.
+  - Markdown files are excluded by `.prettierignore`, and no Markdown linter is configured, so no other documentation check applies. Lint, typecheck, Knip, Vitest, build and Playwright were not run locally because no code, configuration or test changed. CI runs them on the PR.
+  - The diff contains no secrets, tokens or `.env` values.
+- **Notes for the planner (none block this task):**
+  1. **Production is stale.** On 2026-11-25, read-only requests to `https://loomora-craft.vercel.app` still served `assets/index-Cbeen9Dj.js`. That build has the cream `#F5EDE6` theme and a Focus page that only shows "Coming soon". The README links the demo and states that it is behind `v2-rebuild` (QA-016). `https://loomora-api.onrender.com/api/v1/health` returned `200 {"status":"ok"}`. The API has no hosted documentation page, so the README links the OpenAPI file instead.
+  2. **Vercel preview for this branch.** `vercel.json` `git.deploymentEnabled` does not list `docs/DOC-001-frontend-readme`, so Vercel will probably build a protected Preview for it. As instructed, `vercel.json` was not edited for a docs-only task. Please add an opt-out if previews for docs branches are unwanted.
+  3. **`date-fns` in `docs/10-tech-and-structure.md`.** The stack lists `date-fns`, but it is not in `package.json` and nothing under `src/` imports it. The README lists only installed tools. Should `docs/10` drop it? The frontend structure in `docs/10` also lists fewer feature folders than exist today (no `focus`, `reminders`, `landing`, `legal`, `insights` or `styleguide`).
+  4. **Guest Focus sessions are not imported.** `saveGuestPlan` imports to-dos, schedule items, exceptions, check-ins and daily intentions, but not guest Focus sessions. The README states this. Please confirm that this is intended.
+  5. **`npm run e2e` runs six projects.** The suite covers Chromium, Firefox and WebKit at 375 px and 1280 px. The previous README said it ran only at 375 px and 1280 px in one browser. The new README explains installing all browsers for a full run and that CI runs only `phone-375`.

@@ -874,3 +874,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   3. Present the existing timer and essential controls in an accessible expanded view. Support browser fullscreen, in-app fallback, keyboard exit, and focus restoration.
   4. Add tests for preset selection, supported and unsupported fullscreen, exit, keyboard focus, navigation, and timer continuity through phase changes and recovery.
   5. Run the required frontend checks and verify 320, 375, 390, 768, 1024, and 1440 px widths at 100% and 200% text with reduced motion and zero horizontal page overflow.
+
+### DOC-001 — Professional frontend README
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Planner prompt DOC-001. Registered from `origin/v2-rebuild` at `7bd5b52` (PR #69 merged) after verifying the task ID was unused in both task documents and in remote branches.
+- **Scope:** Documentation only. Rewrite the root `README.md` and record the task here and in `docs/PROGRESS.md`. No application code, tests, dependencies, `vercel.json`, OpenAPI or legal changes.
+- **Plan:**
+  1. Verify the base, then read the rules, task queue, progress log, feature list, decisions and tech docs, `package.json`, routes, storage, API client, PWA, Vercel and CI configuration.
+  2. Rewrite `README.md` from verified facts only: implemented versus planned features, committed Elemental Edition screenshots, the stack, the architecture, setup, environment, scripts, tests, guest and account modes, PWA and deployment, API links, roadmap and author.
+  3. Describe the live deployment honestly, including that production is behind `v2-rebuild` (QA-016).
+  4. Check every link, image path, script name and environment variable, run `git diff --check`, and record the planner notes in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] Every relative link and image in `README.md` resolves, and every external link returns HTTP 200
+  - [x] Every documented script exists in `package.json`, and `VITE_API_URL` matches `.env.example` and `src/lib/api/index.ts`
+  - [x] `git diff --check` passes
+- **Files:** `README.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
