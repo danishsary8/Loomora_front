@@ -85,8 +85,6 @@ const INTER_STACK = ['"Inter Variable"', 'Inter', 'system-ui', 'sans-serif'] as 
 export const fontFamily = {
   heading: INTER_STACK,
   body: INTER_STACK,
-  // Alias retained so existing heading classes immediately adopt Inter before UX-004+ cleanup.
-  script: INTER_STACK,
 } as const
 
 /** WCAG 2.1 relative luminance of a #RRGGBB color. */

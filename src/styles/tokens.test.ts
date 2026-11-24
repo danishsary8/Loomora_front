@@ -61,7 +61,6 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
   it('uses self-hosted Inter across heading and body stacks and approved DEC-003 radii/motion', () => {
     expect(fontFamily.body[0]).toBe('"Inter Variable"')
     expect(fontFamily.heading).toEqual(fontFamily.body)
-    expect(fontFamily.script).toEqual(fontFamily.body)
     expect(radius).toEqual({ sm: '8px', md: '14px', lg: '22px' })
     expect(motion.duration).toEqual({ fast: '160ms', base: '200ms', slow: '240ms' })
   })

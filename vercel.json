@@ -23,6 +23,7 @@
       "feat/F-R3-04-focus-history": false,
       "feat/F-R3-05-timer-end-sound": false,
       "feat/UX-009-elemental-profile": false,
+      "feat/UX-010-elemental-landing": false,
       "v2-rebuild": false
     }
   },

@@ -67,7 +67,6 @@ export default {
       },
       fontFamily: {
         heading: [...fontFamily.heading],
-        script: [...fontFamily.script],
         body: [...fontFamily.body],
       },
       minHeight: {

@@ -16,7 +16,7 @@ export function StandalonePage({
   return (
     <div
       className={cn(
-        'mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-6',
+        'mx-auto flex min-h-dvh w-full flex-col pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1.5rem,env(safe-area-inset-top))]',
         wide ? 'max-w-4xl' : 'max-w-lg',
       )}
     >
@@ -27,7 +27,7 @@ export function StandalonePage({
       >
         {children}
       </main>
-      <footer className="mt-10 flex justify-center gap-2 text-sm">
+      <footer className="mt-10 flex flex-wrap justify-center gap-2 text-sm">
         <Link to="/privacy" className="inline-flex min-h-touch items-center px-2 underline">
           {t('pages.privacy.title')}
         </Link>
