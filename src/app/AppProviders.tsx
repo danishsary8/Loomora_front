@@ -1,5 +1,6 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { LazyMotion } from 'framer-motion'
+import { FocusRuntimeProvider } from '@/features/focus/FocusRuntimeProvider'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   accountDataApi,
@@ -86,6 +87,8 @@ export function AppProviders({
     ? server
     : { todos: guest.todos, schedule: guest.schedule, streak: guestStreak }
 
+  const focusRepository = signedIn ? accountFocus : guestFocus
+
   return (
     <LazyMotion features={loadMotionFeatures} strict>
       <QueryClientProvider client={client}>
@@ -94,10 +97,14 @@ export function AppProviders({
             <ScheduleRepositoryContext.Provider value={active.schedule}>
               <StreakRepositoryContext.Provider value={active.streak}>
                 <GuestPreferenceDatabaseContext.Provider value={guestDatabase}>
-                  <FocusSessionRepositoryContext.Provider
-                    value={signedIn ? accountFocus : guestFocus}
-                  >
-                    {children}
+                  <FocusSessionRepositoryContext.Provider value={focusRepository}>
+                    <FocusRuntimeProvider
+                      database={guestDatabase}
+                      repository={focusRepository}
+                      generation={generation}
+                    >
+                      {children}
+                    </FocusRuntimeProvider>
                   </FocusSessionRepositoryContext.Provider>
                 </GuestPreferenceDatabaseContext.Provider>
               </StreakRepositoryContext.Provider>
