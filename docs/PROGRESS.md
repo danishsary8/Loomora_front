@@ -237,7 +237,6 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 - **Verified:** lint, typecheck, knip, build exit 0; Vitest 41 files / 377 tests passed; Playwright phone-375 41 passed. `format:check` reports 209 files including untouched ones (e.g. `tsconfig.json`), so it is a local Windows CRLF issue, not this change; CI (Linux) result is the reference.
 - **Questions:** None.
 
-
 ### 2026-11-19: F-023 Subtasks, priority and notes UI
 - **Plan:** Add failing guest, account and phone tests. Migrate Dexie and implement the subtask rules. Map the existing API and import fields. Extend the Today sheet and rows. Verify and open the review PR.
 - **Today:** Reused the existing sheet for adding and editing to-dos and subtasks. Added text priority labels, optional plain-text notes with a translated 2,000-character limit, nested checkboxes, completed/total progress and accessible add, edit and delete controls. Add subtask is available while the parent can remain in Today. Parent and child check-offs run in order so a failed child request after parent completion retains the saved state.
@@ -1167,6 +1166,25 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
   - Playwright `phone-375`: **98/98 passed**.
   - Full Vitest with 4 workers: 805/807. The two failures were in `auth` (a missed label wait) and `session` (a load-timing assertion). Both passed 44/44 when rerun alone. The Linux CI unit job is the authoritative full-suite run.
 
+### 2026-11-24 UX-011 — Elemental Authentication Screen Refinement
+
+- **Changes:**
+  - `src/features/auth/AuthLayout.tsx` (new): `AuthLayout` sits inside the unchanged shared `StandalonePage`. It shows the Inter `PageHeading` with an optional muted subtitle, puts the form on the shared paper `Card` (`sm:p-6`), and lists text links below the card. It is centered vertically from `sm`. `AuthLink` gives every auth text link the same primary-colored, underlined style with a 44 px target. `AuthDivider` is the hairline "or" separator, labeled for screen readers.
+  - `src/features/auth/FormError.tsx`: `FormError` is now a hairline danger notice (`border-danger` on paper, ink text, `AlertIcon`) instead of the legacy `border-thick` box. The new `FormSuccess` is the matching success notice (`border-success/40` on `primary-soft`, `CheckIcon`, `role="status"`). The forgot-password, reset and verify confirmations and the resend outcome now use these notices instead of the `health` / `life` category cards, because DEC-003 keeps category colors out of status messages.
+  - `AuthPage`, `SignInForm`, `SignUpForm`, `ForgotPasswordPage`, `ResetPasswordPage`, `VerifyEmailPage`, `SurveyPage`, `ResendVerification`: use the layout, notices and links above. Every auth form sets `aria-busy` while its request runs. Forgot and Reset now show "Sending…" / "Saving…" while pending, as Sign in and Sign up already did. "Forgot your password?" is right-aligned under the password field, and tab order is unchanged.
+  - `src/components/ui/icons.tsx`: new `AlertIcon` in the unified 1.75 px round-cap style.
+  - `src/i18n/en.json`: `pages.signIn.subtitle`, `pages.signUp.subtitle`, `auth.forgot.sending`, `auth.reset.saving`.
+  - `src/features/auth/authPresentation.test.tsx` (new, 15 tests), `e2e/auth.spec.ts` (new, 8 tests), `docs/screenshots/auth-375.png` and `auth-1440.png` (Sign in), `vercel.json` (branch preview opt-out).
+- **Unchanged:** routes, validation rules, server error mapping, the session generation guards, the Google redirect URL and intents, the Google callback, token handling, the API, Dexie, guest import, `StandalonePage`, Landing, Profile and Focus. Legal and 404 screens (UX-012) were not touched.
+- **Notes for the planner:**
+  - Profile's `AccountCard` and `DeleteAccountSheet` import the shared auth `FormError`, so their form errors now also use the Elemental danger notice. UX-009 flagged this component as still legacy. Profile's code and layout are otherwise unchanged.
+  - The Google button keeps its text-only label. A Google "G" mark would add a third-party brand asset outside the unified icon set, so it was left out.
+- **Verification (Windows, `4de84ff` base):**
+  - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `prettier --check --end-of-line auto .`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 existing warnings) and `git diff --check` passed. `npm run build` passed as part of the Playwright web server.
+  - New unit tests: `authPresentation.test.tsx` 15/15, and all auth tests 64/64.
+  - Full Vitest (`--maxWorkers=3`): 806/812. The 6 failures were in `auth`, `LandingPage`, `ProfilePage`, `AddTodoSheet` and `DailyIntention`. They were 5 s timeouts or missed waits while a forks worker also failed to start under machine load. Rerun alone, the 5 files passed **100/100**. The Linux CI unit job is the authoritative full-suite run.
+  - Playwright `phone-375`: 105/106. The one failure was `a11y.spec.ts` `/reset-password`, which ended with "Protocol error … session closed" before axe ran. `a11y.spec.ts` then passed **17/17** on its own. The new `e2e/auth.spec.ts` passed **8/8**. It covers field and server errors, a network failure, a Google callback error, links between screens, keyboard order with a visible focus ring, the guest Save your plan → Sign up → back path with no write requests, axe on five auth screens with 44 px targets, and 0 px overflow at 320/375/390/768/1024/1440 px plus 200% text at 320 px. All API calls are route fixtures, so no account is created or changed.
+
 ### 2026-11-24 F-R3-06 — Focus Presets & Full-Screen Focus View
 
 - Verified PRs #64 and #66 merged into `v2-rebuild` and their merge commits (`f277c0f` and `fede106`) are ancestors of the fetched base `4de84ff`. F-R3-06 was unused in the task and progress logs and in local and remote branches. Created `feat/F-R3-06-focus-presentation` in the isolated `loomora-front-F-R3-06` worktree.
@@ -1186,3 +1204,11 @@ The planner approved the presentation scope on 2026-11-24. The expanded view wil
 - Verification covers native and fallback fullscreen, keyboard and focus behavior, phase transitions, navigation, reload, linked guest and account sessions, history, and audio. The Playwright sweep covers 320, 375, 390, 768, 1024, and 1440 px at 100% and 200% text with reduced motion. The production audit found zero vulnerabilities, and Redocly validated the unchanged OpenAPI file with four existing warnings. The review PR carries the final suite results. Vercel previews are disabled for this branch.
 
 The first GitHub browser run exposed two test assumptions. The midnight scenario now uses Week for its navigation step to keep the guest save prompt out of the scenario. The normal layout sweep tabs to the primary control and checks its final position above the mobile navigation. Both revised cases passed against the standalone production preview.
+
+#### PR #69 planner follow-up: merge of `origin/v2-rebuild` after F-R3-06 (PR #68)
+
+- Merged `origin/v2-rebuild` at `087bf51` into `feat/UX-011-elemental-auth` with a merge commit (no rebase, no force-push). Only the appended entries in `docs/TASKS.md`, `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted. Both sides were kept, including all 22 preview opt-outs, and neither side lost a line. `src/i18n/en.json` merged automatically. No F-R3-06 Focus file was changed.
+- Verification after the merge on Windows:
+  - `npm ci`, lint, typecheck, Knip, Prettier, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, 4 existing warnings) passed.
+  - Full Vitest (`--maxWorkers=2`): **823/823 passed**.
+  - Playwright `phone-375`: the first attempt hit the 120 s web-server start timeout during the production build under machine load, and no tests ran. The retry passed 108/109. The failure was `cross-browser.spec.ts` "6: cross-tab session synchronization", where the browser context had already closed ("Target page, context or browser has been closed"). `cross-browser.spec.ts` then passed **5/5** on its own.

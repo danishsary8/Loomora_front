@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
-import { PageHeading, StandalonePage } from '@/components/page'
-import { Button, Card, Input } from '@/components/ui'
+import { useSearchParams } from 'react-router-dom'
+import { Button, Input } from '@/components/ui'
 import { authApi } from '@/lib/api'
-import { FormError } from './FormError'
+import { AuthLayout, AuthLink } from './AuthLayout'
+import { FormError, FormSuccess } from './FormError'
 import { MIN_PASSWORD_LENGTH } from './validation'
 import { useFormAction } from './useFormAction'
 
@@ -34,14 +34,18 @@ export function ResetPasswordPage() {
     !token || !email || fieldErrors.token ? t('auth.reset.invalidLink') : undefined
 
   return (
-    <StandalonePage>
-      <PageHeading>{t('auth.reset.title')}</PageHeading>
+    <AuthLayout
+      title={t('auth.reset.title')}
+      links={
+        <AuthLink to={done ? '/sign-in' : '/forgot-password'}>
+          {t(done ? 'auth.backToSignIn' : 'auth.reset.requestNew')}
+        </AuthLink>
+      }
+    >
       {done ? (
-        <Card tone="health" role="status">
-          {t('auth.reset.done')}
-        </Card>
+        <FormSuccess>{t('auth.reset.done')}</FormSuccess>
       ) : (
-        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        <form onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-4">
           <FormError message={linkProblem ?? formError} />
           <Input
             label={t('auth.reset.newPassword')}
@@ -53,16 +57,10 @@ export function ResetPasswordPage() {
             error={fieldErrors.password}
           />
           <Button type="submit" size="lg" fullWidth disabled={pending || !token || !email}>
-            {t('auth.reset.submit')}
+            {t(pending ? 'auth.reset.saving' : 'auth.reset.submit')}
           </Button>
         </form>
       )}
-      <Link
-        to={done ? '/sign-in' : '/forgot-password'}
-        className="inline-flex min-h-touch items-center font-semibold underline"
-      >
-        {t(done ? 'auth.backToSignIn' : 'auth.reset.requestNew')}
-      </Link>
-    </StandalonePage>
+    </AuthLayout>
   )
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { Button, Input } from '@/components/ui'
 import { authApi, useSession } from '@/lib/api'
+import { AuthLink } from './AuthLayout'
 import { FormError } from './FormError'
 import { isEmail } from './validation'
 import { useFormAction } from './useFormAction'
@@ -39,7 +39,7 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-4">
       <FormError message={formError} />
       <Input
         label={t('auth.email')}
@@ -59,12 +59,9 @@ export function SignInForm() {
         onChange={(e) => setPassword(e.target.value)}
         error={clientErrors.password}
       />
-      <Link
-        to="/forgot-password"
-        className="inline-flex min-h-touch items-center font-semibold underline"
-      >
-        {t('auth.forgotLink')}
-      </Link>
+      <div className="-my-1 flex justify-end">
+        <AuthLink to="/forgot-password">{t('auth.forgotLink')}</AuthLink>
+      </div>
       <Button type="submit" size="lg" fullWidth disabled={pending}>
         {t(pending ? 'auth.signingIn' : 'auth.signInSubmit')}
       </Button>

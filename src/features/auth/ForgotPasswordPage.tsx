@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import { PageHeading, StandalonePage } from '@/components/page'
-import { Button, Card, Input } from '@/components/ui'
+import { Button, Input } from '@/components/ui'
 import { authApi } from '@/lib/api'
-import { FormError } from './FormError'
+import { AuthLayout, AuthLink } from './AuthLayout'
+import { FormError, FormSuccess } from './FormError'
 import { isEmail } from './validation'
 import { useFormAction } from './useFormAction'
 
@@ -27,15 +26,15 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <StandalonePage>
-      <PageHeading>{t('auth.forgot.title')}</PageHeading>
+    <AuthLayout
+      title={t('auth.forgot.title')}
+      subtitle={sent ? undefined : t('auth.forgot.intro')}
+      links={<AuthLink to="/sign-in">{t('auth.backToSignIn')}</AuthLink>}
+    >
       {sent ? (
-        <Card tone="health" role="status">
-          {t('auth.forgot.sent')}
-        </Card>
+        <FormSuccess>{t('auth.forgot.sent')}</FormSuccess>
       ) : (
-        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-          <p>{t('auth.forgot.intro')}</p>
+        <form onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-4">
           <FormError message={formError} />
           <Input
             label={t('auth.email')}
@@ -46,13 +45,10 @@ export function ForgotPasswordPage() {
             error={fieldErrors.email}
           />
           <Button type="submit" size="lg" fullWidth disabled={pending}>
-            {t('auth.forgot.submit')}
+            {t(pending ? 'auth.forgot.sending' : 'auth.forgot.submit')}
           </Button>
         </form>
       )}
-      <Link to="/sign-in" className="inline-flex min-h-touch items-center font-semibold underline">
-        {t('auth.backToSignIn')}
-      </Link>
-    </StandalonePage>
+    </AuthLayout>
   )
 }
