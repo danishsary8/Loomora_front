@@ -87,13 +87,23 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
         ).toBeGreaterThanOrEqual(44)
         if (width >= 768 || scale !== 200) continue
         const primary = page.locator('#main button[type="submit"]')
-        await page.evaluate(() => window.scrollTo(0, 0))
+        const mobileNav = page.getByRole('navigation').filter({ visible: true })
         await primary.focus()
-        const box = await primary.boundingBox()
-        const nav = await page.getByRole('navigation').filter({ visible: true }).boundingBox()
-        if (!box || !nav)
-          throw new Error('The primary control and mobile navigation must be visible')
-        expect(box.y + box.height).toBeLessThanOrEqual(nav.y)
+        await page.keyboard.press('Shift+Tab')
+        await page.keyboard.press('Tab')
+        await expect(primary).toBeFocused()
+        await expect
+          .poll(
+            async () => {
+              const box = await primary.boundingBox()
+              const nav = await mobileNav.boundingBox()
+              if (!box || !nav)
+                throw new Error('The primary control and mobile navigation must be visible')
+              return Math.min(box.y, nav.y - box.y - box.height)
+            },
+            { message: `Primary control at ${width}px and ${scale}% text size` },
+          )
+          .toBeGreaterThanOrEqual(0)
         await primary.blur()
       }
     }
