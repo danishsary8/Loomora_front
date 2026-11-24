@@ -750,3 +750,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`; 320–1440 px and 200% text at 375 px show `0 px` overflow.
   - [x] Planner fix (PR #61): from 768 px the seven columns keep a `8rem` minimum and scroll inside their own focusable `Week schedule` region when the screen is narrower (768 and 1024 px); all seven fit without scrolling at 1280 and 1440 px; sidebar unchanged; regression test at 768 px with long titles.
 - **Files:** `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/WeekPage.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/schedule/week/useHorizontalOverflow.ts`, `src/features/schedule/week/WeekPage.test.tsx`, `e2e/week.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/week-375.png`, `docs/screenshots/week-768.png`, `docs/screenshots/week-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-02B — Focus timer runtime and recovery
+
+- **Status:** review
+- **Owner:** codex
+- **Prerequisites:** F-R3-02A timer math and F-R3-01 Focus repositories are merged. B-043 supplies the finished-session API contract.
+- **Scope:** Implement countdown and stopwatch lifecycle, durable recovery, cross-tab and account isolation, and idempotent finalization through the existing Focus repositories.
+- **Approved behavior:** [DEC-004](DECISIONS.md#dec-004-focus-timer-runtime-and-recovery-2026-11-24).

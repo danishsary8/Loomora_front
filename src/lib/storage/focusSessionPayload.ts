@@ -57,10 +57,10 @@ function time(value: string, field: string): number {
   return ms
 }
 
-export function focusDurations(
-  input: FocusSessionInput,
-): Pick<FocusSession, 'focus_ms' | 'break_ms' | 'paused_ms'> {
-  for (const field of ['id', 'todo_id', 'schedule_item_id'] as const) {
+export function validateFocusSessionLink(
+  input: Pick<FocusSessionInput, 'todo_id' | 'schedule_item_id' | 'label'>,
+): void {
+  for (const field of ['todo_id', 'schedule_item_id'] as const) {
     const value = input[field]
     if (value != null && !uuid.test(value)) invalidFocusSession(field, 'Use a UUID.')
   }
@@ -71,6 +71,13 @@ export function focusDurations(
   if (label && [...label].length > 120) {
     invalidFocusSession('label', 'Use at most 120 characters.')
   }
+}
+
+export function focusDurations(
+  input: FocusSessionInput,
+): Pick<FocusSession, 'focus_ms' | 'break_ms' | 'paused_ms'> {
+  if (input.id != null && !uuid.test(input.id)) invalidFocusSession('id', 'Use a UUID.')
+  validateFocusSessionLink(input)
   if (input.mode === 'countdown') {
     if (!Number.isSafeInteger(input.planned_focus_ms) || (input.planned_focus_ms ?? 0) < 1) {
       invalidFocusSession('planned_focus_ms', 'Use a positive millisecond duration.')

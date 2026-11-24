@@ -17,6 +17,7 @@
       "feat/F-R3-01-focus-session-repository": false,
       "feat/UX-007-elemental-today": false,
       "feat/UX-008-elemental-week": false,
+      "feat/F-R3-02B-focus-runtime": false,
       "v2-rebuild": false
     }
   },
