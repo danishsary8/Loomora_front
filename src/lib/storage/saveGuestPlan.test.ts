@@ -1,6 +1,7 @@
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { MAX_TODOS } from '@/features/todos/types'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
+import { importBackend } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
 import type { GuestStorage } from './saveGuestPlan'
@@ -48,12 +49,14 @@ beforeEach(() => {
 afterEach(() => db.delete())
 
 describe('saveGuestPlan (docs/08 rule 9)', () => {
+  // The plan has one repeat successor, which does not count toward the 500 (DECISIONS I9).
   it.each([
     { active: 499, account: 0, accepted: true },
-    { active: 499, account: 1, accepted: true },
-    { active: 500, account: 0, accepted: true },
-    { active: 500, account: 1, accepted: false },
-    { active: 501, account: 0, accepted: false },
+    { active: 499, account: 2, accepted: true },
+    { active: 500, account: 1, accepted: true },
+    { active: 500, account: 2, accepted: false },
+    { active: 501, account: 0, accepted: true },
+    { active: 501, account: 1, accepted: false },
   ])(
     'imports $active active rows into an account with $account existing rows (accepted: $accepted)',
     async ({ active, account, accepted }) => {
@@ -80,31 +83,23 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
         })
       }
 
-      const bodies: ImportBody[] = []
-      server.use(
-        http.post(`${API}/import`, async ({ request }) => {
-          const body = (await request.json()) as ImportBody
-          bodies.push(body)
-          // Mirrors ImportRequest's per-request and aggregate caps for fresh UUIDs.
-          if (body.todos.length > MAX_TODOS || body.todos.length + account > MAX_TODOS) {
-            return HttpResponse.json(
-              { message: 'Invalid', errors: { todos: ['Too many to-dos'] } },
-              { status: 422 },
-            )
-          }
-          return HttpResponse.json({ data: RESULT })
-        }),
-      )
+      const { calls } = importBackend({
+        todos: Array.from({ length: account }, () => ({
+          id: crypto.randomUUID(),
+          parent_id: null,
+          next_todo_id: null,
+        })),
+      })
 
-      if (accepted) {
-        await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
-        expect(await guest.todos.listAll({ includeDeleted: true })).toEqual([])
-      } else {
+      if (!accepted) {
         await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 422 })
         expect(await guest.todos.listAll({ includeDeleted: true })).toEqual(before)
+        return
       }
-      expect(bodies).toHaveLength(1)
-      const sent = bodies[0]?.todos ?? []
+      await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+      expect(await guest.todos.listAll({ includeDeleted: true })).toEqual([])
+      expect(calls).toHaveLength(Math.ceil(active / MAX_TODOS))
+      const sent = calls.flatMap(({ todos }) => todos)
       expect(sent).toHaveLength(active)
       expect(sent).toEqual(
         expect.arrayContaining([

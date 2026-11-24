@@ -3,6 +3,7 @@ import type { LocalDate, Todo } from '@/features/todos/types'
 import type { AccountDataApi, ImportBody } from '@/lib/api'
 import type { DailyIntentionRecord } from '@/lib/api/types'
 import type { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import { orderForImport } from './guestImportOrder'
 import type { GuestScheduleRepository } from './GuestScheduleRepository'
 import type { GuestTodoRepository } from './GuestTodoRepository'
 
@@ -55,8 +56,9 @@ export function hadFullDay(plan: GuestPlan, today: LocalDate): boolean {
   return [...days.values()].some(Boolean)
 }
 
-// Per-call caps of `POST /import` (docs/openapi.yaml). To-dos and items are totals per user, so
+// Per-call caps of `POST /import` (docs/openapi.yaml). Schedule items are a total per user, so
 // they all go in the first call.
+const MAX_TODOS_PER_CALL = 500
 const MAX_EXCEPTIONS_PER_CALL = 5000
 const MAX_CHECKINS_PER_CALL = 10000
 const MAX_INTENTIONS_PER_CALL = 1000
@@ -65,9 +67,8 @@ const MAX_INTENTIONS_PER_CALL = 1000
 function toImportBody(plan: GuestPlan): ImportBody {
   const todoIds = new Set(plan.todos.map(({ id }) => id))
   return {
-    todos: [...plan.todos]
-      .sort((a, b) => Number(a.parent_id !== null) - Number(b.parent_id !== null))
-      .map(
+    todos: orderForImport(
+      plan.todos.map(
         ({
           id,
           title,
@@ -99,6 +100,7 @@ function toImportBody(plan: GuestPlan): ImportBody {
           next_todo_id: next_todo_id && todoIds.has(next_todo_id) ? next_todo_id : null,
         }),
       ),
+    ),
     schedule_items: plan.items.map(
       ({ id, title, category, start_time, end_time, days, starts_on, ends_on, created_at }) => ({
         id,
@@ -118,29 +120,26 @@ function toImportBody(plan: GuestPlan): ImportBody {
   }
 }
 
-/** The first call carries to-dos and items; every call stays under the API caps. */
+/**
+ * The first call carries the items; to-dos keep their import order across calls, and every call
+ * stays under the API caps.
+ */
 function chunkImportBody(body: ImportBody): ImportBody[] {
   const count = Math.max(
     1,
+    Math.ceil(body.todos.length / MAX_TODOS_PER_CALL),
     Math.ceil(body.exceptions.length / MAX_EXCEPTIONS_PER_CALL),
     Math.ceil(body.checkins.length / MAX_CHECKINS_PER_CALL),
     Math.ceil(body.daily_intentions.length / MAX_INTENTIONS_PER_CALL),
   )
+  const part = <T>(rows: T[], size: number, index: number) =>
+    rows.slice(index * size, (index + 1) * size)
   return Array.from({ length: count }, (_, index) => ({
-    todos: index === 0 ? body.todos : [],
+    todos: part(body.todos, MAX_TODOS_PER_CALL, index),
     schedule_items: index === 0 ? body.schedule_items : [],
-    exceptions: body.exceptions.slice(
-      index * MAX_EXCEPTIONS_PER_CALL,
-      (index + 1) * MAX_EXCEPTIONS_PER_CALL,
-    ),
-    checkins: body.checkins.slice(
-      index * MAX_CHECKINS_PER_CALL,
-      (index + 1) * MAX_CHECKINS_PER_CALL,
-    ),
-    daily_intentions: body.daily_intentions.slice(
-      index * MAX_INTENTIONS_PER_CALL,
-      (index + 1) * MAX_INTENTIONS_PER_CALL,
-    ),
+    exceptions: part(body.exceptions, MAX_EXCEPTIONS_PER_CALL, index),
+    checkins: part(body.checkins, MAX_CHECKINS_PER_CALL, index),
+    daily_intentions: part(body.daily_intentions, MAX_INTENTIONS_PER_CALL, index),
   }))
 }
 
