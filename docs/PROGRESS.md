@@ -1166,3 +1166,23 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
   - `npm ci`, lint, typecheck, Knip, Prettier, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, with 4 existing warnings) all passed.
   - Playwright `phone-375`: **98/98 passed**.
   - Full Vitest with 4 workers: 805/807. The two failures were in `auth` (a missed label wait) and `session` (a load-timing assertion). Both passed 44/44 when rerun alone. The Linux CI unit job is the authoritative full-suite run.
+
+### 2026-11-24 F-R3-06 — Focus Presets & Full-Screen Focus View
+
+- Verified PRs #64 and #66 merged into `v2-rebuild` and their merge commits (`f277c0f` and `fede106`) are ancestors of the fetched base `4de84ff`. F-R3-06 was unused in the task and progress logs and in local and remote branches. Created `feat/F-R3-06-focus-presentation` in the isolated `loomora-front-F-R3-06` worktree.
+- Reviewed the R3 feature list, DEC-003, DEC-004, the Focus page, readout, session hook, app-level runtime, and existing preset, recovery, accessibility, and browser tests. The current picker already offers 25, 50, 90, and Custom. The active timer uses the app-level runtime through page changes.
+- **Planner question:** Should F-R3-06 keep the device screen awake while the timer runs in the expanded view? [Research prompt DC-37](research/daycraft-task-prompts.md#dc-37--full-screen-focus-view) proposes requesting Screen Wake Lock while running and releasing it on pause or exit. The R3 feature list, DEC-004, and the task scope leave that device behavior unspecified. Please confirm whether to include it or limit this task to the presentation.
+- Registered the task and its five-step plan. Implementation and feature verification are pending the planner's decision.
+
+#### F-R3-06 planner decision
+
+The planner approved the presentation scope on 2026-11-24. The expanded view will use browser fullscreen when available and an in-app fallback otherwise. Screen Wake Lock and additional permission requests are outside this task. Implementation resumes in the existing worktree.
+
+#### F-R3-06 implementation and verification
+
+- The countdown picker uses a labeled radio group with arrow-key selection and a visible checked indicator. The documented 25, 50, 90, and Custom durations use the existing timer configuration.
+- The localized expanded view shares the active timer controls, phase readout, linked item, mute, and stopwatch laps. Native fullscreen and the viewport-filling dialog use the same exit control. Escape and browser exit return focus to Expand timer, and session completion returns focus to Start.
+- The presentation closes if the active snapshot disappears. A recovered timer returns in the normal layout. Countdown audio unlock runs before the fullscreen request, and linked to-do lookups use the session's starting date through midnight.
+- Verification covers native and fallback fullscreen, keyboard and focus behavior, phase transitions, navigation, reload, linked guest and account sessions, history, and audio. The Playwright sweep covers 320, 375, 390, 768, 1024, and 1440 px at 100% and 200% text with reduced motion. The production audit found zero vulnerabilities, and Redocly validated the unchanged OpenAPI file with four existing warnings. The review PR carries the final suite results. Vercel previews are disabled for this branch.
+
+The first GitHub browser run exposed two test assumptions. The midnight scenario now uses Week for its navigation step to keep the guest save prompt out of the scenario. The normal layout sweep tabs to the primary control and checks its final position above the mobile navigation. Both revised cases passed against the standalone production preview.
