@@ -1007,6 +1007,74 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - The runtime ignores stale confirmations and suppresses a stale rejection if the replacement was already saved before queue cleanup. Generic validation and conflict rejections keep their existing feedback.
 - The focused Vitest run passed 43 tests and all 87 phone-375 Playwright tests passed against the standalone Windows production preview. Lint, typecheck, Knip, formatting, build, and Git diff checks passed. The production audit found zero vulnerabilities. The full audit and Redocly retained four existing findings and four existing warnings, respectively.
 
+### 2026-11-24: QA-024 Lossless guest import frontend integration
+
+- **Branch / PR:** `feat/QA-024-lossless-guest-import` from `origin/v2-rebuild` at `e6486d4`, in worktree `loomora-front-QA-024`. One PR into `v2-rebuild`; not merged.
+- **Contract:** Copied `docs/openapi.yaml` byte for byte from merged backend B-044 ([PR #48](https://github.com/danishsary8/loomora_back/pull/48), `13c64ff`), Git blob `435b75539239383016a3697d1ca99203a005c172`. Only the `POST /import` description changed. docs/08 rule 11 now records the I9 exemption. Rule 9 already described chunked requests with one transaction each.
+- **What changed:**
+  - `orderForImport` (`src/lib/storage/guestImportOrder.ts`) orders to-dos as in DECISIONS I9:
+    - Each repeat chain runs from its newest occurrence down to the original.
+    - Each successor's subtasks go right after its predecessor.
+    - Every other to-do is followed by its subtasks.
+    - Every `parent_id` and `next_todo_id` then points at an earlier row, so any cut is valid.
+  - `saveGuestPlan` sends to-dos in consecutive calls of at most 500. Schedule items stay in the first call. Exceptions, check-ins and daily intentions keep their 5000, 10000 and 1000 per-call caps and travel in the same calls. The guest copy is still cleared only after every call succeeds. Rows keep their client UUIDs, so a replay skips what an earlier call committed.
+  - It fails closed: if the order cannot place a row (a link loop, or a subtask whose parent is not a top-level to-do in the plan), it throws before any call. Nothing is sent or cleared.
+- **Tests:**
+  - `src/test/importBackend.ts` is a stand-in for `POST /import` that models backend `ImportRequest`:
+    - at most 500 to-dos per call;
+    - links to a row in the same call or on the account;
+    - another account's id is refused;
+    - the I9 manual count (a successor is proven only by an account row or a new row in the call, and so are its subtasks);
+    - one transaction per call, and rows the account already has are skipped.
+  - `src/lib/storage/guestImport.test.ts` (14 tests) covers:
+    - 499, 500 and 501 rows, and 500 manual plus 1 generated row;
+    - 500 manual plus 600 generated rows with subtasks (1100 rows in 3 calls);
+    - two chains with subtasks crossing calls, newest occurrence first;
+    - an account with 301 manual to-dos that ends at exactly 500, and one with 302, refused with the plan kept;
+    - an account with 499 manual to-dos where a later occurrence has 300 more subtasks than the original;
+    - a failed second call followed by a replay after reload: no duplicates, and items, check-ins and intentions intact;
+    - another account's id;
+    - a small plan in one call;
+    - the fail-closed loop;
+    - the recorded deletion case below.
+  - The boundary table in `saveGuestPlan.test.ts` now follows I9. Its old mock used the pre-B-044 total count, which refused a plan of 500 manual rows plus a successor. It now uses the shared stand-in. All other existing import tests are unchanged and pass.
+  - **Mutation checks:**
+    - Placing a successor's subtasks right after the successor makes the 300-subtask near-capacity test fail with a false 422.
+    - Starting chains from rows nobody points at instead of the newest occurrence fails 9 tests.
+- **Recorded case (task step 8): a deleted middle occurrence breaks repeat provenance.**
+  - **Exact case:** a guest has a repeating to-do P plus 499 other manual to-dos (500 manual). Checking off P creates S1; checking off S1 creates S2. The guest then deletes S1.
+  - **Why it fails:** `GuestTodoRepository.delete` clears P's link to S1. Deleted rows are never imported, because the import schema has no deleted field. So nothing in the payload or the account points at S2. The backend counts S2 as manual: 501, so the import gets 422 `todos`.
+  - **Contrast with an account:** an account's deleted S1 keeps proving S2, because deleted predecessors count (I9).
+  - **What the app does:** it keeps the whole guest copy and does not discard or relink anything. Earlier calls may already be committed (Q-B044-3); a replay skips them.
+  - **Scope:** this only fails when such orphaned successors, and their subtasks, push the final manual count past 500.
+  - **Q-QA024-1, answered by the planner (2026-11-24): Option C.** The orphan-repeat case is a documented unsupported limit for QA-024. All guest data is kept; the app never silently relinks, deletes or changes repeat history. Options that were considered:
+    - (A) The backend accepts deleted rows (or a provenance-only tombstone) on import, so the guest can send S1.
+    - (B) The frontend relinks P to S2. Not done: it rewrites repeat history.
+    - (C) Accept it as a documented limit.
+  - Covered by the last test in `guestImport.test.ts`.
+- **Other residual edges (unchanged by this task):**
+  - Guest `restore` skips the 500 check, as account restores do. A plan can therefore pass 500 manual rows; it is refused and kept.
+  - After a partial import, a guest who signs out and edits an already-committed row loses that edit on replay: the server copy wins (skip by id).
+- **How it was verified:**
+  - Clean `npm ci`, then `npm run lint`, `npm run typecheck`, `npm run knip`, and `npx prettier --check --end-of-line auto .`: all passed.
+  - Full Vitest: **745/745 passed** in 68 files on a clean run.
+    - An earlier run reported 4 unidentified failures.
+    - A later run, made while the production build ran at the same time, hit 6 timeouts in `auth`, `ProfilePage`, `ScheduleItemSheet` and `DailyIntention`. Those 4 files then passed alone (92/92). None of them touches import code.
+  - `npm run build` passed (PWA precache 33 entries).
+  - Playwright `phone-375`: **80/80 passed** (`LOOMORA_E2E_PORT=4324`).
+  - `npm audit --omit=dev`: 0 vulnerabilities.
+  - `npx @redocly/cli lint docs/openapi.yaml`: valid, with the 4 existing warnings.
+  - `git diff --check`: clean.
+- **Migration / rollback:**
+  - No Dexie schema change and no backend change.
+  - Rolling back restores the single-call import. A plan of 500 manual rows plus successors would again get 422 and keep the guest copy.
+  - Rows committed by a partial import stay on the account, and a later replay skips them.
+
+#### 2026-11-24: QA-024 merge of `origin/v2-rebuild` and planner decision
+
+- The planner answered Q-QA024-1 with Option C, recorded above. No code change was needed: the import already refuses the case, and the guest copy is kept unchanged.
+- Merged `origin/v2-rebuild` at `c7bbfb2` (F-R3-02B and F-R3-03) with a merge commit. `docs/TASKS.md`, `docs/PROGRESS.md` and `vercel.json` conflicted only on appended entries, and both sides were kept, including all three branch preview opt-outs.
+
 ### 2026-11-24 F-R3-04 — Focus History & Time Tracking
 
 - Focus history appears below the timer. The date defaults to today in the account or device time zone and stays selected across midnight. Sessions are ordered by start instant with a UUID tie-breaker. The day total sums each saved UUID's actual focus time once, including early-ended sessions.
