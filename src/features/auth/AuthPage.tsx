@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
-import { PageHeading, StandalonePage } from '@/components/page'
+import { useSearchParams } from 'react-router-dom'
+import { AuthDivider, AuthLayout, AuthLink } from './AuthLayout'
 import { FormError } from './FormError'
 import { GoogleButton } from './GoogleButton'
 import { SignInForm } from './SignInForm'
@@ -28,16 +28,16 @@ function AuthPage({ mode }: { mode: 'signIn' | 'signUp' }) {
   const googleError = useGoogleError()
   const other = mode === 'signIn' ? '/sign-up' : '/sign-in'
   return (
-    <StandalonePage>
-      <PageHeading>{t(`pages.${mode}.title`)}</PageHeading>
+    <AuthLayout
+      title={t(`pages.${mode}.title`)}
+      subtitle={t(`pages.${mode}.subtitle`)}
+      links={<AuthLink to={other}>{t(`pages.${mode}.switch`)}</AuthLink>}
+    >
       <FormError message={googleError} />
       <GoogleButton intent={mode === 'signIn' ? 'sign_in' : 'sign_up'} />
-      <p className="text-center text-sm font-semibold text-muted">{t('auth.or')}</p>
+      <AuthDivider />
       {mode === 'signIn' ? <SignInForm /> : <SignUpForm />}
-      <Link to={other} className="inline-flex min-h-touch items-center font-semibold underline">
-        {t(`pages.${mode}.switch`)}
-      </Link>
-    </StandalonePage>
+    </AuthLayout>
   )
 }
 
