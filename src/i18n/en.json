@@ -100,6 +100,64 @@
       }
     }
   },
+  "focus": {
+    "loading": "Loading your timer…",
+    "unavailable": "Your timer is unavailable.",
+    "retry": "Try again",
+    "mode": "Timer mode",
+    "countdown": "Countdown",
+    "stopwatch": "Stopwatch",
+    "duration": "Countdown duration",
+    "preset": "{{minutes}} min",
+    "custom": "Custom",
+    "minutes": "Duration in minutes",
+    "durationError": "Enter {{min}} to {{max}} whole minutes.",
+    "phase": {
+      "focus": "Focus session",
+      "short_break": "Short break",
+      "long_break": "Long break"
+    },
+    "startPhase": {
+      "focus": "Start focus",
+      "short_break": "Start short break",
+      "long_break": "Start long break"
+    },
+    "cycle": "Cycle {{current}} of {{total}}",
+    "initialTime": "{{minutes}}:00",
+    "remaining": "Time remaining",
+    "elapsed": "Elapsed time",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "lap": "Lap",
+    "laps": "Laps",
+    "lapNumber": "Lap {{count}}",
+    "split": "Split {{time}}",
+    "total": "Total {{time}}",
+    "finish": "Finish",
+    "endEarly": "End early",
+    "attachment": "Link to your plan (optional)",
+    "noAttachment": "No linked item",
+    "todayTodos": "Today’s to-dos",
+    "scheduleItems": "Schedule items",
+    "attachmentsLoading": "Loading plan items…",
+    "attachmentsUnavailable": "Some plan items are unavailable. You can still start a timer.",
+    "attachmentsEmpty": "No plan items available.",
+    "linkedItem": "Linked to {{title}}",
+    "linkedTodo": "Linked to a to-do",
+    "linkedSchedule": "Linked to a schedule item",
+    "restored": "Session restored.",
+    "paused": "Paused",
+    "waiting": "Ready for the next phase.",
+    "nextPhase": "Next up is {{phase}}.",
+    "running": "{{phase}} running.",
+    "saving": "Saving your session…",
+    "saveStatusError": "Couldn’t check the session’s save status.",
+    "saveFailed": "Couldn’t save your session. It’s kept on this device for retry.",
+    "rejected": "The session was rejected and is still kept on this device.",
+    "retrySave": "Retry save",
+    "actionError": "Couldn’t update your timer. Try again."
+  },
   "pages": {
     "today": {
       "title": "Today"
@@ -108,8 +166,7 @@
       "title": "Week"
     },
     "focus": {
-      "title": "Focus",
-      "comingSoon": "Focus timer, countdown and stopwatch are on the way."
+      "title": "Focus"
     },
     "insights": {
       "title": "Insights",

@@ -739,3 +739,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Prerequisites:** F-R3-02A timer math and F-R3-01 Focus repositories are merged. B-043 supplies the finished-session API contract.
 - **Scope:** Implement countdown and stopwatch lifecycle, durable recovery, cross-tab and account isolation, and idempotent finalization through the existing Focus repositories.
 - **Approved behavior:** [DEC-004](DECISIONS.md#dec-004-focus-timer-runtime-and-recovery-2026-11-24).
+
+### F-R3-03 — Elemental Focus timer interface
+
+- **Status:** review
+- **Owner:** codex
+- **Prerequisite:** F-R3-02B merged in PR #60 (5a46b68).
+- **Scope:** Elemental countdown, stopwatch, phase controls and optional plan links on `/focus`. Follow DEC-003 and DEC-004.
+- **Acceptance:**
+  - Use the owner-scoped runtime and repositories for timer commands, recovery, finalization and retries.
+  - Cover the timer controls, phase changes, end-early preservation, reloads, guest and account isolation, and offline save failures.
+  - Verify 320, 375, 390, 768, 1024 and 1440 px at normal and 200% text size.
+  - Run the full frontend checks and disable branch previews before opening the PR for planner review.

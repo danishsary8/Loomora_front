@@ -53,11 +53,17 @@ export class FocusRuntime {
 
   async read(): Promise<FocusTimerSnapshot | null> {
     this.assertCurrent()
-    const { db: open, scope, login } = this.options
-    const db = await open()
-    const timer = checkedSnapshot(await db.focus_timers.get(scope))
+    return this.readSnapshot(await this.options.db())
+  }
+
+  private readSnapshot(db: GuestDatabase) {
     this.assertCurrent()
-    return timer && timer.login !== login ? recoverLogin(timer, login) : timer
+    const { scope, login } = this.options
+    return db.focus_timers.get(scope).then((row) => {
+      this.assertCurrent()
+      const timer = checkedSnapshot(row)
+      return timer && timer.login !== login ? recoverLogin(timer, login) : timer
+    })
   }
 
   readTime(snapshot: FocusTimerSnapshot) {
@@ -167,11 +173,23 @@ export class FocusRuntime {
 
   async pending(): Promise<PendingFocusTimer[]> {
     this.assertCurrent()
-    const { db: open, scope } = this.options
-    const db = await open()
-    const rows = await db.focus_timer_pending.where('scope').equals(scope).toArray()
+    return this.readPending(await this.options.db())
+  }
+
+  private readPending(db: GuestDatabase) {
     this.assertCurrent()
-    return rows
+    return db.focus_timer_pending
+      .where('scope')
+      .equals(this.options.scope)
+      .toArray()
+      .then((rows) => {
+        this.assertCurrent()
+        return rows
+      })
+  }
+
+  observePending(onChange: (rows: PendingFocusTimer[]) => void, onError: (error: unknown) => void) {
+    return this.observeStorage((db) => this.readPending(db), onChange, onError)
   }
 
   async retryPending(id?: string) {
@@ -225,7 +243,32 @@ export class FocusRuntime {
   }
 
   observe(onChange: (state: FocusTimerSnapshot | null) => void, onError: (error: unknown) => void) {
-    return liveQuery(() => this.read()).subscribe({ next: onChange, error: onError })
+    return this.observeStorage((db) => this.readSnapshot(db), onChange, onError)
+  }
+
+  private observeStorage<T>(
+    read: (db: GuestDatabase) => Promise<T>,
+    onChange: (value: T) => void,
+    onError: (error: unknown) => void,
+  ) {
+    let active = true
+    let subscription: { unsubscribe: () => void } | undefined
+    // Resolve the lazy database first so Dexie tracks the reads in its live query context.
+    void this.options
+      .db()
+      .then((db) => {
+        if (active)
+          subscription = liveQuery(() => read(db)).subscribe({ next: onChange, error: onError })
+      })
+      .catch((error) => {
+        if (active) onError(error)
+      })
+    return {
+      unsubscribe() {
+        active = false
+        subscription?.unsubscribe()
+      },
+    }
   }
 }
 
