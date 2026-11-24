@@ -1204,3 +1204,11 @@ The planner approved the presentation scope on 2026-11-24. The expanded view wil
 - Verification covers native and fallback fullscreen, keyboard and focus behavior, phase transitions, navigation, reload, linked guest and account sessions, history, and audio. The Playwright sweep covers 320, 375, 390, 768, 1024, and 1440 px at 100% and 200% text with reduced motion. The production audit found zero vulnerabilities, and Redocly validated the unchanged OpenAPI file with four existing warnings. The review PR carries the final suite results. Vercel previews are disabled for this branch.
 
 The first GitHub browser run exposed two test assumptions. The midnight scenario now uses Week for its navigation step to keep the guest save prompt out of the scenario. The normal layout sweep tabs to the primary control and checks its final position above the mobile navigation. Both revised cases passed against the standalone production preview.
+
+#### PR #69 planner follow-up: merge of `origin/v2-rebuild` after F-R3-06 (PR #68)
+
+- Merged `origin/v2-rebuild` at `087bf51` into `feat/UX-011-elemental-auth` with a merge commit (no rebase, no force-push). Only the appended entries in `docs/TASKS.md`, `docs/PROGRESS.md` and the `vercel.json` branch-preview list conflicted. Both sides were kept, including all 22 preview opt-outs, and neither side lost a line. `src/i18n/en.json` merged automatically. No F-R3-06 Focus file was changed.
+- Verification after the merge on Windows:
+  - `npm ci`, lint, typecheck, Knip, Prettier, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities) and Redocly (valid, 4 existing warnings) passed.
+  - Full Vitest (`--maxWorkers=2`): **823/823 passed**.
+  - Playwright `phone-375`: the first attempt hit the 120 s web-server start timeout during the production build under machine load, and no tests ran. The retry passed 108/109. The failure was `cross-browser.spec.ts` "6: cross-tab session synchronization", where the browser context had already closed ("Target page, context or browser has been closed"). `cross-browser.spec.ts` then passed **5/5** on its own.
