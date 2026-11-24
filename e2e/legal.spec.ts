@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 test.use({ reducedMotion: 'reduce' })
 
@@ -77,4 +77,164 @@ test('legal links navigate from landing, sign-in, and sign-up and pass 375 px ac
     .analyze()
   expect(termsAxe.violations).toEqual([])
   expect(problems).toEqual([])
+})
+
+test.describe('S13 Elemental legal and recovery pages', () => {
+  const WIDTHS = [320, 375, 390, 768, 1024, 1440] as const
+  const PAGES = [
+    { path: '/privacy', heading: 'Privacy' },
+    { path: '/terms', heading: 'Terms' },
+    { path: '/missing-page', heading: 'Page not found' },
+  ] as const
+
+  test.skip(
+    ({ browserName, viewport }) => browserName !== 'chromium' || viewport?.width !== 375,
+    'Viewport sweep runs once on phone-375',
+  )
+
+  async function horizontalOverflow(page: Page): Promise<number> {
+    return page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+  }
+
+  async function tabUntilFocused(page: Page, target: Locator) {
+    for (
+      let i = 0;
+      i < 25 && !(await target.evaluate((el) => el === document.activeElement));
+      i++
+    ) {
+      await page.keyboard.press('Tab')
+    }
+    await expect(target).toBeFocused()
+  }
+
+  test('contents links jump to their section from the keyboard, and Back to Loomora goes home', async ({
+    page,
+  }) => {
+    await page.goto('/privacy')
+    const contents = page.getByRole('navigation', { name: 'On this page' })
+    const lastLink = contents.getByRole('link').last()
+    const lastTitle = (await lastLink.textContent()) ?? ''
+    await tabUntilFocused(page, lastLink)
+    expect(await lastLink.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')
+    await page.keyboard.press('Enter')
+
+    await expect(page).toHaveURL(/\/privacy#privacy-s7$/)
+    const section = page.getByRole('region', { name: lastTitle })
+    await expect(section.getByRole('heading', { level: 2, name: lastTitle })).toBeInViewport()
+    await expect(section).toBeFocused()
+
+    await page.getByRole('link', { name: 'Back to Loomora' }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Loomora' })).toBeVisible()
+  })
+
+  test('legal text keeps a readable measure and the contents column stays beside it on desktop', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/terms')
+    const firstSection = page.getByRole('region').first()
+    // Real measure of the longest paragraph: its characters divided by its rendered line count.
+    const charsPerLine = await page.locator('main section p').evaluateAll((paragraphs) => {
+      const longest = paragraphs.reduce((a, b) =>
+        (b.textContent ?? '').length > (a.textContent ?? '').length ? b : a,
+      )
+      const lineHeight = parseFloat(getComputedStyle(longest).lineHeight)
+      const lines = Math.round(longest.getBoundingClientRect().height / lineHeight)
+      return (longest.textContent ?? '').length / lines
+    })
+    expect(charsPerLine).toBeGreaterThanOrEqual(55)
+    expect(charsPerLine).toBeLessThanOrEqual(75)
+
+    const contents = await page.getByRole('navigation', { name: 'On this page' }).boundingBox()
+    const article = await firstSection.boundingBox()
+    expect((contents?.x ?? 0) + (contents?.width ?? 0)).toBeLessThan(article?.x ?? 0)
+  })
+
+  test('S13 pages pass axe and keep every link at least 44 px tall', async ({ page }) => {
+    for (const { path, heading } of PAGES) {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
+      const results = await new AxeBuilder({ page }).analyze()
+      expect(results.violations, path).toEqual([])
+      const links = page.getByRole('main').getByRole('link')
+      for (const link of await links.all()) {
+        expect((await link.boundingBox())?.height ?? 0, path).toBeGreaterThanOrEqual(44)
+      }
+    }
+  })
+
+  test('S13 pages have no horizontal overflow at 320–1440 px, at 100% and 200% text', async ({
+    page,
+  }) => {
+    for (const { path, heading } of PAGES) {
+      for (const width of WIDTHS) {
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(path)
+        await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
+        expect(await horizontalOverflow(page), `${path} ${width} px`).toBeLessThanOrEqual(0)
+        await page.evaluate(() => {
+          document.documentElement.style.fontSize = '200%'
+        })
+        expect(await horizontalOverflow(page), `${path} ${width} px 200%`).toBeLessThanOrEqual(0)
+      }
+    }
+  })
+
+  test('not found offers Go to Today and Back to Loomora from the keyboard', async ({ page }) => {
+    await page.goto('/missing/deep/link')
+    await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible()
+    await expect(page.getByText('Error 404')).toBeVisible()
+
+    await tabUntilFocused(page, page.getByRole('link', { name: 'Go to Today' }))
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('link', { name: 'Back to Loomora' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/$/)
+
+    await page.goto('/missing-page')
+    await page.getByRole('link', { name: 'Go to Today' }).click()
+    await expect(page).toHaveURL(/\/today$/)
+    await expect(page.getByRole('button', { name: 'Add a to-do' })).toBeVisible()
+  })
+
+  test.describe('router error', () => {
+    test.use({ serviceWorkers: 'block' })
+
+    test('a failed screen load shows the recovery page, and Try again reloads it', async ({
+      page,
+    }) => {
+      const chunk = /\/assets\/ProfilePage-[^/]+\.js$/
+      await page.route(chunk, (route) => route.abort('internetdisconnected'))
+      await page.goto('/profile')
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'This page could not load' }),
+      ).toBeVisible()
+      await expect(page.getByRole('alert')).toHaveText('Something went wrong. Please try again.')
+      await expect(page.getByRole('link', { name: 'Go to Today' })).toHaveAttribute(
+        'href',
+        '/today',
+      )
+      const footer = page.getByRole('contentinfo')
+      await expect(footer.getByRole('link', { name: 'Privacy' })).toBeVisible()
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+      for (const width of [320, 1440]) {
+        await page.setViewportSize({ width, height: 900 })
+        await page.evaluate(() => {
+          document.documentElement.style.fontSize = '200%'
+        })
+        expect(await horizontalOverflow(page), `${width} px 200%`).toBeLessThanOrEqual(0)
+      }
+
+      await page.unroute(chunk)
+      const tryAgain = page.getByRole('button', { name: 'Try again' })
+      await tabUntilFocused(page, tryAgain)
+      await page.keyboard.press('Enter')
+      await expect(page.getByRole('heading', { level: 1, name: 'Profile' })).toBeVisible()
+    })
+  })
 })
