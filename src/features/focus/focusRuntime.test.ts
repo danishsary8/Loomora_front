@@ -448,3 +448,43 @@ describe('Focus timer runtime', () => {
     })
   })
 })
+
+it('publishes each committed phase expiry once across competing runtime instances', async () => {
+  const { runtime, elapse } = setup()
+  const onCountdownExpired = vi.fn()
+  const tab = runtime({ onCountdownExpired })
+  const peer = runtime({ onCountdownExpired })
+  await tab.start({ mode: 'countdown', minutes: 1 })
+
+  for (const [index, duration] of [
+    60_000, 300_000, 60_000, 300_000, 60_000, 300_000, 60_000, 900_000,
+  ].entries()) {
+    if (index > 0) await command(tab, 'next')
+    elapse(duration)
+    await Promise.all([tab.reconcile(), peer.reconcile(), tab.reconcile()])
+    expect(onCountdownExpired).toHaveBeenCalledTimes(index + 1)
+  }
+
+  await runtime({ onCountdownExpired }).reconcile()
+  await tab.retryPending()
+  expect(onCountdownExpired).toHaveBeenCalledTimes(8)
+})
+
+it('keeps pause, resume and manual end silent even when end races the deadline', async () => {
+  const { runtime, elapse } = setup()
+  const onCountdownExpired = vi.fn()
+  const tab = runtime({ onCountdownExpired })
+  await tab.start({ mode: 'countdown', minutes: 1 })
+  elapse(1000)
+  await command(tab, 'pause')
+  elapse(60_000)
+  await command(tab, 'resume')
+  elapse(59_000)
+  await command(tab, 'endEarly')
+  await tab.reconcile()
+
+  await tab.start({ mode: 'stopwatch' })
+  elapse(1000)
+  await command(tab, 'finish')
+  expect(onCountdownExpired).not.toHaveBeenCalled()
+})

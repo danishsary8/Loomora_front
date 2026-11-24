@@ -101,6 +101,7 @@
     }
   },
   "focus": {
+    "muteSound": "Mute timer sound",
     "history": {
       "title": "Focus history",
       "date": "Session date",

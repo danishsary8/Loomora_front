@@ -37,6 +37,8 @@ interface RuntimeOptions {
   repository: Repository
   clock: () => TimerClock
   lock: <T>(name: string, operation: () => Promise<T>) => Promise<T>
+  onCountdownExpired?: (deadline: number) => void
+  unlockCountdownSound?: () => void
 }
 
 function checkedSnapshot(row: FocusTimerSnapshot | undefined): FocusTimerSnapshot | null {
@@ -98,6 +100,10 @@ export class FocusRuntime {
 
   reconcile() {
     return this.transition()
+  }
+
+  unlockCountdownSound() {
+    this.options.unlockCountdownSound?.()
   }
 
   /** Called with the old account binding when authentication has already changed. */
@@ -167,6 +173,9 @@ export class FocusRuntime {
 
     if (!suspending) {
       this.assertCurrent()
+      if (result.countdownDeadline !== undefined) {
+        this.options.onCountdownExpired?.(result.countdownDeadline)
+      }
       if (result.payload && this.options.isCurrent()) await this.retryPending(result.payload.id)
       this.assertCurrent()
     }

@@ -5,11 +5,13 @@ import type { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessio
 import { openGuestDatabase } from '@/lib/storage/openGuestDatabase'
 import type { ServerFocusSessionRepository } from '@/lib/storage/ServerFocusSessionRepository'
 import { FocusRuntime, observeFocusRuntime } from './focusRuntime'
+import { connectCountdownSound } from './focusSound'
 
 const clockSource = newId()
+const monotonicNow = () => Math.floor(performance.timeOrigin + performance.now())
 const clock = () => ({
   source: clockSource,
-  mono: Math.floor(performance.timeOrigin + performance.now()),
+  mono: monotonicNow(),
   wall: Date.now(),
 })
 
@@ -43,13 +45,17 @@ export async function connectFocusRuntime(
   const login = token ? await loginFingerprint(token) : null
   if (!isCurrent()) return
 
+  const scope = owner ? `account:${owner}` : 'guest'
+  const sound = connectCountdownSound(scope, monotonicNow, isCurrent)
   const runtime = new FocusRuntime({
     db: () => (database ? Promise.resolve(database) : openGuestDatabase()),
-    scope: owner ? `account:${owner}` : 'guest',
+    scope,
     login,
     isCurrent,
     repository,
     clock,
+    onCountdownExpired: sound.notify,
+    unlockCountdownSound: sound.unlock,
     lock: async (name, operation) =>
       navigator.locks ? await navigator.locks.request(name, operation) : operation(),
   })
@@ -62,6 +68,7 @@ export async function connectFocusRuntime(
     suspended = true
     clearTimeout(expiryTimer)
     stop()
+    sound.disconnect()
     // A sleeping tab can learn of expiry late. Keep only its verified checkpoint.
     void runtime.suspend(token !== null && expires <= Date.now()).catch(() => undefined)
   }
@@ -87,6 +94,7 @@ export async function connectFocusRuntime(
       window.removeEventListener('focus', watchExpiry)
       document.removeEventListener('visibilitychange', watchExpiry)
       stop()
+      if (!suspended) sound.disconnect()
     },
   }
 }

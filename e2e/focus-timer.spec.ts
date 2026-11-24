@@ -385,3 +385,64 @@ for (const status of [409, 422]) {
     },
   )
 }
+
+test('plays a countdown chime once, honors keyboard mute, and stays silent after reload', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const audio = { contexts: 0, tones: 0 }
+    Object.assign(window, { focusAudio: audio })
+    const BrowserAudioContext = window.AudioContext
+    window.AudioContext = class extends BrowserAudioContext {
+      constructor() {
+        super()
+        audio.contexts++
+      }
+
+      override createOscillator() {
+        const tone = super.createOscillator()
+        tone.addEventListener('ended', () => audio.tones++, { once: true })
+        return tone
+      }
+    }
+  })
+  const audio = () =>
+    page.evaluate(
+      () => (window as Window & { focusAudio?: { contexts: number; tones: number } }).focusAudio,
+    )
+  await page.clock.install()
+  await page.goto('/focus')
+  const mute = page.getByRole('button', { name: 'Mute timer sound' })
+  await expect(mute).toHaveAttribute('aria-pressed', 'false')
+  expect(await audio()).toEqual({ contexts: 0, tones: 0 })
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
+    true,
+  )
+
+  await page.getByRole('button', { name: 'Custom' }).click()
+  await page.getByRole('spinbutton', { name: 'Duration in minutes' }).fill('1')
+  await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible()
+  await page.clock.fastForward(61_000)
+  const next = page.getByRole('button', { name: 'Start short break' })
+  await expect(next).toBeVisible()
+  await expect.poll(audio).toEqual({ contexts: 1, tones: 1 })
+
+  await page.reload()
+  await expect(next).toBeVisible()
+  expect(await audio()).toEqual({ contexts: 0, tones: 0 })
+  await mute.press('Space')
+  await expect(mute).toBeFocused()
+  await expect(mute).toHaveAttribute('aria-pressed', 'true')
+
+  await next.click()
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible()
+  await page.clock.fastForward(301_000)
+  await expect(page.getByRole('button', { name: 'Start focus', exact: true })).toBeVisible()
+  expect(await audio()).toEqual({ contexts: 0, tones: 0 })
+  await mute.press('Enter')
+  await expect(mute).toHaveAttribute('aria-pressed', 'false')
+  await page.getByRole('button', { name: 'End early' }).click()
+  await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible()
+  expect(await audio()).toEqual({ contexts: 1, tones: 0 })
+})

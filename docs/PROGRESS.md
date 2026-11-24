@@ -1089,3 +1089,14 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 - Merged v2-rebuild at edefad4 through a69c832, including QA-024. The merge preserves both task and progress entries and both branch preview exclusions.
 - Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
 - The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.
+
+### 2026-11-24 F-R3-05 — Timer-End Sound & Mute
+
+- Started from `f277c0f` in the `loomora-front-F-R3-05` worktree after confirming F-R3-04 merged in PR #64 and F-R3-05 was unused.
+- A committed expiry of a started countdown phase, including a short or long break, can play one original 320 ms Web Audio chime. The runtime that commits the expiry plays it if audio is enabled, or relays it to the last audio-enabled document in the same owner scope. Manual endings, ordinary pause and resume, stopwatch finishes, and outbox retries are silent.
+- The localized **Mute timer sound** toggle uses the Elemental Button and remembers a browser-local preference shared by guest and account mode. Audio opens on a Focus interaction. Playback failure is silent and independent of the timer. The deadline check suppresses audio for phases already expired at unlock, including expired reload recovery.
+- The sound trigger uses the existing transaction and DEC-004's verified expiry. Vercel branch previews are disabled.
+- Playwright `phone-375` passed 91/91, including the real Chromium chime, keyboard mute, reload and reduced-motion checks. Focus passed axe and the 320, 375, 390, 768, 1024 and 1440 px sweep at 100% and 200% text size.
+- Lint, typecheck, Knip, Prettier, and the production build passed. The production audit found zero vulnerabilities. Redocly validated the OpenAPI contract with four existing warnings.
+- Full Vitest passed 792/792 across 73 files with `--pool=forks --maxWorkers=4`. An earlier threads run reported two account-runtime fixture failures. Both passed in the focused forked run and the full forked rerun.
+- Git diff checks passed. GitHub CLI authentication is unavailable. The planner can open the PR into `v2-rebuild` and verify CI and mergeability.
