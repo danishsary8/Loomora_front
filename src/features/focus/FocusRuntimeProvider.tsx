@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function FocusRuntimeProvider({ children, database, repository, generation }: Props) {
-  const [ready, setReady] = useState<{ generation: number; runtime: FocusRuntime }>()
+  const [ready, setReady] = useState<{ generation: number; runtime: FocusRuntime | null }>()
   useEffect(() => {
     let cancelled = false
     let disconnect: (() => void) | undefined
@@ -22,7 +22,10 @@ export function FocusRuntimeProvider({ children, database, repository, generatio
         if (!cancelled) return connectFocusRuntime(database, repository, generation)
       })
       .then((connection) => {
-        if (!connection) return
+        if (!connection) {
+          if (!cancelled) setReady({ generation, runtime: null })
+          return
+        }
         if (cancelled) {
           connection.disconnect()
           return
@@ -31,8 +34,7 @@ export function FocusRuntimeProvider({ children, database, repository, generatio
         setReady({ generation, runtime: connection.runtime })
       })
       .catch(() => {
-        // Runtime initialization can fail when secure browser APIs are unavailable.
-        // A null context leaves the rest of the app usable.
+        if (!cancelled) setReady({ generation, runtime: null })
       })
     return () => {
       cancelled = true
@@ -41,7 +43,9 @@ export function FocusRuntimeProvider({ children, database, repository, generatio
   }, [database, repository, generation])
 
   return (
-    <FocusRuntimeContext.Provider value={ready?.generation === generation ? ready.runtime : null}>
+    <FocusRuntimeContext.Provider
+      value={ready?.generation === generation ? ready.runtime : undefined}
+    >
       {children}
     </FocusRuntimeContext.Provider>
   )

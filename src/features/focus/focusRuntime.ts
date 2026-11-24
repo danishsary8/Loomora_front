@@ -25,6 +25,8 @@ export interface PendingFocusTimer {
   blockedStatus?: number
 }
 
+export type PendingFocusSave = PendingFocusTimer & { missingSchedule?: true }
+
 type Repository = FocusSessionRepository | ServerFocusSessionRepository
 
 interface RuntimeOptions {
@@ -53,11 +55,17 @@ export class FocusRuntime {
 
   async read(): Promise<FocusTimerSnapshot | null> {
     this.assertCurrent()
-    const { db: open, scope, login } = this.options
-    const db = await open()
-    const timer = checkedSnapshot(await db.focus_timers.get(scope))
+    return this.readSnapshot(await this.options.db())
+  }
+
+  private readSnapshot(db: GuestDatabase) {
     this.assertCurrent()
-    return timer && timer.login !== login ? recoverLogin(timer, login) : timer
+    const { scope, login } = this.options
+    return db.focus_timers.get(scope).then((row) => {
+      this.assertCurrent()
+      const timer = checkedSnapshot(row)
+      return timer && timer.login !== login ? recoverLogin(timer, login) : timer
+    })
   }
 
   readTime(snapshot: FocusTimerSnapshot) {
@@ -167,11 +175,53 @@ export class FocusRuntime {
 
   async pending(): Promise<PendingFocusTimer[]> {
     this.assertCurrent()
-    const { db: open, scope } = this.options
-    const db = await open()
-    const rows = await db.focus_timer_pending.where('scope').equals(scope).toArray()
+    return this.readPending(await this.options.db())
+  }
+
+  private readPending(db: GuestDatabase) {
     this.assertCurrent()
-    return rows
+    return db.focus_timer_pending
+      .where('scope')
+      .equals(this.options.scope)
+      .toArray()
+      .then((rows) => {
+        this.assertCurrent()
+        return rows
+      })
+  }
+
+  observePending(onChange: (rows: PendingFocusSave[]) => void, onError: (error: unknown) => void) {
+    const { repository } = this.options
+    return this.observeStorage(
+      (db) =>
+        this.readPending(db).then(async (rows) => {
+          if (!('getLocalRecord' in repository)) return rows
+          const saves = await Promise.all(
+            rows.map(async (row): Promise<PendingFocusSave | undefined> => {
+              if (row.blockedStatus !== 422) return row
+              const draft = await repository.getLocalRecord(row.id)
+              this.assertCurrent()
+              if (draft?.status === 'saved') return
+              if (draft?.status === 'missing_schedule') return { ...row, missingSchedule: true }
+              // An interrupted delivery can leave the queue blocked after the replacement is staged.
+              if (draft?.replacement && draft.status === 'pending') {
+                return { ...row, blockedStatus: undefined }
+              }
+              return row
+            }),
+          )
+          return saves.filter((save) => save !== undefined)
+        }),
+      onChange,
+      onError,
+    )
+  }
+
+  async saveWithoutSchedule(id: string) {
+    const row = (await this.pending()).find(
+      (pending) => pending.id === id && pending.blockedStatus === 422,
+    )
+    if (row) await this.deliver(row, 'withoutSchedule')
   }
 
   async retryPending(id?: string) {
@@ -184,7 +234,10 @@ export class FocusRuntime {
     }
   }
 
-  private async deliver(observed: PendingFocusTimer) {
+  private async deliver(
+    observed: PendingFocusTimer,
+    action: 'retry' | 'withoutSchedule' = 'retry',
+  ) {
     const { db: open, scope, repository, lock, isCurrent } = this.options
     const db = await open()
     const table = db.focus_timer_pending
@@ -198,15 +251,20 @@ export class FocusRuntime {
         if ('getLocalRecord' in repository) {
           const draft = await repository.getLocalRecord(row.id)
           if (!isCurrent()) return
-          // Only an explicit repository amendment may unblock a rejected payload.
-          if (
-            row.blockedStatus &&
-            (!draft?.replacement || !['pending', 'saved'].includes(draft.status))
-          )
-            return
-          if (draft) await repository.retry(row.id)
-          else await repository.record(row.payload)
-        } else if (!row.blockedStatus) {
+          if (action === 'withoutSchedule') {
+            if (draft?.status !== 'missing_schedule') return
+            await repository.saveWithoutSchedule(row.id)
+          } else {
+            // Only an explicit repository amendment may unblock a rejected payload.
+            if (
+              row.blockedStatus &&
+              (!draft?.replacement || !['pending', 'saved'].includes(draft.status))
+            )
+              return
+            if (draft) await repository.retry(row.id)
+            else await repository.record(row.payload)
+          }
+        } else if (action === 'retry' && !row.blockedStatus) {
           await repository.record(row.payload)
         } else {
           return
@@ -217,7 +275,12 @@ export class FocusRuntime {
           status && status >= 400 && status < 500 && ![401, 408, 425, 429].includes(status)
             ? status
             : undefined
-        await table.put({ ...row, attempts: row.attempts + 1, blockedStatus })
+        await db.transaction('rw', table, async () => {
+          const latest = await table.get(key)
+          if (latest?.attempts === row.attempts) {
+            await table.put({ ...latest, attempts: latest.attempts + 1, blockedStatus })
+          }
+        })
         return
       }
       await table.delete(key)
@@ -225,7 +288,32 @@ export class FocusRuntime {
   }
 
   observe(onChange: (state: FocusTimerSnapshot | null) => void, onError: (error: unknown) => void) {
-    return liveQuery(() => this.read()).subscribe({ next: onChange, error: onError })
+    return this.observeStorage((db) => this.readSnapshot(db), onChange, onError)
+  }
+
+  private observeStorage<T>(
+    read: (db: GuestDatabase) => Promise<T>,
+    onChange: (value: T) => void,
+    onError: (error: unknown) => void,
+  ) {
+    let active = true
+    let subscription: { unsubscribe: () => void } | undefined
+    // Resolve the lazy database first so Dexie tracks the reads in its live query context.
+    void this.options
+      .db()
+      .then((db) => {
+        if (active)
+          subscription = liveQuery(() => read(db)).subscribe({ next: onChange, error: onError })
+      })
+      .catch((error) => {
+        if (active) onError(error)
+      })
+    return {
+      unsubscribe() {
+        active = false
+        subscription?.unsubscribe()
+      },
+    }
   }
 }
 

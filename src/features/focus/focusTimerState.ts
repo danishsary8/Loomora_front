@@ -53,8 +53,19 @@ interface Transition {
   payload?: FocusSessionInput
 }
 
+export const customDurationLimits = [1, 240] as const
+
+export function isCountdownMinutes(minutes: number): boolean {
+  const [min, max] = customDurationLimits
+  return Number.isInteger(minutes) && minutes >= min && minutes <= max
+}
+
 const MINUTE = 60_000
 const LONG_BREAK_INDEX = 7
+
+export function readCountdownCycle(phaseIndex: number) {
+  return { current: Math.floor(phaseIndex / 2) + 1, total: Math.ceil(LONG_BREAK_INDEX / 2) }
+}
 
 function phaseDuration(config: TimerConfig, index: number): number | null {
   if (config.mode === 'stopwatch') return null
@@ -97,10 +108,7 @@ export function startTimer(
   login: string | null,
   clock: TimerClock,
 ): FocusTimerSnapshot {
-  if (
-    config.mode === 'countdown' &&
-    (!Number.isInteger(config.minutes) || config.minutes < 1 || config.minutes > 240)
-  ) {
+  if (config.mode === 'countdown' && !isCountdownMinutes(config.minutes)) {
     throw new RangeError('Use 1 to 240 whole minutes for a custom countdown')
   }
   const { wall: at } = sampleClock(clock)
@@ -119,7 +127,7 @@ export function startTimer(
   }
 }
 
-function phaseType(index: number): Segment['type'] {
+export function phaseType(index: number): Segment['type'] {
   if (index === LONG_BREAK_INDEX) return 'long_break'
   return index % 2 === 0 ? 'focus' : 'short_break'
 }
