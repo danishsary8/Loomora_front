@@ -24,8 +24,13 @@ describe('routes', () => {
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
   })
 
-  it.each(['/focus', '/insights'])('%s shows "Coming soon"', async (path) => {
-    renderRoute(path)
+  it('opens the Focus timer from its route', async () => {
+    renderRoute('/focus')
+    expect(await screen.findByRole('button', { name: 'Start' })).toBeVisible()
+  })
+
+  it('/insights shows "Coming soon"', async () => {
+    renderRoute('/insights')
     expect(await screen.findByText('Coming soon')).toBeInTheDocument()
   })
 

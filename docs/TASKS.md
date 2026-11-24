@@ -732,6 +732,27 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Clean `npm ci`, `lint`, `typecheck`, `knip`, `prettier --check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/features/today/TodayPage.tsx`, `src/features/today/TodoRow.tsx`, `src/features/today/DoneStamp.tsx`, `src/features/today/NowNextStrip.tsx`, `src/features/today/TodayEmpty.tsx`, `src/features/streak/StreakBadge.tsx`, `src/components/states/LoadingState.tsx`, `src/features/today/TodayPage.test.tsx`, `src/features/streak/StreakBadge.test.tsx`, `vercel.json`, `docs/screenshots/today-375.png`, `docs/screenshots/today-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R3-02B — Focus timer runtime and recovery
+
+- **Status:** review
+- **Owner:** codex
+- **Prerequisites:** F-R3-02A timer math and F-R3-01 Focus repositories are merged. B-043 supplies the finished-session API contract.
+- **Scope:** Implement countdown and stopwatch lifecycle, durable recovery, cross-tab and account isolation, and idempotent finalization through the existing Focus repositories.
+- **Approved behavior:** [DEC-004](DECISIONS.md#dec-004-focus-timer-runtime-and-recovery-2026-11-24).
+
+### F-R3-03 — Elemental Focus timer interface
+
+- **Status:** review
+- **Owner:** codex
+- **Prerequisite:** F-R3-02B merged in PR #60 (5a46b68).
+- **Scope:** Elemental countdown, stopwatch, phase controls and optional plan links on `/focus`. Follow DEC-003 and DEC-004.
+- **Acceptance:**
+  - Use the owner-scoped runtime and repositories for timer commands, recovery, finalization and retries.
+  - Cover the timer controls, phase changes, end-early preservation, reloads, guest and account isolation, and offline save failures.
+  - Verify 320, 375, 390, 768, 1024 and 1440 px at normal and 200% text size.
+  - Offer confirmation before saving without a schedule link only when the account outbox records a definitive missing schedule. Retain the original and retry the approved replacement by UUID.
+  - Run the full frontend checks and disable branch previews before opening the PR for planner review.
+
 ### QA-024: Lossless guest import frontend integration
 
 - **Status:** review
@@ -739,4 +760,6 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Source:** Merged backend B-044 ([PR #48](https://github.com/danishsary8/loomora_back/pull/48) at `13c64ff`), DECISIONS I9, and the `POST /import` chunk-order contract in `docs/openapi.yaml`.
 - **Scope:** Send guest to-dos in `POST /import` calls of at most 500, in the I9 order. Each repeat chain runs from its newest occurrence down to the original, and each successor's subtasks go right after its predecessor. Other to-dos are each followed by their subtasks. Schedule items, exceptions, check-ins and daily intentions keep their documented caps and dependencies. The whole guest copy stays on the device until every call succeeds.
 - **Verification:** Run a fake `/import` backend that models `ImportRequest`. Cover 499/500/501 rows, 500 manual plus generated rows, multiple chains with subtasks, cross-call links, partial success then failure, replay after reload, near-capacity accounts, ownership, and unchanged small imports. Then run lint, typecheck, Knip, formatting, full Vitest, build, `phone-375` Playwright, the production audit, Redocly and `git diff --check`.
+- **Decision Q-QA024-1 (planner, 2026-11-24):** Option C. A guest plan whose deleted middle occurrence leaves a successor counted as manual is a documented unsupported case. The import is refused, and all guest data is kept. Nothing is silently relinked, deleted, or changed in repeat history. See [PROGRESS](PROGRESS.md#2026-11-24-qa-024-lossless-guest-import-frontend-integration).
+- **PR:** [#63](https://github.com/danishsary8/Loomora_front/pull/63).
 - **Files:** `src/lib/storage/guestImportOrder.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `docs/openapi.yaml`, `docs/08-data-model.md`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

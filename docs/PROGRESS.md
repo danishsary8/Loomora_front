@@ -932,6 +932,53 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
 - Guest Focus history stays on the device. The future runtime should finalize sessions in their original storage mode. Guest-to-account import depends on planner approval of the Focus history import policy.
 - Local verification passed lint, typecheck, Knip, formatting, build, 79 phone-375 Playwright tests, OpenAPI lint with four existing warnings, and Git whitespace checks. The Windows Playwright launcher timed out, so the suite ran against a standalone local preview. Vitest identified an older v7 migration assertion pinned to v8. After removing the version pin, all 21 Focus and daily-intention tests passed. The production dependency audit found zero vulnerabilities, and the full audit reported four existing moderate advisories in the PWA build dependency chain.
 
+### 2026-11-24 F-R3-02B — Focus timer runtime and recovery
+
+PR #58 merged into `v2-rebuild` at `d18ca7ddef33f4fb23bac715c2993d86feeac0df`. The isolated `feat/F-R3-02B-focus-runtime` worktree uses that base. F-R3-02B was available and follows the merged F-R3-02A timer core and F-R3-01 repositories. At intake, implementation was blocked pending planner approval.
+
+The [R3 feature list](02-feature-list.md) requires custom countdowns, Focus cycles, early finish that keeps time, and recovery across navigation and reload. The [user flows](04-user-flows.md) leave Focus unmapped. The [research prompts](research/daycraft-task-prompts.md#dc-35--focus-cycle-planner-pure-logic) propose concrete behavior. The [B-043 contract](openapi.yaml) defines what finished sessions the repositories can store.
+
+- **Custom countdowns:** What are the minimum, maximum, and input increment for a custom countdown? The core's positive whole-millisecond check validates the numeric representation. The DayCraft comparison's 1 second to 24 hours describes the reference product.
+- **Breaks and completion:** Are the proposed preset plans (focus/short break/long break in minutes × cycles) of 25/5/15 × 4, 50/10/20 × 2, and 90/15/30 × 1 approved? Confirm how custom countdowns get a break plan, whether phases require an explicit start or can auto-advance, what recovery does when multiple phase deadlines have passed, and when skipping a break or finishing the last focus phase completes the session.
+- **Early finish:** Which positive-duration sessions should be saved, and which actions map to `completed` or `ended_early` for each mode? B-043 accepts any positive Focus duration. DC-36 proposes discarding under 60 seconds, and the R3 feature list says early finish keeps time. B-043 rejects zero Focus time.
+- **Clock recovery:** Should elapsed time include device sleep? What should the runtime do when a manual or network clock correction moves the clock backward or jumps it forward, including across reload? This determines whether recovery can safely advance or finalize a timer.
+- **Session ownership:** What should happen when the owner signs out or changes while a timer is active? Confirm whether the timer continues for its original owner, freezes, or requires another explicit action before it can resume. Finalized sessions and retries must stay in their original guest or account scope.
+
+After approval, cover lifecycle and recovery with tests around the existing timer math, persist owner-scoped snapshots with cross-tab coordination, finalize through the existing repositories with the same UUID and payload on retries, then run the frontend verification suite before opening the review PR.
+
+#### Planner approval and contract reconciliation
+
+The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004](DECISIONS.md#dec-004-focus-timer-runtime-and-recovery-2026-11-24) records the approved behavior. The default countdown has eight ordered phases (four Focus, three short breaks, one long break). This fits B-043's 200-segment limit. Waiting for a phase to start adds wall time without producing an active segment. The countdown sends the duration of one Focus phase as `planned_focus_ms`. The stopwatch sends one Focus segment and cumulative millisecond laps, consistent with the B-043 example. Both modes preserve positive Focus time on early finish. B-043 counts breaks separately and requires strictly increasing lap values. The reconciled behavior requires no API changes.
+
+#### Runtime implementation
+
+- The app-level Focus provider exposes lifecycle commands and read-only time projections. Dexie v10 adds an active snapshot per owner scope and a finished-session queue. A single transaction consumes the active snapshot and stages a finished payload. Snapshot revisions reject stale commands from another tab. Browser Web Locks serialize delivery where available, and the repositories enforce UUID idempotency on replay.
+- Running timers checkpoint at most every 15 seconds and on browser lifecycle events. Countdown expiry records the current phase at the verified deadline. Explicit next-phase actions start the following phase. An account switch suspends the prior timer, and a late token expiry or an unobserved login change freezes it at the last verified checkpoint. Guest timers stay on the device and recover only in guest mode.
+- A failed write retains the exact payload and UUID. The runtime retries on startup, reconnect, or explicit request. A 409 stays blocked. A missing schedule link stays blocked until an explicit repository amendment, which retains the original and can be recovered after another failure. A crash after the server commits and before the browser acknowledges can replay the same idempotent request.
+- In a live document, only monotonic elapsed time is credited. Across documents, recovery requires a nonnegative interval supported by both clocks within a one-second tolerance. Material disagreement freezes the running phase at its last verified checkpoint. If the platform's monotonic reference does not advance through sleep, wall-only time cannot be verified. A browser restart can also make a forward clock correction indistinguishable from elapsed time if both clocks realign to the new value. [High Resolution Time](https://www.w3.org/TR/hr-time-3/).
+
+#### Verification
+
+- On the original PR #58 base, full Vitest passed 754 tests across 69 files and Playwright passed 81 phone-375 tests. The browser suite includes two tabs recovering the same expired final break and observing one saved session. Lint, typecheck, Knip, formatting, the production build, and Git whitespace checks passed.
+- The production dependency audit found zero vulnerabilities. The full audit reported four moderate findings in the existing PWA build dependency chain. Redocly validated the unchanged OpenAPI contract with its four existing warnings.
+- The unpublished Focus branch was rebased onto PR #59 (`e6486d4`) for review, retaining the UX-007 task and progress records. The Focus branch disables Vercel previews.
+
+### 2026-11-24 F-R3-03 — Elemental Focus timer interface
+
+- Started the isolated `feat/F-R3-03-focus-timer-ui` worktree from PR #60's merge commit `5a46b68`. Updated `/focus` with the DEC-003 design tokens and DEC-004 lifecycle. Countdown offers 25, 50, 90 and 1–240 whole minutes. Each break or subsequent Focus phase starts explicitly. Stopwatch shows centiseconds and lap splits, with Finish and End early controls.
+- The attachment picker uses the existing Today to-do query and recurring schedule-item list. Restored, paused, upcoming phase, saving, and owner-scoped failure states have live announcements. Retryable saves keep the original UUID and payload. Rejected saves remain in the existing runtime queue.
+- The production browser exposed a missed Dexie change notification when the live query awaited lazy database loading. Resolving the database first restored snapshot updates and phase scheduling. At 200% text size, responsive checks also exposed the shared header's hidden desktop brand taking up space. The header now keeps the Profile control in view.
+- The feature branch opts out of Vercel previews.
+- All 84 phone-375 Playwright tests passed against the standalone production preview after the combined Windows launcher timed out. The Focus checks covered keyboard and touch operation, recovery, phase transitions, early termination, owner isolation, offline retry with the same payload, and all six requested widths at 100% and 200% text size. The Focus axe scan found zero violations.
+- Lint, typecheck, Knip, the production build, and Git whitespace checks passed. The production dependency audit found zero vulnerabilities. The full audit retained four moderate development dependency findings, and Redocly validated OpenAPI with four existing warnings.
+- Full Vitest passed all 758 tests across 70 files on Windows with four workers, a 15-second test timeout, and one retry allowed. Prettier passed with automatic line endings for the Windows checkout.
+
+#### PR #62 planner follow-up
+
+- Focus reads the account outbox's definitive missing-schedule status to offer an explicit confirmation sheet. Confirmation uses the existing repository amendment through the owner-scoped runtime delivery lock. The outbox retains the original and resends the approved replacement by the same UUID after a failure or reload.
+- The runtime ignores stale confirmations and suppresses a stale rejection if the replacement was already saved before queue cleanup. Generic validation and conflict rejections keep their existing feedback.
+- The focused Vitest run passed 43 tests and all 87 phone-375 Playwright tests passed against the standalone Windows production preview. Lint, typecheck, Knip, formatting, build, and Git diff checks passed. The production audit found zero vulnerabilities. The full audit and Redocly retained four existing findings and four existing warnings, respectively.
+
 ### 2026-11-24: QA-024 Lossless guest import frontend integration
 
 - **Branch / PR:** `feat/QA-024-lossless-guest-import` from `origin/v2-rebuild` at `e6486d4`, in worktree `loomora-front-QA-024`. One PR into `v2-rebuild`; not merged.
@@ -972,7 +1019,7 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
   - **Contrast with an account:** an account's deleted S1 keeps proving S2, because deleted predecessors count (I9).
   - **What the app does:** it keeps the whole guest copy and does not discard or relink anything. Earlier calls may already be committed (Q-B044-3); a replay skips them.
   - **Scope:** this only fails when such orphaned successors, and their subtasks, push the final manual count past 500.
-  - **Question Q-QA024-1 for the planner:**
+  - **Q-QA024-1, answered by the planner (2026-11-24): Option C.** The orphan-repeat case is a documented unsupported limit for QA-024. All guest data is kept; the app never silently relinks, deletes or changes repeat history. Options that were considered:
     - (A) The backend accepts deleted rows (or a provenance-only tombstone) on import, so the guest can send S1.
     - (B) The frontend relinks P to S2. Not done: it rewrites repeat history.
     - (C) Accept it as a documented limit.
@@ -994,3 +1041,8 @@ The backend queue at `c9a7acf0e03a0a3ee5f60cc38198634fd0f58e3d` ends at B-042. B
   - No Dexie schema change and no backend change.
   - Rolling back restores the single-call import. A plan of 500 manual rows plus successors would again get 422 and keep the guest copy.
   - Rows committed by a partial import stay on the account, and a later replay skips them.
+
+#### 2026-11-24: QA-024 merge of `origin/v2-rebuild` and planner decision
+
+- The planner answered Q-QA024-1 with Option C, recorded above. No code change was needed: the import already refuses the case, and the guest copy is kept unchanged.
+- Merged `origin/v2-rebuild` at `c7bbfb2` (F-R3-02B and F-R3-03) with a merge commit. `docs/TASKS.md`, `docs/PROGRESS.md` and `vercel.json` conflicted only on appended entries, and both sides were kept, including all three branch preview opt-outs.
