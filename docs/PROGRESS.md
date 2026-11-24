@@ -1074,3 +1074,18 @@ The planner approved the five lifecycle decisions above on 2026-11-24. [DEC-004]
 
 - The planner answered Q-QA024-1 with Option C, recorded above. No code change was needed: the import already refuses the case, and the guest copy is kept unchanged.
 - Merged `origin/v2-rebuild` at `c7bbfb2` (F-R3-02B and F-R3-03) with a merge commit. `docs/TASKS.md`, `docs/PROGRESS.md` and `vercel.json` conflicted only on appended entries, and both sides were kept, including all three branch preview opt-outs.
+
+### 2026-11-24 F-R3-04 — Focus History & Time Tracking
+
+- Focus history appears below the timer. The date defaults to today in the account or device time zone and stays selected across midnight. Sessions are ordered by start instant with a UUID tie-breaker. The day total sums each saved UUID's actual focus time once, including early-ended sessions.
+- Guest history reads from IndexedDB, including while offline. Account history uses the existing B-043 date endpoint, shows cached dates while offline, and refreshes when a save settles or the connection returns. Linked items use a saved title when available, with existing plan queries and a fallback for unavailable items.
+- Verified on v2-rebuild at 7056a4e. Full Vitest passed 770/770 with the threads pool after a Windows fork startup timeout. Full Playwright phone-375 passed 90/90 against a standalone production preview. The Playwright axe scan found zero violations, and the history layout and touch targets passed at 320, 375, 390, 768, 1024 and 1440 px at 100% and 200% text size.
+- Lint, typecheck, Knip, Prettier with automatic Windows line endings, the production build, and git diff checks passed. The production audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings.
+- Vercel previews are disabled for this branch. GitHub CLI authentication is unavailable. The planner can open the PR into v2-rebuild and start the two required CI jobs.
+
+#### PR #64 planner follow-up
+
+- GitHub Actions run 45350270141 failed in Unit tests when the schedule-title assertion received a detached element. The historical-session fixture now reuses the same session UUIDs on refetch and checks both linked titles in the current render.
+- Merged v2-rebuild at edefad4 through a69c832, including QA-024. The merge preserves both task and progress entries and both branch preview exclusions.
+- Local Focus History tests passed 5/5, and phone-375 passed 90/90. Lint, typecheck, Knip, Prettier, the production build and Git diff checks passed. The production audit found zero vulnerabilities. OpenAPI lint reported four existing warnings.
+- The parallel Windows Vitest run reported timing failures in unchanged Today and Undo Delete tests. The Undo Delete rerun passed, and the first Today rerun hit a worker startup timeout. The PR CI job runs the full suite on Linux.
