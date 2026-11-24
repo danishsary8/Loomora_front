@@ -20,9 +20,14 @@ test('shows a saved guest session on its starting local date, including offline'
   await page.keyboard.press('Tab')
   await expect(date).toBeFocused()
   await start.click()
+  const pause = page.getByRole('button', { name: 'Pause' })
+  await expect(pause).toHaveAttribute('aria-disabled', 'false')
   await page.clock.fastForward(48_000)
-  await page.getByRole('button', { name: 'Pause' }).click()
-  await expect(page.getByRole('button', { name: 'Resume' })).toBeVisible()
+  await pause.click()
+  await expect(page.getByRole('button', { name: 'Resume' })).toHaveAttribute(
+    'aria-disabled',
+    'false',
+  )
   await page.clock.fastForward(30_000)
   await page.getByRole('button', { name: 'End early' }).click()
 
@@ -30,7 +35,7 @@ test('shows a saved guest session on its starting local date, including offline'
   await expect(row).toContainText('Stopwatch')
   await expect(row).toContainText('Ended early')
   await expect(row.locator('time')).toHaveText('23:59')
-  await expect(history.locator('dd')).toContainText(/^(?:4[89]|5\d)(?:\.\d+)? sec$/)
+  await expect(history.locator('dd')).toHaveText(/^(?:4[89]|5\d)(?:\.\d+)? sec$/)
   await expect(date).toHaveValue('2026-11-23')
 
   await context.setOffline(true)
@@ -42,14 +47,17 @@ test('shows a saved guest session on its starting local date, including offline'
 })
 
 test('fits Focus history at six widths with normal and doubled text', async ({ page }) => {
-  await page.clock.install({ time: new Date('2026-11-23T08:00:00Z') })
   await page.goto('/focus')
   const history = page.getByRole('region', { name: 'Focus history' })
   const date = history.getByLabel('Session date')
+  const start = page.getByRole('button', { name: 'Start', exact: true })
 
   await page.getByRole('button', { name: 'Stopwatch' }).click()
-  await page.getByRole('button', { name: 'Start', exact: true }).click()
-  await page.clock.fastForward(65_000)
+  await start.click()
+  await expect(page.getByRole('button', { name: 'Pause' })).toHaveAttribute(
+    'aria-disabled',
+    'false',
+  )
   await page.getByRole('button', { name: 'Finish', exact: true }).click()
   await expect(history.getByRole('listitem')).toContainText('Completed')
 
@@ -69,17 +77,27 @@ test('fits Focus history at six widths with normal and doubled text', async ({ p
         context,
       ).toBeLessThanOrEqual(0)
 
-      await page.evaluate(() => window.scrollTo(0, 0))
-      await date.focus()
+      await start.focus()
+      await page.keyboard.press('Tab')
+      await expect(date, context).toBeFocused()
       const box = await date.boundingBox()
       if (!box) throw new Error('The session date input must be visible')
       expect(Math.min(box.height, box.width), context).toBeGreaterThanOrEqual(44)
       if (width < 768) {
-        const nav = await page.getByRole('navigation').filter({ visible: true }).boundingBox()
-        if (!nav) throw new Error('Mobile navigation must be visible')
-        expect(box.y + box.height, context).toBeLessThanOrEqual(nav.y)
+        const mobileNav = page.getByRole('navigation').filter({ visible: true })
+        await expect
+          .poll(
+            async () => {
+              const field = await date.boundingBox()
+              const nav = await mobileNav.boundingBox()
+              if (!field || !nav)
+                throw new Error('The session date and mobile navigation must be visible')
+              return Math.min(field.y, nav.y - field.y - field.height)
+            },
+            { message: context },
+          )
+          .toBeGreaterThanOrEqual(0)
       }
-      await date.blur()
     }
   }
 })

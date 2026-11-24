@@ -22,6 +22,7 @@
       "feat/QA-024-lossless-guest-import": false,
       "feat/F-R3-04-focus-history": false,
       "feat/F-R3-05-timer-end-sound": false,
+      "feat/UX-009-elemental-profile": false,
       "v2-rebuild": false
     }
   },

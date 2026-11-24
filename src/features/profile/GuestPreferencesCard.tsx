@@ -5,7 +5,7 @@ import { Button, Card } from '@/components/ui'
 import { FormError } from '@/features/auth/FormError'
 import type { TimePreferences } from '@/lib/time/time'
 import { useSaveGuestTimePreferences, useTimePreferences } from '@/lib/time/useTimePreferences'
-import { PreferenceFields, PreferencesLoadStatus } from './PreferenceFields'
+import { PreferenceFields, PreferencesLoadStatus, SavedStatus } from './PreferenceFields'
 
 export function GuestPreferencesCard() {
   const { t } = useTranslation()
@@ -32,7 +32,7 @@ export function GuestPreferencesCard() {
 
   return (
     <Card className="flex flex-col gap-4">
-      <h2 className="text-lg font-bold">{t('profile.preferencesTitle')}</h2>
+      <h2 className="text-lg font-semibold tracking-tight">{t('profile.preferencesTitle')}</h2>
       {prefs.loading || prefs.failed ? (
         <PreferencesLoadStatus failed={prefs.failed} retry={prefs.retry} />
       ) : (
@@ -46,14 +46,16 @@ export function GuestPreferencesCard() {
             }}
           />
           <FormError message={save.isError ? t('profile.preferencesSaveError') : undefined} />
-          <Button type="submit" size="lg" fullWidth disabled={save.pending || !changed}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="lg"
+            fullWidth
+            disabled={save.pending || !changed}
+          >
             {t(save.pending ? 'profile.saving' : 'profile.saveSettings')}
           </Button>
-          {save.isSuccess && !changed && (
-            <p role="status" className="text-center font-semibold">
-              {t('profile.saved')}
-            </p>
-          )}
+          {save.isSuccess && !changed && <SavedStatus />}
         </form>
       )}
     </Card>

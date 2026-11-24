@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui'
 import { Field } from '@/components/ui/Field'
+import { CheckIcon } from '@/components/ui/icons'
 import { fieldClasses } from '@/components/ui/fieldClasses'
 import { cn } from '@/lib/cn'
 import type { FieldErrors } from '@/lib/api'
@@ -62,7 +63,7 @@ export function PreferenceFields({ values, onChange, disabled, errors }: Prefere
 export function PreferencesLoadStatus({ failed, retry }: { failed: boolean; retry: () => void }) {
   const { t } = useTranslation()
   return failed ? (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <p role="alert" className="text-sm font-semibold text-danger">
         {t('profile.preferencesLoadError')}
       </p>
@@ -71,8 +72,29 @@ export function PreferencesLoadStatus({ failed, retry }: { failed: boolean; retr
       </Button>
     </div>
   ) : (
-    <p role="status" className="text-sm text-muted">
-      {t('common.loading')}
+    <div role="status" aria-busy="true" className="flex flex-col gap-4">
+      <span className="sr-only">{t('common.loading')}</span>
+      {[0, 1].map((i) => (
+        <div
+          key={i}
+          aria-hidden="true"
+          className="h-touch animate-pulse rounded-sm bg-subtle motion-reduce:animate-none"
+        />
+      ))}
+    </div>
+  )
+}
+
+/** Confirms a saved settings form until the next change. */
+export function SavedStatus() {
+  const { t } = useTranslation()
+  return (
+    <p
+      role="status"
+      className="flex items-center justify-center gap-1.5 text-sm font-semibold text-success"
+    >
+      <CheckIcon className="size-4 shrink-0" />
+      {t('profile.saved')}
     </p>
   )
 }

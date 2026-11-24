@@ -735,9 +735,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-008: Elemental Week Screen Refinement
 
-- **Status:** review
+- **Status:** done
 - **Owner:** claude (CLI 2, covering for antigravity)
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52), `UX-004` (PR #54), `UX-005` (PR #56), `UX-006` (PR #57), and `UX-007` (PR #59 @ `e6486d4`). Planner-proposed 2026-11-24; ID confirmed unused in `docs/TASKS.md` and `docs/PROGRESS.md`.
+- **Merge:** [PR #61](https://github.com/danishsary8/Loomora_front/pull/61) at `7056a4e`.
 - **Scope:** Visual refinement of S6 Week only, matching the merged Elemental Today screen. Keep the mobile day strip with week overview toggle and the tablet/desktop 7-column layout (`docs/04` Flow 4, `docs/05` S6). Keep the six category meanings, every Week interaction (select day, add, edit, delete with undo, repeat weekdays, Copy day, one-day exceptions from Today), guest/account parity, offline guest behavior, and loading/empty/error states. No domain, data contract, Dexie, API, Focus, auth/import, `AddTodoSheet`, or `ScheduleForm` changes.
 - **Plan:**
   1. Branch `feat/UX-008-elemental-week` from `origin/v2-rebuild` (`e6486d4`) in isolated worktree `loomora-front-UX-008` without touching other agents' worktrees.
@@ -800,8 +801,27 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Status:** review
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003 and DEC-004. F-R3-04 merged in PR #64 at `f277c0f`. Task ID was unused at registration.
+- **PR:** [#66](https://github.com/danishsary8/Loomora_front/pull/66).
 - **Plan:**
   1. Test the committed expiry signal for each started countdown phase, including the long-break finalization, command races and repeat reconciliation.
   2. Route each committed expiry to the Focus tab that enabled audio. Use a short original Web Audio chime, unlocked by Focus interactions, and skip deadlines already elapsed at unlock.
   3. Add a keyboard-accessible Elemental mute toggle with an i18next label and a device-local preference.
   4. Verify audio, silent paths, browser restrictions and cross-tab delivery with automated tests. Run all required checks and the six-width and reduced-motion sweep before handing off the PR.
+
+### UX-009: Elemental Profile & Settings Refinement
+
+- **Status:** review
+- **Owner:** claude (CLI 2)
+- **Source:** Approved `DEC-003`, `UX-004` (PR #54), `UX-005` (PR #56), `UX-007` (PR #59), and `UX-008` (PR #61 @ `7056a4e`). Planner-proposed 2026-11-24; ID confirmed unused in `docs/TASKS.md` and `docs/PROGRESS.md`.
+- **Scope:** Visual refinement of S9 Profile & Settings only, matching the merged Elemental Today and Week screens. Keep name, time zone and display settings editing, the streak, guest Save your plan, sign out, delete account (password and Google confirmation), feedback, and guest/account parity. No domain, data contract, Dexie, API, auth, guest import (`QA-024`), Focus, or Week changes.
+- **Plan:**
+  1. Branch `feat/UX-009-elemental-profile` from `origin/v2-rebuild` (`7056a4e`) in isolated worktree `loomora-front-UX-009` without touching other agents' worktrees.
+  2. Add a Today/Week-style header (Inter heading + muted subtitle for guests and accounts) and order the screen as data notice, streak, settings, then grouped action rows.
+  3. Give the streak its own card with loading skeleton, error + retry and offline states; move the guest "Your data" notices from the `work` category fill to the semantic warning surface.
+  4. Restyle `AccountCard` and `GuestPreferencesCard` (Inter headings, wrapped email, warning-surface unverified notice, hairline-divided Display settings group, success-colored Saved status) and turn feedback, sign out and delete into 52 px Elemental settings rows (delete in danger text in its own group; sign out disabled while it runs).
+  5. Add Profile unit tests for states, rows, touch targets and keyboard use, plus a Playwright Profile regression for guests and accounts (no real deletion); run all required checks, a 6-width sweep with 200% text at 375 px, and capture `profile-375.png` / `profile-1440.png`.
+- **Done when:**
+  - [x] Profile header, guest data notice, streak, account and display settings cards, and grouped Help / Account actions rows follow `DEC-003` with no behavior, API or data changes (Sign out is only disabled while its request runs).
+  - [x] Streak loading, error + retry and offline states, and the preferences loading skeleton are covered by unit tests, together with rows, touch targets, keyboard delete-sheet access without deletion, and the one-primary-action rule. Existing Profile, deletion, feedback and time-preference tests still pass.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest (775/775), `build`, Playwright `phone-375` (90/90), `npm audit --omit=dev`, Redocly OpenAPI lint, and `git diff --check`. The new `e2e/profile.spec.ts` shows 0 px overflow at 320–1440 px and at 200% text, with every visible main button at least 44 px and no write requests.
+- **Files:** `src/features/profile/ProfilePage.tsx`, `src/features/profile/StreakCard.tsx`, `src/features/profile/SettingsList.tsx`, `src/features/profile/AccountCard.tsx`, `src/features/profile/GuestPreferencesCard.tsx`, `src/features/profile/PreferenceFields.tsx`, `src/features/profile/ProfilePage.test.tsx`, `e2e/profile.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/profile-375.png`, `docs/screenshots/profile-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
