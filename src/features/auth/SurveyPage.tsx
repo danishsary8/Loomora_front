@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { PageHeading, StandalonePage } from '@/components/page'
 import { Button, Chip, Input } from '@/components/ui'
 import { authApi, useSession, type Goal, type User } from '@/lib/api'
 import type { Category } from '@/styles/tokens'
+import { AuthLayout } from './AuthLayout'
 import { FormError } from './FormError'
 import { useFormAction } from './useFormAction'
 
@@ -61,11 +61,11 @@ function SurveyForm({ user, generation }: { user: User; generation: number }) {
   }
 
   return (
-    <StandalonePage>
-      <PageHeading>{t('auth.survey.title')}</PageHeading>
-      <p>{t('auth.survey.intro')}</p>
-      <p className="text-sm text-muted">{t('auth.survey.verifyNote', { email: user.email })}</p>
-      <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+    <AuthLayout title={t('auth.survey.title')} subtitle={t('auth.survey.intro')}>
+      <p className="text-sm text-muted [overflow-wrap:anywhere]">
+        {t('auth.survey.verifyNote', { email: user.email })}
+      </p>
+      <form onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-5">
         <FormError message={formError} />
         <Input
           label={t('auth.survey.name')}
@@ -103,6 +103,6 @@ function SurveyForm({ user, generation }: { user: User; generation: number }) {
           {t('auth.survey.skip')}
         </Button>
       </form>
-    </StandalonePage>
+    </AuthLayout>
   )
 }

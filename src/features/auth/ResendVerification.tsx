@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui'
 import { ApiError, authApi, errorMessageKey } from '@/lib/api'
-import { FormError } from './FormError'
+import { FormError, FormSuccess } from './FormError'
 
 type Outcome = { kind: 'sent' } | { kind: 'failed'; message: string }
 
@@ -37,11 +37,7 @@ export function ResendVerification() {
       <Button variant="secondary" fullWidth disabled={pending} onClick={() => void resend()}>
         {t(pending ? 'auth.resend.sending' : 'auth.resend.action')}
       </Button>
-      {outcome?.kind === 'sent' && (
-        <p role="status" className="font-semibold">
-          {t('auth.resend.sent')}
-        </p>
-      )}
+      {outcome?.kind === 'sent' && <FormSuccess>{t('auth.resend.sent')}</FormSuccess>}
       <FormError message={outcome?.kind === 'failed' ? outcome.message : undefined} />
     </div>
   )

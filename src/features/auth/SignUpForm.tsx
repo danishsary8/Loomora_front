@@ -46,7 +46,7 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-4">
       <FormError message={formError} />
       <Input
         label={t('auth.email')}
