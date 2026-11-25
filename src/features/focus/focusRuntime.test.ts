@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FocusRuntime, observeFocusRuntime } from './focusRuntime'
+import { maxLaps } from './focusTimerState'
 import type { FocusSession, FocusSessionInput } from './types'
 import { GuestDatabase } from '@/lib/storage/db'
 import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
@@ -181,6 +182,60 @@ describe('Focus timer runtime', () => {
       focus_ms: 137,
     })
   })
+
+  it.each(['guest', 'account:owner'])(
+    'records the 999th and 1000th laps and rejects the 1001st in %s scope',
+    async (scope) => {
+      const { runtime, elapse, db, guest } = setup()
+      const received: FocusSessionInput[] = []
+      const record = (payload: FocusSessionInput) => {
+        received.push(structuredClone(payload))
+        return guest.record(payload)
+      }
+      const account = scope !== 'guest'
+      if (account) {
+        useSession.setState({
+          token: 'test-token',
+          user: { id: 'owner' } as NonNullable<ReturnType<typeof useSession.getState>['user']>,
+        })
+      }
+      const repository = account
+        ? new ServerFocusSessionRepository(
+            {
+              record,
+              get: () => Promise.reject(new ApiError(404)),
+              listForDate: () => Promise.resolve([]),
+            },
+            db,
+          )
+        : Object.assign(Object.create(guest) as GuestFocusSessionRepository, { record })
+      const tab = runtime({ scope, login: account ? 'sign-in' : null, repository })
+      const { id } = await tab.start({ mode: 'stopwatch' })
+      elapse(10_000)
+      const seeded = Array.from({ length: maxLaps - 2 }, (_, index) => (index + 1) * 10)
+      await db.focus_timers.update(scope, { laps: seeded })
+      elapse(7)
+      expect((await command(tab, 'lap'))?.laps).toHaveLength(maxLaps - 1)
+      elapse(5)
+      const full = await command(tab, 'lap')
+      expect(full?.laps).toHaveLength(maxLaps)
+      expect(full?.laps.at(-1)).toBe(10_012)
+      elapse(3)
+      const rejected = await command(tab, 'lap')
+      expect(rejected?.laps).toEqual(full?.laps)
+      expect(rejected?.revision).toBe(full?.revision)
+      expect((await tab.read())?.laps).toHaveLength(maxLaps)
+      elapse(1)
+      await command(tab, 'finish')
+      expect(received).toEqual([
+        expect.objectContaining({ segments: [expect.objectContaining({ active_ms: 10_016 })] }),
+      ])
+      const laps = received[0]?.laps
+      expect(laps).toHaveLength(maxLaps)
+      expect(laps?.slice(-2)).toEqual([10_007, 10_012])
+      await expect(guest.get(id)).resolves.toMatchObject({ laps })
+    },
+  )
 
   it('does not turn a live wall-clock jump into a countdown expiry in a second tab', async () => {
     const { runtime, elapse, shiftWall } = setup()

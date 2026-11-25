@@ -55,6 +55,8 @@ interface Transition {
 }
 
 export const customDurationLimits = [1, 240] as const
+/** B-043 accepts at most this many stopwatch laps per session. */
+export const maxLaps = 1000
 
 export function isCountdownMinutes(minutes: number): boolean {
   const [min, max] = customDurationLimits
@@ -277,7 +279,7 @@ export function updateTimer(
   ) {
     const previous = current.laps.at(-1) ?? 0
     const lap = getLap(previous, getElapsedMs(phase.timing, at))
-    if (lap.splitMs > 0 && current.laps.length < 1000) {
+    if (lap.splitMs > 0 && current.laps.length < maxLaps) {
       return {
         timer: {
           ...current,
