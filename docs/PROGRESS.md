@@ -14,13 +14,13 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 
 ## Open questions
 
-- **Q1 (stacked branches):** F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
+- ~~**Q1 (stacked branches):**~~ Resolved by practice: the stacked PRs #1 to #14 and #17 to #20 merged in order, and later tasks branch from `origin/v2-rebuild` (see the 2026-11-18 F-020 entry). Original question: F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
 - **Q3 (undated + done, docs/08 rule 1):** Undated to-dos show only while not done. Taken literally, checking off an undated to-do makes it vanish at once, while a dated one stays checked. Should undated items checked off today stay visible until midnight? Implemented as written for now (F-005).
 - **Q4 (default category):** docs/03 says category is optional; docs/08 has no null category. The guest repository defaults to `other`. OK?
-- **Q5 (e2e in CI):** `npm run e2e` (Playwright, 375 and 1280 px) runs locally but not in CI. Adding it needs `npx playwright install --with-deps chromium` in the workflow. Add it?
+- ~~**Q5 (e2e in CI):**~~ Resolved 2026-10-24 by F-014 (PR #14): CI has an `e2e` job (see the F-014 entry). Original question: `npm run e2e` (Playwright, 375 and 1280 px) runs locally but not in CI. Adding it needs `npx playwright install --with-deps chromium` in the workflow. Add it?
 - **Q6 (floating + in empty state):** Hidden there, so the two equal buttons are the only actions (D26). OK?
 - **Q7 (midnight):** Today's date is fixed when the screen opens; a screen left open past midnight shows the old day until reopened. Follow-up task?
-- **Q2 (default branch):** `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
+- ~~**Q2 (default branch):**~~ Overtaken: the GitHub default branch is `v2-rebuild` (see the 2026-11-20 QA-016 entry). Original question: `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
 
 ## Log
 
@@ -1337,6 +1337,21 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - Merged `origin/v2-rebuild` at `64408cc` after DOC-002 (PR #73). The append-only task and progress conflicts kept both original entries. The DOC-002 architecture document, the F-R3-13 test, and its Vercel preview opt-out match their original versions.
 - Lint, typecheck, Knip, Prettier with automatic line endings, production build, and Git diff checks passed. Vitest passed 845/845 across 75 files. The production dependency audit found zero vulnerabilities, and Redocly reported four existing warnings.
 - The first `phone-375` run passed 118 of 119. The existing Reset Password overflow test measured 43 px at 200% text. The full rerun against the same production build had 118 first-pass successes and one retry-pass for that test. Auth source and tests match `v2-rebuild`.
+
+### 2026-11-25: Task board reconciliation with merged PRs
+
+- **Scope:** documentation only, `docs/TASKS.md` and `docs/PROGRESS.md`. Branch `docs/board-sync-20261125` from `origin/v2-rebuild` at `f5c962c` (fetched 2026-11-25). Owner-approved: reconcile through a separate docs PR and keep genuinely open items open. Entries that exist only on open branches (QA-025, F-R3-11, F-R3-10, QA-026) are not touched.
+- **Merge evidence:** for each PR, the head and the merge commit are ancestors of `origin/v2-rebuild`, the merge commit message names the PR and the task branch, and the GitHub API reports the PR merged.
+- **`review` to `done` (25), each with a `Merge` line:** QA-010 #36 `34b6a5a`, F-030 #45 `00a6d01`, QA-019 #46 `93959cb`, QA-020 #47 `40ab685`, QA-021 #48 `e4e57b4`, QA-022 #49 `aef8230`, F-031 #50 `b84a977`, QA-023 #51 `b34ab8f`, F-R3-02A #55 `3b8611e`, F-R3-01 #58 `d18ca7d`, F-R3-02B #60 `5a46b68`, F-R3-03 #62 `c7bbfb2`, QA-024 #63 `edefad4`, F-R3-04 #64 `f277c0f`, UX-009 #65 `a6fd1db`, F-R3-05 #66 `fede106`, UX-010 #67 `4de84ff`, F-R3-06 #68 `087bf51`, UX-011 #69 `7bd5b52`, UX-012 #70 `5fe3192`, F-R3-07 #71 `017c442`, DOC-001 #72 `401fc8d`, DOC-002 #73 `64408cc`, F-R3-13 #74 `7390ec7`, F-R3-08 #76 `f5c962c`. QA-024, F-R3-04 and F-R3-05 had a `PR` line, which the `Merge` line replaces.
+- **Still `blocked`:** QA-016. PR #42 merged only the audit, and the owner's Vercel settings check and promotion are not recorded.
+- **"Done when" boxes ticked, with evidence:**
+  - F-015: `Lint, typecheck, test, build` and `End-to-end (375 px)` passed on the PR #18 head `7dfb2ff`. That commit added the 375 px auth screenshots in `docs/screenshots/`.
+  - F-016 and F-017: the same two checks passed on the PR #19 head `ad5bf14` and the PR #20 head `1a46257`.
+  - F-018: the two checks passed on the PR #17 head `41a770b`, and that workflow includes the `Unused code (knip)` step. The Lighthouse scores are recorded in the F-018 entry.
+  - F-024 (all three): the two checks passed on the PR #30 head `cd75018`. `GuestTodoRepository.test.ts` covers daily, weekly across Sunday, daily just after midnight in `Asia/Phnom_Penh`, and unchecking then re-checking keeping the same next to-do. `e2e/repeat.spec.ts` creates a daily to-do at 375 px, checks it and finds tomorrow's copy.
+- **Left open on purpose:** F-029's performance box (QA-020 measured 93 on `/` and 89 on `/today`, but not in the F-018 environment the box names). Also the owner and release gates of QA-016 (two boxes), QA-017, QA-018, QA-019, QA-020, QA-021, and UX-002's missing reference assets.
+- **Open questions:** Q1, Q2 and Q5 are marked resolved, each with a pointer. Q3, Q4, Q6 and Q7 have no recorded answer and stay open, unchanged.
+- **Checks:** Prettier with automatic line endings on both docs, `git diff --check`, and Redocly (unchanged, valid). No code changed, so the code checks were not run.
 
 ### 2026-11-25 F-R3-08 - Focus History Filters & Search
 
