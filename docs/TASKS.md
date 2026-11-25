@@ -940,3 +940,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `docs/10-tech-and-structure.md` lists no dependency that is not in `package.json`
   - [x] `git diff --check` passes
 - **Files:** `docs/10-tech-and-structure.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-13 — Focus History account regression
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** R3 Focus completion audit, F-R3-04, DEC-004, and the B-043 contract in `docs/openapi.yaml`. ID verified unused before branching from `origin/v2-rebuild` at `5fe3192`.
+- **Plan:**
+  1. Extend the existing Playwright account fixture with token-scoped Focus reads and writes.
+  2. Save a stopwatch through the browser. Check the starting date, elapsed time, order, total and session identity before and after reload.
+  3. Switch between the guest and two signed-in accounts in the same browser and verify each history remains separate.
+  4. Control the history responses to check loading, empty, error and keyboard retry states.
+  5. Run the requested verification and disable previews for this branch.

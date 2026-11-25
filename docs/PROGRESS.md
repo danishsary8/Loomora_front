@@ -1322,3 +1322,18 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   5. Account Focus timers and the Focus outbox are stored in the `loomora-guest` IndexedDB database, scoped by user id, while A8-4 describes IndexedDB as guest storage. Should A8-4 or the database name be updated?
   6. `README.md` lists Dexie only as guest storage (see question 5). It is outside this task's scope and was not changed.
 - GitHub CLI is not authenticated. The branch is pushed so the planner can open the PR into `v2-rebuild`.
+
+### 2026-11-25 F-R3-13 — Focus History account regression
+
+- Verified the task ID was unused and opened the isolated `feat/F-R3-13-focus-history-regression` worktree from `origin/v2-rebuild` at `5fe3192`.
+- Extended the Playwright Focus fixture to use the bearer token for account identity and return B-043 session records by starting local date. Added two browser regressions for account save through History and reload, guest and second-account isolation, and loading, empty, error, and keyboard retry states.
+- The save test finishes a 22.5-second linked stopwatch session after account-local midnight. It verifies the earlier row, start time, row duration, daily total, and UUID on a fresh History response, plus the absence of duplicate writes. The first focused run held the History update while the test clock was paused. Waiting for the timer to close before resuming the clock preserves the exact duration and lets the query update.
+- Production application code is untouched. The branch-specific Vercel setting disables preview deployment.
+- Local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the Playwright production build, full Vitest (845/845 across 75 files), and full Chromium `phone-375` (119/119, including 2 new tests). The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. Git diff checks passed.
+- GitHub CLI is unauthenticated. The planner can open the PR into `v2-rebuild` from the pushed branch to start CI.
+
+#### PR #74 planner follow-up
+
+- Merged `origin/v2-rebuild` at `64408cc` after DOC-002 (PR #73). The append-only task and progress conflicts kept both original entries. The DOC-002 architecture document, the F-R3-13 test, and its Vercel preview opt-out match their original versions.
+- Lint, typecheck, Knip, Prettier with automatic line endings, production build, and Git diff checks passed. Vitest passed 845/845 across 75 files. The production dependency audit found zero vulnerabilities, and Redocly reported four existing warnings.
+- The first `phone-375` run passed 118 of 119. The existing Reset Password overflow test measured 43 px at 200% text. The full rerun against the same production build had 118 first-pass successes and one retry-pass for that test. Auth source and tests match `v2-rebuild`.
