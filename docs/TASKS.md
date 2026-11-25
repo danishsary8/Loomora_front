@@ -952,3 +952,13 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   3. Switch between the guest and two signed-in accounts in the same browser and verify each history remains separate.
   4. Control the history responses to check loading, empty, error and keyboard retry states.
   5. Run the requested verification and disable previews for this branch.
+
+### F-R3-08 — Focus History Filters & Search
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Planner task brief, R3 feature list, F-R3-04, F-R3-13 and DEC-003. ID verified unused before branching from `7390ec7`.
+- **Plan:**
+  1. Add unit and Playwright regressions for modes, search, combined filters, empty results, offline guests, and account changes.
+  2. Filter the selected day's existing display text and add localized Elemental controls and a keyboard-accessible reset. Keep the full-day total and date selection independent of the filters.
+  3. Run the required checks and the full phone-375 suite, record verification, and open the review PR.
