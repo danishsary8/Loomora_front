@@ -41,7 +41,7 @@ Loomora is built around three pillars, released in stages (see [`docs/02-feature
 | Pillar | Release | Status in this repo |
 |---|---|---|
 | **Plan** | R1 Today, R2 Repeat, subtasks, reminders | Implemented |
-| **Focus** | R3 Focus | Implemented, except history filters, search and delete |
+| **Focus** | R3 Focus | Implemented, with history deletion pending |
 | **Review** | R4 Review | Planned. `/insights` shows a "Coming soon" screen |
 
 ### Plan (R1 and R2): implemented
@@ -58,15 +58,15 @@ Loomora is built around three pillars, released in stages (see [`docs/02-feature
 - **Profile:** 12 h / 24 h time format, the first day of the week, feedback, sign out and delete account (including re-confirmation for Google accounts).
 - **Error, offline and not-found states**, a service-down banner and an installable, offline-friendly PWA.
 
-### Focus (R3): implemented, history tools pending
+### Focus (R3)
 
-- Focus timer you can link to a to-do or a schedule item (optional).
+- Focus timer with an expanded full-screen view and optional links to to-dos or schedule items.
 - **Countdown** with 25, 50 and 90 minute presets or a custom length from 1 to 240 minutes. Each run is four Focus phases with short and long breaks ([DEC-004](docs/DECISIONS.md)).
 - **Stopwatch** with laps.
 - The timer keeps running when you change pages and is recovered after a reload. Ending early keeps the recorded time.
-- **Focus history** by date with total Focus time, and an expanded full-screen view.
+- **Focus history** by date with Countdown and Stopwatch filters, search, and a full-day Focus total.
 - **Timer-end alarm:** three synthesized sounds (Chime, Wood, Bell), a volume setting, and three play modes. Once is the default. Repeat 3× plays three times, and Until I stop repeats until dismissed, up to two minutes. Mute takes precedence, and a Stop alarm control appears while it rings. These settings are saved in this browser for both guests and accounts.
-- Planned for R3 but not built yet: history filters, search and delete with undo.
+- History deletion with undo is planned for R3.
 
 ### Review (R4): planned
 
@@ -306,7 +306,7 @@ The API has no hosted documentation page. Read the OpenAPI file directly or load
 | **R1 Today**: to-dos, weekly schedule, Now/Next, Week, guest mode, accounts, streak, PWA | Done |
 | **R2 Repeat, subtasks, reminders**: plus priority, notes, daily intention, time preferences | Done |
 | **Elemental Edition redesign** (DEC-003) | Main screens (Today, Week, Focus, Profile, Landing, Auth) updated; refinement continues |
-| **R3 Focus**: timer, countdown, stopwatch, history, alarm sound and play mode, presets, full-screen view | Merged; history filters, search and delete still to come |
+| **R3 Focus**: timer, countdown, stopwatch, history with filters and search, alarm sound and play mode, presets, full-screen view | History deletion with undo is still planned |
 | **Release and production verification** (QA-016 and related QA tasks) | Open: promote the latest `v2-rebuild` to production |
 | **R4 Review**: analytics, notes, weekly recap, Plan vs Reality | Planned |
 | **After R4**: Khmer language, push notifications, quick-add by typing, data export | Later |
