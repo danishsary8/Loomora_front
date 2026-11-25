@@ -14,11 +14,13 @@ describe('Landing page (S1)', () => {
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/sign-in')
   })
 
-  it('uses Inter headings instead of the legacy script font', async () => {
+  it('uses Inter headings and the decorative Elemental brand mark instead of the legacy script font', async () => {
     renderRoute('/')
     const heading = await screen.findByRole('heading', { level: 1, name: 'Loomora' })
     expect(heading).toHaveClass('font-heading')
     expect(document.querySelector('.font-script')).toBeNull()
+    const mark = heading.parentElement?.querySelector('svg')
+    expect(mark).toHaveAttribute('aria-hidden', 'true')
   })
 
   it('makes Try it now the only primary action, with 44 px targets', async () => {

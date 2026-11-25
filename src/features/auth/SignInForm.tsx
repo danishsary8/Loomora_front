@@ -59,7 +59,7 @@ export function SignInForm() {
         onChange={(e) => setPassword(e.target.value)}
         error={clientErrors.password}
       />
-      <div className="-my-1 flex justify-end">
+      <div className="-mt-2 flex justify-end">
         <AuthLink to="/forgot-password">{t('auth.forgotLink')}</AuthLink>
       </div>
       <Button type="submit" size="lg" fullWidth disabled={pending}>

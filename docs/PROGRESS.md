@@ -1463,3 +1463,12 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Wrapped `FocusAlarmSettings` in an accessible `aria-expanded` / `aria-controls` progressive disclosure with a compact live summary (`Chime · 50% · Once`).
   - Refined Week's mobile `DayToggle` (`variant="strip"`, no double borders, improved today-dot clearance) and softened desktop `DayColumn` `Copy` buttons to ghost weight.
 - **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), targeted Vitest (`78/78` across 5 files), full `phone-375` Playwright (`123/123`), and 375 px / 1440 px browser screenshots.
+
+### 2026-11-25 UX-016: Landing & Authentication Final Polish
+
+- **Branch / Worktree:** `feat/UX-016-landing-auth-polish` in `loomora-front-UX-016`, branched from `origin/v2-rebuild` (`6853166`, PR #82 merged).
+- **What changed:**
+  - Added decorative Elemental `BrandMark` (matching `public/icon.svg`) and `GoogleIcon` in `src/components/ui/icons.tsx`.
+  - Applied `BrandMark` lockup and refined typography, CTA rhythm (`Try it now` / `No signup needed.` / spaced `Sign in`), and pastel highlight card hierarchy on `LandingPage.tsx`.
+  - Added `BrandMark` to `AuthLayout`, `GoogleIcon` to `GoogleButton`, elevated paper card spacing/shadow, softened `AuthLink` underlines (`decoration-primary/40`), and tightened `Forgot your password?` spacing under Password in `SignInForm.tsx`.
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Landing/Auth Vitest (`52/52` across 3 files), full `phone-375` Playwright (`123/123`), and 375 px / 1440 px visual screenshots.
