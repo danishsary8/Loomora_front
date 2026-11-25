@@ -978,5 +978,5 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Done when:**
   - [x] Lap is disabled with an accessible, localized explanation at 1000 laps, and a 1001st attempt changes nothing.
   - [x] New laps are announced once, without announcing restored laps.
-  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375` (except the known `e2e/auth.spec.ts` 200% overflow outside this scope), `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
 - **Files:** `src/features/focus/FocusPage.tsx`, `src/features/focus/focusTimerState.ts`, `src/features/focus/FocusPage.test.tsx`, `src/features/focus/focusRuntime.test.ts`, `e2e/focus-laps.spec.ts`, `e2e/focus-timer.spec.ts`, `e2e/focus-presentation.spec.ts`, `src/i18n/en.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
