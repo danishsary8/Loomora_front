@@ -342,3 +342,172 @@ it('combines date-local search and mode filters on offline guest history', async
   expect(history.getAllByRole('listitem')).toHaveLength(2)
   expect(await db.focus_sessions.count()).toBe(3)
 })
+
+describe('Focus History delete and undo (F-R3-14)', () => {
+  it('deletes an account session after 204 confirmation, updates total, preserves filters, and restores on Undo', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const target = session({
+      mode: 'countdown',
+      end_reason: 'completed',
+      label: 'Deep reading',
+      focus_ms: 60_000,
+    })
+    const kept = session({
+      mode: 'stopwatch',
+      end_reason: 'completed',
+      started_at: '2026-11-23T17:10:00Z',
+      label: 'Quick sprint',
+      focus_ms: 15_000,
+    })
+    let rows = [target, kept]
+    let deleteCalls = 0
+    let restoreCalls = 0
+    server.use(
+      http.get(endpoint, ({ request }) =>
+        HttpResponse.json({
+          data: new URL(request.url).searchParams.get('date') === date ? rows : [],
+        }),
+      ),
+      http.delete(`${endpoint}/:id`, ({ params }) => {
+        deleteCalls += 1
+        rows = rows.filter((row) => row.id !== params.id)
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.post(`${endpoint}/:id/restore`, ({ params }) => {
+        restoreCalls += 1
+        if (params.id === target.id) {
+          rows = [target, ...rows.filter((row) => row.id !== target.id)]
+          return HttpResponse.json({ data: target }, { status: 200 })
+        }
+        return new HttpResponse(null, { status: 404 })
+      }),
+    )
+
+    const { history } = openHistory()
+    fireEvent.change(history.getByLabelText('Session date'), { target: { value: date } })
+    expect(await history.findAllByRole('listitem')).toHaveLength(2)
+    expect(history.getByText('1 min, 15 sec')).toBeVisible()
+
+    // Apply a filter before deleting to ensure filters survive delete and undo.
+    await user.type(history.getByRole('searchbox', { name: 'Search sessions' }), 'Deep')
+    expect(history.getAllByRole('listitem')).toHaveLength(1)
+
+    await user.click(history.getByRole('button', { name: /Delete session from/i }))
+    const dialog = await screen.findByRole('dialog', { name: 'Delete Focus session?' })
+    expect(within(dialog).getByText(/Deep reading/)).toBeVisible()
+    await user.click(within(dialog).getByRole('button', { name: 'Delete session' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(deleteCalls).toBe(1)
+    expect(history.queryByRole('listitem')).not.toBeInTheDocument()
+    expect(history.getByText('15 sec')).toBeVisible()
+    expect(history.getByRole('searchbox', { name: 'Search sessions' })).toHaveValue('Deep')
+
+    const undoButton = await screen.findByRole('button', { name: 'Undo' })
+    expect(screen.getByText('Focus session deleted.')).toBeVisible()
+    await user.click(undoButton)
+
+    expect(await history.findByText(/Deep reading/)).toBeVisible()
+    expect(restoreCalls).toBe(1)
+    expect(history.getByText('1 min, 15 sec')).toBeVisible()
+    expect(history.getByRole('searchbox', { name: 'Search sessions' })).toHaveValue('Deep')
+  })
+
+  it('shows expired message on 410 restore and prevents double delete submission while failing safely', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const target = session({ label: 'Expired sample', focus_ms: 10_000 })
+    let failDelete = true
+    let deleted = false
+    let deleteCount = 0
+    let releaseDelete!: () => void
+    let deleteGate = new Promise<void>((resolve) => {
+      releaseDelete = resolve
+    })
+
+    server.use(
+      http.get(endpoint, ({ request }) =>
+        HttpResponse.json({
+          data: new URL(request.url).searchParams.get('date') === date && !deleted ? [target] : [],
+        }),
+      ),
+      http.delete(`${endpoint}/:id`, async () => {
+        deleteCount += 1
+        await deleteGate
+        if (failDelete) return new HttpResponse(null, { status: 500 })
+        deleted = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.post(`${endpoint}/:id/restore`, () =>
+        HttpResponse.json({ message: 'The undo deadline has expired.' }, { status: 410 }),
+      ),
+    )
+
+    const { history } = openHistory()
+    fireEvent.change(history.getByLabelText('Session date'), { target: { value: date } })
+    expect(await history.findByText(/Expired sample/)).toBeVisible()
+
+    await user.click(history.getByRole('button', { name: /Delete session from/i }))
+    const dialog = await screen.findByRole('dialog', { name: 'Delete Focus session?' })
+    const confirm = within(dialog).getByRole('button', { name: 'Delete session' })
+
+    const clickPromise = user.click(confirm)
+    await waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Deleting…' })).toBeDisabled(),
+    )
+    // Second click while in-flight cannot fire a duplicate DELETE.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Deleting…' }))
+    releaseDelete()
+    await clickPromise
+
+    expect(deleteCount).toBe(1)
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'Could not delete this Focus session. Try again.',
+    )
+    // Session stays in active History after failed delete.
+    expect(history.getByText(/Expired sample/)).toBeVisible()
+
+    // Succeed on retry, then hit 410 on Undo.
+    failDelete = false
+    deleteGate = Promise.resolve()
+    await user.click(within(dialog).getByRole('button', { name: 'Delete session' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(history.queryByText(/Expired sample/)).not.toBeInTheDocument()
+
+    await user.click(await screen.findByRole('button', { name: 'Undo' }))
+    expect(
+      await screen.findByText('The undo window for this Focus session has expired.'),
+    ).toBeVisible()
+    expect(history.queryByText(/Expired sample/)).not.toBeInTheDocument()
+  })
+
+  it('supports offline guest delete and undo parity and clears dialogs on session switch', async () => {
+    const user = userEvent.setup()
+    const guestSession = session({ label: 'Offline guest session', focus_ms: 25_000 })
+    await db.focus_sessions.add(guestSession)
+    onlineManager.setOnline(false)
+
+    const { history } = openHistory()
+    fireEvent.change(history.getByLabelText('Session date'), { target: { value: date } })
+    expect(await history.findByText(/Offline guest session/)).toBeVisible()
+    expect(history.getByText('Full-day focus total').nextElementSibling).toHaveTextContent('25 sec')
+
+    await user.click(history.getByRole('button', { name: /Delete session from/i }))
+    const dialog = await screen.findByRole('dialog', { name: 'Delete Focus session?' })
+    await user.click(within(dialog).getByRole('button', { name: 'Delete session' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(history.queryByText(/Offline guest session/)).not.toBeInTheDocument()
+    expect(history.getByText('Full-day focus total').nextElementSibling).toHaveTextContent('0 sec')
+
+    await user.click(await screen.findByRole('button', { name: 'Undo' }))
+    expect(await history.findByText(/Offline guest session/)).toBeVisible()
+    expect(history.getByText('Full-day focus total').nextElementSibling).toHaveTextContent('25 sec')
+
+    // Open delete confirmation then switch to an account: guest dialog closes cleanly.
+    await user.click(history.getByRole('button', { name: /Delete session from/i }))
+    expect(await screen.findByRole('dialog', { name: 'Delete Focus session?' })).toBeVisible()
+    act(() => signIn())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+})

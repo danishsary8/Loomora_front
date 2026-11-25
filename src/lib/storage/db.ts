@@ -12,11 +12,15 @@ import type { FocusOutboxRecord } from './ServerFocusSessionRepository'
 
 export const GUEST_DB_NAME = 'loomora-guest'
 
+export type StoredFocusSession = FocusSession & {
+  deleted_at?: string | null
+}
+
 /** Guest data in IndexedDB (A8-4). Rows keep their client UUIDs for the later import. */
 export class GuestDatabase extends Dexie {
   focus_timers!: EntityTable<FocusTimerSnapshot, 'scope'>
   focus_timer_pending!: Table<PendingFocusTimer, [string, string]>
-  focus_sessions!: EntityTable<FocusSession, 'id'>
+  focus_sessions!: EntityTable<StoredFocusSession, 'id'>
   focus_outbox!: Table<FocusOutboxRecord, [string, string]>
   meta!: EntityTable<{ key: string; value: TimePreferences }, 'key'>
   dailyIntentions!: EntityTable<DailyIntentionRecord, 'date'>

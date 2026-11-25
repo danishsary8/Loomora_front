@@ -85,6 +85,19 @@ export class ServerFocusSessionRepository implements FocusSessionRepository {
     return sessions
   }
 
+  async delete(id: string): Promise<void> {
+    this.owner()
+    await this.api.delete(id)
+    this.owner()
+  }
+
+  async restore(id: string): Promise<FocusSession> {
+    this.owner()
+    const session = await this.api.restore(id)
+    this.owner()
+    return session
+  }
+
   async getLocalRecord(id: string): Promise<FocusOutboxRecord | undefined> {
     const owner = this.owner()
     const record = await (await this.open()).focus_outbox.get([owner, id.toLowerCase()])

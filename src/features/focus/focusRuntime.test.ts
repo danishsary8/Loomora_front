@@ -205,6 +205,8 @@ describe('Focus timer runtime', () => {
               record,
               get: () => Promise.reject(new ApiError(404)),
               listForDate: () => Promise.resolve([]),
+              delete: () => Promise.resolve(),
+              restore: () => Promise.reject(new ApiError(404)),
             },
             db,
           )
@@ -353,6 +355,8 @@ describe('Focus timer runtime', () => {
         },
         get: () => Promise.reject(new ApiError(404)),
         listForDate: () => Promise.resolve([]),
+        delete: () => Promise.resolve(),
+        restore: () => Promise.reject(new ApiError(404)),
       },
       db,
     )
@@ -414,6 +418,8 @@ describe('Focus timer runtime', () => {
         },
         get: () => Promise.reject(new ApiError(404)),
         listForDate: () => Promise.resolve([]),
+        delete: () => Promise.resolve(),
+        restore: () => Promise.reject(new ApiError(404)),
       },
       db,
     )

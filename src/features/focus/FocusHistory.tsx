@@ -1,7 +1,8 @@
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Card, Input } from '@/components/ui'
-import { CheckIcon } from '@/components/ui/icons'
+import { ActionToast, Button, Card, Input, Sheet } from '@/components/ui'
+import { CheckIcon, TrashIcon } from '@/components/ui/icons'
+import { FormError } from '@/features/auth/FormError'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import type { LocalDate } from '@/features/todos/types'
 import { useTodayTodos } from '@/features/todos/useTodos'
@@ -11,9 +12,24 @@ import { useClockDisplay } from '@/lib/time/useTimePreferences'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import type { FocusSession } from './types'
 import { useFocusHistory } from './useFocusHistory'
+import { useFocusHistoryDelete } from './useFocusHistoryDelete'
 
 const historyModes = ['all', 'countdown', 'stopwatch'] as const
 type HistoryMode = (typeof historyModes)[number]
+
+const deleteButtonClass =
+  'grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control/70 bg-paper text-ink transition-[background-color,transform] duration-fast ease-elemental hover:bg-subtle active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100'
+
+interface DisplayRow {
+  session: FocusSession
+  id: string
+  started_at: string
+  modeText: string
+  startText: string
+  outcomeText: string
+  linkedText: string
+  durationText: string
+}
 
 function durationFormatter(locale: string) {
   const unit = (unit: string) =>
@@ -39,20 +55,78 @@ export function FocusHistory() {
   const heading = useId()
   const generation = useSession((state) => state.generation)
   const zone = useSession((state) => (state.token ? state.user?.timezone : undefined))
+  const del = useFocusHistoryDelete()
+  const [pendingDelete, setPendingDelete] = useState<{
+    row: DisplayRow
+    generation: number
+  } | null>(null)
+  const activePending = pendingDelete?.generation === generation ? pendingDelete.row : null
+
+  function openDelete(row: DisplayRow) {
+    del.clearDeleteError()
+    setPendingDelete({ row, generation })
+  }
+
+  function closeDelete() {
+    if (del.deletingId) return
+    del.clearDeleteError()
+    setPendingDelete(null)
+  }
+
+  async function handleConfirmDelete() {
+    if (!activePending) return
+    const ok = await del.confirmDelete(activePending.session)
+    if (ok) setPendingDelete(null)
+  }
 
   return (
-    <section aria-labelledby={heading} className="min-w-0">
-      <Card className="flex min-w-0 flex-col gap-4">
-        <h2 id={heading} className="text-xl font-semibold">
-          {t('focus.history.title')}
-        </h2>
-        <HistoryDay key={`${generation}:${zone ?? ''}`} zone={zone} />
-      </Card>
-    </section>
+    <>
+      <section aria-labelledby={heading} className="min-w-0">
+        <Card className="flex min-w-0 flex-col gap-4">
+          <h2 id={heading} className="text-xl font-semibold">
+            {t('focus.history.title')}
+          </h2>
+          <HistoryDay
+            key={`${generation}:${zone ?? ''}`}
+            zone={zone}
+            deletingId={del.deletingId}
+            onDelete={openDelete}
+          />
+        </Card>
+      </section>
+      <DeleteFocusSessionSheet
+        row={activePending}
+        deleting={del.deletingId !== null}
+        error={del.deleteError}
+        onConfirm={() => void handleConfirmDelete()}
+        onClose={closeDelete}
+      />
+      <ActionToast
+        message={
+          del.undoSession ? t('focus.history.deleted') : del.toastError ? del.toastError : null
+        }
+        actionLabel={
+          del.undoSession
+            ? t(del.restoring ? 'focus.history.undoing' : 'focus.history.undo')
+            : undefined
+        }
+        actionDisabled={del.restoring}
+        onAction={del.undoSession ? () => void del.undoDelete() : undefined}
+        tone={!del.undoSession && del.toastError ? 'danger' : 'default'}
+      />
+    </>
   )
 }
 
-function HistoryDay({ zone }: { zone?: string }) {
+function HistoryDay({
+  zone,
+  deletingId,
+  onDelete,
+}: {
+  zone?: string
+  deletingId: string | null
+  onDelete: (row: DisplayRow) => void
+}) {
   const { t, i18n } = useTranslation()
   const today = toLocalDate(new Date(), zone)
   const [date, setDate] = useState<LocalDate>(today)
@@ -158,6 +232,8 @@ function HistoryDay({ zone }: { zone?: string }) {
             duration={duration}
             mode={mode}
             search={search}
+            deletingId={deletingId}
+            onDelete={onDelete}
           />
         </>
       ) : (
@@ -169,6 +245,50 @@ function HistoryDay({ zone }: { zone?: string }) {
   )
 }
 
+function DeleteFocusSessionSheet({
+  row,
+  deleting,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  row: DisplayRow | null
+  deleting: boolean
+  error: string | null
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Sheet open={row !== null} onClose={onClose} title={t('focus.history.deleteTitle')}>
+      {row && (
+        <div className="flex flex-col gap-4">
+          <div className="rounded-md border-hairline border-border-subtle bg-subtle/60 p-3 text-sm">
+            <p className="font-semibold tabular-nums text-ink">
+              {t('focus.history.deleteSummary', {
+                mode: row.modeText,
+                time: row.startText,
+                duration: row.durationText,
+              })}
+            </p>
+            {row.linkedText && (
+              <p className="mt-1 text-muted [overflow-wrap:anywhere]">{row.linkedText}</p>
+            )}
+          </div>
+          <p className="text-sm text-muted">{t('focus.history.deleteHint')}</p>
+          <FormError message={error ?? undefined} />
+          <Button variant="danger" size="lg" fullWidth disabled={deleting} onClick={onConfirm}>
+            {t(deleting ? 'focus.history.deleting' : 'focus.history.deleteConfirm')}
+          </Button>
+          <Button variant="secondary" size="lg" fullWidth disabled={deleting} onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
 function HistoryRows({
   todoDate,
   sessions,
@@ -176,6 +296,8 @@ function HistoryRows({
   duration,
   mode,
   search,
+  deletingId,
+  onDelete,
 }: {
   todoDate: LocalDate
   sessions: FocusSession[] | undefined
@@ -183,6 +305,8 @@ function HistoryRows({
   duration: (ms: number) => string
   mode: HistoryMode
   search: string
+  deletingId: string | null
+  onDelete: (row: DisplayRow) => void
 }) {
   const { t } = useTranslation()
   const clock = useClockDisplay()
@@ -201,7 +325,7 @@ function HistoryRows({
 
   const query = search.trim()
   const match = query ? new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'iu') : null
-  const rows = (sessions ?? []).flatMap((session) => {
+  const rows: DisplayRow[] = (sessions ?? []).flatMap((session) => {
     if (mode !== 'all' && session.mode !== mode) return []
     const { id, label, todo_id, schedule_item_id, started_at, focus_ms, end_reason } = session
     const title = todo_id
@@ -226,7 +350,7 @@ function HistoryRows({
       ![modeText, startText, outcomeText, linkedText, durationText].some((text) => match.test(text))
     )
       return []
-    return [{ id, started_at, modeText, startText, outcomeText, linkedText, durationText }]
+    return [{ session, id, started_at, modeText, startText, outcomeText, linkedText, durationText }]
   })
 
   const status = loading
@@ -244,28 +368,44 @@ function HistoryRows({
       </p>
       {rows.length > 0 && (
         <ol role="list" className="divide-y divide-border-subtle">
-          {rows.map(
-            ({ id, started_at, modeText, startText, outcomeText, linkedText, durationText }) => (
-              <li
-                key={id}
-                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold">{modeText}</p>
-                  <p className="flex flex-wrap gap-x-3 text-sm text-muted">
-                    <time dateTime={started_at} className="tabular-nums">
-                      {startText}
-                    </time>
-                    <span>{outcomeText}</span>
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 py-3"
+            >
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <p className="font-semibold">{row.modeText}</p>
+                <p className="flex flex-wrap gap-x-3 text-sm text-muted">
+                  <time dateTime={row.started_at} className="tabular-nums">
+                    {row.startText}
+                  </time>
+                  <span>{row.outcomeText}</span>
+                </p>
+                {row.linkedText && (
+                  <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">
+                    {row.linkedText}
                   </p>
-                  {linkedText && (
-                    <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">{linkedText}</p>
-                  )}
-                </div>
-                <p className="min-w-0 font-semibold tabular-nums">{durationText}</p>
-              </li>
-            ),
-          )}
+                )}
+              </div>
+              <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-2">
+                <p className="min-w-0 font-semibold tabular-nums [overflow-wrap:anywhere]">
+                  {row.durationText}
+                </p>
+                <button
+                  type="button"
+                  disabled={deletingId !== null}
+                  onClick={() => onDelete(row)}
+                  aria-label={t('focus.history.deleteLabel', {
+                    time: row.startText,
+                    duration: row.durationText,
+                  })}
+                  className={deleteButtonClass}
+                >
+                  <TrashIcon className="size-4" />
+                </button>
+              </div>
+            </li>
+          ))}
         </ol>
       )}
     </>

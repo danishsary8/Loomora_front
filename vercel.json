@@ -33,6 +33,7 @@
       "feat/UX-014-elemental-legacy-cleanup": false,
       "feat/UX-015-elemental-visual-polish": false,
       "feat/UX-016-landing-auth-polish": false,
+      "feat/F-R3-14-focus-history-delete": false,
       "v2-rebuild": false
     }
   },

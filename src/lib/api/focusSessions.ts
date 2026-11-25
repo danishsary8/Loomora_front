@@ -31,6 +31,24 @@ export function createFocusSessionsApi(client: ApiClient) {
       })
       return data
     },
+    async delete(id: string): Promise<void> {
+      await client.request<undefined>('DELETE', `${path}/${encodeURIComponent(id.toLowerCase())}`, {
+        expectedStatus: [204],
+      })
+    },
+    async restore(id: string): Promise<FocusSession> {
+      const normalized = id.toLowerCase()
+      const result = await client.request<{ data: FocusSession }>(
+        'POST',
+        `${path}/${encodeURIComponent(normalized)}/restore`,
+        { expectedStatus: [200] },
+      )
+      const data = result?.data
+      if (data?.id !== normalized) {
+        throw new ApiError(502, { message: 'Unexpected Focus session response.' })
+      }
+      return data
+    },
   }
 }
 

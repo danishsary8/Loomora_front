@@ -30,6 +30,7 @@ export interface ActionToastProps {
   /** Optional interactive action (e.g. Undo). */
   actionLabel?: string
   onAction?: () => void
+  actionDisabled?: boolean
   tone?: 'default' | 'danger'
   /** Stacks above a lower toast when two undoable operations overlap. */
   stacked?: boolean
@@ -42,6 +43,7 @@ export function ActionToast({
   message,
   actionLabel,
   onAction,
+  actionDisabled = false,
   tone = 'default',
   stacked = false,
   truncate = false,
@@ -74,7 +76,12 @@ export function ActionToast({
             <span className={cn(truncate && 'truncate')}>{message}</span>
           </span>
           {actionLabel && onAction && (
-            <Button variant="secondary" className="shrink-0" onClick={onAction}>
+            <Button
+              variant="secondary"
+              className="shrink-0"
+              disabled={actionDisabled}
+              onClick={onAction}
+            >
               {actionLabel}
             </Button>
           )}
