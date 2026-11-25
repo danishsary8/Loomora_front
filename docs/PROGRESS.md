@@ -1445,7 +1445,8 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npm run build`: passed (35 PWA precache entries).
   - `npm audit --omit=dev`: 0 vulnerabilities.
   - `npx vitest run --maxWorkers=2`: **855/855** passed across 77 test files.
-  - `npx playwright test e2e/a11y.spec.ts e2e/today.spec.ts e2e/week.spec.ts e2e/pwa.spec.ts e2e/page-heading.spec.ts --project=phone-375 --workers=1`: **32/32** passed (including all 15 route axe-core checks, manifest icon loadability, F-022 undo toast, and 320–1440 px / 200% text overflow checks).
+  - `npx playwright test --project=phone-375 --workers=2`: **123/123** passed (full suite).
+  - **PR #81 CI fix:** `e2e/auth.spec.ts:94` failed on CI because clicking `Forgot your password?` updated the URL before the lazy-loaded `ForgotPasswordPage` chunk mounted, causing `getByLabel('Email').fill(...)` to type into the outgoing `/sign-in` email field. Added `heading` visibility assertions for `Sign in` and `Forgot password` before interacting with the form, re-ran the full 123/123 `phone-375` suite locally, and pushed to PR #81.
 - **Backend API Dependencies / Blockers Identified for Next Tasks:**
   1. **Focus History Delete with Undo (`docs/02` R3 Should):** Blocked on backend — `docs/openapi.yaml` currently only exposes `GET /focus-sessions/{focusSession}` (needs `DELETE /focus-sessions/{focusSession}` and `POST /focus-sessions/{focusSession}/restore`).
   2. **Guest Focus Sessions Sync in `POST /import`:** Blocked on backend — `docs/openapi.yaml` `POST /import` currently accepts `todos`, `schedule_items`, `exceptions`, `checkins`, and `daily_intentions` (no `focus_sessions`).
