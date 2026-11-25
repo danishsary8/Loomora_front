@@ -52,9 +52,9 @@ export function DayColumn({
       )}
       {items.length > 0 && (
         <Button
-          variant="secondary"
+          variant="ghost"
           fullWidth
-          className="md:px-3"
+          className="border-hairline border-transparent text-xs font-medium text-muted hover:border-border-subtle hover:text-ink md:px-3"
           aria-label={t('copyDay.open', { day: name })}
           onClick={() => onCopy(day)}
         >

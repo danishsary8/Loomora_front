@@ -243,7 +243,12 @@ it('restores the active timer in the normal layout after a timer read error', as
 it('restores alarm sound, volume, and play mode after remount', async () => {
   const user = userEvent.setup()
   const initial = openFocus()
-  const sound = await screen.findByRole('combobox', { name: 'Alarm sound' })
+  const toggle = await screen.findByRole('button', { name: /Timer alarm/i })
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(toggle).toHaveTextContent('Chime · 50% · Once')
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  const sound = screen.getByRole('combobox', { name: 'Alarm sound' })
   const volume = screen.getByRole('slider', { name: 'Alarm volume' })
   const mode = screen.getByRole('combobox', { name: 'Alarm play mode' })
   expect(sound).toHaveDisplayValue('Chime')
@@ -256,7 +261,10 @@ it('restores alarm sound, volume, and play mode after remount', async () => {
   initial.unmount()
 
   openFocus()
-  expect(await screen.findByRole('combobox', { name: 'Alarm sound' })).toHaveDisplayValue('Wood')
+  const restoredToggle = await screen.findByRole('button', { name: /Timer alarm/i })
+  expect(restoredToggle).toHaveTextContent('Wood · 55% · Until I stop')
+  await user.click(restoredToggle)
+  expect(screen.getByRole('combobox', { name: 'Alarm sound' })).toHaveDisplayValue('Wood')
   expect(screen.getByRole('slider', { name: 'Alarm volume' })).toHaveValue('55')
   expect(screen.getByRole('combobox', { name: 'Alarm play mode' })).toHaveDisplayValue(
     'Until I stop',

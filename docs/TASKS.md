@@ -1043,7 +1043,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-014: Elemental Edition Final Polish, Shared ActionToast, PWA Icons & Legacy Token Cleanup
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #81](https://github.com/danishsary8/Loomora_front/pull/81) at `a1f05d0`.
 - **Owner:** antigravity
 - **Source:** Full DEC-003 Elemental Edition audit on `origin/v2-rebuild` (`61373df`, PR #80). ID verified unused in `docs/TASKS.md`, `docs/PROGRESS.md`, and local/remote branches (`UX-013` is reserved for `docs/UX-013-insights-mockups`).
 - **Scope:** Remove the remaining neo-brutalist UI remnants (`UndoDeleteToast`, `RootLayout` skip link, `ComingSoon` category-fill misuse, neo-brutalist orange PWA/boot icons) and delete deprecated neo-brutalist tokens (`borderWidth.thin/thick`, `shadowOffset`, `shadow`, `hard-*`, `press-*`) from `tokens.ts` and `tailwind.config.ts`. Preserves all R1–R3 behavior, guest/account parity, and `F-R3-10` worktree isolation.
@@ -1058,3 +1059,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `ActionToast` unifies schedule and to-do undo toasts with safe-area clearance and Elemental styling; `ComingSoon` no longer uses `tone="work"`.
   - [x] `npm run lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), full Vitest (**855/855** across 77 files), and Playwright `phone-375` (`a11y`, `today`, `week`, `pwa`, `page-heading`: **32/32**) pass.
 - **Files:** `src/components/ui/Toast.tsx`, `src/components/ui/Toast.test.tsx`, `src/components/ui/index.ts`, `src/features/schedule/UndoDeleteToast.tsx`, `src/features/todos/UndoDeleteToast.tsx`, `src/app/layout/RootLayout.tsx`, `src/components/page/ComingSoon.tsx`, `src/components/page/ComingSoon.test.tsx`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `tailwind.config.ts`, `public/icon.svg`, `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`, `scripts/icon-maskable.svg`, `scripts/generate-icons.mjs`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-015: Elemental Edition Visual Polish Pass
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Owner-approved visual audit follow-up to PR #81 (`UX-014`, merged at `a1f05d0`).
+- **Scope:** Apply provisional `DEC-003` pastel category colors, stretch the desktop sidebar full page height while keeping nav sticky, tighten Today `TodoRow` density without hiding functionality, add accessible progressive disclosure for Focus alarm settings, and refine Week mobile day strip and desktop `Copy` action weight.
+- **Done when:**
+  - [x] Provisional `DEC-003` pastel category colors (`#E3F0FC`, `#FBF0D9`, `#E2F5EA`, `#FDE8EE`, `#EEE9FC`, `#ECE8DF`) applied in `src/styles/tokens.ts` and verified for WCAG AA contrast.
+  - [x] Desktop `Sidebar` stretches full page height (`min-h-dvh self-stretch`) with sticky inner navigation.
+  - [x] `TodoRow` omits redundant `Normal` baseline priority badges and tightens empty subtask affordance while keeping full touch targets and functionality.
+  - [x] `FocusAlarmSettings` uses accessible `aria-expanded`/`aria-controls` progressive disclosure with collapsed summary.
+  - [x] `WeekPage`/`DayToggle` strip mode removes double borders and `DayColumn` softens `Copy` to ghost weight.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, and full `phone-375` Playwright (**123/123**) pass.
+- **Files:** `src/styles/tokens.ts`, `src/app/layout/Sidebar.tsx`, `src/features/today/TodoRow.tsx`, `src/features/focus/FocusAlarmSettings.tsx`, `src/features/focus/FocusPage.test.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/WeekPage.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/i18n/en.json`, `e2e/focus-alarm.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

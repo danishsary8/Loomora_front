@@ -105,6 +105,7 @@
     "muteSound": "Mute timer sound",
     "alarm": {
       "title": "Timer alarm",
+      "summary": "{{sound}} · {{volume}} · {{mode}}",
       "sound": "Alarm sound",
       "volume": "Alarm volume",
       "volumeValue": "{{volume}}%",

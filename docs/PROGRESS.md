@@ -1452,3 +1452,14 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   2. **Guest Focus Sessions Sync in `POST /import`:** Blocked on backend — `docs/openapi.yaml` `POST /import` currently accepts `todos`, `schedule_items`, `exceptions`, `checkins`, and `daily_intentions` (no `focus_sessions`).
   3. **R4 Insights, Analytics, Notes, Weekly Recap & Plan vs Reality (`docs/02` R4 Must/Should):** Blocked on backend — no `/analytics`, `/insights`, `/notes`, `/recap`, or `/plan-vs-reality` endpoints exist in `docs/openapi.yaml` yet.
   4. **Category Pastel Hexes (`DEC-003`):** Pending owner confirmation against the 4 original Elemental reference assets (`LOOMORA_ELEMENTAL_*` / `LOOMORA_PREMIUM_*`, not in repo).
+
+### 2026-11-25 UX-015: Elemental Edition Visual Polish Pass
+
+- **Branch / Worktree:** `feat/UX-015-elemental-visual-polish` in `loomora-front-UX-015`, branched from `origin/v2-rebuild` (`a1f05d0`, PR #81 merged).
+- **What changed:**
+  - Applied the 6 provisional WCAG-verified `DEC-003` pastel category fills in `src/styles/tokens.ts` (`study #E3F0FC`, `work #FBF0D9`, `health #E2F5EA`, `life #FDE8EE`, `rest #EEE9FC`, `other #ECE8DF`).
+  - Updated `src/app/layout/Sidebar.tsx` (`min-h-dvh self-stretch` with inner `sticky top-0`) so the desktop navigation rail stretches full page height on tall screens.
+  - Tightened `TodoRow` vertical density (omitted redundant baseline `Normal` priority pill, kept `High`/`Low` explicit, removed repetitive footer border when 0 subtasks exist) without hiding any control.
+  - Wrapped `FocusAlarmSettings` in an accessible `aria-expanded` / `aria-controls` progressive disclosure with a compact live summary (`Chime · 50% · Once`).
+  - Refined Week's mobile `DayToggle` (`variant="strip"`, no double borders, improved today-dot clearance) and softened desktop `DayColumn` `Copy` buttons to ghost weight.
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), targeted Vitest (`78/78` across 5 files), full `phone-375` Playwright (`123/123`), and 375 px / 1440 px browser screenshots.
