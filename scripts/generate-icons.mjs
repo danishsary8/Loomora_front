@@ -1,6 +1,7 @@
 // Renders the PWA icons from public/icon.svg and scripts/icon-maskable.svg.
 // Run with `npm run icons` after changing either SVG.
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 const ICONS = [
@@ -19,7 +20,7 @@ try {
       `<style>html,body{margin:0;background:transparent}svg{display:block;width:${size}px;height:${size}px}</style>${svg}`,
     )
     await page.screenshot({
-      path: new URL(`../public/${file}`, import.meta.url).pathname,
+      path: fileURLToPath(new URL(`../public/${file}`, import.meta.url)),
       omitBackground: true,
     })
     await page.close()

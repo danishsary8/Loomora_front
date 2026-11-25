@@ -41,8 +41,6 @@ export const colors = {
 export const borderWidth = {
   hairline: '1px',
   control: '1.5px',
-  thin: '2px',
-  thick: '3px',
 } as const
 
 export const radius = {
@@ -57,17 +55,6 @@ export const elevation = {
   md: '0 4px 12px rgba(19, 42, 35, 0.08)',
   sheet: '0 -8px 24px rgba(19, 42, 35, 0.12)',
 } as const
-
-// Legacy hard offset shadows retained only until UX-004 migrates shared UI primitives.
-export const shadowOffset = {
-  sm: 2,
-  md: 4,
-  lg: 6,
-} as const
-
-export const shadow = Object.fromEntries(
-  Object.entries(shadowOffset).map(([name, px]) => [name, `${px}px ${px}px 0 0 ${colors.ink}`]),
-) as Record<keyof typeof shadowOffset, string>
 
 export const motion = {
   duration: {

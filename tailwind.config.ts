@@ -1,14 +1,5 @@
 import type { Config } from 'tailwindcss'
-import {
-  borderWidth,
-  colors,
-  elevation,
-  fontFamily,
-  motion,
-  radius,
-  shadow,
-  shadowOffset,
-} from './src/styles/tokens'
+import { borderWidth, colors, elevation, fontFamily, motion, radius } from './src/styles/tokens'
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -36,8 +27,6 @@ export default {
       borderWidth: {
         hairline: borderWidth.hairline,
         control: borderWidth.control,
-        thin: borderWidth.thin,
-        thick: borderWidth.thick,
       },
       borderRadius: {
         sm: radius.sm,
@@ -48,9 +37,6 @@ export default {
         'soft-sm': elevation.sm,
         'soft-md': elevation.md,
         'soft-sheet': elevation.sheet,
-        'hard-sm': shadow.sm,
-        'hard-md': shadow.md,
-        'hard-lg': shadow.lg,
       },
       transitionDuration: {
         fast: motion.duration.fast,
@@ -59,11 +45,6 @@ export default {
       },
       transitionTimingFunction: {
         elemental: motion.easing.standard,
-      },
-      translate: {
-        'press-sm': `${shadowOffset.sm}px`,
-        'press-md': `${shadowOffset.md}px`,
-        'press-lg': `${shadowOffset.lg}px`,
       },
       fontFamily: {
         heading: [...fontFamily.heading],

@@ -1,4 +1,13 @@
-import { CATEGORIES, colors, contrastRatio, fontFamily, motion, radius } from './tokens'
+import {
+  borderWidth,
+  CATEGORIES,
+  colors,
+  contrastRatio,
+  fontFamily,
+  motion,
+  radius,
+} from './tokens'
+import * as tokens from './tokens'
 
 const AA_TEXT = 4.5
 const AA_NON_TEXT = 3.0
@@ -63,5 +72,11 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     expect(fontFamily.heading).toEqual(fontFamily.body)
     expect(radius).toEqual({ sm: '8px', md: '14px', lg: '22px' })
     expect(motion.duration).toEqual({ fast: '160ms', base: '200ms', slow: '240ms' })
+  })
+
+  it('excludes removed legacy neo-brutalist border and hard-shadow tokens', () => {
+    expect(borderWidth).toEqual({ hairline: '1px', control: '1.5px' })
+    expect('shadow' in tokens).toBe(false)
+    expect('shadowOffset' in tokens).toBe(false)
   })
 })

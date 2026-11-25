@@ -1040,3 +1040,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] New laps are announced once, without announcing restored laps.
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
 - **Files:** `src/features/focus/FocusPage.tsx`, `src/features/focus/focusTimerState.ts`, `src/features/focus/FocusPage.test.tsx`, `src/features/focus/focusRuntime.test.ts`, `e2e/focus-laps.spec.ts`, `e2e/focus-timer.spec.ts`, `e2e/focus-presentation.spec.ts`, `src/i18n/en.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-014: Elemental Edition Final Polish, Shared ActionToast, PWA Icons & Legacy Token Cleanup
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Full DEC-003 Elemental Edition audit on `origin/v2-rebuild` (`61373df`, PR #80). ID verified unused in `docs/TASKS.md`, `docs/PROGRESS.md`, and local/remote branches (`UX-013` is reserved for `docs/UX-013-insights-mockups`).
+- **Scope:** Remove the remaining neo-brutalist UI remnants (`UndoDeleteToast`, `RootLayout` skip link, `ComingSoon` category-fill misuse, neo-brutalist orange PWA/boot icons) and delete deprecated neo-brutalist tokens (`borderWidth.thin/thick`, `shadowOffset`, `shadow`, `hard-*`, `press-*`) from `tokens.ts` and `tailwind.config.ts`. Preserves all R1–R3 behavior, guest/account parity, and `F-R3-10` worktree isolation.
+- **Plan:**
+  1. Branch `feat/UX-014-elemental-legacy-cleanup` from `origin/v2-rebuild` (`61373df`) in isolated worktree `loomora-front-UX-014`.
+  2. Extract shared Elemental `ActionToast` in `src/components/ui/Toast.tsx` (hairline border, soft elevation, iOS safe-area bottom inset, danger tone with `AlertIcon`) and refactor both `schedule/UndoDeleteToast.tsx` and `todos/UndoDeleteToast.tsx` to use it.
+  3. Migrate `RootLayout` skip-to-content link and `ComingSoon` (`/insights` placeholder) from legacy `border-thick`/`tone="work"` to Elemental Edition (`border-control border-primary`, paper `Card` + `bg-primary-soft text-primary` badge).
+  4. Replace legacy neo-brutalist `#FF8A3D`/`#111111` `public/icon.svg` and `scripts/icon-maskable.svg` with Elemental forest `#1D5039` + warm ivory `#F7F5EF` icons, fix Windows `fileURLToPath` in `scripts/generate-icons.mjs`, and regenerate all 4 PNG icons via `npm run icons`.
+  5. Remove deprecated `borderWidth.thin/thick`, `shadowOffset`, `shadow`, `hard-*`, and `translate.press-*` from `src/styles/tokens.ts` and `tailwind.config.ts`; add unit tests (`Toast.test.tsx`, `ComingSoon.test.tsx`, `tokens.test.ts`); run full static, Vitest, build, audit, and Playwright checks.
+- **Done when:**
+  - [x] Zero legacy `border-thick`, `border-thin`, `shadow-hard-*`, or neo-brutalist icon remnants remain in `src/` or `public/`.
+  - [x] `ActionToast` unifies schedule and to-do undo toasts with safe-area clearance and Elemental styling; `ComingSoon` no longer uses `tone="work"`.
+  - [x] `npm run lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), full Vitest (**855/855** across 77 files), and Playwright `phone-375` (`a11y`, `today`, `week`, `pwa`, `page-heading`: **32/32**) pass.
+- **Files:** `src/components/ui/Toast.tsx`, `src/components/ui/Toast.test.tsx`, `src/components/ui/index.ts`, `src/features/schedule/UndoDeleteToast.tsx`, `src/features/todos/UndoDeleteToast.tsx`, `src/app/layout/RootLayout.tsx`, `src/components/page/ComingSoon.tsx`, `src/components/page/ComingSoon.test.tsx`, `src/styles/tokens.ts`, `src/styles/tokens.test.ts`, `tailwind.config.ts`, `public/icon.svg`, `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`, `scripts/icon-maskable.svg`, `scripts/generate-icons.mjs`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

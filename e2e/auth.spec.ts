@@ -97,8 +97,10 @@ test('links move between sign in, sign up and the password reset screens', async
   await page.getByRole('link', { name: 'New here? Create an account' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Create an account' })).toBeVisible()
   await page.getByRole('link', { name: 'Already have an account? Sign in' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   await page.getByRole('link', { name: 'Forgot your password?' }).click()
   await expect(page).toHaveURL(/\/forgot-password$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Forgot password' })).toBeVisible()
 
   await page.getByLabel('Email').fill('sokha@example.test')
   await page.getByRole('button', { name: 'Send reset link' }).click()
