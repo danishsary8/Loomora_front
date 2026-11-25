@@ -987,7 +987,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-026: Frontend line-ending normalization
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #78](https://github.com/danishsary8/Loomora_front/pull/78) at `1be0ac8`.
 - **Owner:** claude
 - **Source:** Windows checkouts get CRLF from the Git for Windows system setting `core.autocrlf=true`, because the frontend has no `.gitattributes` (the backend has `* text=auto eol=lf`). `npm run format:check` then fails locally on about 327 files, while Linux CI passes. The index already stores LF only. ID verified unused in both task documents, branches and GitHub.
 - **Scope:** A root `.gitattributes`, `docs/TASKS.md` and `docs/PROGRESS.md` only. No source, Prettier config, global or system Git config changes, and no renormalization of existing files.
@@ -1005,7 +1006,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-025: Page heading overflow at 320 px and 200% text
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #75](https://github.com/danishsary8/Loomora_front/pull/75) at `ce89c7f`.
 - **Owner:** claude
 - **Source:** UX-011 regression reported in `docs/PROGRESS.md` (UX-012 planner question): `/forgot-password` overflows by 43 px at 320 px and 200% text. Registered from `origin/v2-rebuild` at `5fe3192` (PR #70 merged) after verifying the task ID was unused in `docs/TASKS.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md` and remote branches.
 - **Scope:** The shared `PageHeading` and the overflow regressions only. No API, auth behavior, routing, data, copy or design-token changes.
@@ -1022,7 +1024,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-11 — Stopwatch Lap Accessibility
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #77](https://github.com/danishsary8/Loomora_front/pull/77) at `99dfaa1`.
 - **Owner:** claude
 - **Source:** R3 audit findings for the stopwatch (`docs/02` "Stopwatch with laps (1/100 s)"), DEC-003, DEC-004 and the B-043 limit of 1000 laps. Registered from `origin/v2-rebuild` at `64408cc` (PR #73 merged) after verifying the task ID was unused in both task documents and in local and remote branches.
 - **Scope:** Focus stopwatch UI, lap tests, English translations, `docs/TASKS.md` and `docs/PROGRESS.md`. No Focus History tests, shared `PageHeading`, backend contract or unrelated feature changes.

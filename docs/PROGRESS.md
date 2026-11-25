@@ -1416,3 +1416,13 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **Limit heard twice:** on the 1000th lap the polite status already ends with the limit sentence, and Lap's `aria-describedby` repeated it. Lap now holds back the description while that announcement is current and focus has not left Lap. After a blur, or after a reload, the description returns. The visible note is shown throughout.
 - **Tests (RED, then GREEN):** a new `FocusPage.test.tsx` case writes laps through Dexie the way another tab does and failed before the fix ("Lap 1 recorded" was announced). The 1000-lap unit test now expects no description while Lap keeps focus and the description after Tab. It also failed before the fix. `e2e/focus-laps.spec.ts` asserts the same in the normal and expanded views.
 - **Verified on Windows:** lint, typecheck, Knip, Prettier with automatic line endings, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities), Redocly (valid, 4 existing warnings), full Vitest (75 files, 850 tests), production build and Playwright `phone-375` (121/121) all passed.
+
+### 2026-11-25: Task board reconciliation (QA-025, F-R3-11, QA-026)
+
+- **Scope:** documentation only. Branch `docs/board-sync-20261125b` from `origin/v2-rebuild` at `1be0ac8`. Only the three status lines change, each with a `Merge` line in the board's format, plus this entry.
+- **Evidence:** `gh pr view` reports each PR `MERGED` with the merge commit below. The PR head and the merge commit are ancestors of `origin/v2-rebuild`, and the merge commit message names the PR and the task branch.
+  - QA-025: PR #75, head `487d815`, merged at `ce89c7f`.
+  - F-R3-11: PR #77, head `8269042`, merged at `99dfaa1`.
+  - QA-026: PR #78, head `c5832a4`, merged at `1be0ac8`.
+- **"Done when" boxes:** all three tasks already had every box ticked when they were registered, so no box changes.
+- **Checks:** Prettier on both docs, `git diff --check`, and Redocly (unchanged, valid). No code changed.
