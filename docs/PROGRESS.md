@@ -1299,6 +1299,52 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **Planner question (pre-existing, outside UX-012):** The UX-011 test `e2e/auth.spec.ts` "auth screens have no horizontal overflow at 320–1440 px and 200% text" failed once in the full run and once in two isolated repeats with `/forgot-password at 200%: 43`. A browser probe of the production build (fonts loaded, 320 px, 200% root text) reproduces a 43 px overflow every time. The cause is the `h1` "Forgot password" from `AuthLayout` → shared `PageHeading`: at `text-4xl` × 200% the word "password" cannot break and its text ends at 363 px. The test passes intermittently, probably because it sometimes measures before Inter is applied. This branch does not change `PageHeading`, `StandalonePage` or any auth file (they are identical to `v2-rebuild`), so the defect is already on `v2-rebuild` from PR #69. A likely fix is `[overflow-wrap:anywhere]` (or a fluid size) on the auth heading or on `PageHeading`. That is UX-011 / shared-component scope, so it was not changed here. Please assign it.
 - `v2-rebuild` then moved to `401fc8d` (PR #72, DOC-001 README), which made PR #70 conflicted, so GitHub started no CI run for `85f9d04`. Merged it with another merge commit. Only the appended DOC-001 entries in `docs/TASKS.md` and `docs/PROGRESS.md` conflicted. Both sides were kept, with DOC-001 first, and every DOC-001, F-R3-07, UX-011 and UX-012 entry matches its source. PR #72 changed only `README.md` and docs. Rerun on the final merge: all static checks passed, full Vitest **845/845** across 75 files and Playwright `phone-375` **117/117**, including the auth overflow test, which supports the intermittency described above.
 
+### 2026-11-25 DOC-002 — Frontend architecture documentation cleanup
+
+- **Scope:** Documentation only. Branch `docs/DOC-002-frontend-architecture` from `origin/v2-rebuild` at `5fe3192` (PR #70 merged), isolated worktree `loomora-front-DOC-002`. DOC-002 was unused in `docs/TASKS.md`, `docs/PROGRESS.md` and local and remote branches. Only `docs/10-tech-and-structure.md`, `docs/TASKS.md` and `docs/PROGRESS.md` changed.
+- **`date-fns` mismatch confirmed.** It is not in `package.json` or `package-lock.json`, and nothing under `src/` or `e2e/` imports it. F-001 installed it, and QA-020 removed it (native `YYYY-MM-DD` helpers in `src/lib/date.ts`) to shrink the entry bundle. `docs/10` now says date handling uses no library and names the native and `Intl` helpers. The F-001 and QA-020 task history is unchanged.
+- **Corrected in `docs/10-tech-and-structure.md` (v1.0 → v1.1):**
+  - Frontend stack: removed `date-fns`. Added versions and the installed tools the plan did not list: Workbox, self-hosted Inter, jsdom, fake-indexeddb, MSW, axe-core, Knip and the Node 22 requirement.
+  - Frontend tree: replaced the planned tree with the real one. It adds `src/main.tsx`, `src/app/layout/`, `src/components/page/` and `states/`, the `focus`, `reminders`, `landing`, `legal`, `insights` and `styleguide` feature folders, `schedule/week/`, the `src/lib/api/`, `storage/` and `time/` split, `src/test/`, `e2e/staging/`, `public/` and `scripts/`. The `ui/` list now names the real primitives (`ProgressRing`, not `Ring`, plus `Textarea`, `Field`, `ClockInput`, `SegmentedControl`, `Toast`, `FloatingAddButton` and icons).
+  - New sections, each checked against source: how A8-1 to A8-8 are implemented, routing (`src/app/routes.tsx`, including guards and the standalone Google deletion callback), data and storage (the four repository pairs chosen in `AppProviders`, Dexie schema versions 1 to 10 with every table, Web Storage keys, guest import), API integration, client state (TanStack Query and the five Zustand stores), PWA and Vercel, tests and CI.
+  - Kept unchanged: the A8 decision table, the backend stack and backend structure (marked as the v1.0 plan, not re-verified), and the environment and secrets list.
+- **README consistency:** The new `docs/10` agrees with `README.md` on the stack, folder structure, routes, repositories, API client behavior, PWA, Vercel, tests and CI. `docs/10` adds detail the README leaves out, but nothing contradicts it.
+- **Verified:**
+  - All 45 unique file paths named in backticks in `docs/10` exist (bare file names were checked in the folder the text names), as do all 12 folders in the frontend tree. Its 3 in-page anchors match headings. `docs/10` contains no external links.
+  - Every dependency named in `docs/10` is in `package.json`.
+  - `git diff --check` passed.
+  - Markdown is excluded by `.prettierignore` and no Markdown linter is configured. Lint, typecheck, Knip, Vitest, build and Playwright were not run locally because no code, configuration or test changed. CI runs them on the PR.
+- **Open questions for the planner** (also listed in `docs/10`, none block this task):
+  1. `legacy/` was planned for deletion at the end of R1. It still exists here and in `loomora_back`. Remove it, and in which task?
+  2. The backend structure in `docs/10` lists fewer models and services than `loomora_back` has now (for example `DailyIntention`, `FocusSession`, `FocusSessionService`, `RepeatTodoService`). Should a backend task update it?
+  3. Guest Focus sessions are not part of the guest import (also DOC-001 note 4). Is this intended?
+  4. Daily intentions and time preferences switch between Dexie and the API inside their hooks, not through a repository interface. Is this an accepted exception to A8-5?
+  5. Account Focus timers and the Focus outbox are stored in the `loomora-guest` IndexedDB database, scoped by user id, while A8-4 describes IndexedDB as guest storage. Should A8-4 or the database name be updated?
+  6. `README.md` lists Dexie only as guest storage (see question 5). It is outside this task's scope and was not changed.
+- GitHub CLI is not authenticated. The branch is pushed so the planner can open the PR into `v2-rebuild`.
+
+### 2026-11-25 F-R3-13 — Focus History account regression
+
+- Verified the task ID was unused and opened the isolated `feat/F-R3-13-focus-history-regression` worktree from `origin/v2-rebuild` at `5fe3192`.
+- Extended the Playwright Focus fixture to use the bearer token for account identity and return B-043 session records by starting local date. Added two browser regressions for account save through History and reload, guest and second-account isolation, and loading, empty, error, and keyboard retry states.
+- The save test finishes a 22.5-second linked stopwatch session after account-local midnight. It verifies the earlier row, start time, row duration, daily total, and UUID on a fresh History response, plus the absence of duplicate writes. The first focused run held the History update while the test clock was paused. Waiting for the timer to close before resuming the clock preserves the exact duration and lets the query update.
+- Production application code is untouched. The branch-specific Vercel setting disables preview deployment.
+- Local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the Playwright production build, full Vitest (845/845 across 75 files), and full Chromium `phone-375` (119/119, including 2 new tests). The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. Git diff checks passed.
+- GitHub CLI is unauthenticated. The planner can open the PR into `v2-rebuild` from the pushed branch to start CI.
+
+#### PR #74 planner follow-up
+
+- Merged `origin/v2-rebuild` at `64408cc` after DOC-002 (PR #73). The append-only task and progress conflicts kept both original entries. The DOC-002 architecture document, the F-R3-13 test, and its Vercel preview opt-out match their original versions.
+- Lint, typecheck, Knip, Prettier with automatic line endings, production build, and Git diff checks passed. Vitest passed 845/845 across 75 files. The production dependency audit found zero vulnerabilities, and Redocly reported four existing warnings.
+- The first `phone-375` run passed 118 of 119. The existing Reset Password overflow test measured 43 px at 200% text. The full rerun against the same production build had 118 first-pass successes and one retry-pass for that test. Auth source and tests match `v2-rebuild`.
+
+### 2026-11-25 F-R3-08 - Focus History Filters & Search
+
+- Branched from `origin/v2-rebuild` at `7390ec7` after checking task IDs, Git refs and PRs. Reviewed the R3 Focus specifications and the audit-linked F-R3-13 regression in PR #74. The original audit report was unavailable.
+- Added date-local Countdown and Stopwatch filters, defaulting to All, and case-insensitive literal search of the displayed session fields. Search uses the titles and labels already available to History. The full-day total still includes every session for that date. Filters carry across date selection and reset when the active owner changes. Clear filters keeps the date and returns keyboard focus to Search sessions.
+- Reused Elemental preset radio styling so mode labels wrap at 200% text, and kept the results status mounted across date loads for screen-reader announcements. Updated the README Focus status and disabled preview deployment for the task branch.
+- Final local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the production build, 11 focused Vitest cases, and all 119 Chromium `phone-375` Playwright cases. The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. The review PR carries the full CI results.
+
 ## 2026-11-25 QA-025 page heading overflow at 320 px and 200% text
 
 - **Base:** `origin/v2-rebuild` at `5fe3192` (PR #70 merged). Branch `fix/QA-025-auth-heading-overflow` in worktree `loomora-front-QA-025`. Answers the UX-012 planner question about `/forgot-password at 200%: 43`.

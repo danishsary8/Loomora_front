@@ -923,6 +923,46 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
 - **Files:** `src/features/legal/LegalPage.tsx`, `src/features/legal/LegalPage.test.tsx`, `src/components/page/RecoveryPage.tsx`, `src/components/page/index.ts`, `src/app/NotFoundPage.tsx`, `src/app/NotFoundPage.test.tsx`, `src/app/layout/RouteError.tsx`, `src/app/layout/RouteError.test.tsx`, `e2e/legal.spec.ts`, `src/i18n/en.json`, `vercel.json`, `docs/screenshots/legal-375.png`, `docs/screenshots/legal-1440.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### DOC-002 — Frontend architecture documentation cleanup
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Planner prompt DOC-002, following DOC-001 planner note 3 (`date-fns` and missing feature folders in `docs/10`). Registered from `origin/v2-rebuild` at `5fe3192` (PR #70 merged) after verifying the task ID was unused in both task documents and in local and remote branches.
+- **Scope:** Documentation only: `docs/10-tech-and-structure.md`, `docs/TASKS.md` and `docs/PROGRESS.md`. No application code, tests, dependencies, backend, README or `vercel.json` changes.
+- **Plan:**
+  1. Branch `docs/DOC-002-frontend-architecture` from `origin/v2-rebuild` (`5fe3192`) in isolated worktree `loomora-front-DOC-002`.
+  2. Verify the `date-fns` mismatch against `package.json`, `package-lock.json` and `src/`, and trace when it was removed.
+  3. Update the frontend stack and folder tree in `docs/10`, and add verified sections for routing, guest and account storage, API integration, client state, PWA, tests and CI that agree with `README.md`.
+  4. Keep the A8 decision table and the backend plan unchanged. Add how each A8 decision is implemented, and record unresolved questions without answering them.
+  5. Check every path and anchor in `docs/10`, run `git diff --check`, and record the result in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] Every file path and in-page anchor in `docs/10-tech-and-structure.md` resolves in the repository
+  - [x] `docs/10-tech-and-structure.md` lists no dependency that is not in `package.json`
+  - [x] `git diff --check` passes
+- **Files:** `docs/10-tech-and-structure.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-13 — Focus History account regression
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** R3 Focus completion audit, F-R3-04, DEC-004, and the B-043 contract in `docs/openapi.yaml`. ID verified unused before branching from `origin/v2-rebuild` at `5fe3192`.
+- **Plan:**
+  1. Extend the existing Playwright account fixture with token-scoped Focus reads and writes.
+  2. Save a stopwatch through the browser. Check the starting date, elapsed time, order, total and session identity before and after reload.
+  3. Switch between the guest and two signed-in accounts in the same browser and verify each history remains separate.
+  4. Control the history responses to check loading, empty, error and keyboard retry states.
+  5. Run the requested verification and disable previews for this branch.
+
+### F-R3-08 — Focus History Filters & Search
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Planner task brief, R3 feature list, F-R3-04, F-R3-13 and DEC-003. ID verified unused before branching from `7390ec7`.
+- **Plan:**
+  1. Add unit and Playwright regressions for modes, search, combined filters, empty results, offline guests, and account changes.
+  2. Filter the selected day's existing display text and add localized Elemental controls and a keyboard-accessible reset. Keep the full-day total and date selection independent of the filters.
+  3. Run the required checks and the full phone-375 suite, record verification, and open the review PR.
+
 ### QA-025: Page heading overflow at 320 px and 200% text
 
 - **Status:** review

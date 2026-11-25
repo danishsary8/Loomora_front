@@ -118,6 +118,9 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
 })
 
 const scheduleId = '2ff729f5-834e-41b5-917f-fbe9d825ddbe'
+const ownerEmail = 'owner@example.test'
+const otherEmail = 'other@example.test'
+const historyDate = '2026-11-24'
 
 async function mockFocusAccounts(
   page: Page,
@@ -126,10 +129,17 @@ async function mockFocusAccounts(
     route: Route,
     payload: FocusSessionInput,
     headers: Record<string, string>,
+    email: string,
+  ) => Promise<void>,
+  list?: (
+    route: Route,
+    date: string,
+    headers: Record<string, string>,
+    email: string,
   ) => Promise<void>,
 ) {
   const requests: FocusSessionInput[] = []
-  let loginCount = 0
+  const accountsByToken = new Map<string, string>()
 
   await context.route(/\/api\/v1\//, async (route) => {
     const request = route.request()
@@ -143,10 +153,12 @@ async function mockFocusAccounts(
     if (path.endsWith('/auth/login')) {
       const { email } = request.postDataJSON() as { email: string }
       const owner = email.startsWith('owner@')
+      const token = `${accountsByToken.size + 1}|focus-test`
+      accountsByToken.set(`Bearer ${token}`, email)
       return route.fulfill({
         headers,
         json: {
-          token: ++loginCount + '|focus-test',
+          token,
           expires_at: '2099-01-01T00:00:00Z',
           user: {
             id: owner ? 'focus-owner' : 'focus-other',
@@ -188,10 +200,18 @@ async function mockFocusAccounts(
         },
       })
     }
-    if (path.endsWith('/focus-sessions') && request.method() === 'POST') {
-      const payload = request.postDataJSON() as FocusSessionInput
-      requests.push(payload)
-      return save(route, payload, headers)
+    if (path.endsWith('/focus-sessions')) {
+      const email = accountsByToken.get(request.headers().authorization)
+      if (!email) {
+        return route.fulfill({ status: 401, headers, json: { message: 'Unauthenticated.' } })
+      }
+      if (request.method() === 'POST') {
+        const payload = request.postDataJSON() as FocusSessionInput
+        requests.push(payload)
+        return save(route, payload, headers, email)
+      }
+      const date = new URL(request.url()).searchParams.get('date')
+      if (list && date) return list(route, date, headers, email)
     }
     return route.fulfill({ headers, json: { data: [] } })
   })
@@ -214,6 +234,229 @@ async function mockFocusAccounts(
 
   return { requests, signIn, signOut }
 }
+
+function historySession(input: FocusSessionInput): FocusSession {
+  // Both mock accounts use Asia/Phnom_Penh (UTC+07:00).
+  const localStart = new Date(Date.parse(input.started_at) + 7 * 60 * 60 * 1000)
+  let focusMs = 0
+  let breakMs = 0
+  for (const segment of input.segments) {
+    if (segment.type === 'focus') focusMs += segment.active_ms
+    else breakMs += segment.active_ms
+  }
+  return {
+    ...input,
+    planned_focus_ms: input.planned_focus_ms ?? null,
+    todo_id: input.todo_id ?? null,
+    schedule_item_id: input.schedule_item_id ?? null,
+    label: input.label ?? null,
+    laps: input.laps ?? null,
+    local_date: localStart.toISOString().slice(0, 10),
+    focus_ms: focusMs,
+    break_ms: breakMs,
+    paused_ms: Date.parse(input.ended_at) - Date.parse(input.started_at) - focusMs - breakMs,
+    created_at: input.ended_at,
+  }
+}
+
+function earlierStopwatch(id: string, label: string): FocusSession {
+  const started_at = '2026-11-24T08:00:00.000Z'
+  const ended_at = '2026-11-24T08:00:10.000Z'
+  return historySession({
+    id,
+    label,
+    mode: 'stopwatch',
+    end_reason: 'completed',
+    started_at,
+    ended_at,
+    segments: [{ type: 'focus', started_at, ended_at, active_ms: 10_000 }],
+  })
+}
+
+test.describe('account Focus history', () => {
+  test.use({ timezoneId: 'Asia/Phnom_Penh' })
+
+  test('shows a saved account session in dated history after reload and account switches', async ({
+    context,
+    page,
+  }) => {
+    const earlier = earlierStopwatch('9c28aec6-2d8d-47d3-ba28-6db88cf439cc', 'Account reading')
+    const other = earlierStopwatch('7db58c49-1f2e-4188-b35a-b7e54ca49c59', 'Other account reading')
+    const byAccount = new Map([
+      [ownerEmail, [earlier]],
+      [otherEmail, [other]],
+    ])
+    const { requests, signIn, signOut } = await mockFocusAccounts(
+      page,
+      context,
+      async (route, payload, headers, email) => {
+        const data = historySession(payload)
+        byAccount.get(email)?.push(data)
+        await route.fulfill({ status: 201, headers, json: { data } })
+      },
+      (route, date, headers, email) =>
+        route.fulfill({
+          headers,
+          json: { data: byAccount.get(email)?.filter((row) => row.local_date === date) ?? [] },
+        }),
+    )
+    const history = page.getByRole('region', { name: 'Focus history' })
+    const date = history.getByLabel('Session date')
+    const rows = history.getByRole('listitem')
+    const total = history.locator('dd')
+    const empty = history.getByText('No saved Focus sessions for this date.')
+    const start = page.getByRole('button', { name: 'Start', exact: true })
+    const pause = page.getByRole('button', { name: 'Pause', exact: true })
+
+    async function expectOwnerHistory() {
+      await expect(rows.locator('time')).toHaveText(['15:00', '23:59'])
+      await expect(rows.nth(0)).toContainText('Account reading')
+      await expect(rows.nth(0).getByText('10 sec', { exact: true })).toBeVisible()
+      await expect(rows.nth(1)).toContainText('Completed')
+      await expect(rows.nth(1)).toContainText('Linked to Deep work block')
+      await expect(rows.nth(1).getByText('22.5 sec', { exact: true })).toBeVisible()
+      await expect(total).toHaveText('32.5 sec')
+    }
+
+    await page.clock.install({ time: new Date('2026-11-24T16:50:00Z') })
+    await page.goto('/focus')
+    await expect(empty).toBeVisible()
+    await page.getByRole('button', { name: 'Stopwatch' }).click()
+    await page.clock.pauseAt(new Date('2026-11-24T16:55:00Z'))
+    await start.click()
+    await expect(pause).toHaveAttribute('aria-disabled', 'false')
+    await page.clock.fastForward(3_000)
+    await page.getByRole('button', { name: 'End early', exact: true }).click()
+    await expect(start).toBeVisible()
+    // The committed timer is gone. Resume the clock for History query notifications.
+    await page.clock.resume()
+    await expect(rows).toContainText('Ended early')
+    await expect(total).toHaveText('3 sec')
+    expect(requests).toHaveLength(0)
+
+    await signIn(ownerEmail)
+    await expect(date).toHaveValue(historyDate)
+    await expect(rows).toHaveCount(1)
+    await expect(rows).toContainText('Account reading')
+    await expect(total).toHaveText('10 sec')
+    await page.getByRole('button', { name: 'Stopwatch' }).click()
+    await page.getByLabel('Link to your plan (optional)').selectOption({ label: 'Deep work block' })
+    await page.clock.pauseAt(new Date('2026-11-24T16:59:50Z'))
+    await start.click()
+    await expect(pause).toHaveAttribute('aria-disabled', 'false')
+    await page.clock.fastForward(22_500)
+    await page.getByRole('button', { name: 'Finish', exact: true }).click()
+    await expect(start).toBeVisible()
+    await page.clock.resume()
+    await expectOwnerHistory()
+
+    expect(requests).toHaveLength(1)
+    const [saved] = requests
+    expect(saved).toMatchObject({
+      id: expect.stringMatching(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/),
+      mode: 'stopwatch',
+      started_at: '2026-11-24T16:59:50.000Z',
+      ended_at: '2026-11-24T17:00:12.500Z',
+      end_reason: 'completed',
+      schedule_item_id: scheduleId,
+      segments: [{ type: 'focus', active_ms: 22_500 }],
+    })
+    expect(saved.id).not.toBe(earlier.id)
+    await page.reload()
+    await expect(date).toHaveValue('2026-11-25')
+    await expect(empty).toBeVisible()
+    const historyRead = page.waitForResponse((response) => {
+      const url = new URL(response.url())
+      return (
+        response.request().method() === 'GET' &&
+        url.pathname.endsWith('/focus-sessions') &&
+        url.searchParams.get('date') === historyDate &&
+        response.ok()
+      )
+    })
+    await date.fill(historyDate)
+    await expectOwnerHistory()
+    const response = await historyRead
+    const { data } = (await response.json()) as { data: FocusSession[] }
+    expect(data.map((row) => row.id)).toEqual([earlier.id, saved.id])
+
+    const search = history.getByRole('searchbox', { name: 'Search sessions' })
+    const modes = history.getByRole('group', { name: 'Timer mode' })
+    await search.fill('dEEP WORK')
+    await modes.getByRole('radio', { name: 'Stopwatch' }).click()
+    await expect(rows).toHaveCount(1)
+    await expect(rows).toContainText('Linked to Deep work block')
+    await expect(total).toHaveText('32.5 sec')
+
+    await signOut()
+    await date.fill(historyDate)
+    await expect(search).toHaveValue('')
+    await expect(modes.getByRole('radio', { name: 'All' })).toBeChecked()
+    await expect(rows).toContainText('Ended early')
+    await expect(total).toHaveText('3 sec')
+    await search.fill('guest-only search')
+    await signIn(otherEmail)
+    await date.fill(historyDate)
+    await expect(search).toHaveValue('')
+    await expect(rows).toContainText('Other account reading')
+    await expect(total).toHaveText('10 sec')
+    await signOut()
+    await signIn(ownerEmail)
+    await date.fill(historyDate)
+    await expectOwnerHistory()
+    expect(requests).toEqual([saved])
+  })
+
+  test('shows loading and an empty date, then recovers from a history error on retry', async ({
+    context,
+    page,
+  }) => {
+    const entry = earlierStopwatch('0969386b-7770-4757-92fa-16eeb1efed30', 'Recovered reading')
+    let releaseInitialRead!: () => void
+    const initialRead = new Promise<void>((resolve) => {
+      releaseInitialRead = resolve
+    })
+    let failRead = true
+    const { signIn } = await mockFocusAccounts(
+      page,
+      context,
+      (route) => route.abort(),
+      async (route, date, headers) => {
+        if (date !== historyDate) {
+          await initialRead
+          return route.fulfill({ headers, json: { data: [] } })
+        }
+        if (failRead) {
+          return route.fulfill({ status: 500, headers, json: { message: 'Server error.' } })
+        }
+        return route.fulfill({ headers, json: { data: [entry] } })
+      },
+    )
+    await page.clock.install({ time: new Date('2026-11-25T08:00:00Z') })
+    await signIn(ownerEmail)
+    const history = page.getByRole('region', { name: 'Focus history' })
+    const date = history.getByLabel('Session date')
+    try {
+      await expect(date).toHaveValue('2026-11-25')
+      await expect(history.getByRole('status')).toHaveText('Loading Focus history…')
+    } finally {
+      releaseInitialRead()
+    }
+    await expect(history.getByText('No saved Focus sessions for this date.')).toBeVisible()
+    await expect(history.locator('dd')).toHaveText('0 sec')
+    await date.fill(historyDate)
+    await expect(history.getByRole('alert')).toHaveText('Could not load Focus history.')
+    await expect(history.getByRole('listitem')).toHaveCount(0)
+
+    failRead = false
+    await history.getByRole('button', { name: 'Try again' }).press('Enter')
+    await expect(date).toBeFocused()
+    await expect(date).toHaveValue(historyDate)
+    await expect(history.getByRole('alert')).toHaveCount(0)
+    await expect(history.getByRole('listitem')).toContainText('Recovered reading')
+    await expect(history.locator('dd')).toHaveText('10 sec')
+  })
+})
 
 test('keeps an offline account save with its owner and retries the original linked session', async ({
   page,
