@@ -985,6 +985,24 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   2. Filter the selected day's existing display text and add localized Elemental controls and a keyboard-accessible reset. Keep the full-day total and date selection independent of the filters.
   3. Run the required checks and the full phone-375 suite, record verification, and open the review PR.
 
+### QA-026: Frontend line-ending normalization
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Windows checkouts get CRLF from the Git for Windows system setting `core.autocrlf=true`, because the frontend has no `.gitattributes` (the backend has `* text=auto eol=lf`). `npm run format:check` then fails locally on about 327 files, while Linux CI passes. The index already stores LF only. ID verified unused in both task documents, branches and GitHub.
+- **Scope:** A root `.gitattributes`, `docs/TASKS.md` and `docs/PROGRESS.md` only. No source, Prettier config, global or system Git config changes, and no renormalization of existing files.
+- **Plan:**
+  1. Branch `fix/QA-026-frontend-line-endings` from `origin/v2-rebuild` (`f5c962c`) in isolated worktree `loomora-front-QA-026`.
+  2. Add `.gitattributes` with `* text=auto eol=lf`, and mark the repository's binary types (`png`, `jpg`, `ico`) as `binary`.
+  3. Confirm `git add --renormalize .` changes nothing beyond `.gitattributes` and the docs.
+  4. In a fresh clone outside the workspace, with the system `core.autocrlf=true` still in effect, confirm the files check out as LF and plain `npm run format:check` passes.
+  5. Run the required checks and record the evidence in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] A fresh Windows checkout has LF working files and plain `npm run format:check` passes.
+  - [x] `git add --renormalize .` stages no file other than `.gitattributes` and the docs.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+- **Files:** `.gitattributes`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
 ### QA-025: Page heading overflow at 320 px and 200% text
 
 - **Status:** review
