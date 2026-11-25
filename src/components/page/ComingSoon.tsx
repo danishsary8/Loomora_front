@@ -2,15 +2,17 @@ import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 import { PageHeading } from './PageHeading'
 
-/** docs/05: Focus and Insights show a "Coming soon" screen in R1. */
+/** Placeholder screen for upcoming release surfaces (e.g. R4 Insights). */
 export function ComingSoon({ title, message }: { title: string; message: string }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-6">
       <PageHeading>{title}</PageHeading>
-      <Card tone="work" className="flex flex-col gap-2">
-        <p className="text-lg font-bold">{t('common.comingSoon')}</p>
-        <p>{message}</p>
+      <Card className="flex flex-col items-start gap-3">
+        <span className="inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+          {t('common.comingSoon')}
+        </span>
+        <p className="text-sm leading-relaxed text-muted">{message}</p>
       </Card>
     </div>
   )

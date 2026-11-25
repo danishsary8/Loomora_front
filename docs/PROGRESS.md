@@ -1426,3 +1426,28 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - QA-026: PR #78, head `c5832a4`, merged at `1be0ac8`.
 - **"Done when" boxes:** all three tasks already had every box ticked when they were registered, so no box changes.
 - **Checks:** Prettier on both docs, `git diff --check`, and Redocly (unchanged, valid). No code changed.
+
+### 2026-11-25 UX-014: Elemental Edition Final Polish, Shared ActionToast, PWA Icons & Legacy Token Cleanup
+
+- **Branch / Worktree:** `feat/UX-014-elemental-legacy-cleanup` in `loomora-front-UX-014`, branched from `origin/v2-rebuild` (`61373df`, PR #80). Preserved all existing worktrees (including local Claude-team `loomora-front-F-R3-10` and `loomora-front-UX-013`).
+- **What changed:**
+  - Added reusable Elemental `ActionToast` in `src/components/ui/Toast.tsx` (hairline border, `shadow-soft-md`, iOS safe-area bottom inset, `danger` tone with `AlertIcon`, optional `stacked` offset) and refactored both `src/features/schedule/UndoDeleteToast.tsx` and `src/features/todos/UndoDeleteToast.tsx` to use it — removing duplicated markup and legacy `border-thick border-ink shadow-hard-md`.
+  - Updated `src/app/layout/RootLayout.tsx` skip-to-content link from `border-thick border-ink` to Elemental `border-control border-primary` with soft elevation and iOS top safe-area clearance.
+  - Updated `src/components/page/ComingSoon.tsx` (`/insights`) from `<Card tone="work">` (DEC-003 violation: category fill on non-category notice) to an Elemental paper `Card` with a `bg-primary-soft text-primary` badge.
+  - Replaced legacy neo-brutalist orange `#FF8A3D` / thick `#111111` shadow icons (`public/icon.svg`, `scripts/icon-maskable.svg`) with Elemental forest `#1D5039` + warm ivory `#F7F5EF` icons, updated `scripts/generate-icons.mjs` to use `fileURLToPath` for Windows compatibility, and regenerated `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, and `public/apple-touch-icon.png`.
+  - Removed deprecated neo-brutalist tokens (`borderWidth.thin/thick`, `shadowOffset`, `shadow`, `hard-sm/md/lg`, `translate.press-sm/md/lg`) from `src/styles/tokens.ts` and `tailwind.config.ts`.
+  - Added unit tests (`src/components/ui/Toast.test.tsx`, `src/components/page/ComingSoon.test.tsx`) and token cleanup assertions (`src/styles/tokens.test.ts`); disabled Vercel branch preview in `vercel.json`.
+- **Verified:**
+  - `npm run lint`: passed (0 errors).
+  - `npm run typecheck`: passed.
+  - `npm run knip`: passed.
+  - `npm run format:check`: passed (`All matched files use Prettier code style!`).
+  - `npm run build`: passed (35 PWA precache entries).
+  - `npm audit --omit=dev`: 0 vulnerabilities.
+  - `npx vitest run --maxWorkers=2`: **855/855** passed across 77 test files.
+  - `npx playwright test e2e/a11y.spec.ts e2e/today.spec.ts e2e/week.spec.ts e2e/pwa.spec.ts e2e/page-heading.spec.ts --project=phone-375 --workers=1`: **32/32** passed (including all 15 route axe-core checks, manifest icon loadability, F-022 undo toast, and 320–1440 px / 200% text overflow checks).
+- **Backend API Dependencies / Blockers Identified for Next Tasks:**
+  1. **Focus History Delete with Undo (`docs/02` R3 Should):** Blocked on backend — `docs/openapi.yaml` currently only exposes `GET /focus-sessions/{focusSession}` (needs `DELETE /focus-sessions/{focusSession}` and `POST /focus-sessions/{focusSession}/restore`).
+  2. **Guest Focus Sessions Sync in `POST /import`:** Blocked on backend — `docs/openapi.yaml` `POST /import` currently accepts `todos`, `schedule_items`, `exceptions`, `checkins`, and `daily_intentions` (no `focus_sessions`).
+  3. **R4 Insights, Analytics, Notes, Weekly Recap & Plan vs Reality (`docs/02` R4 Must/Should):** Blocked on backend — no `/analytics`, `/insights`, `/notes`, `/recap`, or `/plan-vs-reality` endpoints exist in `docs/openapi.yaml` yet.
+  4. **Category Pastel Hexes (`DEC-003`):** Pending owner confirmation against the 4 original Elemental reference assets (`LOOMORA_ELEMENTAL_*` / `LOOMORA_PREMIUM_*`, not in repo).

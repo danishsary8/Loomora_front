@@ -43,7 +43,7 @@ export function RootLayout() {
     <>
       <a
         href="#main"
-        className="sr-only z-50 rounded-md border-thick border-ink bg-paper px-4 py-2 font-bold focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-50 rounded-md border-control border-primary bg-paper px-4 py-2.5 text-sm font-semibold text-ink shadow-soft-md focus:not-sr-only focus:fixed focus:left-4 focus:top-[calc(1rem+env(safe-area-inset-top))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         {t('common.skipToContent')}
       </a>
