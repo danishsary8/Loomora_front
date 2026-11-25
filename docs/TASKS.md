@@ -163,7 +163,7 @@ Rules:
   2. Screens S10: Sign in and Sign up (email + password, "Sign in with Google" and "Sign up with Google" buttons using `intent`), the skippable sign-up survey (display name, biggest goal, how you heard), errors `account_not_found` and `account_already_exists`, forgot and reset password pages, email verification page.
   3. Token stored with expiry; auth state in a small store; protected routes.
 - **Done when:**
-  - [ ] Unit and component tests with MSW pass; lint, typecheck, build pass; screenshots at 375 px
+  - [x] Unit and component tests with MSW pass; lint, typecheck, build pass; screenshots at 375 px
 - **Files:** `src/lib/api/*`, `src/features/auth/*`
 
 ### F-016: Server repositories and "Save your plan" (guest to account)
@@ -173,7 +173,7 @@ Rules:
   2. "Save your plan" sheet (docs/04 Flow 3): shown after 3 check-offs or the first full day, dismissible, always in Profile. On success call `POST /import`, then clear guest data; on failure keep guest data and offer retry.
   3. Tests with MSW: success, failure keeps guest data, idempotent retry.
 - **Done when:**
-  - [ ] Tests, lint, typecheck, build pass
+  - [x] Tests, lint, typecheck, build pass
 - **Files:** `src/lib/storage/*`, `src/features/auth/*`, `src/features/profile/*`
 
 ### F-017: Profile for accounts, feedback and delete account
@@ -182,7 +182,7 @@ Rules:
   1. Profile (S9) for signed-in users: name, streak, sign out, feedback sheet (POST /feedback), delete account with confirmation (password or Google re-auth message).
   2. Time zone detection sent at sign-up and editable.
 - **Done when:**
-  - [ ] Tests, lint, typecheck, build pass
+  - [x] Tests, lint, typecheck, build pass
 - **Files:** `src/features/profile/*`
 
 ### F-018: Accessibility, performance and cleanup pass
@@ -192,7 +192,7 @@ Rules:
   2. Run Lighthouse (mobile) and record scores in `docs/PROGRESS.md`; target 90+ for Performance, Accessibility, Best practices.
   3. Add a knip (or similar) unused-code check, fix everything it reports, and add it to CI.
 - **Done when:**
-  - [ ] CI green with the unused-code check; scores recorded
+  - [x] CI green with the unused-code check; scores recorded
 - **Files:** `package.json`, `.github/workflows/ci.yml`, various
 
 ## Done
@@ -266,9 +266,9 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   1. Needs B-020. In the to-do sheet add Repeat: None, Daily, Weekly with weekday chips. It requires a due date (show the message under the field).
   2. Guest repository creates the next occurrence on the first check-off with the same rules as B-020 (use the user's time zone helper). Add a small repeat icon and label on the row. Bump Dexie if needed and include `repeat_rule` in the import payload.
 - **Done when:**
-  - [ ] Vitest: daily, weekly across a week boundary, and a check-off just after local midnight in `Asia/Phnom_Penh`; toggling twice creates one next to-do
-  - [ ] Playwright (375 px): create a daily to-do, check it, tomorrow's copy appears
-  - [ ] Lint, typecheck, test, build pass
+  - [x] Vitest: daily, weekly across a week boundary, and a check-off just after local midnight in `Asia/Phnom_Penh`; toggling twice creates one next to-do
+  - [x] Playwright (375 px): create a daily to-do, check it, tomorrow's copy appears
+  - [x] Lint, typecheck, test, build pass
 - **Files:** `src/features/todos/*`, `src/lib/db/*`, repositories, `src/i18n/locales/en.json`, `e2e/repeat.spec.ts`
 
 ### F-025: In-app reminders UI
@@ -350,7 +350,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-010: Offline guest schedule reliability
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #36](https://github.com/danishsary8/Loomora_front/pull/36) at `34b6a5a`.
 - **Owner:** codex
 - **Source:** Planner-authorized schedule follow-up to QA-003, which deferred this work in PR #35. The QA-001 audit already assigns QA-002 through QA-009.
 - **Plan:**
@@ -525,7 +526,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-019: Safe PWA update experience
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #46](https://github.com/danishsary8/Loomora_front/pull/46) at `93959cb`.
 - **Owner:** antigravity
 - **Source:** Planner-approved Q21 fix from QA-018 (`PR #44`, merged at `d177047`).
 - **Plan:**
@@ -545,7 +547,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-020: Mobile Lighthouse performance
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #47](https://github.com/danishsary8/Loomora_front/pull/47) at `40ab685`.
 - **Owner:** antigravity
 - **Source:** F-018 / F-029 mobile Lighthouse performance targets (`/` ≥ 90, `/today` ≥ 85) on `v2-rebuild` (`93959cb`).
 - **Plan:**
@@ -563,7 +566,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-030: Google account deletion frontend
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #45](https://github.com/danishsary8/Loomora_front/pull/45) at `00a6d01`.
 - **Owner:** codex
 - **Source:** Backend B-042, [PR #45](https://github.com/danishsary8/loomora_back/pull/45).
 - **Scope:** Offer Google verification in Profile for Google-only accounts, require an explicit final confirmation, and clear the matching account session after HTTP 204. Preserve password deletion and guest data.
@@ -572,7 +576,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-021: Cross-browser and offline regression
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #48](https://github.com/danishsary8/Loomora_front/pull/48) at `e4e57b4`.
 - **Owner:** antigravity
 - **Source:** Independent cross-browser, responsive (`320`/`375`/`768`/`1280` px), and offline regression verification on `origin/v2-rebuild` (`93959cb`, merged with `00a6d01`).
 - **Plan:**
@@ -591,7 +596,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-022: Paired staging integration preparation
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #49](https://github.com/danishsary8/Loomora_front/pull/49) at `aef8230`.
 - **Owner:** codex
 - **Scope:** Prepare a guarded Playwright suite for the exact frontend and API candidates. Cover auth, guest import, planner data, account isolation, and Google deletion's disabled and callback behavior. Record provider and deletion steps for an approved manual run.
 - **Evidence:** [QA-022 staging evidence and runbook](QA-022-staging-evidence.md).
@@ -599,7 +605,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-031: Complete guest repeating to-dos at capacity
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #50](https://github.com/danishsary8/Loomora_front/pull/50) at `b84a977`.
 - **Owner:** codex
 - **Scope:** Match backend decisions I4, I5, I7 and I8. Allow repeat completion to create one successor with undone subtasks in the same transaction. Keep the 500-active-item limit for manual creation and exclude soft-deleted rows.
 - **Verification:** Repeat at capacity, toggle idempotence, reminder carryover, manual creation after soft deletion, and rollback on a failed write. Run the frontend static checks, unit suite, build, and phone Playwright coverage for repeats, subtasks, and reminders.
@@ -625,7 +632,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-023: R2 guest/account parity verification
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #51](https://github.com/danishsary8/Loomora_front/pull/51) at `b34ab8f`.
 - **Owner:** codex
 - **Planner-approved scope:** R2 subtasks, priority, notes, repeats, reminders, date boundaries, offline guest persistence, validation, and import and recovery within available account capacity. Includes the tested guest repeat-successor deletion fix and the 499, 500, and 501 active-row boundary cases.
 - **Outstanding R2 import blocker:** Full-plan import remains blocked when repeat-generated rows exceed the request limit or available account capacity. The planner separated this work from PR #51. The existing 500-active-row manual-creation limit and failed-import recovery are preserved.
@@ -686,7 +694,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-02A — Deterministic Focus Timer Core
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #55](https://github.com/danishsary8/Loomora_front/pull/55) at `3b8611e`.
 - **Owner:** codex
 - **Scope:** Pure TypeScript calculations for 25/50/90-minute presets, positive whole-millisecond custom durations, countdown and stopwatch readings, pause/resume, early finish, lap splits and cumulative times, and reconstruction from supplied timing snapshots.
 - **Acceptance tests:** `npm test -- src/features/focus/timerMath.test.ts` exercises the presets, numeric validation, repeated pauses and resumes, early finish, exact and missed deadlines, foreground and recovered readings, invalid and backward timestamps, and centisecond boundaries.
@@ -710,7 +719,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-01 — Focus session repository and API integration
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #58](https://github.com/danishsary8/Loomora_front/pull/58) at `d18ca7d`.
 - **Owner:** codex
 - **Source:** Merged B-043 contract from backend PR #47 and frontend base including PR #55.
 - **Acceptance:** Guest and account repositories record finished sessions, retrieve one by UUID, and list by starting local date. Millisecond precision, owner-scoped retries, and all existing guest data survive reload and schema upgrade.
@@ -754,7 +764,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-02B — Focus timer runtime and recovery
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #60](https://github.com/danishsary8/Loomora_front/pull/60) at `5a46b68`.
 - **Owner:** codex
 - **Prerequisites:** F-R3-02A timer math and F-R3-01 Focus repositories are merged. B-043 supplies the finished-session API contract.
 - **Scope:** Implement countdown and stopwatch lifecycle, durable recovery, cross-tab and account isolation, and idempotent finalization through the existing Focus repositories.
@@ -762,7 +773,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-03 — Elemental Focus timer interface
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #62](https://github.com/danishsary8/Loomora_front/pull/62) at `c7bbfb2`.
 - **Owner:** codex
 - **Prerequisite:** F-R3-02B merged in PR #60 (5a46b68).
 - **Scope:** Elemental countdown, stopwatch, phase controls and optional plan links on `/focus`. Follow DEC-003 and DEC-004.
@@ -775,21 +787,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-024: Lossless guest import frontend integration
 
-- **Status:** review
+- **Status:** done
 - **Owner:** claude
 - **Source:** Merged backend B-044 ([PR #48](https://github.com/danishsary8/loomora_back/pull/48) at `13c64ff`), DECISIONS I9, and the `POST /import` chunk-order contract in `docs/openapi.yaml`.
 - **Scope:** Send guest to-dos in `POST /import` calls of at most 500, in the I9 order. Each repeat chain runs from its newest occurrence down to the original, and each successor's subtasks go right after its predecessor. Other to-dos are each followed by their subtasks. Schedule items, exceptions, check-ins and daily intentions keep their documented caps and dependencies. The whole guest copy stays on the device until every call succeeds.
 - **Verification:** Run a fake `/import` backend that models `ImportRequest`. Cover 499/500/501 rows, 500 manual plus generated rows, multiple chains with subtasks, cross-call links, partial success then failure, replay after reload, near-capacity accounts, ownership, and unchanged small imports. Then run lint, typecheck, Knip, formatting, full Vitest, build, `phone-375` Playwright, the production audit, Redocly and `git diff --check`.
 - **Decision Q-QA024-1 (planner, 2026-11-24):** Option C. A guest plan whose deleted middle occurrence leaves a successor counted as manual is a documented unsupported case. The import is refused, and all guest data is kept. Nothing is silently relinked, deleted, or changed in repeat history. See [PROGRESS](PROGRESS.md#2026-11-24-qa-024-lossless-guest-import-frontend-integration).
-- **PR:** [#63](https://github.com/danishsary8/Loomora_front/pull/63).
+- **Merge:** [PR #63](https://github.com/danishsary8/Loomora_front/pull/63) at `edefad4`.
 - **Files:** `src/lib/storage/guestImportOrder.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `docs/openapi.yaml`, `docs/08-data-model.md`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
 ### F-R3-04 — Focus History & Time Tracking
 
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Source:** F-R3-03 (PR #62), the B-043 Focus session contract, and DEC-003.
-- **PR:** [#64](https://github.com/danishsary8/Loomora_front/pull/64).
+- **Merge:** [PR #64](https://github.com/danishsary8/Loomora_front/pull/64) at `f277c0f`.
 - **Plan:**
   1. Add tests for the starting local date, chronological order, both modes and outcomes, and totals from unique saved records.
   2. Add a dated History section below the timer using owner-scoped repository reads, account reconnection, and refresh after saves.
@@ -798,10 +810,10 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-05 — Timer-End Sound & Mute
 
-- **Status:** review
+- **Status:** done
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003 and DEC-004. F-R3-04 merged in PR #64 at `f277c0f`. Task ID was unused at registration.
-- **PR:** [#66](https://github.com/danishsary8/Loomora_front/pull/66).
+- **Merge:** [PR #66](https://github.com/danishsary8/Loomora_front/pull/66) at `fede106`.
 - **Plan:**
   1. Test the committed expiry signal for each started countdown phase, including the long-break finalization, command races and repeat reconciliation.
   2. Route each committed expiry to the Focus tab that enabled audio. Use a short original Web Audio chime, unlocked by Focus interactions, and skip deadlines already elapsed at unlock.
@@ -810,7 +822,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-009: Elemental Profile & Settings Refinement
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #65](https://github.com/danishsary8/Loomora_front/pull/65) at `a6fd1db`.
 - **Owner:** claude (CLI 2)
 - **Source:** Approved `DEC-003`, `UX-004` (PR #54), `UX-005` (PR #56), `UX-007` (PR #59), and `UX-008` (PR #61 @ `7056a4e`). Planner-proposed 2026-11-24; ID confirmed unused in `docs/TASKS.md` and `docs/PROGRESS.md`.
 - **Scope:** Visual refinement of S9 Profile & Settings only, matching the merged Elemental Today and Week screens. Keep name, time zone and display settings editing, the streak, guest Save your plan, sign out, delete account (password and Google confirmation), feedback, and guest/account parity. No domain, data contract, Dexie, API, auth, guest import (`QA-024`), Focus, or Week changes.
@@ -828,7 +841,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-010: Elemental Landing Page Refinement
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #67](https://github.com/danishsary8/Loomora_front/pull/67) at `4de84ff`.
 - **Owner:** claude (CLI 1)
 - **Source:** Approved `DEC-003` (`UX-002`, PR #52) and the merged Elemental Today (`UX-007`, PR #59) and Week (`UX-008`, PR #61) screens. Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md` and remote branches. Planner approved Option A (safe-area insets in the shared `StandalonePage`) and removing the legacy `font-script` alias once nothing references it.
 - **Scope:** Visual refinement of S1 Landing only (`docs/05` S1). Keep the tagline, all existing copy, the `Try it now` → `/today` guest entry, `Sign in` → `/sign-in`, the three highlights and their category tones. No auth, API, Dexie, Focus, Profile, or guest-import changes. Landing has no data, so it has no loading, empty or error states.
@@ -846,7 +860,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-011: Elemental Authentication Screen Refinement
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #69](https://github.com/danishsary8/Loomora_front/pull/69) at `7bd5b52`.
 - **Owner:** claude (CLI 1)
 - **Source:** Approved `DEC-003` and the merged Elemental Profile (`UX-009`, PR #65) and Landing (`UX-010`, PR #67 @ `4de84ff`) screens. Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md` and remote branches.
 - **Scope:** Visual refinement of S10 Sign in / Sign up and the related auth screens (forgot password, reset password, verify email, the sign-up survey and the Google callback). Keep email and Google sign-in/up, password validation, verification, reset, server errors, pending states and the guest Save your plan → Sign up route. No auth contract, token, Google OAuth, API, Dexie, guest import, Focus, Landing, Profile or shared `StandalonePage` changes, and no legal/404 changes (`UX-012`).
@@ -864,7 +879,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-06 — Focus Presets & Full-Screen Focus View
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #68](https://github.com/danishsary8/Loomora_front/pull/68) at `087bf51`.
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003, DEC-004, and merged PRs #64 and #66. Registered from `origin/v2-rebuild` at `4de84ff` after verifying the task ID was unused.
 - **Planner decision:** Browser fullscreen with an in-app fallback. Screen Wake Lock is out of scope. See [PROGRESS](PROGRESS.md#2026-11-24-f-r3-06--focus-presets--full-screen-focus-view).
@@ -877,7 +893,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-07 — Focus Alarm Customization
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #71](https://github.com/danishsary8/Loomora_front/pull/71) at `017c442`.
 - **Owner:** codex
 - **Source:** R3 feature list, DEC-003, DEC-004, and PR #68 merged at `087bf51`.
 - **Planner decision:** Once, Repeat 3×, and Until I stop, with two seconds between plays and a two-minute cutoff. See [PROGRESS](PROGRESS.md#f-r3-07-planner-decision).
@@ -890,7 +907,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### DOC-001 — Professional frontend README
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #72](https://github.com/danishsary8/Loomora_front/pull/72) at `401fc8d`.
 - **Owner:** claude
 - **Source:** Planner prompt DOC-001. Registered from `origin/v2-rebuild` at `7bd5b52` (PR #69 merged) after verifying the task ID was unused in both task documents and in remote branches.
 - **Scope:** Documentation only. Rewrite the root `README.md` and record the task here and in `docs/PROGRESS.md`. No application code, tests, dependencies, `vercel.json`, OpenAPI or legal changes.
@@ -907,7 +925,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-012: Elemental Legal & Error Page Refinement
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #70](https://github.com/danishsary8/Loomora_front/pull/70) at `5fe3192`.
 - **Owner:** claude (CLI 2)
 - **Source:** Approved `DEC-003` and the merged Elemental Landing (`UX-010`, PR #67 @ `4de84ff`). Planner-assigned 2026-11-24; ID confirmed unused in `docs/TASKS.md`, `docs/PROGRESS.md`, local and remote branches.
 - **Scope:** Visual and navigation refinement of S13 only (`docs/05` S13): Privacy, Terms, Not found and the router error screen. Privacy and Terms copy stays word-for-word (no `legal.*` translation changes; QA-004 publication blockers stay open). Routes, retry behavior and data are unchanged. No auth (`UX-011`), Focus, Landing, Profile, guest-import, API or shared `StandalonePage` changes.
@@ -925,7 +944,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### DOC-002 — Frontend architecture documentation cleanup
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #73](https://github.com/danishsary8/Loomora_front/pull/73) at `64408cc`.
 - **Owner:** claude
 - **Source:** Planner prompt DOC-002, following DOC-001 planner note 3 (`date-fns` and missing feature folders in `docs/10`). Registered from `origin/v2-rebuild` at `5fe3192` (PR #70 merged) after verifying the task ID was unused in both task documents and in local and remote branches.
 - **Scope:** Documentation only: `docs/10-tech-and-structure.md`, `docs/TASKS.md` and `docs/PROGRESS.md`. No application code, tests, dependencies, backend, README or `vercel.json` changes.
@@ -943,7 +963,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-13 — Focus History account regression
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #74](https://github.com/danishsary8/Loomora_front/pull/74) at `7390ec7`.
 - **Owner:** codex
 - **Source:** R3 Focus completion audit, F-R3-04, DEC-004, and the B-043 contract in `docs/openapi.yaml`. ID verified unused before branching from `origin/v2-rebuild` at `5fe3192`.
 - **Plan:**
@@ -955,7 +976,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-08 — Focus History Filters & Search
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #76](https://github.com/danishsary8/Loomora_front/pull/76) at `f5c962c`.
 - **Owner:** codex
 - **Source:** Planner task brief, R3 feature list, F-R3-04, F-R3-13 and DEC-003. ID verified unused before branching from `7390ec7`.
 - **Plan:**
@@ -980,3 +1002,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `git add --renormalize .` stages no file other than `.gitattributes` and the docs.
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
 - **Files:** `.gitattributes`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-025: Page heading overflow at 320 px and 200% text
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** UX-011 regression reported in `docs/PROGRESS.md` (UX-012 planner question): `/forgot-password` overflows by 43 px at 320 px and 200% text. Registered from `origin/v2-rebuild` at `5fe3192` (PR #70 merged) after verifying the task ID was unused in `docs/TASKS.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md` and remote branches.
+- **Scope:** The shared `PageHeading` and the overflow regressions only. No API, auth behavior, routing, data, copy or design-token changes.
+- **Plan:**
+  1. Branch `fix/QA-025-auth-heading-overflow` from `origin/v2-rebuild` (`5fe3192`) in isolated worktree `loomora-front-QA-025`.
+  2. RED: `e2e/page-heading.spec.ts` checks every `PageHeading` screen at 320, 375, 390, 768, 1024 and 1440 px, at 100% and 200% text, after fonts load and layout settles: the `h1` fits its box and the page has 0 px horizontal overflow. It also checks keyboard focus on `/forgot-password` at 320 px and 200% text.
+  3. Measure only after the `h1` is laid out at the requested width and text size. Chromium can report the previous layout for a few frames after a live resize and root text-size change, which is why the UX-011 page-level sweep passed intermittently.
+  4. GREEN: let long words in `PageHeading` wrap with `[overflow-wrap:anywhere]`. Size, weight, tracking and font stay the same.
+  5. Run every required check and record the evidence in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] No `PageHeading` screen overflows at 320–1440 px at 100% or 200% text after fonts load.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+- **Files:** `src/components/page/PageHeading.tsx`, `e2e/page-heading.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
