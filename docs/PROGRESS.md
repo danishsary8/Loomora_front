@@ -14,13 +14,13 @@ Claude Code appends one entry at the end of every session or task. Newest entry 
 
 ## Open questions
 
-- **Q1 (stacked branches):** F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
+- ~~**Q1 (stacked branches):**~~ Resolved by practice: the stacked PRs #1 to #14 and #17 to #20 merged in order, and later tasks branch from `origin/v2-rebuild` (see the 2026-11-18 F-020 entry). Original question: F-002 to F-006 all need the F-001 scaffold, but PRs are not merged while a session runs. I branch each task from the previous task's branch and open its PR into `v2-rebuild`, so each PR shows earlier tasks' changes until they merge. Merge PRs in order (#1 first). Is this OK, or should each task wait until the previous PR is merged?
 - **Q3 (undated + done, docs/08 rule 1):** Undated to-dos show only while not done. Taken literally, checking off an undated to-do makes it vanish at once, while a dated one stays checked. Should undated items checked off today stay visible until midnight? Implemented as written for now (F-005).
 - **Q4 (default category):** docs/03 says category is optional; docs/08 has no null category. The guest repository defaults to `other`. OK?
-- **Q5 (e2e in CI):** `npm run e2e` (Playwright, 375 and 1280 px) runs locally but not in CI. Adding it needs `npx playwright install --with-deps chromium` in the workflow. Add it?
+- ~~**Q5 (e2e in CI):**~~ Resolved 2026-10-24 by F-014 (PR #14): CI has an `e2e` job (see the F-014 entry). Original question: `npm run e2e` (Playwright, 375 and 1280 px) runs locally but not in CI. Adding it needs `npx playwright install --with-deps chromium` in the workflow. Add it?
 - **Q6 (floating + in empty state):** Hidden there, so the two equal buttons are the only actions (D26). OK?
 - **Q7 (midnight):** Today's date is fixed when the screen opens; a screen left open past midnight shows the old day until reopened. Follow-up task?
-- **Q2 (default branch):** `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
+- ~~**Q2 (default branch):**~~ Overtaken: the GitHub default branch is `v2-rebuild` (see the 2026-11-20 QA-016 entry). Original question: `main` exists (copy of `Testing`) but is not yet the GitHub default branch. Danish needs to set it in Settings > General > Default branch.
 
 ## Log
 
@@ -1338,12 +1338,44 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - Lint, typecheck, Knip, Prettier with automatic line endings, production build, and Git diff checks passed. Vitest passed 845/845 across 75 files. The production dependency audit found zero vulnerabilities, and Redocly reported four existing warnings.
 - The first `phone-375` run passed 118 of 119. The existing Reset Password overflow test measured 43 px at 200% text. The full rerun against the same production build had 118 first-pass successes and one retry-pass for that test. Auth source and tests match `v2-rebuild`.
 
+### 2026-11-25: Task board reconciliation with merged PRs
+
+- **Scope:** documentation only, `docs/TASKS.md` and `docs/PROGRESS.md`. Branch `docs/board-sync-20261125` from `origin/v2-rebuild` at `f5c962c` (fetched 2026-11-25). Owner-approved: reconcile through a separate docs PR and keep genuinely open items open. Entries that exist only on open branches (QA-025, F-R3-11, F-R3-10, QA-026) are not touched.
+- **Merge evidence:** for each PR, the head and the merge commit are ancestors of `origin/v2-rebuild`, the merge commit message names the PR and the task branch, and the GitHub API reports the PR merged.
+- **`review` to `done` (25), each with a `Merge` line:** QA-010 #36 `34b6a5a`, F-030 #45 `00a6d01`, QA-019 #46 `93959cb`, QA-020 #47 `40ab685`, QA-021 #48 `e4e57b4`, QA-022 #49 `aef8230`, F-031 #50 `b84a977`, QA-023 #51 `b34ab8f`, F-R3-02A #55 `3b8611e`, F-R3-01 #58 `d18ca7d`, F-R3-02B #60 `5a46b68`, F-R3-03 #62 `c7bbfb2`, QA-024 #63 `edefad4`, F-R3-04 #64 `f277c0f`, UX-009 #65 `a6fd1db`, F-R3-05 #66 `fede106`, UX-010 #67 `4de84ff`, F-R3-06 #68 `087bf51`, UX-011 #69 `7bd5b52`, UX-012 #70 `5fe3192`, F-R3-07 #71 `017c442`, DOC-001 #72 `401fc8d`, DOC-002 #73 `64408cc`, F-R3-13 #74 `7390ec7`, F-R3-08 #76 `f5c962c`. QA-024, F-R3-04 and F-R3-05 had a `PR` line, which the `Merge` line replaces.
+- **Still `blocked`:** QA-016. PR #42 merged only the audit, and the owner's Vercel settings check and promotion are not recorded.
+- **"Done when" boxes ticked, with evidence:**
+  - F-015: `Lint, typecheck, test, build` and `End-to-end (375 px)` passed on the PR #18 head `7dfb2ff`. That commit added the 375 px auth screenshots in `docs/screenshots/`.
+  - F-016 and F-017: the same two checks passed on the PR #19 head `ad5bf14` and the PR #20 head `1a46257`.
+  - F-018: the two checks passed on the PR #17 head `41a770b`, and that workflow includes the `Unused code (knip)` step. The Lighthouse scores are recorded in the F-018 entry.
+  - F-024 (all three): the two checks passed on the PR #30 head `cd75018`. `GuestTodoRepository.test.ts` covers daily, weekly across Sunday, daily just after midnight in `Asia/Phnom_Penh`, and unchecking then re-checking keeping the same next to-do. `e2e/repeat.spec.ts` creates a daily to-do at 375 px, checks it and finds tomorrow's copy.
+- **Left open on purpose:** F-029's performance box (QA-020 measured 93 on `/` and 89 on `/today`, but not in the F-018 environment the box names). Also the owner and release gates of QA-016 (two boxes), QA-017, QA-018, QA-019, QA-020, QA-021, and UX-002's missing reference assets.
+- **Open questions:** Q1, Q2 and Q5 are marked resolved, each with a pointer. Q3, Q4, Q6 and Q7 have no recorded answer and stay open, unchanged.
+- **Checks:** Prettier with automatic line endings on both docs, `git diff --check`, and Redocly (unchanged, valid). No code changed, so the code checks were not run.
+
 ### 2026-11-25 F-R3-08 - Focus History Filters & Search
 
 - Branched from `origin/v2-rebuild` at `7390ec7` after checking task IDs, Git refs and PRs. Reviewed the R3 Focus specifications and the audit-linked F-R3-13 regression in PR #74. The original audit report was unavailable.
 - Added date-local Countdown and Stopwatch filters, defaulting to All, and case-insensitive literal search of the displayed session fields. Search uses the titles and labels already available to History. The full-day total still includes every session for that date. Filters carry across date selection and reset when the active owner changes. Clear filters keeps the date and returns keyboard focus to Search sessions.
 - Reused Elemental preset radio styling so mode labels wrap at 200% text, and kept the results status mounted across date loads for screen-reader announcements. Updated the README Focus status and disabled preview deployment for the task branch.
 - Final local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the production build, 11 focused Vitest cases, and all 119 Chromium `phone-375` Playwright cases. The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. The review PR carries the full CI results.
+
+## 2026-11-25 QA-025 page heading overflow at 320 px and 200% text
+
+- **Base:** `origin/v2-rebuild` at `5fe3192` (PR #70 merged). Branch `fix/QA-025-auth-heading-overflow` in worktree `loomora-front-QA-025`. Answers the UX-012 planner question about `/forgot-password at 200%: 43`.
+- **Root cause:** The shared `PageHeading` renders `text-4xl` (2.25rem), which becomes 72 px at 200% text, and it gave long words no way to break. "password" is 331 px wide, but the 320 px column is only 256 px at 200% text, so the word ran 75 px past the `h1` and 43 px past the page. The same defect hit every screen whose heading has a word wider than its column. In the app shell, the overflow was clipped instead of scrolling: at 768 px and 200% text, the side navigation leaves Today, Profile and Insights a 192 px column, and their titles were cut off.
+- **Why UX-011 shipped green:** `e2e/auth.spec.ts` measured `document.documentElement.scrollWidth` straight after a live resize and root text-size change. Chromium sometimes reports the previous layout for a few frames, so the check read 0 px. Waiting for fonts and two animation frames was not enough to make it reliable.
+- **Fix:** `[overflow-wrap:anywhere]` on `PageHeading`, the same idiom `AuthLink` and Focus already use. A word breaks only when it cannot fit on a line of its own, so headings that fit are unchanged at every width. Font, size, weight, tracking, leading and color tokens are unchanged. `hyphens: auto` was rejected because it would hyphenate headings that fit when moved to the next line, and a fluid or smaller size was rejected because it changes Elemental typography and would stop the heading scaling with text size.
+- **Regression:** `e2e/page-heading.spec.ts` checks all 14 `PageHeading` screens (Today, Week, Focus, Insights, Profile, Sign in, Sign up, Forgot, Reset, Verify, Google deletion callback, Privacy, Terms, Not found) at 320, 375, 390, 768, 1024 and 1440 px, at 100% and 200% text. Before measuring, it waits until the `h1` is laid out at the requested width and size, with fonts loaded. It asserts 0 px overflow for both the `h1` and the page, and checks keyboard order, a visible focus ring and on-screen focus on `/forgot-password` at 320 px and 200% text.
+- **RED** (fix reverted, 3 runs, identical each time): 13 failing cells. Today, Profile and Insights at 768 px; Insights, Sign up, Forgot, Reset, Verify and the Google deletion callback at 320 px; Forgot and Reset at 375 and 390 px. Plus the keyboard test. `/forgot-password` at 320 px and 200% text: `{"heading": 75, "page": 43}`.
+- **GREEN** (3 runs): 2/2 passed.
+- **Verification (Windows):** `npm ci`, `npm run lint`, `npm run typecheck`, `npm run knip`, `prettier --check . --end-of-line auto`, `npm audit --omit=dev` (0 vulnerabilities), Redocly (valid, 4 existing warnings), `npm run build` and `git diff --check` all passed. Full Vitest (`--maxWorkers=2`): **845/845** across 75 files. Playwright `phone-375` with the standard config and production build: **119/119**.
+- **Planner notes (not changed here):**
+  - At 200% text, a word wider than its column now wraps mid-word ("passw / ord" at 320 px, "Toda / y" at 768 px). That meets reflow, but a softer break would need a smaller heading size on narrow columns. That is a typography decision.
+  - At 768 px and 200% text, the app-shell side navigation takes about 60% of the width, and the Daily intention field is clipped. That is outside `PageHeading`.
+  - Other page-level overflow sweeps (`auth`, `legal`, `landing`, `profile`) use the same measure-right-after-resize pattern, so they can pass falsely in the same way.
+- Merged `origin/v2-rebuild` at `f5c962c` (PR #76, F-R3-08 history filters) with a merge commit. There was no rebase and no force-push. `docs/TASKS.md` and `docs/PROGRESS.md` conflicted only because both sides appended entries. Every `v2-rebuild` entry is kept unchanged, and the QA-025 entries follow them.
+- Verification after the merge on Windows: lint, typecheck, Knip, Prettier with automatic line endings, `git diff --check`, `npm audit --omit=dev` (0 vulnerabilities), Redocly (valid, 4 existing warnings), full Vitest (75 files, 846 tests), production build and Playwright `phone-375` (121/121) all passed.
 
 ### 2026-11-25 F-R3-11 — Stopwatch Lap Accessibility
 
