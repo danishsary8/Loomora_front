@@ -26,15 +26,15 @@ export const colors = {
   warning: '#9A5B04',
   warningSurface: '#FEF4E4',
   danger: '#C62F36',
-  // Preserved documented category hexes pending reconciliation of provisional pastel hexes
-  // against the original Elemental reference assets (LOOMORA_ELEMENTAL_* / LOOMORA_PREMIUM_*).
+  // Provisional WCAG-verified Elemental pastel category fills (DEC-003),
+  // pending final reconciliation if raw reference assets are added later.
   category: {
-    study: '#8EC5FF',
-    work: '#FFD166',
-    health: '#7ED9A6',
-    life: '#FF9EBB',
-    rest: '#C3B1FF',
-    other: '#E3D7C9',
+    study: '#E3F0FC',
+    work: '#FBF0D9',
+    health: '#E2F5EA',
+    life: '#FDE8EE',
+    rest: '#EEE9FC',
+    other: '#ECE8DF',
   } satisfies Record<Category, string>,
 } as const
 

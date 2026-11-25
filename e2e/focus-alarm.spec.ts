@@ -7,6 +7,11 @@ test('keeps alarm preferences keyboard-accessible and readable across widths and
   page,
 }) => {
   await page.goto('/focus')
+  const toggle = page.getByRole('button', { name: /Timer alarm/i })
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(toggle).toContainText('Chime · 50% · Once')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   const settings = page.getByRole('group', { name: 'Timer alarm' })
   const sound = settings.getByRole('combobox', { name: 'Alarm sound' })
   const volume = settings.getByRole('slider', { name: 'Alarm volume' })
@@ -25,6 +30,8 @@ test('keeps alarm preferences keyboard-accessible and readable across widths and
   await mode.selectOption('repeat')
   await expect(mode).toHaveAccessibleDescription('The alarm stops automatically after two minutes.')
   await page.reload()
+  await expect(toggle).toContainText('Bell · 55% · Repeat 3×')
+  await toggle.click()
   await expect(sound).toHaveValue('bell')
   await expect(volume).toHaveValue('55')
   await expect(mode).toHaveValue('repeat')
@@ -72,6 +79,7 @@ test('stops ringing on dismissal, the next phase, navigation and reload', async 
   const tones = () => page.evaluate(() => Reflect.get(window, 'alarmTones') as number)
   await page.clock.install()
   await page.goto('/focus')
+  await page.getByRole('button', { name: /Timer alarm/i }).click()
   await page.getByRole('combobox', { name: 'Alarm play mode' }).selectOption('loop')
   await page.getByRole('radio', { name: 'Custom' }).click()
   await page.getByRole('spinbutton', { name: 'Duration in minutes' }).fill('1')

@@ -42,7 +42,7 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
       data-testid={child ? 'subtask-row' : 'todo-row'}
       data-done={done}
       className={cn(
-        'min-w-0 border-hairline border-border-subtle bg-paper px-3.5 py-3 transition-colors duration-fast ease-elemental',
+        'min-w-0 border-hairline border-border-subtle bg-paper px-3.5 py-2.5 transition-colors duration-fast ease-elemental',
         child ? 'rounded-md' : 'rounded-lg shadow-soft-sm',
         done && 'bg-subtle/60',
       )}
@@ -71,9 +71,18 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
               )}
               <span className="flex flex-wrap items-center gap-1.5 text-xs">
                 {!child && <Chip category={todo.category} />}
-                <span className="inline-flex items-center rounded-full border-hairline border-border-subtle bg-subtle px-2.5 py-0.5 font-medium text-ink">
-                  {t(`todoForm.priorities.${todo.priority}`)}
-                </span>
+                {todo.priority !== 'normal' && (
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full border-hairline px-2.5 py-0.5 font-medium',
+                      todo.priority === 'high'
+                        ? 'border-warning/35 bg-warning-surface text-warning'
+                        : 'border-border-subtle bg-subtle text-muted',
+                    )}
+                  >
+                    {t(`todoForm.priorities.${todo.priority}`)}
+                  </span>
+                )}
                 {todo.overdue && (
                   <span className="inline-flex items-center rounded-full bg-danger px-2.5 py-0.5 font-semibold text-white">
                     {t('today.overdue')}
@@ -125,10 +134,16 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
       {!child && (
         <>
           {(canAddSubtask || total > 0) && (
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t-hairline border-border-subtle/70 pt-2">
+            <div
+              className={cn(
+                'flex flex-wrap items-center justify-between gap-2',
+                total > 0 ? 'mt-2 border-t-hairline border-border-subtle/70 pt-1.5' : 'mt-0.5 pl-7',
+              )}
+            >
               {canAddSubtask && (
                 <Button
                   variant="ghost"
+                  className="px-2 text-xs font-medium text-muted hover:text-ink"
                   onClick={() => actions.onAddSubtask(todo)}
                   aria-label={t('today.addSubtaskTo', { title: todo.title })}
                 >

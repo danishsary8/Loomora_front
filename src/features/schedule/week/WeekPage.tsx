@@ -95,6 +95,7 @@ function WeekSchedule() {
                   text={t(`weekdays.short.${day}`)}
                   selected={day === selected}
                   current={day === today}
+                  variant="strip"
                   onClick={() => setSelected(day)}
                 />
               ))}
