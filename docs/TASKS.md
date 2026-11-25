@@ -972,7 +972,7 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Plan:**
   1. Share one `maxLaps` (1000) constant between the timer state and the UI, so the existing limit stays the single source.
   2. Mark Lap `aria-disabled` at the limit (it stays focusable with its visible focus ring), ignore further activation and describe it with a visible, localized limit note in both the normal and expanded views.
-  3. Announce only the newest lap recorded on screen through the existing polite status region, with the limit appended on the 1000th lap. Restored laps are not announced.
+  3. Announce only the newest lap recorded in this tab through the existing polite status region, with the limit appended on the 1000th lap. Restored laps and laps recorded in another tab are not announced. While the 1000th-lap announcement is current, Lap omits its limit description until focus leaves it.
   4. Cover laps 999, 1000 and a rejected 1001st in runtime tests (guest and account scopes), FocusPage tests and Playwright (keyboard, reload, expanded view, axe, 320–1440 px at 100% and 200% text).
   5. Run the required frontend checks and record the result in `docs/PROGRESS.md`.
 - **Done when:**

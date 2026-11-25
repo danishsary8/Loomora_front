@@ -123,11 +123,16 @@ it('announces new laps and explains the disabled Lap action at the 1000-lap limi
   expect(status).toHaveTextContent(limit)
   expect(status).not.toHaveTextContent('Lap 999 recorded')
   expect(lap).toHaveAttribute('aria-disabled', 'true')
-  expect(lap).toHaveAccessibleDescription(limit)
   expect(screen.getByText(limit)).toBeVisible()
   expect(lap).toHaveFocus()
+  // The live announcement already carries the limit, so Lap does not repeat it until refocused.
+  expect(lap).not.toHaveAccessibleDescription()
 
   await user.keyboard('{Enter}')
+  expect(lap).not.toHaveAccessibleDescription()
+  await user.tab()
+  expect(lap).not.toHaveFocus()
+  expect(lap).toHaveAccessibleDescription(limit)
   await user.click(lap)
   expect(screen.queryByText('Lap 1001')).not.toBeInTheDocument()
   expect(
@@ -135,6 +140,36 @@ it('announces new laps and explains the disabled Lap action at the 1000-lap limi
   ).toHaveLength(1000)
   expect((await db.focus_timers.get(timer.scope))?.laps).toHaveLength(1000)
 }, 20_000)
+
+it('announces only laps recorded in this tab, not laps another tab records', async () => {
+  const user = userEvent.setup()
+  openFocus()
+  await user.click(await screen.findByRole('button', { name: 'Stopwatch' }))
+  await user.click(screen.getByRole('button', { name: 'Start' }))
+  const lap = await screen.findByRole('button', { name: 'Lap' })
+  await waitFor(() => expect(lap).toHaveAttribute('aria-disabled', 'false'))
+  const status = screen.getAllByRole('status').find((region) => region.closest('form'))
+  const [timer] = await db.focus_timers.toArray()
+  if (timer?.phase.status !== 'running') throw new Error('Expected a running stopwatch')
+  const elapsed = { ...timer.phase.timing, accumulatedMs: 60_000 }
+
+  // Another tab records lap 1: this tab shows it but stays silent.
+  await db.focus_timers.update(timer.scope, {
+    laps: [1_000],
+    phase: { ...timer.phase, timing: elapsed },
+  })
+  await screen.findByText('Lap 1')
+  expect(status).not.toHaveTextContent(/recorded/)
+
+  await user.click(lap)
+  await waitFor(() => expect(status).toHaveTextContent('Lap 2 recorded'))
+  await waitFor(() => expect(lap).toHaveAttribute('aria-disabled', 'false'))
+
+  const laps = (await db.focus_timers.get(timer.scope))?.laps ?? []
+  await db.focus_timers.update(timer.scope, { laps: [...laps, (laps.at(-1) ?? 0) + 1] })
+  await screen.findByText('Lap 3')
+  expect(status).not.toHaveTextContent(/recorded/)
+})
 
 it('lets keyboard users mute and unmute with a stable name and pressed state', async () => {
   const user = userEvent.setup()

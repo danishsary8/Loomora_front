@@ -99,10 +99,17 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const lapCount = snapshot?.laps.length ?? 0
   const lapLimitReached = lapCount >= maxLaps
   const lapLimitId = useId()
-  // Announce only laps recorded while this session is on screen, never restored ones.
-  const [lapBaseline, setLapBaseline] = useState({ id: snapshot?.id, count: lapCount })
-  if (lapBaseline.id !== snapshot?.id) setLapBaseline({ id: snapshot?.id, count: lapCount })
-  const newLap = snapshot && lapCount > lapBaseline.count ? snapshot.laps.at(-1) : undefined
+  // Announce only the lap this tab recorded, never restored laps or laps from another tab.
+  const [lapRequest, setLapRequest] = useState<{ id: string; count: number }>()
+  const newLap =
+    snapshot && lapRequest?.id === snapshot.id && lapCount === lapRequest.count
+      ? snapshot.laps.at(-1)
+      : undefined
+  // The 1000th-lap announcement already states the limit, so Lap describes it again only
+  // after focus has left it.
+  const [limitHeardId, setLimitHeardId] = useState<string>()
+  const describeLapLimit =
+    lapLimitReached && (newLap === undefined || limitHeardId === snapshot?.id)
   const muted = useSyncExternalStore(subscribeToAlarmPreferences, isFocusSoundMuted)
   const alarm = runtime.countdownSound
   const alarmActive = useSyncExternalStore(
@@ -342,9 +349,14 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
               <Button
                 variant="secondary"
                 aria-disabled={!running || Boolean(busy) || lapLimitReached}
-                aria-describedby={lapLimitReached ? lapLimitId : undefined}
+                aria-describedby={describeLapLimit ? lapLimitId : undefined}
+                onBlur={() => {
+                  if (lapLimitReached && newLap !== undefined) setLimitHeardId(snapshot.id)
+                }}
                 onClick={() => {
-                  if (running && !lapLimitReached) run(() => runtime.command(snapshot, 'lap'))
+                  if (!running || lapLimitReached) return
+                  setLapRequest({ id: snapshot.id, count: lapCount + 1 })
+                  run(() => runtime.command(snapshot, 'lap'))
                 }}
               >
                 {t('focus.lap')}

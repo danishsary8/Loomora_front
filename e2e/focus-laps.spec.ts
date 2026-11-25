@@ -91,13 +91,17 @@ test('announces laps 999 and 1000, then disables Lap with an explanation by keyb
   await expect(status).not.toContainText('Lap 999 recorded')
 
   await expect(lap).toHaveAttribute('aria-disabled', 'true')
-  await expect(lap).toHaveAccessibleDescription(limit)
   await expect(page.getByText(limit, { exact: true })).toBeVisible()
   await expect(lap).toBeFocused()
+  // The live announcement already carries the limit, so Lap repeats it only after a refocus.
+  await expect(lap).toHaveAccessibleDescription('')
   expect(await lap.evaluate((element) => element.matches(':focus-visible'))).toBe(true)
   expect(await lap.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
 
   await page.keyboard.press('Enter')
+  await page.keyboard.press('Tab')
+  await expect(lap).not.toBeFocused()
+  await expect(lap).toHaveAccessibleDescription(limit)
   await lap.click({ force: true })
   await expect(page.getByText('Lap 1000', { exact: true })).toBeVisible()
   await expect(page.getByText('Lap 1001', { exact: true })).toHaveCount(0)
@@ -140,6 +144,8 @@ test('expanded Focus keeps the lap limit explanation without overflow at 320–1
   await expandedLap.click()
   await expect(dialog.getByRole('status')).toContainText('Lap 1000 recorded')
   await expect(expandedLap).toHaveAttribute('aria-disabled', 'true')
+  await expect(expandedLap).toHaveAccessibleDescription('')
+  await page.keyboard.press('Tab')
   await expect(expandedLap).toHaveAccessibleDescription(limit)
   await expect(dialog.getByText(limit, { exact: true })).toBeVisible()
   await expandedLap.click({ force: true })
