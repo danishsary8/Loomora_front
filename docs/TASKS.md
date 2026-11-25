@@ -1078,7 +1078,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-016: Landing & Authentication Final Polish
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #83](https://github.com/danishsary8/Loomora_front/pull/83) at `daec9af`.
 - **Owner:** antigravity
 - **Source:** Owner-approved follow-up after PR #82 (`UX-015`, merged at `6853166`).
 - **Scope:** Apply the Elemental forest brand mark consistently to Landing and Auth headers, refine Landing typography/spacing/CTA hierarchy, add a decorative Google "G" mark to `GoogleButton`, and refine Auth card elevation, divider, and link hierarchy while preserving all auth flows and accessibility.
@@ -1087,3 +1088,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Landing and Auth typography, spacing, CTA rhythm, and link underline weight refined with zero auth behavior changes.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, full `phone-375` Playwright (**123/123**), and 375 px / 1440 px visual checks pass.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/landing/LandingPage.tsx`, `src/features/landing/LandingPage.test.tsx`, `src/features/auth/AuthLayout.tsx`, `src/features/auth/GoogleButton.tsx`, `src/features/auth/SignInForm.tsx`, `src/features/auth/authPresentation.test.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-14: Focus History Delete + Undo
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Merged backend B-046 (`DELETE /focus-sessions/{focusSession}`, `POST /focus-sessions/{focusSession}/restore`, backend PR #54 @ `6a8fb15`) and `DEC-003` Elemental Edition.
+- **Scope:** Sync B-046 into `docs/openapi.yaml`, implement Focus session soft-delete and 7-day restore parity in `focusSessionsApi`, `GuestFocusSessionRepository`, and `ServerFocusSessionRepository`, add an accessible per-row Delete action with Elemental confirmation `Sheet` and shared `ActionToast` Undo, and cover deletion, Undo, expired 410 restoration, errors, double submissions, auth boundaries, and guest/account parity.
+- **Done when:**
+  - [x] `docs/openapi.yaml` synced with merged B-046 contract (`DELETE /focus-sessions/{focusSession}` and `POST /focus-sessions/{focusSession}/restore`).
+  - [x] Guest and account repositories share identical soft-delete, 7-day restore deadline (`410`), `404` on deleted reads, repeat-delete deadline retention, and session-generation boundary rules.
+  - [x] `FocusHistory` deletes after 204/Dexie confirmation, updates daily total immediately while preserving active filters, and restores via shared `ActionToast` Undo.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, and full `phone-375` Playwright (**125/125**) pass.
+- **Files:** `docs/openapi.yaml`, `src/lib/api/focusSessions.ts`, `src/lib/storage/FocusSessionRepository.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/ServerFocusSessionRepository.ts`, `src/lib/storage/db.ts`, `src/lib/storage/focusSessions.test.ts`, `src/components/ui/Toast.tsx`, `src/components/ui/Sheet.tsx`, `src/features/focus/useFocusHistory.ts`, `src/features/focus/useFocusHistoryDelete.ts`, `src/features/focus/FocusHistory.tsx`, `src/features/focus/FocusHistory.test.tsx`, `src/features/focus/focusRuntime.test.ts`, `src/i18n/en.json`, `e2e/focus-history.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

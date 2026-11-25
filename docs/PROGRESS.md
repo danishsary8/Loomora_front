@@ -1472,3 +1472,12 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Applied `BrandMark` lockup and refined typography, CTA rhythm (`Try it now` / `No signup needed.` / spaced `Sign in`), and pastel highlight card hierarchy on `LandingPage.tsx`.
   - Added `BrandMark` to `AuthLayout`, `GoogleIcon` to `GoogleButton`, elevated paper card spacing/shadow, softened `AuthLink` underlines (`decoration-primary/40`), and tightened `Forgot your password?` spacing under Password in `SignInForm.tsx`.
 - **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Landing/Auth Vitest (`52/52` across 3 files), full `phone-375` Playwright (`123/123`), and 375 px / 1440 px visual screenshots.
+
+### 2026-11-25 F-R3-14: Focus History Delete + Undo
+
+- **Branch / Worktree:** `feat/F-R3-14-focus-history-delete` in `loomora-front-F-R3-14`, branched from `origin/v2-rebuild` (`daec9af`, PR #83 merged). Preserved `loomora-front-F-R3-10` untouched.
+- **What changed:**
+  - Synced merged backend B-046 `docs/openapi.yaml` (`DELETE /focus-sessions/{focusSession}`, `POST /focus-sessions/{focusSession}/restore`) and added `delete`/`restore` across `focusSessionsApi`, `FocusSessionRepository`, `ServerFocusSessionRepository`, and `GuestFocusSessionRepository` (soft-delete, 7-day 410 expiry, 404 on deleted reads, repeat-delete deadline preservation, session-generation checks).
+  - Built `useFocusHistoryDelete` and updated `FocusHistory` with an accessible per-row Delete button, Elemental confirmation `Sheet`, and shared `ActionToast` Undo (`actionDisabled` double-submit protection), plus `Sheet.tsx` `duration: 0` when `prefers-reduced-motion: reduce` is active.
+  - Added repository, UI, and 375 px E2E tests covering guest (including offline) and account delete, Undo, 410 expired restore, error rollback/retention, double-submission prevention, filter preservation, and session-switch isolation.
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Focus/Sheet/Toast Vitest (`68/68` across 5 files), and full `phone-375` Playwright (`125/125`).

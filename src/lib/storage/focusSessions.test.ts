@@ -405,3 +405,80 @@ it('uses the staged original when retry input differs only in backend-trimmed la
   )
   expect(sent).toEqual([payload, payload])
 })
+
+describe('Focus session delete and restore parity (B-046 / F-R3-14)', () => {
+  it('soft-deletes, hides, preserves original deadline, and restores within 7 days in guest mode', async () => {
+    let clock = new Date('2026-11-24T08:00:00.000Z')
+    const repo = () =>
+      new GuestFocusSessionRepository({
+        db,
+        timeZone: 'Asia/Phnom_Penh',
+        now: () => clock,
+      })
+    const payload = input()
+    const saved = await repo().record(payload)
+
+    await repo().delete(saved.id)
+    await expect(repo().listForDate(date)).resolves.toEqual([])
+    await expect(repo().get(saved.id)).rejects.toMatchObject({ status: 404 })
+
+    // Identical retry of a deleted session returns its stored payload and leaves it deleted.
+    await expect(repo().record(payload)).resolves.toEqual(saved)
+    await expect(repo().listForDate(date)).resolves.toEqual([])
+
+    // Repeat delete 5 days later keeps the original undo deadline.
+    clock = new Date('2026-11-29T08:00:00.000Z')
+    await repo().delete(saved.id)
+
+    // Restoring at 6 days succeeds.
+    clock = new Date('2026-11-30T07:59:00.000Z')
+    await expect(repo().restore(saved.id)).resolves.toEqual(saved)
+    await expect(repo().listForDate(date)).resolves.toEqual([saved])
+    // Restoring an already active session returns it as-is.
+    await expect(repo().restore(saved.id)).resolves.toEqual(saved)
+
+    // Delete again and advance 7 full days: restore expires with 410.
+    clock = new Date('2026-12-01T00:00:00.000Z')
+    await repo().delete(saved.id)
+    clock = new Date('2026-12-08T00:00:00.000Z')
+    await expect(repo().restore(saved.id)).rejects.toMatchObject({ status: 410 })
+    await expect(repo().delete(newId())).rejects.toMatchObject({ status: 404 })
+  })
+
+  it('calls DELETE and POST /restore in account mode and enforces session generation boundaries', async () => {
+    const payload = input()
+    const saved = response(payload)
+    let deleted = false
+    let expired = false
+
+    server.use(
+      http.delete(`${endpoint}/:id`, ({ params }) => {
+        if (params.id !== saved.id) return new HttpResponse(null, { status: 404 })
+        deleted = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.post(`${endpoint}/:id/restore`, ({ params }) => {
+        if (params.id !== saved.id) return new HttpResponse(null, { status: 404 })
+        if (expired) {
+          return HttpResponse.json({ message: 'The undo deadline has expired.' }, { status: 410 })
+        }
+        deleted = false
+        return HttpResponse.json({ data: saved }, { status: 200 })
+      }),
+    )
+
+    const repo = accountRepo()
+    await expect(repo.delete(saved.id)).resolves.toBeUndefined()
+    expect(deleted).toBe(true)
+    await expect(repo.restore(saved.id)).resolves.toEqual(saved)
+    expect(deleted).toBe(false)
+
+    expired = true
+    await expect(repo.restore(saved.id)).rejects.toMatchObject({ status: 410 })
+
+    // Changing auth session invalidates the stale repository instance.
+    useSession.getState().signOut()
+    await expect(repo.delete(saved.id)).rejects.toMatchObject({ status: 401 })
+    await expect(repo.restore(saved.id)).rejects.toMatchObject({ status: 401 })
+  })
+})

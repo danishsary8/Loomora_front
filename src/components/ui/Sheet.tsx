@@ -122,7 +122,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            transition={{ duration: reduceMotion ? 0 : 0.16 }}
             onClick={onClose}
           />
           <m.div
@@ -133,7 +133,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
             tabIndex={-1}
             className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-lg border-t border-border-subtle bg-paper pb-[max(1.25rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-3 shadow-soft-sheet focus-visible:outline-none"
             {...panelMotion}
-            transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.2, 0.8, 0.2, 1] }}
           >
             <div
               aria-hidden="true"
