@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { buttonClasses } from '@/components/ui'
+import { GoogleIcon } from '@/components/ui/icons'
 import { authApi, type GoogleIntent } from '@/lib/api'
 import { deviceTimeZone } from './timezone'
 
@@ -11,7 +12,8 @@ export function GoogleButton({ intent }: { intent: GoogleIntent }) {
       href={authApi.googleRedirectUrl(intent, deviceTimeZone())}
       className={buttonClasses({ variant: 'secondary', size: 'lg', fullWidth: true, as: 'link' })}
     >
-      {t(intent === 'sign_in' ? 'auth.googleSignIn' : 'auth.googleSignUp')}
+      <GoogleIcon className="size-5 shrink-0" />
+      <span>{t(intent === 'sign_in' ? 'auth.googleSignIn' : 'auth.googleSignUp')}</span>
     </a>
   )
 }

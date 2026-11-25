@@ -130,3 +130,48 @@ export function AlertIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+/** Elemental forest "L" brand mark matching public/icon.svg (decorative; caller names the brand). */
+export function BrandMark(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false" {...props}>
+      <rect x="24" y="24" width="464" height="464" rx="112" fill="#1D5039" />
+      <rect
+        x="27"
+        y="27"
+        width="458"
+        height="458"
+        rx="109"
+        fill="none"
+        stroke="#FCFBF8"
+        strokeOpacity="0.14"
+        strokeWidth="6"
+      />
+      <path d="M174 132h68v184h108v64H174z" fill="#F7F5EF" />
+    </svg>
+  )
+}
+
+/** Standard decorative Google "G" mark for the Google OAuth button. */
+export function GoogleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...props}>
+      <path
+        fill="#4285F4"
+        d="M21.8 12.23c0-.72-.06-1.42-.19-2.09H12v3.96h5.5a4.7 4.7 0 0 1-2.04 3.08v2.56h3.3c1.93-1.78 3.04-4.4 3.04-7.51Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 22c2.76 0 5.07-.91 6.76-2.46l-3.3-2.56c-.91.61-2.08.98-3.46.98-2.66 0-4.91-1.8-5.72-4.21H2.87v2.64A10.22 10.22 0 0 0 12 22Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M6.28 13.75a6.12 6.12 0 0 1 0-3.9V7.21H2.87a10.22 10.22 0 0 0 0 9.18l3.41-2.64Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.64c1.5 0 2.84.52 3.9 1.53l2.93-2.93C17.06 2.61 14.76 1.6 12 1.6a10.22 10.22 0 0 0-9.13 5.61l3.41 2.64C7.09 7.44 9.34 5.64 12 5.64Z"
+      />
+    </svg>
+  )
+}

@@ -1062,7 +1062,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-015: Elemental Edition Visual Polish Pass
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #82](https://github.com/danishsary8/Loomora_front/pull/82) at `6853166`.
 - **Owner:** antigravity
 - **Source:** Owner-approved visual audit follow-up to PR #81 (`UX-014`, merged at `a1f05d0`).
 - **Scope:** Apply provisional `DEC-003` pastel category colors, stretch the desktop sidebar full page height while keeping nav sticky, tighten Today `TodoRow` density without hiding functionality, add accessible progressive disclosure for Focus alarm settings, and refine Week mobile day strip and desktop `Copy` action weight.
@@ -1074,3 +1075,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `WeekPage`/`DayToggle` strip mode removes double borders and `DayColumn` softens `Copy` to ghost weight.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, and full `phone-375` Playwright (**123/123**) pass.
 - **Files:** `src/styles/tokens.ts`, `src/app/layout/Sidebar.tsx`, `src/features/today/TodoRow.tsx`, `src/features/focus/FocusAlarmSettings.tsx`, `src/features/focus/FocusPage.test.tsx`, `src/features/schedule/DayToggle.tsx`, `src/features/schedule/week/WeekPage.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/i18n/en.json`, `e2e/focus-alarm.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-016: Landing & Authentication Final Polish
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Owner-approved follow-up after PR #82 (`UX-015`, merged at `6853166`).
+- **Scope:** Apply the Elemental forest brand mark consistently to Landing and Auth headers, refine Landing typography/spacing/CTA hierarchy, add a decorative Google "G" mark to `GoogleButton`, and refine Auth card elevation, divider, and link hierarchy while preserving all auth flows and accessibility.
+- **Done when:**
+  - [x] Elemental forest `BrandMark` and `GoogleIcon` added in `src/components/ui/icons.tsx` and applied to `LandingPage`, `AuthLayout`, and `GoogleButton`.
+  - [x] Landing and Auth typography, spacing, CTA rhythm, and link underline weight refined with zero auth behavior changes.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, full `phone-375` Playwright (**123/123**), and 375 px / 1440 px visual checks pass.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/landing/LandingPage.tsx`, `src/features/landing/LandingPage.test.tsx`, `src/features/auth/AuthLayout.tsx`, `src/features/auth/GoogleButton.tsx`, `src/features/auth/SignInForm.tsx`, `src/features/auth/authPresentation.test.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

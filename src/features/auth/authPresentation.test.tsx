@@ -55,9 +55,11 @@ describe('Elemental auth layout (UX-011)', () => {
     },
   )
 
-  it('separates Google from the email form with a labelled hairline divider', async () => {
+  it('separates Google (with decorative icon) from the email form with a labelled hairline divider', async () => {
     renderRoute('/sign-in')
-    const divider = await screen.findByRole('separator', { name: 'or' })
+    const google = await screen.findByRole('link', { name: 'Sign in with Google' })
+    expect(google.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    const divider = screen.getByRole('separator', { name: 'or' })
     expect(divider).toBeInTheDocument()
   })
 
