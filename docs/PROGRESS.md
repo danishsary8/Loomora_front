@@ -1323,6 +1323,28 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   6. `README.md` lists Dexie only as guest storage (see question 5). It is outside this task's scope and was not changed.
 - GitHub CLI is not authenticated. The branch is pushed so the planner can open the PR into `v2-rebuild`.
 
+### 2026-11-25 F-R3-13 — Focus History account regression
+
+- Verified the task ID was unused and opened the isolated `feat/F-R3-13-focus-history-regression` worktree from `origin/v2-rebuild` at `5fe3192`.
+- Extended the Playwright Focus fixture to use the bearer token for account identity and return B-043 session records by starting local date. Added two browser regressions for account save through History and reload, guest and second-account isolation, and loading, empty, error, and keyboard retry states.
+- The save test finishes a 22.5-second linked stopwatch session after account-local midnight. It verifies the earlier row, start time, row duration, daily total, and UUID on a fresh History response, plus the absence of duplicate writes. The first focused run held the History update while the test clock was paused. Waiting for the timer to close before resuming the clock preserves the exact duration and lets the query update.
+- Production application code is untouched. The branch-specific Vercel setting disables preview deployment.
+- Local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the Playwright production build, full Vitest (845/845 across 75 files), and full Chromium `phone-375` (119/119, including 2 new tests). The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. Git diff checks passed.
+- GitHub CLI is unauthenticated. The planner can open the PR into `v2-rebuild` from the pushed branch to start CI.
+
+#### PR #74 planner follow-up
+
+- Merged `origin/v2-rebuild` at `64408cc` after DOC-002 (PR #73). The append-only task and progress conflicts kept both original entries. The DOC-002 architecture document, the F-R3-13 test, and its Vercel preview opt-out match their original versions.
+- Lint, typecheck, Knip, Prettier with automatic line endings, production build, and Git diff checks passed. Vitest passed 845/845 across 75 files. The production dependency audit found zero vulnerabilities, and Redocly reported four existing warnings.
+- The first `phone-375` run passed 118 of 119. The existing Reset Password overflow test measured 43 px at 200% text. The full rerun against the same production build had 118 first-pass successes and one retry-pass for that test. Auth source and tests match `v2-rebuild`.
+
+### 2026-11-25 F-R3-08 - Focus History Filters & Search
+
+- Branched from `origin/v2-rebuild` at `7390ec7` after checking task IDs, Git refs and PRs. Reviewed the R3 Focus specifications and the audit-linked F-R3-13 regression in PR #74. The original audit report was unavailable.
+- Added date-local Countdown and Stopwatch filters, defaulting to All, and case-insensitive literal search of the displayed session fields. Search uses the titles and labels already available to History. The full-day total still includes every session for that date. Filters carry across date selection and reset when the active owner changes. Clear filters keeps the date and returns keyboard focus to Search sessions.
+- Reused Elemental preset radio styling so mode labels wrap at 200% text, and kept the results status mounted across date loads for screen-reader announcements. Updated the README Focus status and disabled preview deployment for the task branch.
+- Final local verification passed lint, typecheck, Knip, Prettier with automatic line endings, the production build, 11 focused Vitest cases, and all 119 Chromium `phone-375` Playwright cases. The production dependency audit found zero vulnerabilities. Redocly validated the existing OpenAPI contract with four warnings. The review PR carries the full CI results.
+
 ### 2026-11-25 F-R3-11 — Stopwatch Lap Accessibility
 
 - **Scope:** Branch `feat/F-R3-11-lap-accessibility` from `origin/v2-rebuild` at `64408cc` (PR #73 merged), isolated worktree `loomora-front-F-R3-11`. F-R3-11 was unused in `docs/TASKS.md`, `docs/PROGRESS.md` and local and remote branches.

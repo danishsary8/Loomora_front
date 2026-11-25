@@ -43,6 +43,27 @@ test('shows a saved guest session on its starting local date, including offline'
   await expect(history.getByText('No saved Focus sessions for this date.')).toBeVisible()
   await date.fill('2026-11-23')
   await expect(row).toBeVisible()
+  const search = history.getByRole('searchbox', { name: 'Search sessions' })
+  const modes = history.getByRole('group', { name: 'Timer mode' })
+  const all = modes.getByRole('radio', { name: 'All' })
+  const countdown = modes.getByRole('radio', { name: 'Countdown' })
+  const stopwatch = modes.getByRole('radio', { name: 'Stopwatch' })
+  await search.fill('ENDED EARLY')
+  await stopwatch.click()
+  await expect(row).toContainText('Stopwatch')
+  await date.fill('2026-11-24')
+  await expect(history.getByText('No saved Focus sessions for this date.')).toBeVisible()
+  await date.fill('2026-11-23')
+  await expect(row).toBeVisible()
+  await countdown.click()
+  await expect(history.getByRole('status')).toHaveText('No sessions match your filters.')
+  await expect(history.locator('dd')).toHaveText(/^(?:4[89]|5\d)(?:\.\d+)? sec$/)
+  await history.getByRole('button', { name: 'Clear filters' }).press('Enter')
+  await expect(search).toBeFocused()
+  await expect(search).toHaveValue('')
+  await expect(all).toBeChecked()
+  await expect(date).toHaveValue('2026-11-23')
+  await expect(row).toBeVisible()
   await expect(history).not.toContainText('Focus history is unavailable offline.')
 })
 
@@ -52,6 +73,14 @@ test('fits Focus history at six widths with normal and doubled text', async ({ p
   const date = history.getByLabel('Session date')
   const start = page.getByRole('button', { name: 'Start', exact: true })
 
+  await start.click()
+  await expect(page.getByRole('button', { name: 'Pause' })).toHaveAttribute(
+    'aria-disabled',
+    'false',
+  )
+  await page.getByRole('button', { name: 'End early', exact: true }).click()
+  await expect(history.getByRole('listitem')).toContainText('Countdown')
+
   await page.getByRole('button', { name: 'Stopwatch' }).click()
   await start.click()
   await expect(page.getByRole('button', { name: 'Pause' })).toHaveAttribute(
@@ -59,6 +88,18 @@ test('fits Focus history at six widths with normal and doubled text', async ({ p
     'false',
   )
   await page.getByRole('button', { name: 'Finish', exact: true }).click()
+  const modes = history.getByRole('group', { name: 'Timer mode' })
+  const all = modes.getByRole('radio', { name: 'All' })
+  const countdown = modes.getByRole('radio', { name: 'Countdown' })
+  const stopwatch = modes.getByRole('radio', { name: 'Stopwatch' })
+  const search = history.getByRole('searchbox', { name: 'Search sessions' })
+  const clear = history.getByRole('button', { name: 'Clear filters' })
+  await expect(history.getByRole('listitem')).toHaveCount(2)
+  await all.press('ArrowRight')
+  await expect(countdown).toBeChecked()
+  await expect(history.getByRole('listitem')).toContainText('Countdown')
+  await countdown.press('ArrowRight')
+  await expect(stopwatch).toBeChecked()
   await expect(history.getByRole('listitem')).toContainText('Completed')
 
   const { violations } = await new AxeBuilder({ page }).include('#main').analyze()
@@ -78,25 +119,39 @@ test('fits Focus history at six widths with normal and doubled text', async ({ p
       ).toBeLessThanOrEqual(0)
 
       await start.focus()
-      await page.keyboard.press('Tab')
-      await expect(date, context).toBeFocused()
-      const box = await date.boundingBox()
-      if (!box) throw new Error('The session date input must be visible')
-      expect(Math.min(box.height, box.width), context).toBeGreaterThanOrEqual(44)
-      if (width < 768) {
-        const mobileNav = page.getByRole('navigation').filter({ visible: true })
-        await expect
-          .poll(
-            async () => {
-              const field = await date.boundingBox()
-              const nav = await mobileNav.boundingBox()
-              if (!field || !nav)
-                throw new Error('The session date and mobile navigation must be visible')
-              return Math.min(field.y, nav.y - field.y - field.height)
-            },
-            { message: context },
-          )
-          .toBeGreaterThanOrEqual(0)
+      const mobileNav = page.getByRole('navigation').filter({ visible: true })
+      for (const option of [all, countdown, stopwatch]) {
+        const box = await option.boundingBox()
+        if (!box) throw new Error('The filter option must be visible')
+        expect(Math.min(box.height, box.width), context).toBeGreaterThanOrEqual(44)
+      }
+      for (const control of [date, search, stopwatch, clear]) {
+        await page.keyboard.press('Tab')
+        if (control === search) {
+          // Chromium tabs through each part of a native date field before exiting it.
+          for (let part = 0; part < 4; part++) {
+            if (!(await date.evaluate((field) => field === document.activeElement))) break
+            await page.keyboard.press('Tab')
+          }
+        }
+        await expect(control, context).toBeFocused()
+        const box = await control.boundingBox()
+        if (!box) throw new Error('The History control must be visible')
+        expect(Math.min(box.height, box.width), context).toBeGreaterThanOrEqual(44)
+        if (width < 768) {
+          await expect
+            .poll(
+              async () => {
+                const field = await control.boundingBox()
+                const nav = await mobileNav.boundingBox()
+                if (!field || !nav)
+                  throw new Error('The History control and mobile navigation must be visible')
+                return Math.min(field.y, nav.y - field.y - field.height)
+              },
+              { message: context },
+            )
+            .toBeGreaterThanOrEqual(0)
+        }
       }
     }
   }

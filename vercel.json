@@ -28,6 +28,8 @@
       "feat/F-R3-06-focus-presentation": false,
       "feat/F-R3-07-alarm-customization": false,
       "feat/UX-012-elemental-legal": false,
+      "feat/F-R3-13-focus-history-regression": false,
+      "feat/F-R3-08-history-filters-search": false,
       "v2-rebuild": false
     }
   },
