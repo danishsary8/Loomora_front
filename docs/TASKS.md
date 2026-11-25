@@ -1001,3 +1001,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] No `PageHeading` screen overflows at 320–1440 px at 100% or 200% text after fonts load.
   - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
 - **Files:** `src/components/page/PageHeading.tsx`, `e2e/page-heading.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R3-11 — Stopwatch Lap Accessibility
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** R3 audit findings for the stopwatch (`docs/02` "Stopwatch with laps (1/100 s)"), DEC-003, DEC-004 and the B-043 limit of 1000 laps. Registered from `origin/v2-rebuild` at `64408cc` (PR #73 merged) after verifying the task ID was unused in both task documents and in local and remote branches.
+- **Scope:** Focus stopwatch UI, lap tests, English translations, `docs/TASKS.md` and `docs/PROGRESS.md`. No Focus History tests, shared `PageHeading`, backend contract or unrelated feature changes.
+- **Plan:**
+  1. Share one `maxLaps` (1000) constant between the timer state and the UI, so the existing limit stays the single source.
+  2. Mark Lap `aria-disabled` at the limit (it stays focusable with its visible focus ring), ignore further activation and describe it with a visible, localized limit note in both the normal and expanded views.
+  3. Announce only the newest lap recorded in this tab through the existing polite status region, with the limit appended on the 1000th lap. Restored laps and laps recorded in another tab are not announced. While the 1000th-lap announcement is current, Lap omits its limit description until focus leaves it.
+  4. Cover laps 999, 1000 and a rejected 1001st in runtime tests (guest and account scopes), FocusPage tests and Playwright (keyboard, reload, expanded view, axe, 320–1440 px at 100% and 200% text).
+  5. Run the required frontend checks and record the result in `docs/PROGRESS.md`.
+- **Done when:**
+  - [x] Lap is disabled with an accessible, localized explanation at 1000 laps, and a 1001st attempt changes nothing.
+  - [x] New laps are announced once, without announcing restored laps.
+  - [x] Clean `lint`, `typecheck`, `knip`, `prettier --check`, full Vitest, `build`, Playwright `phone-375`, `npm audit --omit=dev`, Redocly OpenAPI lint and `git diff --check`.
+- **Files:** `src/features/focus/FocusPage.tsx`, `src/features/focus/focusTimerState.ts`, `src/features/focus/FocusPage.test.tsx`, `src/features/focus/focusRuntime.test.ts`, `e2e/focus-laps.spec.ts`, `e2e/focus-timer.spec.ts`, `e2e/focus-presentation.spec.ts`, `src/i18n/en.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

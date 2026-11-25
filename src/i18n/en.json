@@ -171,6 +171,8 @@
     "lap": "Lap",
     "laps": "Laps",
     "lapNumber": "Lap {{count}}",
+    "lapRecorded": "Lap {{count}} recorded, split {{time}}.",
+    "lapLimit": "Lap limit reached. A session can record up to {{max, number}} laps.",
     "split": "Split {{time}}",
     "total": "Total {{time}}",
     "finish": "Finish",

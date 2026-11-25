@@ -113,7 +113,7 @@ test('fits the Elemental layout at six widths with normal and doubled text', asy
   await page.getByRole('button', { name: 'Stopwatch' }).click()
   await start.click()
   await page.getByRole('button', { name: 'Lap', exact: true }).click()
-  await expect(page.getByText('Lap 1')).toBeVisible()
+  await expect(page.getByText('Lap 1', { exact: true })).toBeVisible()
   await checkWidths()
 })
 
@@ -507,7 +507,7 @@ test('keeps an offline account save with its owner and retries the original link
   const lap = expanded.getByRole('button', { name: 'Lap', exact: true })
   if (testInfo.project.use.hasTouch) await lap.tap()
   else await lap.click()
-  await expect(page.getByText('Lap 1')).toBeVisible()
+  await expect(page.getByText('Lap 1', { exact: true })).toBeVisible()
 
   const finish = expanded.getByRole('button', { name: 'Finish', exact: true })
   await expect(finish).toHaveAttribute('aria-disabled', 'false')

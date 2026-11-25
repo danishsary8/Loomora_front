@@ -122,7 +122,7 @@ test('denied fullscreen preserves stopwatch controls and fits the responsive fal
   await expect(exit).toBeFocused()
   await expect(lap).toHaveAttribute('aria-disabled', 'false')
   await lap.click()
-  await expect(dialog.getByText('Lap 1')).toBeVisible()
+  await expect(dialog.getByText('Lap 1', { exact: true })).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Pause' })).toHaveAttribute(
     'aria-disabled',
     'false',

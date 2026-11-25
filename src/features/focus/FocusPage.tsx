@@ -2,6 +2,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -31,11 +32,12 @@ import {
 import {
   customDurationLimits,
   isCountdownMinutes,
+  maxLaps,
   phaseType,
   type TimerCommand,
   type TimerConfig,
 } from './focusTimerState'
-import { countdownPresetsMs } from './timerMath'
+import { countdownPresetsMs, formatCentiseconds, getLap } from './timerMath'
 import { useFocusSession } from './useFocusSession'
 import { useRefreshFocusHistory } from './useFocusHistory'
 
@@ -94,6 +96,20 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
   const running = snapshot?.phase.status === 'running'
   const paused = snapshot?.phase.status === 'paused'
   const activeMode = snapshot?.config.mode ?? mode
+  const lapCount = snapshot?.laps.length ?? 0
+  const lapLimitReached = lapCount >= maxLaps
+  const lapLimitId = useId()
+  // Announce only the lap this tab recorded, never restored laps or laps from another tab.
+  const [lapRequest, setLapRequest] = useState<{ id: string; count: number }>()
+  const newLap =
+    snapshot && lapRequest?.id === snapshot.id && lapCount === lapRequest.count
+      ? snapshot.laps.at(-1)
+      : undefined
+  // The 1000th-lap announcement already states the limit, so Lap describes it again only
+  // after focus has left it.
+  const [limitHeardId, setLimitHeardId] = useState<string>()
+  const describeLapLimit =
+    lapLimitReached && (newLap === undefined || limitHeardId === snapshot?.id)
   const muted = useSyncExternalStore(subscribeToAlarmPreferences, isFocusSoundMuted)
   const alarm = runtime.countdownSound
   const alarmActive = useSyncExternalStore(
@@ -228,6 +244,15 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
             })}
           </p>
         )}
+        {snapshot && newLap !== undefined && (
+          <p className="sr-only">
+            {t('focus.lapRecorded', {
+              count: lapCount,
+              time: formatCentiseconds(getLap(snapshot.laps.at(-2) ?? 0, newLap).splitMs),
+            })}
+            {lapLimitReached && ` ${t('focus.lapLimit', { max: maxLaps })}`}
+          </p>
+        )}
         {snapshot && observed.restoredId === snapshot.id && <p>{t('focus.restored')}</p>}
         {paused && <p>{t('focus.paused')}</p>}
         {snapshot?.phase.status === 'waiting' && (
@@ -323,9 +348,15 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
             <>
               <Button
                 variant="secondary"
-                aria-disabled={!running || Boolean(busy)}
+                aria-disabled={!running || Boolean(busy) || lapLimitReached}
+                aria-describedby={describeLapLimit ? lapLimitId : undefined}
+                onBlur={() => {
+                  if (lapLimitReached && newLap !== undefined) setLimitHeardId(snapshot.id)
+                }}
                 onClick={() => {
-                  if (running) run(() => runtime.command(snapshot, 'lap'))
+                  if (!running || lapLimitReached) return
+                  setLapRequest({ id: snapshot.id, count: lapCount + 1 })
+                  run(() => runtime.command(snapshot, 'lap'))
                 }}
               >
                 {t('focus.lap')}
@@ -343,6 +374,11 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
             {t('focus.endEarly')}
           </Button>
         </div>
+      )}
+      {activeMode === 'stopwatch' && lapLimitReached && (
+        <p id={lapLimitId} className="text-center text-sm text-muted">
+          {t('focus.lapLimit', { max: maxLaps })}
+        </p>
       )}
     </Card>
   )
