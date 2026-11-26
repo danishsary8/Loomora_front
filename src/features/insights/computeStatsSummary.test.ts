@@ -6,9 +6,9 @@ import type {
   Weekday,
 } from '@/features/schedule/types'
 import type { Todo } from '@/features/todos/types'
+import { addDaysLocalDate } from '@/lib/date'
 import fixture from './fixtures/stats-summary-cases.json'
 import {
-  addDaysLocalDate,
   computeGuestStatsSummary,
   isEmptyStatsSummary,
   weekBoundsForDate,
@@ -97,6 +97,7 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
       from: fixture.from,
       to: fixture.to,
       timeZone: fixture.timezone,
+      today: '2026-12-01',
       todos: [],
       items,
       exceptions,
@@ -104,7 +105,16 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
       sessions,
     })
 
-    expect(actual).toEqual(fixture.expected)
+    expect(actual).toEqual({
+      ...fixture.expected,
+      opening_streak: 0,
+      opening_streak_may_be_longer: false,
+      days: fixture.expected.days.map((day, index) => ({
+        ...day,
+        streak: [1, 1, 0][index],
+        streak_may_be_longer: false,
+      })),
+    })
     expect(isEmptyStatsSummary(actual)).toBe(false)
   })
 
@@ -122,6 +132,7 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
       from: '2026-11-23',
       to: '2026-11-24',
       timeZone: 'Asia/Phnom_Penh',
+      today: '2026-11-27',
       todos,
       items: [],
       exceptions: [],
@@ -143,6 +154,7 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
       from,
       to: ninetySecond,
       timeZone: 'UTC',
+      today: '2026-11-27',
       todos: [],
       items: [],
       exceptions: [],
@@ -157,6 +169,7 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
         from,
         to: ninetyThird,
         timeZone: 'UTC',
+        today: '2026-11-27',
         todos: [],
         items: [],
         exceptions: [],
@@ -170,6 +183,7 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
         from: '2026-01-10',
         to: '2026-01-09',
         timeZone: 'UTC',
+        today: '2026-11-27',
         todos: [],
         items: [],
         exceptions: [],
@@ -186,5 +200,107 @@ describe('computeGuestStatsSummary (B-047 guest parity)', () => {
     // Sunday itself
     expect(weekBoundsForDate('2026-11-29', 1)).toEqual({ from: '2026-11-23', to: '2026-11-29' })
     expect(weekBoundsForDate('2026-11-29', 7)).toEqual({ from: '2026-11-29', to: '2026-12-05' })
+  })
+})
+
+describe('B-051 historical streak parity', () => {
+  const input = {
+    from: '2026-11-23',
+    to: '2026-11-26',
+    timeZone: 'Asia/Phnom_Penh',
+    today: '2026-11-27',
+    items: [],
+    exceptions: [],
+    checkins: [],
+    sessions: [],
+  }
+
+  // Same dates and expected values as backend StatsSummaryTest (B-051).
+  it('matches account opening and daily values across local midnights, skipped days and a break', () => {
+    const result = computeGuestStatsSummary({
+      ...input,
+      todos: [
+        makeTodo({ due_date: '2026-11-21' }),
+        makeTodo({ due_date: null, done_at: '2026-11-21T18:00:00Z' }),
+        makeTodo({ due_date: null, done_at: '2026-11-22T18:00:00Z' }),
+        makeTodo({ due_date: '2026-11-25' }),
+        makeTodo({
+          due_date: null,
+          done_at: '2026-11-24T18:00:00Z',
+          deleted_at: '2026-11-26T01:00:00Z',
+        }),
+      ],
+    })
+    expect(result).toMatchObject({ opening_streak: 1, opening_streak_may_be_longer: false })
+    expect(result.days.map((day) => [day.streak, day.streak_may_be_longer])).toEqual([
+      [2, false],
+      [2, false],
+      [0, false],
+      [0, false],
+    ])
+  })
+
+  it('preserves the streak on a still-unfinished local today and counts a completion once', () => {
+    const todos = [
+      makeTodo({ due_date: null, done_at: '2026-11-22T18:00:00Z' }),
+      makeTodo({ due_date: '2026-11-24' }),
+    ]
+    const todayInput = { ...input, to: '2026-11-24', today: '2026-11-24' }
+    expect(computeGuestStatsSummary({ ...todayInput, todos }).days[1]).toMatchObject({
+      streak: 1,
+      streak_may_be_longer: true,
+    })
+    expect(
+      computeGuestStatsSummary({
+        ...todayInput,
+        todos: [...todos, makeTodo({ done_at: '2026-11-23T17:30:00Z' })],
+      }).days[1],
+    ).toMatchObject({ streak: 2, streak_may_be_longer: true })
+  })
+
+  it('includes the 400th preceding day and drops it when it moves outside the window', () => {
+    const result = computeGuestStatsSummary({
+      ...input,
+      to: '2026-11-24',
+      todos: [
+        makeTodo({
+          due_date: null,
+          done_at: addDaysLocalDate(input.from, -400) + 'T12:00:00Z',
+        }),
+      ],
+    })
+    expect(result).toMatchObject({ opening_streak: 1, opening_streak_may_be_longer: true })
+    expect(result.days.map((day) => [day.streak, day.streak_may_be_longer])).toEqual([
+      [1, true],
+      [0, false],
+    ])
+  })
+
+  it('marks a streak exact when a missed planned day sits at the 400-day boundary', () => {
+    const result = computeGuestStatsSummary({
+      ...input,
+      to: input.from,
+      todos: [
+        makeTodo({ due_date: addDaysLocalDate(input.from, -400) }),
+        makeTodo({ due_date: null, done_at: '2026-11-23T12:00:00Z' }),
+      ],
+    })
+    expect(result.days[0]).toMatchObject({ streak: 1, streak_may_be_longer: false })
+  })
+
+  it('stops at the supported calendar boundary', () => {
+    const result = computeGuestStatsSummary({
+      ...input,
+      from: '0001-01-01',
+      to: '0001-01-02',
+      timeZone: 'UTC',
+      todos: [makeTodo({ due_date: null, done_at: '0001-01-01T12:00:00Z' })],
+    })
+    expect(result).toMatchObject({ opening_streak: 0, opening_streak_may_be_longer: false })
+    expect(result.days[1]).toMatchObject({
+      local_date: '0001-01-02',
+      streak: 1,
+      streak_may_be_longer: false,
+    })
   })
 })

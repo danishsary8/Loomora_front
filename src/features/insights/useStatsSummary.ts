@@ -9,25 +9,30 @@ import { computeGuestStatsSummary } from './computeStatsSummary'
 
 export const statsSummaryKeys = {
   all: ['stats-summary'] as const,
-  range: (generation: number, from: LocalDate, to: LocalDate) =>
-    [...statsSummaryKeys.all, generation, from, to] as const,
+  range: (generation: number, from: LocalDate, to: LocalDate, today: LocalDate, timeZone: string) =>
+    [...statsSummaryKeys.all, generation, from, to, today, timeZone] as const,
 }
 
 /**
- * Loads B-047 analytics and Plan vs Reality summary for `[from, to]`.
+ * Loads analytics, Plan vs Reality, and historical streaks for `[from, to]`.
  * Guests compute locally from Dexie (offline-capable); accounts read `GET /stats/summary`.
  */
-export function useStatsSummary(from: LocalDate, to: LocalDate) {
+export function useStatsSummary(from: LocalDate, to: LocalDate, today: LocalDate) {
   const guest = useGuestStorage()
   const focusRepo = useContext(FocusSessionRepositoryContext)
   if (!focusRepo) throw new Error('useStatsSummary must be used inside <AppProviders>')
   const generation = useSession((state) => state.generation)
   const signedIn = useSession((state) => state.token !== null)
+  const accountTimeZone = useSession((state) => state.user?.timezone)
+  const timeZone =
+    (signedIn ? accountTimeZone : undefined) ?? Intl.DateTimeFormat().resolvedOptions().timeZone
   const isGuest = !signedIn && focusRepo instanceof GuestFocusSessionRepository
 
   return useQuery<StatsSummary>({
-    queryKey: statsSummaryKeys.range(generation, from, to),
+    queryKey: statsSummaryKeys.range(generation, from, to, today, timeZone),
     networkMode: isGuest ? 'always' : 'online',
+    // Check-offs and deletions can change reconstructed history when revisiting Insights.
+    staleTime: 0,
     queryFn: async ({ signal }) => {
       if (useSession.getState().generation !== generation) {
         throw new Error('Session changed')
@@ -48,7 +53,8 @@ export function useStatsSummary(from: LocalDate, to: LocalDate) {
       return computeGuestStatsSummary({
         from,
         to,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeZone,
+        today,
         todos,
         items,
         exceptions,

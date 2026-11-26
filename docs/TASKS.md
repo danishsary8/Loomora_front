@@ -1142,3 +1142,14 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `/insights` renders Overview, Weekly Recap, Plan vs Reality, and Daily Breakdown in Elemental Edition with full i18next localization, guest/account parity, and loading/empty/error/retry/offline states.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and Playwright `phone-375` (including `e2e/insights.spec.ts`, axe, 320–1440 px, and 200% text) pass.
 - **Files:** `docs/openapi.yaml`, `src/features/insights/fixtures/stats-summary-cases.json`, `src/features/insights/computeStatsSummary.ts`, `src/features/insights/computeStatsSummary.test.ts`, `src/features/insights/useStatsSummary.ts`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/lib/api/types.ts`, `src/lib/api/account.ts`, `src/lib/api/index.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/ServerStreakRepository.ts`, `src/features/streak/streak.ts`, `src/components/page/index.ts`, `src/app/routes.test.tsx`, `src/i18n/en.json`, `e2e/insights.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R4-03: Historical Streak Timeline Integration
+
+- **Status:** review
+- **Owner:** codex
+- **Source:** Frontend PR #86 and backend B-051 PR #56, both merged into their respective v2-rebuild branches.
+- **Scope:** Sync B-051 OpenAPI, reconstruct historical streaks for guests, and display the opening and daily values in Elemental Insights.
+- **Done when:**
+  - [x] Guests and accounts show opening and daily streaks with the same local-date, check-in, planning, deletion, current-day, and 400-day lookback semantics.
+  - [x] Positive lower bounds have explicit translated labels, exact values display their count, and existing Insights states and current/longest streak metrics are preserved.
+  - [x] Regression tests cover guest/account parity and the history UI, including offline guest reads.
