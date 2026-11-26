@@ -1282,12 +1282,13 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-06: Note pin, color and tags (B-056)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #102](https://github.com/danishsary8/Loomora_front/pull/102) at `ae5b705`.
 - **Owner:** claude
 - **Source:** docs/02 R4 "Notes: tags, pin, color, search" and backend B-056 (`danishsary8/loomora_back` PR #62). Owner-approved defaults (2026-11-26): six category colors; up to 5 tags of 1 to 24 characters, case-insensitive.
 - **Scope:** `docs/openapi.yaml` synced byte-for-byte from B-056. Note sheet: color picker (None + six category chips), comma-separated tags field, "Pin to the top". Notes list: pinned first with a pin marker, a "Pinned" filter, cards tinted by color, `#tag` links that search for that exact tag, and plain search also matching tags. Guest notes store the same fields (older rows read as unpinned, uncolored, untagged), follow the same tag rules and sort, and import with them. The API layer fills the three fields when a server omits them, so an older backend cannot break the page; the B-053 conflict check compares them too.
 - **Done when:**
   - [x] `noteOrganization.test.ts` and `NotesPage.test.tsx` cover defaults, old rows, normalization, limits, sort, lost-response vs conflict on tags, the Pinned filter and tag search.
   - [x] lint, typecheck, Knip, format check, Vitest (951/951), build and Redocly pass; no horizontal overflow at 320/375 px.
-  - [ ] CI end-to-end (375 px) passes on the PR.
+  - [x] CI end-to-end (375 px) passes on the PR.
 - **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/storage/{db,GuestNoteRepository,ServerNoteRepository,saveGuestPlan}.ts`, `src/lib/storage/noteOrganization.test.ts`, `src/components/ui/{icons,categoryIcons,Chip}.ts(x)`, `src/i18n/en.json`
