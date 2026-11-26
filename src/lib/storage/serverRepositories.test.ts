@@ -443,6 +443,7 @@ describe('ServerStreakRepository', () => {
     )
     expect(await new ServerStreakRepository(accountDataApi).get('2026-10-26')).toEqual({
       count: 4,
+      longest: 9,
       todayCounted: true,
     })
   })
