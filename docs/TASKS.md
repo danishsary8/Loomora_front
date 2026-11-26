@@ -1190,7 +1190,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-028: Atomic Guest Notes Mutations
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #91](https://github.com/danishsary8/Loomora_front/pull/91) at `2f5d56b`.
 - **Owner:** antigravity
 - **Source:** Codex R1–R4 integration audit P1 finding (concurrent update + delete on a guest note could both succeed and resurrect the deleted note because `GuestNoteRepository.update()` read and wrote in separate IndexedDB transactions); reconciled with merged `QA-027` (PR #90, `a546794`). Task ID verified unused across `docs/` and branches (`QA-027` remains Codex's guest import containment task).
 - **Scope:** Notes CRUD transaction atomicity in `GuestNoteRepository.ts` (`create`, `update`, preserving `delete` and `restore` atomicity; leaving `clearImported()` and `saveGuestPlan.ts` untouched for `QA-027`) and deterministic two-instance concurrency regression tests in `src/lib/storage/notes.test.ts`.
@@ -1200,3 +1201,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Deterministic two-instance concurrency tests cover update/delete (both orders, standalone and schedule-attached), update/restore (both orders), and disjoint concurrent updates (no lost updates).
   - [x] `lint`, `typecheck`, `knip`, `format:check`, full `npm test`, `npm run build`, full Playwright `phone-375`, Redocly OpenAPI lint, and `git diff --check` pass.
 - **Files:** `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/notes.test.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-009-PREP: Staging QA Matrix & Release Readiness Preparation (docs-only)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Parent gate (`QA-009`):** **BLOCKED / NOT EXECUTED** — no staging tests have been run, no live services touched, and the release is NOT declared ready.
+- **Scope:** Documentation-only preparation extending [QA-022 paired staging evidence and runbook](QA-022-staging-evidence.md) to the full merged R1–R4 baseline (`2f5d56b`, including `QA-027` and `QA-028`) with a reproducible 9-scenario staging QA matrix (`STG-01`–`STG-09`), release evidence & rollback readiness checklist, and explicit separation of automated local/CI checks, pending manual staging checks, owner gates (`QA-016`, `QA-004`, `Q23`, `Q25`, `QA-022` disposable pair), and active blockers (`QA-029` streak consistency, backend revision-aware Notes reconciliation).
+- **Done when:**
+  - [x] Reproducible staging QA matrix (`docs/QA-009-staging-matrix.md`) defines prerequisites, synthetic data, execution steps, expected results, redacted evidence, and pass/fail criteria for all R1–R4 flows.
+  - [x] Release evidence checklist covers deployed frontend/backend SHAs, OpenAPI parity, staging origin/CORS/CSP, environment separation, migrations, health checks, rate limits, log redaction, and rollback readiness.
+  - [x] `QA-009` remains explicitly **blocked / not executed** with zero staging cases falsely marked passed.
+  - [x] Strictly docs-only diff; links, formatting, and `git diff --check` pass.
+- **Files:** `docs/QA-009-staging-matrix.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
