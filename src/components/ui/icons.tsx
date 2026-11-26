@@ -196,3 +196,66 @@ export function NotesIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+// Category glyphs (concept v3): one outline icon per documented category.
+export function StudyIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M2.5 9.5 12 5l9.5 4.5L12 14 2.5 9.5Z" />
+      <path d="M6.5 11.5V16c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3v-4.5" />
+    </IconBase>
+  )
+}
+
+export function WorkIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <rect x="4" y="5" width="16" height="11" rx="1.5" />
+      <path d="M2 19h20" />
+    </IconBase>
+  )
+}
+
+export function HealthIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.6 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10Z" />
+    </IconBase>
+  )
+}
+
+export function LifeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 11 12 4.5 20 11" />
+      <path d="M6 9.5V20h12V9.5" />
+      <path d="M10 20v-5h4v5" />
+    </IconBase>
+  )
+}
+
+export function RestIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10Z" />
+    </IconBase>
+  )
+}
+
+export function OtherIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1l8 8a1 1 0 0 1 0 1.4l-7.1 7.1a1 1 0 0 1-1.4 0l-8.6-7.4Z" />
+      <circle cx="8.5" cy="8.5" r="1.25" />
+    </IconBase>
+  )
+}
+
+export const CATEGORY_ICONS = {
+  study: StudyIcon,
+  work: WorkIcon,
+  health: HealthIcon,
+  life: LifeIcon,
+  rest: RestIcon,
+  other: OtherIcon,
+} as const

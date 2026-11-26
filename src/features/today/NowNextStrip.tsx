@@ -19,12 +19,7 @@ function Slot({ label, occurrence, emptyText, formatTime }: SlotProps) {
       compact
       className="min-w-0 flex-1 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md"
     >
-      <span
-        className={cn(
-          'block text-xs font-semibold uppercase tracking-wider',
-          occurrence ? 'text-ink' : 'text-muted',
-        )}
-      >
+      <span className={cn('block text-xs font-semibold', occurrence ? 'text-ink' : 'text-muted')}>
         {label}
       </span>
       {occurrence ? (

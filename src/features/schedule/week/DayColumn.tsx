@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
+import { CATEGORY_ICONS } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import type { ScheduleItem, Weekday } from '../types'
 
@@ -102,6 +103,7 @@ function ItemCard({ item, formatTime, onOpen }: ItemCardProps) {
   const { t } = useTranslation()
   const times = { start: formatTime(item.start_time), end: formatTime(item.end_time) }
   const category = t(`categories.${item.category}`)
+  const Icon = CATEGORY_ICONS[item.category]
   return (
     <button
       type="button"
@@ -112,13 +114,19 @@ function ItemCard({ item, formatTime, onOpen }: ItemCardProps) {
       <Card
         tone={item.category}
         compact
-        className="flex min-h-touch flex-col-reverse gap-1 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md md:p-2.5"
+        className="flex min-h-touch items-start gap-3 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md md:p-2.5"
       >
-        <span className="block hyphens-auto break-words text-sm font-semibold leading-snug">
-          {item.title}
-        </span>{' '}
-        <span className="flex flex-wrap items-center justify-between gap-x-2 text-xs font-medium text-ink">
-          <span className="tabular-nums">{t('week.timeRange', times)}</span> <span>{category}</span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-paper/70 md:hidden">
+          <Icon className="size-[18px]" />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="block hyphens-auto break-words text-sm font-semibold leading-snug">
+            {item.title}
+          </span>{' '}
+          <span className="flex flex-wrap items-center justify-between gap-x-2 text-xs font-medium text-ink/80">
+            <span className="tabular-nums">{t('week.timeRange', times)}</span>{' '}
+            <span>{category}</span>
+          </span>
         </span>
       </Card>
     </button>

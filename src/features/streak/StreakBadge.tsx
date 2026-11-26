@@ -35,12 +35,14 @@ export function StreakBadge({ count, todayCounted }: Streak) {
       animate={celebrating && !reduceMotion ? { scale: [1, 1.18, 1] } : { scale: 1 }}
       transition={{ duration: 0.36 }}
       className={cn(
-        'inline-flex min-h-touch items-center gap-1.5 rounded-full border-hairline px-3.5 text-sm font-semibold tabular-nums text-ink shadow-soft-sm transition-colors duration-fast ease-elemental',
-        todayCounted ? 'border-accent/60 bg-accent' : 'border-border-subtle bg-paper',
+        'inline-flex min-h-touch max-w-full items-center gap-2 rounded-md border-hairline px-3 py-1.5 text-sm font-semibold leading-tight text-ink shadow-soft-sm transition-colors duration-fast ease-elemental',
+        todayCounted ? 'border-accent/60 bg-accent/40' : 'border-accent/30 bg-paper',
       )}
     >
-      <StreakIcon className="size-4 shrink-0" />
-      <span aria-hidden="true">{count}</span>
+      <StreakIcon className="size-5 shrink-0" />
+      <span aria-hidden="true" className="min-w-0 max-w-[5rem] [overflow-wrap:anywhere]">
+        {t('streak.days', { count })}
+      </span>
     </m.p>
   )
 }

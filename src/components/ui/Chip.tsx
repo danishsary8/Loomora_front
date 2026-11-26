@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import type { Category } from '@/styles/tokens'
-import { CheckIcon } from './icons'
+import { CATEGORY_ICONS, CheckIcon } from './icons'
 import { pressSm } from './press'
 
 export interface ChipProps {
@@ -27,17 +27,19 @@ export function Chip({ category, label, onClick, selected = false, className }: 
   const { t } = useTranslation()
   const text = label ?? t(`categories.${category}`)
   const base = 'inline-flex select-none items-center gap-1.5 rounded-full font-medium text-ink'
+  const Icon = CATEGORY_ICONS[category]
 
   if (!onClick) {
     return (
       <span
         className={cn(
           base,
-          'min-h-7 border-hairline border-ink/15 px-3 text-sm',
+          'min-h-7 border-hairline border-ink/15 px-2.5 text-sm',
           fillClasses[category],
           className,
         )}
       >
+        <Icon className="size-3.5 shrink-0" />
         {text}
       </span>
     )
@@ -62,8 +64,10 @@ export function Chip({ category, label, onClick, selected = false, className }: 
       ) : (
         <span
           aria-hidden="true"
-          className={cn('size-3 rounded-full border-hairline border-ink/30', fillClasses[category])}
-        />
+          className={cn('grid size-6 place-items-center rounded-full', fillClasses[category])}
+        >
+          <Icon className="size-3.5" />
+        </span>
       )}
       {text}
     </button>

@@ -30,8 +30,7 @@ const SCREENS = [
 ] as const
 
 /**
- * Sets the viewport and root text scale, then waits until the `h1` is laid out at that scale:
- * its computed size is `2.25rem` and it is at least one `leading-tight` line tall. Chromium can
+ * Sets the viewport and root text scale, then waits until the layout reflects both. Chromium can
  * report the previous layout for a few frames after a live resize and text-size change.
  */
 async function settle(page: Page, width: number, scale: number) {
@@ -41,25 +40,27 @@ async function settle(page: Page, width: number, scale: number) {
     return document.fonts.ready.then(() => undefined)
   }, scale)
   await page.waitForFunction(
-    ({ expectedWidth, fontSize }) => {
-      const title = document.querySelector('h1')
-      return (
-        window.innerWidth === expectedWidth &&
-        title !== null &&
-        getComputedStyle(title).fontSize === `${fontSize}px` &&
-        title.getBoundingClientRect().height >= fontSize * 1.25 - 0.5
-      )
-    },
-    { expectedWidth: width, fontSize: 36 * scale },
+    ({ expectedWidth, rootSize }) =>
+      window.innerWidth === expectedWidth &&
+      document.querySelector('h1') !== null &&
+      getComputedStyle(document.documentElement).fontSize === `${rootSize}px`,
+    { expectedWidth: width, rootSize: 16 * scale },
+  )
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
   )
 }
 
-/** How far the `h1` text and the page reach past their boxes, in CSS px. */
+/** How far the `h1`, the editorial headline (app screens), and the page reach past their boxes. */
 async function overflow(page: Page) {
   return page.evaluate(() => {
-    const title = document.querySelector('h1')
+    const reach = (element: Element | null) =>
+      element ? element.scrollWidth - element.clientWidth : 0
     return {
-      heading: title ? title.scrollWidth - title.clientWidth : -1,
+      heading: Math.max(
+        reach(document.querySelector('h1')),
+        reach(document.querySelector('[data-page-headline]')),
+      ),
       page: document.documentElement.scrollWidth - window.innerWidth,
     }
   })

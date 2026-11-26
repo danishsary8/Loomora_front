@@ -1253,3 +1253,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `NotesPage.test.tsx` covers the conflict sheet and "Save mine as a new note" with a new UUID.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, Vitest, `build`, Redocly, `npm audit --omit=dev` and `git diff --check` pass.
 - **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/storage/{errors,index,NoteRepository,ServerNoteRepository}.ts`, `src/lib/storage/noteRevisions.test.ts`, `src/i18n/en.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-018: Elemental concept v3 alignment (all app screens)
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Owner-supplied `LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3.png` and `LOOMORA_ELEMENTAL_UI_UX_ALIGNMENT_V3.md` (DEC-003 tokens unchanged). Guidance from the UI UX Pro Max skill (UX rules and pre-delivery checklist; its generic palette and font suggestions were not used because DEC-003 fixes them).
+- **Scope:** Visual composition only, no behavior change: `Loomora.` wordmark with accent full stop and the user's initial in the top bar; solid primary pill for the selected tab (bottom nav and sidebar); editorial screen header (screen name stays the `h1`, concept headline as display text) on Today, Week, Focus, Insights, Notes, Profile; Today progress card (count, bar, percentage ring), tinted intention card, visible "Your to-dos" heading, `N-day streak` pill, accent `+`; category icons in chips and Week blocks; Focus timer as a progress ring; Insights KPI tiles tinted with icons and sentence-case labels; quiet icon actions on to-dos and notes (shared `iconActionClass`). Concept extras outside docs/02 (pinned notes, tags, Profile illustration) were not added.
+- **Done when:**
+  - [x] lint, typecheck, Knip, format check, Vitest (944/944) pass.
+  - [x] No horizontal overflow at 320/375/768/1440 px, including 200% text on Today, Focus and Profile.
+  - [ ] CI end-to-end (375 px) passes on the PR.
+- **Files:** `src/app/layout/*`, `src/components/page/AppPageHeader.tsx`, `src/components/ui/{Chip,FloatingAddButton,buttonStyles,icons,index}.ts(x)`, `src/features/{today,streak,focus,insights,notes,profile,schedule/week}/*`, `src/i18n/en.json`, tests, `e2e/page-heading.spec.ts`

@@ -45,7 +45,7 @@ export function SegmentedControl<T extends string>({
               if (!selected) onChange(option.value)
             }}
             className={cn(
-              'min-h-touch flex-1 rounded-sm px-3 text-sm font-semibold transition-[background-color,color,box-shadow] duration-fast ease-elemental',
+              'min-h-touch flex-1 rounded-sm px-1.5 text-sm sm:px-3 font-semibold transition-[background-color,color,box-shadow] duration-fast ease-elemental',
               'disabled:cursor-not-allowed',
               selected ? 'bg-primary text-white shadow-soft-sm' : 'text-ink hover:bg-paper/70',
             )}

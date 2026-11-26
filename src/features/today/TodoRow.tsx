@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Chip } from '@/components/ui'
+import { Button, Checkbox, Chip, iconActionClass } from '@/components/ui'
 import { PencilIcon, RepeatIcon, TrashIcon } from '@/components/ui/icons'
 import type { TodayTodo } from '@/features/todos/types'
 import { cn } from '@/lib/cn'
@@ -14,9 +14,6 @@ interface TodoRowProps {
   onAddSubtask: (parent: TodayTodo) => void
   formatDate: (date: string) => string
 }
-
-const actionClass =
-  'grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control/70 bg-paper text-ink transition-[background-color,transform] duration-fast ease-elemental hover:bg-subtle active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100'
 
 export function TodoRow({ todo, ...actions }: TodoRowProps) {
   const { t, i18n } = useTranslation()
@@ -44,7 +41,7 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
       className={cn(
         'min-w-0 border-hairline border-border-subtle bg-paper px-3.5 py-2.5 transition-colors duration-fast ease-elemental',
         child ? 'rounded-md' : 'rounded-lg shadow-soft-sm',
-        done && 'bg-subtle/60',
+        done && 'bg-paper/70',
       )}
     >
       <div className="flex items-start gap-2">
@@ -107,12 +104,12 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
             </span>
           }
         />
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="-mr-1.5 flex shrink-0 items-center">
           <button
             type="button"
             onClick={() => actions.onEdit(todo)}
             aria-label={t('today.editTodo', { title: todo.title })}
-            className={actionClass}
+            className={iconActionClass}
           >
             <PencilIcon className="size-4" />
           </button>
@@ -120,7 +117,7 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
             type="button"
             onClick={() => actions.onDelete(todo)}
             aria-label={t('today.deleteTodo', { title: todo.title })}
-            className={actionClass}
+            className={iconActionClass}
           >
             <TrashIcon className="size-4" />
           </button>

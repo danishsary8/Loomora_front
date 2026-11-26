@@ -21,7 +21,7 @@ export function BottomNav() {
                 cn(
                   'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-center text-xs font-semibold leading-tight transition-colors duration-fast ease-elemental',
                   isActive
-                    ? 'bg-primary-soft text-primary'
+                    ? 'bg-primary text-white shadow-soft-sm'
                     : 'text-muted hover:bg-subtle/60 hover:text-ink',
                 )
               }

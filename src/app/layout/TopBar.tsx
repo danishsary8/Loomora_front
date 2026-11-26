@@ -2,16 +2,17 @@ import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import { pressSmAny } from '@/components/ui'
 import { NotesIcon, ProfileIcon } from '@/components/ui/icons'
+import { useSession } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { Wordmark } from './Wordmark'
 
 /** App name (phones only; the sidebar shows it on wide screens), notes shortcut, and profile avatar. */
 export function TopBar() {
   const { t } = useTranslation()
+  const initial = useSession((s) => s.user?.name.trim().charAt(0).toLocaleUpperCase() ?? '')
   return (
     <header className="flex items-center justify-between gap-3 pb-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] md:px-6 md:pt-5">
-      <p className="min-w-0 font-heading text-[min(1.5rem,10vw)] font-bold leading-none text-ink [overflow-wrap:anywhere] md:hidden">
-        {t('common.appName')}
-      </p>
+      <Wordmark className="min-w-0 text-[min(1.5rem,10vw)] [overflow-wrap:anywhere] md:hidden" />
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <NavLink
           to="/notes"
@@ -41,7 +42,13 @@ export function TopBar() {
             )
           }
         >
-          <ProfileIcon className="size-5" />
+          {initial ? (
+            <span aria-hidden="true" className="text-base font-bold">
+              {initial}
+            </span>
+          ) : (
+            <ProfileIcon className="size-5" />
+          )}
         </NavLink>
       </div>
     </header>
