@@ -68,6 +68,28 @@ export class GuestFocusSessionRepository implements FocusSessionRepository {
     return toPublicSession(session)
   }
 
+  async listAll({ includeDeleted = false } = {}): Promise<StoredFocusSession[]> {
+    const rows = await (await this.open()).focus_sessions.toArray()
+    const filtered = includeDeleted ? rows : rows.filter((row) => !row.deleted_at)
+    return filtered.sort(
+      (a, b) => a.started_at.localeCompare(b.started_at) || a.id.localeCompare(b.id),
+    )
+  }
+
+  /** Clean up the import snapshot without discarding changes made by another tab. */
+  async clearImported(snapshot: StoredFocusSession[]): Promise<void> {
+    if (snapshot.length === 0) return
+    const db = await this.open()
+    await db.transaction('rw', db.focus_sessions, async () => {
+      const current = await db.focus_sessions.toArray()
+      const beforeById = new Map(snapshot.map((row) => [row.id, row]))
+      const remove = current
+        .filter((row) => JSON.stringify(row) === JSON.stringify(beforeById.get(row.id)))
+        .map(({ id }) => id)
+      await db.focus_sessions.bulkDelete(remove)
+    })
+  }
+
   async listForDate(date: LocalDate): Promise<FocusSession[]> {
     if (!isLocalDate(date)) invalidFocusSession('date', 'Use a valid calendar date.')
     const rows = await (

@@ -3,6 +3,7 @@ import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
 import { readGuestPreferences, writeGuestPreferences } from './guestPreferences'
@@ -68,6 +69,7 @@ describe('daily intentions in Save Plan', () => {
     todos: new GuestTodoRepository({ db }),
     schedule: new GuestScheduleRepository({ db }),
     intentions: new GuestDailyIntentionRepository(db),
+    focusSessions: new GuestFocusSessionRepository({ db }),
   })
 
   beforeEach(() => {
@@ -104,6 +106,7 @@ describe('daily intentions in Save Plan', () => {
         schedule_items: [],
         exceptions: [],
         checkins: [],
+        focus_sessions: [],
         daily_intentions: [stored, added],
       },
     ])
