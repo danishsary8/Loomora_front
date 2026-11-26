@@ -325,4 +325,45 @@ describe('ServerNoteRepository', () => {
     await expect(repo.delete(noteId)).resolves.toBeUndefined()
     expect(await repo.restore(noteId)).toEqual(note)
   })
+
+  it('loads all pages beyond 500 notes without silent truncation', async () => {
+    const repo = new ServerNoteRepository(notesApi)
+    const total = 525
+    const perPage = 50
+    const allNotes = Array.from({ length: total }, (_, index) => ({
+      id: crypto.randomUUID(),
+      title: `Note ${index + 1}`,
+      body: null,
+      schedule_item_id: null,
+      local_date: null,
+      created_at: '2026-11-26T09:00:00.000Z',
+      updated_at: '2026-11-26T09:00:00.000Z',
+    }))
+    const requestedPages: number[] = []
+
+    server.use(
+      http.get(`${API}/notes`, ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get('page') ?? '1')
+        requestedPages.push(page)
+        const start = (page - 1) * perPage
+        const slice = allNotes.slice(start, start + perPage)
+        const hasNext = start + perPage < total
+        return HttpResponse.json({
+          data: slice,
+          links: {
+            prev: page > 1 ? `${API}/notes?page=${page - 1}` : null,
+            next: hasNext ? `${API}/notes?page=${page + 1}` : null,
+          },
+          meta: { current_page: page, per_page: perPage },
+        })
+      }),
+    )
+
+    const loaded = await repo.list()
+    expect(requestedPages).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(loaded).toHaveLength(total)
+    expect(loaded[0]?.title).toBe('Note 1')
+    expect(loaded[500]?.title).toBe('Note 501')
+    expect(loaded[524]?.title).toBe('Note 525')
+  })
 })

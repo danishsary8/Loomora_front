@@ -18,12 +18,20 @@ export class ServerNoteRepository implements NoteRepository {
 
   async list(signal?: AbortSignal): Promise<Note[]> {
     const notes: Note[] = []
+    const seenIds = new Set<string>()
+    const seenNextLinks = new Set<string>()
     let page = 1
-    // Follow cursor/page links up to a reasonable safety ceiling (10 pages = 500 notes).
-    while (page <= 10) {
+    while (true) {
       const response = await this.api.list(page, signal)
-      notes.push(...response.data)
-      if (!response.links.next) break
+      for (const note of response.data) {
+        if (!seenIds.has(note.id)) {
+          seenIds.add(note.id)
+          notes.push(note)
+        }
+      }
+      const next = response.links.next
+      if (!next || response.data.length === 0 || seenNextLinks.has(next)) break
+      seenNextLinks.add(next)
       page += 1
     }
     return notes
