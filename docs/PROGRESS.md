@@ -1591,3 +1591,9 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 ### 2026-11-26 F-R4-04 status synchronization (docs-only)
 
 - Marked `F-R4-04` `done` (PR #95 merged at `6f4ba00`). No `todo` tasks remain; `QA-016` stays blocked on owner Vercel access. Backend dependency advisories are being fixed in `loomora_back` B-055 (PR #60).
+
+### 2026-11-26 F-R4-05: Revision-aware Notes (B-053)
+
+- **Branch:** `claude/happy-faraday-y2jsqe` from `origin/v2-rebuild` (`8187218`).
+- **What changed:** Synced `docs/openapi.yaml` from backend `v2-rebuild` (B-053). `Note` gains optional `revision` (guest notes have none). `notesApi.update`/`delete` send `expected_revision` when known; `create` accepts `200` replays. `ServerNoteRepository` turns a revision `409` into success when the re-read note already matches the edit, otherwise into `NoteConflictError` (with the latest note, or `null` if it was deleted elsewhere); a stale delete of a note that is already gone succeeds. Update and delete hooks pass the revision and refresh the list on success or failure. `NoteSheet` shows a conflict view with "Use the latest version" (close and show the refreshed note) or "Save mine as a new note" (new UUID, account copy untouched); `NotesPage` shows a toast for a delete conflict. New strings are in `en.json`.
+- **How it was verified:** Notes tests (45) pass, including the new `noteRevisions.test.ts` and conflict-sheet test. Full Vitest 944/944, lint, typecheck, Knip, format check, build, Redocly (valid, four existing warnings), `npm audit --omit=dev` (0) and `git diff --check` passed. Playwright `phone-375`: 127/128 in this sandbox; the failing spec differed between runs (Focus import/timer, Legal desktop layout), none touches Notes. CI is authoritative.

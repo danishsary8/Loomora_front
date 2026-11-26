@@ -25,6 +25,8 @@ export interface Note {
   body: string | null
   schedule_item_id: string | null
   local_date: LocalDate | null
+  /** Server-set edit counter (B-053). Guest notes have none. */
+  revision?: number
   created_at: string
   updated_at: string
 }

@@ -851,6 +851,15 @@
     "restoreExpired": "The 7-day undo window for this note has expired.",
     "deleteError": "Could not delete this note. Try again.",
     "restoreError": "Could not restore this note. Try again.",
+    "deleteConflict": "This note changed on another device. Check it before deleting.",
+    "conflict": {
+      "title": "This note changed on another device",
+      "body": "Your edit was not saved, so the other change is safe. Choose what to keep.",
+      "deletedBody": "This note was deleted on another device, so your edit was not saved.",
+      "useLatest": "Use the latest version",
+      "saveAsNew": "Save mine as a new note",
+      "saving": "Saving…"
+    },
     "form": {
       "titleLabel": "Title (optional)",
       "titlePlaceholder": "Short heading",

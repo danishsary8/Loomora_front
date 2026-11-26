@@ -5,7 +5,8 @@ export interface NoteRepository {
   list(signal?: AbortSignal): Promise<Note[]>
   get(id: string): Promise<Note>
   create(input: NoteInput): Promise<Note>
-  update(id: string, fields: NoteFields): Promise<Note>
-  delete(id: string): Promise<void>
+  /** `expectedRevision` guards account notes against stale writes; guest notes ignore it. */
+  update(id: string, fields: NoteFields, expectedRevision?: number): Promise<Note>
+  delete(id: string, expectedRevision?: number): Promise<void>
   restore(id: string): Promise<Note>
 }

@@ -22,7 +22,8 @@ export function createNotesApi(client: ApiClient) {
     async create(input: NoteInput): Promise<Note> {
       const result = await client.request<{ data: Note }>('POST', path, {
         body: input,
-        expectedStatus: [201],
+        // 200 is an identical replay of an active note (B-053).
+        expectedStatus: [200, 201],
       })
       const data = result?.data
       if (data?.id !== input.id.toLowerCase()) {
@@ -30,17 +31,20 @@ export function createNotesApi(client: ApiClient) {
       }
       return data
     },
-    async update(id: string, fields: NoteFields): Promise<Note> {
+    async update(id: string, fields: NoteFields, expectedRevision?: number): Promise<Note> {
       const normalized = id.toLowerCase()
+      const body =
+        expectedRevision === undefined ? fields : { ...fields, expected_revision: expectedRevision }
       const { data } = await client.request<{ data: Note }>(
         'PATCH',
         `${path}/${encodeURIComponent(normalized)}`,
-        { body: fields },
+        { body },
       )
       return data
     },
-    async delete(id: string): Promise<void> {
+    async delete(id: string, expectedRevision?: number): Promise<void> {
       await client.request<undefined>('DELETE', `${path}/${encodeURIComponent(id.toLowerCase())}`, {
+        query: { expected_revision: expectedRevision?.toString() },
         expectedStatus: [204],
       })
     },

@@ -1239,3 +1239,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Unit/integration tests cover all statuses, mixed statuses, malformed/missing/duplicate/foreign/count-mismatch diagnostics, multi-chunk partial failures, and zero unnecessary `GET /notes` calls.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, Vitest, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Playwright `phone-375`, and `git diff --check` pass.
 - **Files:** `docs/openapi.yaml`, `src/lib/api/types.ts`, `src/lib/api/account.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/test/importBackend.ts`, `src/lib/storage/notes.test.ts`, `src/features/auth/savePlan.test.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R4-05: Revision-aware Notes (B-053)
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Merged backend B-053 (`danishsary8/loomora_back` PR #59 at `2c95ed6`) and its owner-approved rules: new frontend writes send `expected_revision`, an account note is never silently overwritten, and conflicts are resolved one note at a time (no bulk action).
+- **Scope:** Sync `docs/openapi.yaml` byte-for-byte from backend `v2-rebuild`. Send `expected_revision` on account-note `PATCH` and `DELETE`; accept `200` for an identical `POST /notes` replay. On a revision `409`, read the note: matching content is success (lost response), otherwise raise `NoteConflictError`. The edit sheet then offers "Use the latest version" or "Save mine as a new note"; a delete conflict shows a toast and refreshes. Guest notes are unchanged.
+- **Done when:**
+  - [x] `docs/openapi.yaml` matches backend `v2-rebuild` byte-for-byte and passes Redocly lint.
+  - [x] `noteRevisions.test.ts` covers sent revisions, omitted revisions, lost-response success, conflict with latest, conflict after remote delete, stale and gone deletes, and the `200` create replay.
+  - [x] `NotesPage.test.tsx` covers the conflict sheet and "Save mine as a new note" with a new UUID.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, Vitest, `build`, Redocly, `npm audit --omit=dev` and `git diff --check` pass.
+- **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/storage/{errors,index,NoteRepository,ServerNoteRepository}.ts`, `src/lib/storage/noteRevisions.test.ts`, `src/i18n/en.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
