@@ -14,7 +14,7 @@ test('two tabs recover an expired final break and save one guest session', async
     .poll(() =>
       page.evaluate(async () =>
         (await indexedDB.databases()).some(
-          (db) => db.name === 'loomora-guest' && db.version === 100,
+          (db) => db.name === 'loomora-guest' && db.version === 110,
         ),
       ),
     )
