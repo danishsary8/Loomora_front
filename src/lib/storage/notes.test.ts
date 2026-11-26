@@ -160,7 +160,7 @@ describe('GuestNoteRepository (B-048 parity)', () => {
             exceptions: { created: 0, skipped: 0 },
             checkins: { created: 0, skipped: 0 },
             focus_sessions: { created: body.focus_sessions.length, skipped: 0 },
-            notes: { created: body.notes?.length ?? 0, skipped: 0 },
+            notes: { created: body.notes?.length ?? 0, skipped: 0, skipped_details: [] },
             daily_intentions: { created: 0, skipped: 0 },
           },
         })
@@ -208,8 +208,8 @@ describe('GuestNoteRepository (B-048 parity)', () => {
     expect(await guest.todos.listAll()).toContainEqual(todo)
   })
 
-  it.each(['unchanged', 'edited', 'invalid final acknowledgment'])(
-    'handles a 501-note partial import retry with %s',
+  it.each(['unchanged', 'edited', 'deleted', 'invalid final acknowledgment'])(
+    'handles a 501-note partial import retry with %s using B-052 diagnostics and zero GET /notes reads',
     async (retry) => {
       const notes = Array.from({ length: 501 }, (_, index) => ({
         id: crypto.randomUUID(),
@@ -221,16 +221,36 @@ describe('GuestNoteRepository (B-048 parity)', () => {
         updated_at: new Date(nowMs).toISOString(),
       }))
       await db.notes.bulkAdd(notes)
-      const account = new Map<string, NonNullable<ImportBody['notes']>[number]>()
+      const account = new Map<
+        string,
+        NonNullable<ImportBody['notes']>[number] & { deleted?: boolean }
+      >()
       let batches = 0
+      let noteListReads = 0
       server.use(
         http.post(API + '/import', async ({ request }) => {
           const body = (await request.json()) as ImportBody
           if (++batches === 2) return HttpResponse.error()
           const rows = body.notes ?? []
           let created = 0
+          const skipped_details: Array<{
+            id: string
+            status: 'identical' | 'different' | 'deleted'
+          }> = []
           for (const note of rows) {
-            if (account.has(note.id)) continue
+            const existing = account.get(note.id)
+            if (existing) {
+              const status = existing.deleted
+                ? 'deleted'
+                : existing.title === note.title &&
+                    existing.body === note.body &&
+                    existing.schedule_item_id === note.schedule_item_id &&
+                    existing.local_date === note.local_date
+                  ? 'identical'
+                  : 'different'
+              skipped_details.push({ id: note.id, status })
+              continue
+            }
             account.set(note.id, note)
             created++
           }
@@ -240,17 +260,13 @@ describe('GuestNoteRepository (B-048 parity)', () => {
               notes:
                 batches === 4 && retry === 'invalid final acknowledgment'
                   ? undefined
-                  : { created, skipped: rows.length - created },
+                  : { created, skipped: skipped_details.length, skipped_details },
             },
           })
         }),
-        http.get(API + '/notes', ({ request }) => {
-          const page = Number(new URL(request.url).searchParams.get('page') ?? 1)
-          const end = page * 50
-          return HttpResponse.json({
-            data: [...account.values()].slice(end - 50, end),
-            links: { next: end < account.size ? API + '/notes?page=' + (page + 1) : null },
-          })
+        http.get(API + '/notes', () => {
+          noteListReads++
+          return HttpResponse.json({ data: [], links: { next: null } })
         }),
       )
 
@@ -266,6 +282,13 @@ describe('GuestNoteRepository (B-048 parity)', () => {
         })
         expect((await notesRepo.get(original.id)).title).toBe('Edit made after the failure')
         expect(await db.notes.count()).toBe(501)
+      } else if (retry === 'deleted') {
+        account.set(original.id, { ...original, deleted: true })
+        await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({
+          name: 'GuestNoteImportConflict',
+        })
+        expect(await db.notes.count()).toBe(501)
+        expect(account.get(original.id)?.deleted).toBe(true)
       } else if (retry === 'invalid final acknowledgment') {
         await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 502 })
         expect(await db.notes.count()).toBe(501)
@@ -273,30 +296,215 @@ describe('GuestNoteRepository (B-048 parity)', () => {
         await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
         expect(await db.notes.count()).toBe(0)
       }
-      expect(account.get(original.id)).toEqual(original)
+      expect(noteListReads).toBe(0)
+      expect(account.get(original.id)?.title).toBe(original.title)
     },
   )
 
-  it('stops account-note verification when the session changes between pages', async () => {
-    const note = await notesRepo.create({ id: crypto.randomUUID(), title: 'Keep this' })
-    const generation = useSession.getState().generation
-    let reads = 0
+  it('consumes B-052 identical diagnostics (case-insensitive UUIDs) without GET /notes pagination', async () => {
+    const note = await notesRepo.create({ id: crypto.randomUUID(), title: 'Same note' })
+    let noteListReads = 0
     server.use(
       http.post(API + '/import', async ({ request }) =>
         HttpResponse.json({
           data: {
             ...acknowledgeImport((await request.json()) as ImportBody),
-            notes: { created: 0, skipped: 1 },
+            notes: {
+              created: 0,
+              skipped: 1,
+              skipped_details: [{ id: note.id.toUpperCase(), status: 'identical' }],
+            },
           },
         }),
       ),
       http.get(API + '/notes', () => {
-        reads++
+        noteListReads++
+        return HttpResponse.json({ data: [], links: { next: null } })
+      }),
+    )
+
+    await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+    expect(noteListReads).toBe(0)
+    expect(await db.notes.count()).toBe(0)
+  })
+
+  it.each([
+    ['different only', ['different']],
+    ['deleted only', ['deleted']],
+    ['mixed identical + different', ['identical', 'different']],
+    ['mixed identical + deleted', ['identical', 'deleted']],
+  ] as const)(
+    'raises GuestNoteImportConflict and retains all guest data for %s statuses without GET /notes or restore calls',
+    async (_label, statuses) => {
+      const todo = await guest.todos.create({ title: 'Keep unresolved todo' })
+      const createdNotes = await Promise.all(
+        statuses.map((_, index) =>
+          notesRepo.create({ id: crypto.randomUUID(), title: `Guest note ${index}` }),
+        ),
+      )
+      let noteReadsOrRestores = 0
+      server.use(
+        http.post(API + '/import', async ({ request }) =>
+          HttpResponse.json({
+            data: {
+              ...acknowledgeImport((await request.json()) as ImportBody),
+              notes: {
+                created: 0,
+                skipped: createdNotes.length,
+                skipped_details: createdNotes.map((note, index) => ({
+                  id: note.id,
+                  status: statuses[index],
+                })),
+              },
+            },
+          }),
+        ),
+        http.get(API + '/notes', () => {
+          noteReadsOrRestores++
+          return HttpResponse.json({ data: [], links: { next: null } })
+        }),
+        http.post(`${API}/notes/:id/restore`, () => {
+          noteReadsOrRestores++
+          return HttpResponse.json({ data: createdNotes[0] })
+        }),
+      )
+
+      await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({
+        name: 'GuestNoteImportConflict',
+      })
+      expect(noteReadsOrRestores).toBe(0)
+      expect(await db.notes.count()).toBe(createdNotes.length)
+      expect(await guest.todos.listAll()).toContainEqual(todo)
+    },
+  )
+
+  it.each([
+    [
+      'missing skipped_details when skipped > 0 (older backend)',
+      (ids: string[]) => ({ created: 0, skipped: ids.length }),
+    ],
+    [
+      'missing skipped_details when skipped === 0 (older backend)',
+      (ids: string[]) => ({ created: ids.length, skipped: 0 }),
+    ],
+    [
+      'non-array skipped_details',
+      (ids: string[]) => ({ created: 0, skipped: ids.length, skipped_details: {} }),
+    ],
+    [
+      'count mismatch (fewer details than skipped)',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [{ id: ids[0], status: 'identical' }],
+      }),
+    ],
+    [
+      'count mismatch (extra detail when skipped === 0)',
+      (ids: string[]) => ({
+        created: ids.length,
+        skipped: 0,
+        skipped_details: [{ id: ids[0], status: 'identical' }],
+      }),
+    ],
+    [
+      'duplicate IDs (case-insensitive)',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [
+          { id: ids[0], status: 'identical' },
+          { id: (ids[0] ?? '').toUpperCase(), status: 'identical' },
+        ],
+      }),
+    ],
+    [
+      'foreign UUID not in submitted batch',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [
+          { id: ids[0], status: 'identical' },
+          { id: crypto.randomUUID(), status: 'identical' },
+        ],
+      }),
+    ],
+    [
+      'invalid UUID format',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [
+          { id: 'not-a-uuid', status: 'identical' },
+          { id: ids[1], status: 'identical' },
+        ],
+      }),
+    ],
+    [
+      'disallowed status value',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [
+          { id: ids[0], status: 'identical' },
+          { id: ids[1], status: 'unknown' },
+        ],
+      }),
+    ],
+    [
+      'unexpected extra property on diagnostic item',
+      (ids: string[]) => ({
+        created: 0,
+        skipped: ids.length,
+        skipped_details: [
+          { id: ids[0], status: 'identical', extra: true },
+          { id: ids[1], status: 'identical' },
+        ],
+      }),
+    ],
+  ])(
+    'fails closed (502) and retains guest data when diagnostics are %s',
+    async (_label, buildNotes) => {
+      const todo = await guest.todos.create({ title: 'Retain todo' })
+      const noteA = await notesRepo.create({ id: crypto.randomUUID(), title: 'Note A' })
+      const noteB = await notesRepo.create({ id: crypto.randomUUID(), title: 'Note B' })
+      server.use(
+        http.post(API + '/import', async ({ request }) =>
+          HttpResponse.json({
+            data: {
+              ...acknowledgeImport((await request.json()) as ImportBody),
+              notes: buildNotes([noteA.id, noteB.id]),
+            },
+          }),
+        ),
+      )
+
+      await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 502 })
+      expect(await notesRepo.get(noteA.id)).toEqual(noteA)
+      expect(await notesRepo.get(noteB.id)).toEqual(noteB)
+      expect(await guest.todos.listAll()).toContainEqual(todo)
+    },
+  )
+
+  it('stops multi-chunk import when the session changes between batches and retains guest notes', async () => {
+    const notes = Array.from({ length: 501 }, (_, index) => ({
+      id: crypto.randomUUID(),
+      title: `Session note ${index}`,
+      body: null,
+      schedule_item_id: null,
+      local_date: null,
+      created_at: new Date(nowMs).toISOString(),
+      updated_at: new Date(nowMs).toISOString(),
+    }))
+    await db.notes.bulkAdd(notes)
+    const generation = useSession.getState().generation
+    let batches = 0
+    server.use(
+      http.post(API + '/import', async ({ request }) => {
+        batches++
+        const body = (await request.json()) as ImportBody
         useSession.getState().signIn(makeTokenResponse())
-        return HttpResponse.json({
-          data: [note],
-          links: { next: API + '/notes?page=2' },
-        })
+        return HttpResponse.json({ data: acknowledgeImport(body) })
       }),
     )
 
@@ -305,8 +513,8 @@ describe('GuestNoteRepository (B-048 parity)', () => {
         if (useSession.getState().generation !== generation) throw new Error('Session changed')
       }),
     ).rejects.toThrow('Session changed')
-    expect(reads).toBe(1)
-    expect(await notesRepo.get(note.id)).toEqual(note)
+    expect(batches).toBe(1)
+    expect(await db.notes.count()).toBe(501)
   })
 
   it('migrates Focus sessions and Notes together in dependency order with zero data loss on retry', async () => {
@@ -371,7 +579,7 @@ describe('GuestNoteRepository (B-048 parity)', () => {
             exceptions: { created: 0, skipped: 0 },
             checkins: { created: 0, skipped: 0 },
             focus_sessions: { created: body.focus_sessions.length, skipped: 0 },
-            notes: { created: body.notes?.length ?? 0, skipped: 0 },
+            notes: { created: body.notes?.length ?? 0, skipped: 0, skipped_details: [] },
             daily_intentions: { created: body.daily_intentions.length, skipped: 0 },
           },
         })

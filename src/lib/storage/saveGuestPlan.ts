@@ -2,7 +2,8 @@ import type { FocusSession, FocusSessionInput } from '@/features/focus/types'
 import type { Note } from '@/features/notes/types'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { LocalDate, Todo } from '@/features/todos/types'
-import { notesApi, type AccountDataApi, type ImportBody } from '@/lib/api'
+import { ApiError, type AccountDataApi, type ImportBody } from '@/lib/api'
+import { isValidNoteImportResult } from '@/lib/api/account'
 import type { DailyIntentionRecord } from '@/lib/api/types'
 import type { StoredFocusSession, StoredNote } from './db'
 import { GuestNoteImportConflict } from './errors'
@@ -13,7 +14,6 @@ import { orderForImport } from './guestImportOrder'
 import type { GuestNoteRepository } from './GuestNoteRepository'
 import type { GuestScheduleRepository } from './GuestScheduleRepository'
 import type { GuestTodoRepository } from './GuestTodoRepository'
-import { ServerNoteRepository } from './ServerNoteRepository'
 
 /** The guest repositories, whichever storage is active. */
 export interface GuestStorage {
@@ -265,29 +265,20 @@ export async function saveGuestPlan(
     noteSnapshot.filter((note) => !note.deleted_at),
   )
   if (isEmptyPlan(plan)) return false
-  const notesToVerify: NonNullable<ImportBody['notes']> = []
+  let hasNoteConflict = false
   for (const chunk of chunkImportBody(toImportBody(plan))) {
     assertSession()
     const result = await api.importGuestData(chunk)
-    // Counts identify no individual skipped UUIDs, so verify the entire affected batch.
-    if (result.notes?.skipped && chunk.notes) notesToVerify.push(...chunk.notes)
+    if (chunk.notes !== undefined || result.notes !== undefined) {
+      if (!isValidNoteImportResult(result.notes, chunk.notes)) {
+        throw new ApiError(502, { message: 'Invalid guest import acknowledgment.' })
+      }
+      if (result.notes.skipped_details.some(({ status }) => status !== 'identical')) {
+        hasNoteConflict = true
+      }
+    }
   }
-  if (notesToVerify.length > 0) {
-    const accountNotes = await new ServerNoteRepository(notesApi).list(undefined, assertSession)
-    assertSession()
-    const byId = new Map(accountNotes.map((note) => [note.id, note]))
-    const matches = notesToVerify.every((note) => {
-      const account = byId.get(note.id)
-      return (
-        account &&
-        account.title === note.title &&
-        account.body === note.body &&
-        account.schedule_item_id === note.schedule_item_id &&
-        account.local_date === note.local_date
-      )
-    })
-    if (!matches) throw new GuestNoteImportConflict()
-  }
+  if (hasNoteConflict) throw new GuestNoteImportConflict()
   assertSession()
   await Promise.all([
     guest.todos.clearImported(todoSnapshot),

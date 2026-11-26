@@ -1224,3 +1224,17 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 - **Priority:** P2
 - **Scope:** Match B-051's inclusive 400-preceding-local-day window using one evaluator for guest current and historical streak values.
 - **Regression coverage:** Audit reproduction, inclusive cutoff, local-midnight completion bucketing, today and historical parity, deleted records, and existing planned-day and schedule-exception rules.
+
+### F-R4-04: Notes Import Diagnostics Integration (B-052)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Merged backend B-052 (`POST /import` `notes.skipped_details`, backend PR #57 at `259cf90`). Task ID verified unused before registration (`F-030` was already assigned to Google account deletion frontend, PR #45).
+- **Scope:** Sync merged backend `docs/openapi.yaml` (`259cf90`), type and strictly validate `notes.skipped_details` in `createAccountDataApi.importGuestData` and `saveGuestPlan` (exact skipped count, valid UUIDs, case-insensitive uniqueness, membership in submitted batch, allowed statuses `identical | different | deleted`, no unexpected properties), remove the legacy paginated `GET /notes` verification walk, accept explicit `identical` skipped Notes, fail closed (`502`) on missing/malformed/inconsistent diagnostics (including older servers), and raise `GuestNoteImportConflict` while retaining the complete guest plan for `different`, `deleted`, or mixed statuses without overwriting or restoring account Notes.
+- **Done when:**
+  - [x] `docs/openapi.yaml` synced byte-for-byte from merged backend B-052 (`259cf90`) and passes Redocly lint.
+  - [x] `notes.skipped_details` is validated against the submitted batch; missing, malformed, duplicate, foreign, or count-mismatched diagnostics fail closed (`502`) and retain the full guest plan.
+  - [x] `identical` skipped Notes succeed without calling `GET /notes`; `different`, `deleted`, and mixed statuses raise `GuestNoteImportConflict` and retain all guest data without overwriting or restoring account Notes.
+  - [x] Unit/integration tests cover all statuses, mixed statuses, malformed/missing/duplicate/foreign/count-mismatch diagnostics, multi-chunk partial failures, and zero unnecessary `GET /notes` calls.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, Vitest, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Playwright `phone-375`, and `git diff --check` pass.
+- **Files:** `docs/openapi.yaml`, `src/lib/api/types.ts`, `src/lib/api/account.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/test/importBackend.ts`, `src/lib/storage/notes.test.ts`, `src/features/auth/savePlan.test.tsx`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

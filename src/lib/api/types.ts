@@ -228,12 +228,23 @@ interface ImportCount {
   skipped: number
 }
 
+export type NoteImportSkippedStatus = 'identical' | 'different' | 'deleted'
+
+export interface NoteImportSkippedDetail {
+  id: string
+  status: NoteImportSkippedStatus
+}
+
+export interface NoteImportResult extends ImportCount {
+  skipped_details: NoteImportSkippedDetail[]
+}
+
 export interface ImportResult {
   todos: ImportCount
   schedule_items: ImportCount
   exceptions: ImportCount
   checkins: ImportCount
   focus_sessions?: ImportCount
-  notes?: ImportCount
+  notes?: NoteImportResult
   daily_intentions: ImportCount
 }

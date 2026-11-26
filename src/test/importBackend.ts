@@ -31,7 +31,7 @@ export function acknowledgeImport(body: ImportBody) {
     checkins: counts(body.checkins.length),
     focus_sessions: counts(body.focus_sessions.length),
     daily_intentions: counts(body.daily_intentions.length),
-    ...(body.notes ? { notes: counts(body.notes.length) } : {}),
+    ...(body.notes ? { notes: { ...counts(body.notes.length), skipped_details: [] } } : {}),
   }
 }
 
