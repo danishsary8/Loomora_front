@@ -1,10 +1,13 @@
 import {
   MAX_NOTE_BODY,
+  MAX_NOTE_TAG_LENGTH,
+  MAX_NOTE_TAGS,
   MAX_NOTE_TITLE,
   type Note,
   type NoteFields,
   type NoteInput,
 } from '@/features/notes/types'
+import { normalizeTags, tagProblem } from '@/features/notes/tags'
 import { ApiError } from '@/lib/api/errors'
 import { isLocalDate } from '@/lib/date'
 import type { GuestDatabase, StoredNote } from './db'
@@ -21,9 +24,25 @@ interface Options {
 }
 
 function toPublicNote(row: StoredNote): Note {
-  const { deleted_at: _deletedAt, ...note } = row
+  const { deleted_at: _deletedAt, pinned, color, tags, ...note } = row
   void _deletedAt
-  return note
+  return { ...note, pinned: pinned ?? false, color: color ?? null, tags: normalizeTags(tags) }
+}
+
+function cleanOrganization(fields: NoteFields, existing?: Note) {
+  const tags = fields.tags !== undefined ? normalizeTags(fields.tags) : (existing?.tags ?? [])
+  const problem = tagProblem(tags)
+  if (problem === 'tooMany') {
+    throw new ValidationError('tags', `Use at most ${MAX_NOTE_TAGS} tags.`)
+  }
+  if (problem === 'tooLong') {
+    throw new ValidationError('tags', `Each tag must be at most ${MAX_NOTE_TAG_LENGTH} characters.`)
+  }
+  return {
+    pinned: fields.pinned ?? existing?.pinned ?? false,
+    color: fields.color !== undefined ? fields.color : (existing?.color ?? null),
+    tags,
+  }
 }
 
 function cleanText(value: string | null | undefined): string | null {
@@ -60,8 +79,13 @@ function validateNoteState(state: {
   }
 }
 
-function sortNewestFirst(a: Note, b: Note): number {
-  return b.updated_at.localeCompare(a.updated_at) || b.id.localeCompare(a.id)
+/** Same order as GET /notes (B-056): pinned first, then the most recently updated. */
+function sortNewestFirst(a: StoredNote, b: StoredNote): number {
+  return (
+    Number(b.pinned ?? false) - Number(a.pinned ?? false) ||
+    b.updated_at.localeCompare(a.updated_at) ||
+    b.id.localeCompare(a.id)
+  )
 }
 
 export class GuestNoteRepository implements NoteRepository {
@@ -81,8 +105,8 @@ export class GuestNoteRepository implements NoteRepository {
     const rows = await (await this.open()).notes.toArray()
     return rows
       .filter((row) => !row.deleted_at)
-      .map(toPublicNote)
       .sort(sortNewestFirst)
+      .map(toPublicNote)
   }
 
   async listAll({ includeDeleted = false } = {}): Promise<StoredNote[]> {
@@ -121,6 +145,7 @@ export class GuestNoteRepository implements NoteRepository {
     const schedule_item_id = input.schedule_item_id ? input.schedule_item_id.toLowerCase() : null
     const local_date = input.local_date ?? null
     validateNoteState({ title, body, schedule_item_id, local_date })
+    const organization = cleanOrganization(input)
 
     const db = await this.open()
     const stamp = this.now().toISOString()
@@ -130,6 +155,7 @@ export class GuestNoteRepository implements NoteRepository {
       body,
       schedule_item_id,
       local_date,
+      ...organization,
       created_at: stamp,
       updated_at: stamp,
     }
@@ -175,6 +201,7 @@ export class GuestNoteRepository implements NoteRepository {
       }
 
       validateNoteState({ title, body, schedule_item_id, local_date })
+      const organization = cleanOrganization(fields, toPublicNote(existing))
       if (schedule_item_id && schedule_item_id !== existing.schedule_item_id) {
         const block = await db.schedule_items.get(schedule_item_id)
         if (!block) throw new ValidationError('schedule_item_id', 'Schedule block not found.')
@@ -186,6 +213,7 @@ export class GuestNoteRepository implements NoteRepository {
         body,
         schedule_item_id,
         local_date,
+        ...organization,
         updated_at: this.now().toISOString(),
       }
       await db.notes.put(updated)

@@ -71,6 +71,53 @@ describe('NotesPage (F-R4-02)', () => {
     expect(await screen.findByText('Exam review')).toBeInTheDocument()
   })
 
+  it('pins, colors and tags guest notes, and filters by Pinned and by tag (F-R4-06)', async () => {
+    const { db, repo } = createTestRepository()
+    const schedule = new GuestScheduleRepository({ db })
+    const notesRepo = new GuestNoteRepository({ db })
+    await notesRepo.create({ id: crypto.randomUUID(), title: 'Plain note', tags: ['home'] })
+
+    renderRoute('/notes', repo, schedule, db)
+    expect(await screen.findByText('Plain note')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'New note' }))
+    const sheet = await screen.findByRole('dialog', { name: 'New note' })
+    await userEvent.type(within(sheet).getByLabelText('Title (optional)'), 'API ideas')
+    await userEvent.type(within(sheet).getByLabelText(/^Tags/), '#Work, ideas')
+    await userEvent.click(within(sheet).getByRole('button', { name: /Study/ }))
+    await userEvent.click(within(sheet).getByLabelText('Pin to the top'))
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Save note' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    const [firstHeading] = await screen.findAllByRole('heading', { level: 2 })
+    if (!firstHeading) throw new Error('Expected a note heading')
+    expect(firstHeading).toHaveTextContent('API ideas')
+    expect(within(firstHeading).getByRole('img', { name: 'Pinned' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show notes tagged work' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Pinned' }))
+    expect(screen.getByText('API ideas')).toBeInTheDocument()
+    expect(screen.queryByText('Plain note')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'All' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Show notes tagged home' }))
+    expect(screen.getByLabelText('Search notes')).toHaveValue('#home')
+    expect(screen.getByText('Plain note')).toBeInTheDocument()
+    expect(screen.queryByText('API ideas')).not.toBeInTheDocument()
+  })
+
+  it('refuses a sixth tag in the note sheet', async () => {
+    const { db, repo } = createTestRepository()
+    renderRoute('/notes', repo, new GuestScheduleRepository({ db }), db)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'New note' }))
+    const sheet = await screen.findByRole('dialog', { name: 'New note' })
+    await userEvent.type(within(sheet).getByLabelText('Title (optional)'), 'Too many')
+    await userEvent.type(within(sheet).getByLabelText(/^Tags/), 'a, b, c, d, e, f')
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Save note' }))
+    expect(await within(sheet).findByText('Use at most 5 tags.')).toBeInTheDocument()
+  })
+
   it('loads account notes from API, handles 410 expired restore, and recovers from load error', async () => {
     const user = makeUser({ survey_done: true })
     useSession.getState().signIn(makeTokenResponse(user))

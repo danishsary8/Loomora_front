@@ -17,9 +17,11 @@ export type StoredFocusSession = FocusSession & {
   deleted_at?: string | null
 }
 
-export type StoredNote = Note & {
-  deleted_at?: string | null
-}
+/** Rows saved before B-056 have no pin, color or tags; reading fills the defaults. */
+export type StoredNote = Omit<Note, 'pinned' | 'color' | 'tags'> &
+  Partial<Pick<Note, 'pinned' | 'color' | 'tags'>> & {
+    deleted_at?: string | null
+  }
 
 /** Guest data in IndexedDB (A8-4). Rows keep their client UUIDs for the later import. */
 export class GuestDatabase extends Dexie {

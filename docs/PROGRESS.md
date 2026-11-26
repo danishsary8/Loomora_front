@@ -1617,3 +1617,9 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 
 - **What changed:** See TASKS UX-019. UX-018 marked done (PR #99 at `288d1e6`).
 - **How it was verified:** lint, typecheck, Knip, format check, Vitest 944/944; 375 px screenshots of the Add sheet, Profile and Landing compared with the concept. A 200% text check at 768 px found the new streak tile and settings rows too rigid; both now wrap. Playwright `phone-375`: 125/128 in this sandbox; `focus-import` fails on the unchanged base here, and `legal` and `pwa` pass when run alone.
+
+### 2026-11-26 F-R4-06: Note pin, color and tags
+
+- **What changed:** See TASKS F-R4-06. `CATEGORY_ICONS` moved from `icons.tsx` to `categoryIcons.ts` (clears a react-refresh lint warning from UX-018).
+- **How it was verified:** lint, typecheck, Knip, format check, Vitest 951/951, Redocly valid; `docs/openapi.yaml` is byte-identical to backend B-056. 320 and 375 px screenshots of the sheet and list. Playwright `phone-375` 126/128 in this sandbox; `focus-presentation` and `pwa` failed once and passed on rerun, and neither touches Notes.
+- **Depends on:** backend PR #62 (B-056), green in CI. Until it is deployed, the server ignores the new fields.

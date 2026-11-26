@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
-import { CATEGORY_ICONS } from '@/components/ui/icons'
+import { CATEGORY_ICONS } from '@/components/ui/categoryIcons'
 import { cn } from '@/lib/cn'
 import type { ScheduleItem, Weekday } from '../types'
 
