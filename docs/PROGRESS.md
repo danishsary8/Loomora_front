@@ -1482,12 +1482,22 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Added repository, UI, and 375 px E2E tests covering guest (including offline) and account delete, Undo, 410 expired restore, error rollback/retention, double-submission prevention, filter preservation, and session-switch isolation.
 - **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Focus/Sheet/Toast Vitest (`68/68` across 5 files), and full `phone-375` Playwright (`125/125`).
 
+### 2026-11-26 F-R3-15: Guest Focus History Import Integration
+
+- **Branch / Worktree:** `feat/F-R3-15-guest-focus-import` in `loomora-front-F-R3-15`, branched from `origin/v2-rebuild` (`2087660`, PR #84 merged). Preserved `loomora-front-F-R3-10` and `loomora-front-UX-013` untouched.
+- **What changed:**
+  - Synced `docs/openapi.yaml` from merged backend `v2-rebuild` (`fa2b93d8`, including B-049 `POST /import` `focus_sessions` + `409` and B-047 `GET /stats/summary`).
+  - Added `listAll({ includeDeleted })` and snapshot-safe `clearImported(snapshot)` to `GuestFocusSessionRepository` and wired `focusSessions` into `GuestStorage`, `AppProviders`, `readGuestPlan`, and `isEmptyPlan`.
+  - Updated `saveGuestPlan` (`toImportBody` / `bucketFocusSessions` / `chunkImportBody`) to include active non-deleted guest Focus sessions via `canonicalFocusPayload`, clear stale links to deleted guest items without dropping the session, schedule sessions in or after the chunk carrying their linked to-do/schedule item under the 500-session-per-call cap, and retain all local records until every batch succeeds.
+  - Extended `src/test/importBackend.ts` with B-049 `focus_sessions` validation, duplicate/foreign/mismatch `409` rollback, and idempotent/account-deleted replay, and added `src/lib/storage/focusImport.test.ts` (13 tests), `savePlan.test.tsx` Focus-only retry test, and `e2e/focus-import.spec.ts` (375 px).
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint (valid, 4 baseline warnings), Vitest (77 files, 872 tests), and `e2e/focus-import.spec.ts` + full `phone-375` Playwright.
+
 ### 2026-11-26 F-R4-01: Insights, Analytics, Weekly Recap & Plan vs Reality
 
-- **Branch / Worktree:** `feat/F-R4-01-insights-analytics` in `loomora-front-F-R4-01`, branched from `origin/v2-rebuild` (`2087660`, PR #84 merged). Preserved `loomora-front-F-R3-10` and `loomora-front-UX-013` untouched.
+- **Branch / Worktree:** `feat/F-R4-01-insights-analytics` in `loomora-front-F-R4-01`, branched from `origin/v2-rebuild` (`2087660`, PR #84 merged) and reconciled with merged `origin/v2-rebuild` (`9fb692b`, PR #85 `F-R3-15`). Preserved `loomora-front-F-R3-10` and `loomora-front-UX-013` untouched.
 - **What changed:**
   - Synced `docs/openapi.yaml` and copied the shared backend `stats-summary-cases.json` fixture into `src/features/insights/fixtures/stats-summary-cases.json`.
-  - Implemented `accountDataApi.getStatsSummary`, `GuestFocusSessionRepository.listForRange`, `computeGuestStatsSummary` (matching B-047 `StatsSummaryService` identically on the shared fixture), and session-scoped `useStatsSummary` (offline-capable for guests via Dexie, online API for accounts).
+  - Implemented `accountDataApi.getStatsSummary`, `GuestFocusSessionRepository.listForRange` (alongside F-R3-15 `listAll`/`clearImported`), `computeGuestStatsSummary` (matching B-047 `StatsSummaryService` identically on the shared fixture), and session-scoped `useStatsSummary` (offline-capable for guests via Dexie, online API for accounts).
   - Replaced the `ComingSoon` placeholder in `InsightsPage` with the Elemental Edition Insights dashboard: range selector (`Week` with Previous/Next week navigation honoring `week_starts_on`, `7 days`, `30 days`, `90 days` within the 92-day cap), Overview + Current/Longest Streak (`GET /streak`), Weekly Recap (partial & empty weeks), Plan vs Reality (to-dos done/due, schedule blocks checked/planned, linked vs unplanned focus, countdown vs stopwatch), Daily Breakdown, and loading/empty/error/retry/offline states. Removed dead `ComingSoon`.
-  - **Historical streak note / blocker:** `GET /streak` returns only `current_streak`, `longest_streak`, and `today_counted`; no historical streak-by-date endpoint exists yet. Insights displays current and longest streak honestly without fabricating a historical streak timeline.
-- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint, Vitest (`computeStatsSummary`, `InsightsPage`, `routes`), and Playwright `phone-375` (`e2e/insights.spec.ts` + axe + 320–1440 px / 200% text).
+  - **Historical streak note / blocker:** `GET /streak` returns only `current_streak`, `longest_streak`, and `today_counted`; no historical streak-by-date endpoint is assumed until Codex merges B-051. Insights displays current and longest streak honestly without fabricating a historical streak timeline.
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint, Vitest (`computeStatsSummary`, `InsightsPage`, `routes`, `focusImport`), and Playwright `phone-375` (`e2e/insights.spec.ts` + `e2e/focus-import.spec.ts`).

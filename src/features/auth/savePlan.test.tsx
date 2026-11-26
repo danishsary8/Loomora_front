@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useSession } from '@/lib/api'
+import { useSession, type ImportBody } from '@/lib/api'
 import { GuestScheduleRepository } from '@/lib/storage'
+import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
 import { API, http, HttpResponse, makeTokenResponse, makeUser, server } from '@/test/apiMocks'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 import { toLocalDate } from '@/lib/date'
@@ -232,5 +233,54 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Save your plan' })).not.toBeInTheDocument(),
     )
+  })
+
+  it('Profile offers to save guest Focus sessions left on the device and clears them after retry', async () => {
+    const { db, repo, schedule } = setup()
+    const focusRepo = new GuestFocusSessionRepository({ db, timeZone: 'UTC' })
+    const session = await focusRepo.record({
+      id: crypto.randomUUID(),
+      mode: 'countdown',
+      started_at: '2026-10-26T08:00:00.000Z',
+      ended_at: '2026-10-26T08:25:00.000Z',
+      end_reason: 'completed',
+      planned_focus_ms: 1_500_000,
+      label: 'Deep reading',
+      segments: [
+        {
+          type: 'focus',
+          started_at: '2026-10-26T08:00:00.000Z',
+          ended_at: '2026-10-26T08:25:00.000Z',
+          active_ms: 1_500_000,
+        },
+      ],
+    })
+    useSession.getState().signIn(makeTokenResponse(makeUser({ survey_done: true })))
+    const payloads: ImportBody[] = []
+    server.use(
+      ...accountToday(),
+      http.post(`${API}/import`, async ({ request }) => {
+        payloads.push((await request.json()) as ImportBody)
+        if (payloads.length === 1) {
+          return HttpResponse.json({ message: 'Conflict' }, { status: 409 })
+        }
+        return HttpResponse.json({
+          data: { ...IMPORT_RESULT, focus_sessions: { created: 1, skipped: 0 } },
+        })
+      }),
+    )
+
+    renderRoute('/profile', repo, schedule, db)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Save your plan' }))
+    const sheet = await screen.findByRole('dialog', { name: 'We could not save your plan' })
+    expect(await focusRepo.listAll()).toHaveLength(1)
+
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('Your plan is saved')).toBeInTheDocument()
+    expect(payloads).toHaveLength(2)
+    expect(payloads[0]?.focus_sessions.map(({ id }) => id)).toEqual([session.id])
+    expect(payloads[1]).toEqual(payloads[0])
+    expect(await focusRepo.listAll()).toEqual([])
   })
 })
