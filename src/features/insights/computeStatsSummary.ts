@@ -1,12 +1,14 @@
 import type { FocusSession } from '@/features/focus/types'
-import { occurrencesForDate } from '@/features/schedule/occurrences'
+import { occurrencesForDate, weekdayOf } from '@/features/schedule/occurrences'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { LocalDate, Todo } from '@/features/todos/types'
 import type { StatsDayRow, StatsMetrics, StatsSummary } from '@/lib/api/types'
-import { daysBetweenLocalDates, isLocalDate, localDateIn } from '@/lib/date'
+import { addDaysLocalDate, daysBetweenLocalDates, isLocalDate, localDateIn } from '@/lib/date'
 import type { WeekStart } from '@/lib/time/time'
 
 export const MAX_STATS_RANGE_DAYS = 92
+const STREAK_LOOKBACK_DAYS = 400
+const FIRST_SUPPORTED_DATE = '0001-01-01'
 
 function emptyMetrics(): StatsMetrics {
   return {
@@ -27,25 +29,12 @@ function minutesSinceMidnight(time: string): number {
   return hours * 60 + minutes
 }
 
-/** Shift a `YYYY-MM-DD` calendar date by `deltaDays` (positive or negative). */
-export function addDaysLocalDate(date: LocalDate, deltaDays: number): LocalDate {
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number]
-  return new Date(Date.UTC(y, m - 1, d + deltaDays)).toISOString().slice(0, 10)
-}
-
-/** ISO weekday 1 (Monday) .. 7 (Sunday) for a `YYYY-MM-DD` date. */
-function isoWeekday(date: LocalDate): number {
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number]
-  const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
-  return day === 0 ? 7 : day
-}
-
 /** Inclusive `[from, to]` 7-day calendar week containing `anchorDate`, honoring `weekStartsOn`. */
 export function weekBoundsForDate(
   anchorDate: LocalDate,
   weekStartsOn: WeekStart = 1,
 ): { from: LocalDate; to: LocalDate } {
-  const day = isoWeekday(anchorDate)
+  const day = weekdayOf(anchorDate) + 1
   const offset = (day - weekStartsOn + 7) % 7
   const from = addDaysLocalDate(anchorDate, -offset)
   return { from, to: addDaysLocalDate(from, 6) }
@@ -55,6 +44,7 @@ export interface GuestStatsInput {
   from: LocalDate
   to: LocalDate
   timeZone: string
+  today: LocalDate
   todos: readonly Todo[]
   items: readonly ScheduleItem[]
   exceptions: readonly ScheduleException[]
@@ -63,19 +53,20 @@ export interface GuestStatsInput {
 }
 
 /**
- * Pure guest-mode calculation matching backend B-047 `GET /stats/summary` (`StatsSummaryService`).
+ * Pure guest-mode calculation matching backend B-047 and B-051 `GET /stats/summary` (`StatsSummaryService`).
  */
 export function computeGuestStatsSummary({
   from,
   to,
   timeZone,
+  today,
   todos,
   items,
   exceptions,
   checkins,
   sessions,
 }: GuestStatsInput): StatsSummary {
-  if (!isLocalDate(from) || !isLocalDate(to) || to < from) {
+  if (!isLocalDate(from) || !isLocalDate(to) || from < FIRST_SUPPORTED_DATE || to < from) {
     throw new RangeError('Invalid date range for stats summary.')
   }
   const span = daysBetweenLocalDates(to, from) + 1
@@ -83,11 +74,41 @@ export function computeGuestStatsSummary({
     throw new RangeError(`Stats summary range cannot exceed ${MAX_STATS_RANGE_DAYS} days.`)
   }
 
+  const itemIds = new Set(items.map((item) => item.id))
+  const counted = new Set(
+    checkins
+      .filter((checkin) => itemIds.has(checkin.schedule_item_id))
+      .map((checkin) => checkin.date),
+  )
+  const planned = new Set<LocalDate>()
+  const schedulePlan = new Map<LocalDate, boolean>()
+
+  function streakAt(date: LocalDate): Pick<StatsDayRow, 'streak' | 'streak_may_be_longer'> {
+    let streak = 0
+    for (let offset = 0; offset <= STREAK_LOOKBACK_DAYS; offset += 1) {
+      const day = addDaysLocalDate(date, -offset)
+      if (day < FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
+      if (counted.has(day)) {
+        streak += 1
+      } else if (day !== today) {
+        let hasSchedule = schedulePlan.get(day)
+        if (hasSchedule === undefined) {
+          hasSchedule = occurrencesForDate(items, exceptions, [], day).length > 0
+          schedulePlan.set(day, hasSchedule)
+        }
+        if (planned.has(day) || hasSchedule) return { streak, streak_may_be_longer: false }
+      }
+      if (day === FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
+    }
+    return { streak, streak_may_be_longer: streak > 0 }
+  }
+
   const byDate = new Map<LocalDate, StatsMetrics>()
   for (let i = 0; i < span; i += 1) {
     const date = addDaysLocalDate(from, i)
     const metrics = emptyMetrics()
     const occurrences = occurrencesForDate(items, exceptions, checkins, date)
+    schedulePlan.set(date, occurrences.length > 0)
     for (const occurrence of occurrences) {
       metrics.planned_block_minutes +=
         minutesSinceMidnight(occurrence.end_time) - minutesSinceMidnight(occurrence.start_time)
@@ -112,11 +133,13 @@ export function computeGuestStatsSummary({
   for (const todo of todos) {
     if (todo.deleted_at) continue
     if (todo.due_date !== null) {
+      planned.add(todo.due_date)
       const dueDay = byDate.get(todo.due_date)
       if (dueDay) dueDay.todos_due += 1
     }
     if (todo.done_at !== null) {
       const doneDate = localDateIn(todo.done_at, timeZone)
+      counted.add(doneDate)
       const doneDay = byDate.get(doneDate)
       if (doneDay) doneDay.todos_done += 1
     }
@@ -134,10 +157,17 @@ export function computeGuestStatsSummary({
     totals.blocks_checked += metrics.blocks_checked
     totals.focus_ms_linked += metrics.focus_ms_linked
     totals.focus_ms_unplanned += metrics.focus_ms_unplanned
-    days.push({ local_date, ...metrics })
+    days.push({ local_date, ...metrics, ...streakAt(local_date) })
   }
 
-  return { days, totals, by_mode: byMode }
+  const opening = streakAt(addDaysLocalDate(from, -1))
+  return {
+    opening_streak: opening.streak,
+    opening_streak_may_be_longer: opening.streak_may_be_longer,
+    days,
+    totals,
+    by_mode: byMode,
+  }
 }
 
 /** True when every total metric in the summary is zero. */

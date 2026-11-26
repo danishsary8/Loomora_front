@@ -4,12 +4,14 @@ import { PageHeading } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Button, Card, SegmentedControl } from '@/components/ui'
 import { useStreak } from '@/features/streak/useStreak'
+import { useNow } from '@/features/today/useNow'
 import type { LocalDate } from '@/features/todos/types'
 import { errorMessageKey, useSession, type StatsDayRow, type StatsSummary } from '@/lib/api'
-import { daysBetweenLocalDates, toLocalDate } from '@/lib/date'
+import { addDaysLocalDate, daysBetweenLocalDates, toLocalDate } from '@/lib/date'
 import { useTimePreferences } from '@/lib/time/useTimePreferences'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
-import { addDaysLocalDate, isEmptyStatsSummary, weekBoundsForDate } from './computeStatsSummary'
+import { isEmptyStatsSummary, weekBoundsForDate } from './computeStatsSummary'
+import { StreakHistoryCard } from './StreakHistoryCard'
 import { useStatsSummary } from './useStatsSummary'
 
 type RangePreset = 'week' | 'last7' | 'last30' | 'last90'
@@ -64,7 +66,7 @@ function dayActivityScore(day: StatsDayRow): number {
 export function InsightsPage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.resolvedLanguage ?? 'en'
-  const [openedAt] = useState(() => new Date())
+  const now = useNow()
   const [preset, setPreset] = useState<RangePreset>('week')
   const [weekOffset, setWeekOffset] = useState(0)
 
@@ -73,7 +75,7 @@ export function InsightsPage() {
   const online = useOnlineStatus()
   const { values: preferences } = useTimePreferences()
 
-  const today = toLocalDate(openedAt, timezone)
+  const today = toLocalDate(now, timezone)
 
   const range = useMemo(() => {
     if (preset === 'week') {
@@ -87,7 +89,7 @@ export function InsightsPage() {
     }
   }, [preset, today, weekOffset, preferences.week_starts_on])
 
-  const stats = useStatsSummary(range.from, range.to)
+  const stats = useStatsSummary(range.from, range.to, today)
   const streak = useStreak(today)
 
   const rangeOptions = [
@@ -191,6 +193,7 @@ export function InsightsPage() {
           <DailyTrendsCard summary={stats.data} locale={locale} />
         </div>
       )}
+      {stats.isSuccess && <StreakHistoryCard summary={stats.data} today={today} locale={locale} />}
     </div>
   )
 }

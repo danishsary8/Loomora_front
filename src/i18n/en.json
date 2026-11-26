@@ -796,6 +796,13 @@
       "stopwatch": "Stopwatch: {{time}}",
       "noFocus": "No Focus time tracked in this range."
     },
+    "streakHistory": {
+      "title": "Streak history",
+      "opening": "Before this range",
+      "lowerBound_one": "At least {{count}} day",
+      "lowerBound_other": "At least {{count}} days",
+      "lowerBoundHint": "The lookback covers up to 400 preceding days. Earlier completions may make a streak longer."
+    },
     "trends": {
       "title": "Daily breakdown",
       "subtitle": "Daily Focus time, to-dos done, and schedule blocks checked.",

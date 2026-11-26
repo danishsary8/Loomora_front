@@ -11,8 +11,7 @@ import type { LocalDate } from '@/features/todos/types'
 
 /** Weekday of a `YYYY-MM-DD` date, 0 = Monday to 6 = Sunday. */
 export function weekdayOf(date: LocalDate): Weekday {
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number]
-  const sundayFirst = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  const sundayFirst = new Date(date + 'T00:00:00Z').getUTCDay()
   return ((sundayFirst + 6) % 7) as Weekday
 }
 

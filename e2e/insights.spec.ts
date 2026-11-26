@@ -50,6 +50,9 @@ test('renders guest Insights, Weekly Recap, and Plan vs Reality offline and acro
   await expect(page.getByRole('heading', { name: 'Weekly recap' })).toBeVisible()
   await page.getByRole('button', { name: '7 days' }).click()
   await expect(page.getByText('1 done / 1 due')).toBeVisible()
+  const history = page.getByRole('region', { name: 'Streak history' })
+  await expect(history.getByText('Before this range')).toBeVisible()
+  await expect(history.getByText('At least 1 day')).toBeVisible()
   await context.setOffline(false)
 
   // Axe accessibility check.

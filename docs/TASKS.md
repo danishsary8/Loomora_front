@@ -1144,14 +1144,26 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and Playwright `phone-375` (including `e2e/insights.spec.ts`, axe, 320–1440 px, and 200% text) pass.
 - **Files:** `docs/openapi.yaml`, `src/features/insights/fixtures/stats-summary-cases.json`, `src/features/insights/computeStatsSummary.ts`, `src/features/insights/computeStatsSummary.test.ts`, `src/features/insights/useStatsSummary.ts`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/lib/api/types.ts`, `src/lib/api/account.ts`, `src/lib/api/index.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/ServerStreakRepository.ts`, `src/features/streak/streak.ts`, `src/components/page/index.ts`, `src/app/routes.test.tsx`, `src/i18n/en.json`, `e2e/insights.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R4-03: Historical Streak Timeline Integration
+
+- **Status:** done
+- **Merge:** [PR #88](https://github.com/danishsary8/Loomora_front/pull/88) at `5c15812`.
+- **Owner:** codex
+- **Source:** Frontend PR #86 and backend B-051 PR #56, both merged into their respective v2-rebuild branches.
+- **Scope:** Sync B-051 OpenAPI, reconstruct historical streaks for guests, and display the opening and daily values in Elemental Insights.
+- **Done when:**
+  - [x] Guests and accounts show opening and daily streaks with the same local-date, check-in, planning, deletion, current-day, and 400-day lookback semantics.
+  - [x] Positive lower bounds have explicit translated labels, exact values display their count, and existing Insights states and current/longest streak metrics are preserved.
+  - [x] Regression tests cover guest/account parity and the history UI, including offline guest reads.
+
 ### UX-017: Post-Merge Visual Polish for Insights, Notes & Offline Banners
 
 - **Status:** review
 - **Owner:** antigravity
-- **Source:** Post-merge visual QA audit of `F-R4-01` (PR #86, `16adadc`) and `F-R4-02` (PR #87, `a76d95d`). Task ID verified unused across `docs/` and branches (`F-R4-03` remains Codex's historical streak task).
+- **Source:** Post-merge visual QA audit of `F-R4-01` (PR #86, `16adadc`) and `F-R4-02` (PR #87, `a76d95d`); reconciled with merged `F-R4-03` (PR #88, `5c15812`). Task ID verified unused across `docs/` and branches (`F-R4-03` remains Codex's historical streak task).
 - **Owner decisions recorded:**
   - **P2-4 (Desktop Notes Navigation) — Resolved by owner decision:** Keep Notes in the top-right `TopBar` toolbar on desktop; do not add Notes to desktop `Sidebar` or change the 4 mobile `BottomNav` tabs.
-  - **Explicit exclusions:** No historical streak changes (Codex `F-R4-03`), no break-time metrics on Insights, no new features.
+  - **Explicit exclusions:** No historical streak changes (Codex `F-R4-03` preserved untouched), no break-time metrics on Insights, no new features.
 - **Scope:**
   - **P1-1 (`/notes`):** Show a single deep forest green `New note` primary CTA in empty state; hide creation when account notes cannot load or save while preserving guest offline creation.
   - **P1-2 (`/insights`):** Use a balanced 2×2 KPI overview grid (`grid-cols-2`) across 375 px mobile and desktop so `Weekly recap` sits above the fold on mobile and durations (`1 hr 45 min`) stay single-line on desktop.
@@ -1161,6 +1173,6 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - **P2-3 (Shell):** Hide `ServiceDownBanner` and pause `/health` polling while offline (`!online`), re-checking `/health` on reconnect.
 - **Done when:**
   - [x] P1-1..P1-4 and P2-1..P2-3 implemented with zero changes to historical streak or desktop Sidebar/BottomNav navigation.
-  - [x] Vitest (`InsightsPage`, `NotesPage`, `ServiceDownBanner`, `i18n`) and Playwright `phone-375` (`insights`, `notes`, `a11y`, `page-heading`) pass with 0 axe violations and 0 px overflow at 320–1440 px and 200% text.
+  - [x] Vitest (`InsightsPage`, `computeStatsSummary`, `NotesPage`, `ServiceDownBanner`, `i18n`) and Playwright `phone-375` (`insights`, `notes`, `a11y`, `page-heading`) pass with 0 axe violations and 0 px overflow at 320–1440 px and 200% text.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and before/after 375 px & 1440 px visual checks pass.
 - **Files:** `src/features/notes/NotesPage.tsx`, `src/features/notes/NotesPage.test.tsx`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/ServiceDownBanner.test.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
