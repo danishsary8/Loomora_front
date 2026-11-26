@@ -1677,3 +1677,18 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 px overflow across 320–1440 px).
   - Populated Week screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux022-week-375.png`, `ux022-week-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-023 (Focus).
+
+### 2026-11-27 UX-023: Focus screen concept v3 alignment
+
+- **Branch:** `feat/UX-023-focus-polish` stacked on `feat/UX-022-week-polish` (PR #108 — merge #106, #107, #108 first).
+- **What changed:**
+  - **Icons & i18n:** Added `ChevronRightIcon` and `ArrowUpRightIcon` in `src/components/ui/icons.tsx`; added `focus.historyLink` and `focus.setYourPace` in `src/i18n/en.json` (retaining `focus.duration` as the screen-reader `<legend>` for the preset fieldset).
+  - **Gradient ring & sprout (`FocusReadout.tsx`):** Upgraded the timer ring to a soft linear gradient stroke (`primaryLight` → `primary`, or `accent` → `warning` on break) with `SproutIcon` centered above the digits and phase label below.
+  - **Linked task card (`FocusAttachment.tsx`):** Upgraded the active linked task banner into a crisp paper card with a circular focus icon badge and trailing chevron.
+  - **Controls, presets & history shortcut (`FocusPage.tsx`):** Added top-right `"History ↗"` anchor jumping to `#focus-history`; placed primary (`Pause`/`Resume`) and secondary (`Finish`/`End early`) buttons side by side while active (keeping the primary button mounted across idle/active transitions so keyboard focus stays intact, with `min-w-[min(100%,120px)]` to prevent 768 px 200%-text overflow); styled `"Set your pace"` presets as tinted rounded pills.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - `npm test`: `FocusPage.test.tsx` (7/7), `NotesPage.test.tsx` (6/6), and full suite (84 files / 963 tests) passed.
+  - `npx playwright test --project=phone-375 --trace off`: all 128 specs passed (including all 19 Focus/alarm/history/laps/page-heading checks across 320–1440 px and 200% text scaling after fixing the 768 px 200%-text `min-w` overflow).
+  - Screenshots inspected at 375 px (idle + active) and 1440 px (active) (`docs/screenshots/ux023-focus-*.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-024 (Insights).

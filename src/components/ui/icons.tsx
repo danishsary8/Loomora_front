@@ -294,3 +294,19 @@ export function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+export function ChevronRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </IconBase>
+  )
+}
+
+export function ArrowUpRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M7 17 17 7M8 7h9v9" />
+    </IconBase>
+  )
+}

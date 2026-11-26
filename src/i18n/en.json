@@ -182,6 +182,8 @@
     "countdown": "Countdown",
     "stopwatch": "Stopwatch",
     "duration": "Countdown duration",
+    "setYourPace": "Set your pace",
+    "historyLink": "History",
     "preset": "{{minutes}} min",
     "custom": "Custom",
     "minutes": "Duration in minutes",

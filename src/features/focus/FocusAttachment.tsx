@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fieldClasses } from '@/components/ui/fieldClasses'
+import { ChevronRightIcon, FocusIcon } from '@/components/ui/icons'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { useTodayTodos } from '@/features/todos/useTodos'
 import { useSession } from '@/lib/api'
@@ -25,11 +26,20 @@ export function FocusAttachment({ active }: { active?: ActiveLink }) {
       ? todayItems.find((item) => item.id === active.todo_id)?.title
       : scheduleItems.find((item) => item.id === active.schedule_item_id)?.title
     return (
-      <p className="rounded-md bg-subtle p-3 text-sm [overflow-wrap:anywhere]">
-        {label
-          ? t('focus.linkedItem', { title: label })
-          : t(active.todo_id ? 'focus.linkedTodo' : 'focus.linkedSchedule')}
-      </p>
+      <div className="flex items-center gap-3 rounded-md border-hairline border-border-subtle bg-paper px-3.5 py-3 shadow-soft-sm">
+        <span
+          aria-hidden="true"
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary"
+        >
+          <FocusIcon className="h-icon-sm w-icon-sm" />
+        </span>
+        <p className="min-w-0 flex-1 text-sm font-semibold text-ink [overflow-wrap:anywhere]">
+          {label
+            ? t('focus.linkedItem', { title: label })
+            : t(active.todo_id ? 'focus.linkedTodo' : 'focus.linkedSchedule')}
+        </p>
+        <ChevronRightIcon className="h-icon-sm w-icon-sm shrink-0 text-muted" />
+      </div>
     )
   }
 

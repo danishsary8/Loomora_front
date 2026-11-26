@@ -1343,3 +1343,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/features/schedule/{DayToggle.tsx,week/{weekPlan,weekPlan.test,DayColumn,WeekPage}.ts(x)}`, `src/i18n/en.json`, `docs/screenshots/ux022-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-023: Focus screen concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #108 `UX-022`).
+- **Plan:**
+  1. Add `ChevronRightIcon` and `ArrowUpRightIcon` to `src/components/ui/icons.tsx` and add `focus.historyLink` / `focus.setYourPace` in `src/i18n/en.json`.
+  2. Upgrade `FocusReadout` ring with a soft linear gradient stroke (`primaryLight` → `primary`, or `accent` → `warning` on break), a centered `SproutIcon` above the timer digits, and the phase label underneath.
+  3. Upgrade `FocusAttachment` active state into a crisp linked task card with an icon badge and trailing chevron.
+  4. Update `FocusPage` with a top-right `"History ↗"` anchor jumping to `#focus-history`, side-by-side filled primary (`Pause`/`Resume`) + outlined secondary (`Finish`/`End early`) buttons while active (keeping the primary button mounted across transitions so keyboard focus stays intact), and tinted pill preset chips under `"Set your pace"`.
+  5. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Focus matches concept v3 gradient ring + sprout icon, linked task card with chevron, side-by-side Pause + Finish/End early buttons, tinted `"Set your pace"` preset chips, and `"History ↗"` top-right link at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/focus/{FocusPage,FocusReadout,FocusAttachment}.tsx`, `src/i18n/en.json`, `docs/screenshots/ux023-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

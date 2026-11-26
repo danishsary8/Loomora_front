@@ -14,7 +14,7 @@ import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { AppPageHeader } from '@/components/page'
 import { Button, Card, Input, SegmentedControl } from '@/components/ui'
-import { CheckIcon } from '@/components/ui/icons'
+import { ArrowUpRightIcon, CheckIcon } from '@/components/ui/icons'
 import { useSession } from '@/lib/api'
 import { ExpandedFocus } from './ExpandedFocus'
 import { FocusAlarmSettings } from './FocusAlarmSettings'
@@ -56,6 +56,15 @@ export function FocusPage() {
         title={t('pages.focus.title')}
         headline={t('pages.focus.headline')}
         subtitle={t('pages.focus.tagline')}
+        aside={
+          <a
+            href="#focus-history"
+            className="inline-flex min-h-touch max-w-full flex-wrap items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary transition-colors duration-fast ease-elemental hover:bg-primary-soft"
+          >
+            <span>{t('focus.historyLink')}</span>
+            <ArrowUpRightIcon className="h-icon-sm w-icon-sm" />
+          </a>
+        }
       />
       {runtime ? (
         <FocusSession key={generation} runtime={runtime} />
@@ -68,7 +77,9 @@ export function FocusPage() {
           )}
         </Card>
       )}
-      <FocusHistory />
+      <div id="focus-history">
+        <FocusHistory />
+      </div>
     </div>
   )
 }
@@ -276,7 +287,10 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
       {!snapshot && mode === 'countdown' && (
         <>
           <fieldset className="min-w-0">
-            <legend className="mb-2 text-sm font-semibold">{t('focus.duration')}</legend>
+            <legend className="sr-only">{t('focus.duration')}</legend>
+            <p aria-hidden="true" className="mb-2 text-sm font-semibold text-ink">
+              {t('focus.setYourPace')}
+            </p>
             <div className="grid grid-cols-2 gap-2 [@container(min-width:24rem)]:grid-cols-4">
               {[...presets, 'custom'].map((value) => (
                 <label key={value} className="relative min-w-0">
@@ -291,7 +305,7 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
                       setInvalid(false)
                     }}
                   />
-                  <span className="flex h-full min-h-touch flex-wrap items-center justify-center gap-x-1 rounded-md border-control border-border-control bg-paper px-2 py-1 text-center text-sm font-semibold [overflow-wrap:anywhere] peer-hover:bg-subtle peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary">
+                  <span className="flex h-full min-h-touch min-w-0 flex-wrap items-center justify-center gap-x-1 rounded-full border-control border-border-subtle bg-paper px-2 py-1 text-center text-sm font-semibold shadow-soft-sm transition-colors duration-fast ease-elemental [overflow-wrap:anywhere] peer-hover:bg-subtle peer-checked:border-primary/40 peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary">
                     {preset === value && <CheckIcon className="size-4 shrink-0" />}
                     {value === 'custom' ? t('focus.custom') : t('focus.preset', { minutes: value })}
                   </span>
@@ -343,42 +357,65 @@ function FocusSession({ runtime }: { runtime: FocusRuntime }) {
           {t('focus.alarm.stop')}
         </Button>
       )}
-      <Button ref={primaryButton} type="submit" size="lg" fullWidth aria-disabled={Boolean(busy)}>
-        {primaryLabel}
-      </Button>
-      {snapshot && (
-        <div className="flex flex-wrap gap-2 [&>button]:min-w-11 [&>button]:max-w-full [&>button]:flex-auto [&>button]:px-3">
-          {activeMode === 'stopwatch' && (
-            <>
+      <div className="flex min-w-0 flex-col gap-2.5">
+        <div className="flex min-w-0 flex-wrap gap-2.5 [&>button]:min-w-[min(100%,120px)] [&>button]:max-w-full [&>button]:flex-1 [&>button]:px-3">
+          <Button
+            ref={primaryButton}
+            type="submit"
+            size="lg"
+            fullWidth={!snapshot}
+            aria-disabled={Boolean(busy)}
+          >
+            {primaryLabel}
+          </Button>
+          {snapshot &&
+            (activeMode === 'stopwatch' ? (
               <Button
                 variant="secondary"
-                aria-disabled={!running || Boolean(busy) || lapLimitReached}
-                aria-describedby={describeLapLimit ? lapLimitId : undefined}
-                onBlur={() => {
-                  if (lapLimitReached && newLap !== undefined) setLimitHeardId(snapshot.id)
-                }}
-                onClick={() => {
-                  if (!running || lapLimitReached) return
-                  setLapRequest({ id: snapshot.id, count: lapCount + 1 })
-                  run(() => runtime.command(snapshot, 'lap'))
-                }}
-              >
-                {t('focus.lap')}
-              </Button>
-              <Button
-                variant="secondary"
+                size="lg"
                 aria-disabled={Boolean(busy)}
                 onClick={() => end('finish')}
               >
                 {t('focus.finish')}
               </Button>
-            </>
-          )}
-          <Button variant="secondary" aria-disabled={Boolean(busy)} onClick={() => end('endEarly')}>
-            {t('focus.endEarly')}
-          </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="lg"
+                aria-disabled={Boolean(busy)}
+                onClick={() => end('endEarly')}
+              >
+                {t('focus.endEarly')}
+              </Button>
+            ))}
         </div>
-      )}
+        {snapshot && activeMode === 'stopwatch' && (
+          <div className="flex flex-wrap gap-2 [&>button]:min-w-11 [&>button]:max-w-full [&>button]:flex-auto [&>button]:px-3">
+            <Button
+              variant="secondary"
+              aria-disabled={!running || Boolean(busy) || lapLimitReached}
+              aria-describedby={describeLapLimit ? lapLimitId : undefined}
+              onBlur={() => {
+                if (lapLimitReached && newLap !== undefined) setLimitHeardId(snapshot.id)
+              }}
+              onClick={() => {
+                if (!running || lapLimitReached) return
+                setLapRequest({ id: snapshot.id, count: lapCount + 1 })
+                run(() => runtime.command(snapshot, 'lap'))
+              }}
+            >
+              {t('focus.lap')}
+            </Button>
+            <Button
+              variant="secondary"
+              aria-disabled={Boolean(busy)}
+              onClick={() => end('endEarly')}
+            >
+              {t('focus.endEarly')}
+            </Button>
+          </div>
+        )}
+      </div>
       {activeMode === 'stopwatch' && lapLimitReached && (
         <p id={lapLimitId} className="text-center text-sm text-muted">
           {t('focus.lapLimit', { max: maxLaps })}

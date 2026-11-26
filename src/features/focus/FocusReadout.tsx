@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
+import { SproutIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import { colors } from '@/styles/tokens'
 import type { FocusRuntime } from './focusRuntime'
@@ -82,11 +83,17 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
         )}
       >
         <TimerRing ratio={ratio} onBreak={onBreak} />
-        <div className="absolute inset-0 flex min-w-0 flex-col items-center justify-center gap-1 px-[10%]">
+        <div className="absolute inset-0 flex min-w-0 flex-col items-center justify-center gap-1 px-[12%]">
+          <SproutIcon
+            className={cn(
+              'h-icon-lg w-icon-lg shrink-0',
+              onBreak ? 'text-warning' : 'text-primary',
+            )}
+          />
           <div
             role="timer"
             aria-label={t(stopwatch ? 'focus.elapsed' : 'focus.remaining')}
-            className="max-w-full text-4xl font-bold leading-none tracking-tight text-ink tabular-nums [overflow-wrap:anywhere] supports-[width:1cqi]:text-[min(5rem,19cqi)]"
+            className="max-w-full text-4xl font-bold leading-none tracking-tight text-ink tabular-nums [overflow-wrap:anywhere] supports-[width:1cqi]:text-[min(4.25rem,17cqi)]"
           >
             {value}
           </div>
@@ -103,10 +110,11 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
 }
 
 const RING_VIEW = 100
-const RING_STROKE = 4
+const RING_STROKE = 5.5
 
-/** Concept v3 progress ring: remaining share of the current phase (full for a stopwatch). */
+/** Concept v3 progress ring: soft gradient stroke for the current phase (full for a stopwatch). */
 function TimerRing({ ratio, onBreak }: { ratio: number; onBreak: boolean }) {
+  const gradId = useId()
   const radius = RING_VIEW / 2 - RING_STROKE / 2
   const circumference = 2 * Math.PI * radius
   return (
@@ -115,6 +123,12 @@ function TimerRing({ ratio, onBreak }: { ratio: number; onBreak: boolean }) {
       className="block h-auto w-full -rotate-90"
       aria-hidden="true"
     >
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={onBreak ? colors.accent : colors.primaryLight} />
+          <stop offset="100%" stopColor={onBreak ? colors.warning : colors.primary} />
+        </linearGradient>
+      </defs>
       <circle
         cx={RING_VIEW / 2}
         cy={RING_VIEW / 2}
@@ -128,7 +142,7 @@ function TimerRing({ ratio, onBreak }: { ratio: number; onBreak: boolean }) {
         cy={RING_VIEW / 2}
         r={radius}
         fill="none"
-        stroke={onBreak ? colors.accent : colors.primary}
+        stroke={`url(#${gradId})`}
         strokeWidth={RING_STROKE}
         strokeLinecap="round"
         strokeDasharray={circumference}
