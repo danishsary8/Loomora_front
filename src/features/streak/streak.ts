@@ -1,7 +1,10 @@
 import { occurrencesForDate } from '@/features/schedule/occurrences'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { LocalDate, Todo } from '@/features/todos/types'
-import { localDateIn, previousDay } from '@/lib/date'
+import { addDaysLocalDate, localDateIn } from '@/lib/date'
+
+const STREAK_LOOKBACK_DAYS = 400
+const FIRST_SUPPORTED_DATE = '0001-01-01'
 
 export interface StreakInput {
   todos: readonly Todo[]
@@ -16,40 +19,65 @@ export interface StreakInput {
 
 export interface Streak {
   count: number
-  /** Longest consecutive streak of counted days (computed locally for guests, from GET /streak for accounts). */
+  /** Account longest streak from GET /streak. */
   longest?: number
   /** True once something was checked off today. */
   todayCounted: boolean
 }
 
-/**
- * docs/08 rule 8. A day counts when something was checked off on it. A day with nothing
- * planned is skipped. A planned day with no check-off breaks the streak. Today is never
- * judged: it adds one when counted and is otherwise ignored.
- */
-export function computeStreak(input: StreakInput): Streak {
-  const { todos, items, exceptions, checkins, today, timeZone } = input
-
-  const checked = new Set<LocalDate>(checkins.map((c) => c.date))
+/** Shared guest interpretation of docs/08 rule 8 and the B-051 lookback. */
+export function createStreakEvaluator(
+  { todos, items, exceptions, checkins, today, timeZone }: StreakInput,
+  schedulePlan = new Map<LocalDate, boolean>(),
+) {
+  const itemIds = new Set(items.map((item) => item.id))
+  const counted = new Set<LocalDate>()
   const dueDates = new Set<LocalDate>()
+  const todoDates: Array<{ dueDate: LocalDate | null; doneDate: LocalDate | null }> = []
+
+  for (const checkin of checkins) {
+    if (itemIds.has(checkin.schedule_item_id)) counted.add(checkin.date)
+  }
   for (const todo of todos) {
-    if (todo.done_at !== null) checked.add(localDateIn(todo.done_at, timeZone))
-    if (todo.due_date !== null) dueDates.add(todo.due_date)
+    if (todo.deleted_at) continue
+    const dueDate = todo.due_date
+    const doneDate = todo.done_at === null ? null : localDateIn(todo.done_at, timeZone)
+    if (dueDate !== null) dueDates.add(dueDate)
+    if (doneDate !== null) counted.add(doneDate)
+    todoDates.push({ dueDate, doneDate })
   }
-  const isPlanned = (date: LocalDate) =>
-    dueDates.has(date) || occurrencesForDate(items, exceptions, [], date).length > 0
 
-  const earliest = [...checked, ...dueDates, ...items.map((i) => i.starts_on)].reduce<
-    LocalDate | undefined
-  >((min, date) => (min === undefined || date < min ? date : min), undefined)
-
-  const todayCounted = checked.has(today)
-  let count = todayCounted ? 1 : 0
-  if (earliest === undefined) return { count, todayCounted }
-
-  for (let date = previousDay(today); date >= earliest; date = previousDay(date)) {
-    if (checked.has(date)) count += 1
-    else if (isPlanned(date)) break
+  function isPlanned(date: LocalDate): boolean {
+    if (dueDates.has(date)) return true
+    const cached = schedulePlan.get(date)
+    if (cached !== undefined) return cached
+    const planned = occurrencesForDate(items, exceptions, [], date).length > 0
+    schedulePlan.set(date, planned)
+    return planned
   }
-  return { count, todayCounted }
+
+  function at(date: LocalDate) {
+    let streak = 0
+    if (counted.size === 0) return { streak, streak_may_be_longer: false }
+
+    // Include the requested date itself and up to 400 preceding local days.
+    for (let offset = 0; offset <= STREAK_LOOKBACK_DAYS; offset += 1) {
+      const day = addDaysLocalDate(date, -offset)
+      if (day < FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
+      if (counted.has(day)) {
+        streak += 1
+      } else if (day !== today && isPlanned(day)) {
+        return { streak, streak_may_be_longer: false }
+      }
+      if (day === FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
+    }
+    return { streak, streak_may_be_longer: streak > 0 }
+  }
+
+  return { at, todoDates, todayCounted: counted.has(today) }
+}
+
+export function computeStreak(input: StreakInput): Streak {
+  const { at, todayCounted } = createStreakEvaluator(input)
+  return { count: at(input.today).streak, todayCounted }
 }

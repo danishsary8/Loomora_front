@@ -1,14 +1,12 @@
 import type { FocusSession } from '@/features/focus/types'
 import { occurrencesForDate, weekdayOf } from '@/features/schedule/occurrences'
-import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
-import type { LocalDate, Todo } from '@/features/todos/types'
+import { createStreakEvaluator, type StreakInput } from '@/features/streak/streak'
+import type { LocalDate } from '@/features/todos/types'
 import type { StatsDayRow, StatsMetrics, StatsSummary } from '@/lib/api/types'
-import { addDaysLocalDate, daysBetweenLocalDates, isLocalDate, localDateIn } from '@/lib/date'
+import { addDaysLocalDate, daysBetweenLocalDates, isLocalDate, previousDay } from '@/lib/date'
 import type { WeekStart } from '@/lib/time/time'
 
 export const MAX_STATS_RANGE_DAYS = 92
-const STREAK_LOOKBACK_DAYS = 400
-const FIRST_SUPPORTED_DATE = '0001-01-01'
 
 function emptyMetrics(): StatsMetrics {
   return {
@@ -40,15 +38,9 @@ export function weekBoundsForDate(
   return { from, to: addDaysLocalDate(from, 6) }
 }
 
-export interface GuestStatsInput {
+export interface GuestStatsInput extends StreakInput {
   from: LocalDate
   to: LocalDate
-  timeZone: string
-  today: LocalDate
-  todos: readonly Todo[]
-  items: readonly ScheduleItem[]
-  exceptions: readonly ScheduleException[]
-  checkins: readonly ScheduleCheckin[]
   sessions: readonly FocusSession[]
 }
 
@@ -66,7 +58,7 @@ export function computeGuestStatsSummary({
   checkins,
   sessions,
 }: GuestStatsInput): StatsSummary {
-  if (!isLocalDate(from) || !isLocalDate(to) || from < FIRST_SUPPORTED_DATE || to < from) {
+  if (!isLocalDate(from) || !isLocalDate(to) || to < from) {
     throw new RangeError('Invalid date range for stats summary.')
   }
   const span = daysBetweenLocalDates(to, from) + 1
@@ -74,35 +66,7 @@ export function computeGuestStatsSummary({
     throw new RangeError(`Stats summary range cannot exceed ${MAX_STATS_RANGE_DAYS} days.`)
   }
 
-  const itemIds = new Set(items.map((item) => item.id))
-  const counted = new Set(
-    checkins
-      .filter((checkin) => itemIds.has(checkin.schedule_item_id))
-      .map((checkin) => checkin.date),
-  )
-  const planned = new Set<LocalDate>()
   const schedulePlan = new Map<LocalDate, boolean>()
-
-  function streakAt(date: LocalDate): Pick<StatsDayRow, 'streak' | 'streak_may_be_longer'> {
-    let streak = 0
-    for (let offset = 0; offset <= STREAK_LOOKBACK_DAYS; offset += 1) {
-      const day = addDaysLocalDate(date, -offset)
-      if (day < FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
-      if (counted.has(day)) {
-        streak += 1
-      } else if (day !== today) {
-        let hasSchedule = schedulePlan.get(day)
-        if (hasSchedule === undefined) {
-          hasSchedule = occurrencesForDate(items, exceptions, [], day).length > 0
-          schedulePlan.set(day, hasSchedule)
-        }
-        if (planned.has(day) || hasSchedule) return { streak, streak_may_be_longer: false }
-      }
-      if (day === FIRST_SUPPORTED_DATE) return { streak, streak_may_be_longer: false }
-    }
-    return { streak, streak_may_be_longer: streak > 0 }
-  }
-
   const byDate = new Map<LocalDate, StatsMetrics>()
   for (let i = 0; i < span; i += 1) {
     const date = addDaysLocalDate(from, i)
@@ -130,16 +94,16 @@ export function computeGuestStatsSummary({
     byMode[session.mode] += session.focus_ms
   }
 
-  for (const todo of todos) {
-    if (todo.deleted_at) continue
-    if (todo.due_date !== null) {
-      planned.add(todo.due_date)
-      const dueDay = byDate.get(todo.due_date)
+  const { at: streakAt, todoDates } = createStreakEvaluator(
+    { today, timeZone, todos, items, exceptions, checkins },
+    schedulePlan,
+  )
+  for (const { dueDate, doneDate } of todoDates) {
+    if (dueDate !== null) {
+      const dueDay = byDate.get(dueDate)
       if (dueDay) dueDay.todos_due += 1
     }
-    if (todo.done_at !== null) {
-      const doneDate = localDateIn(todo.done_at, timeZone)
-      counted.add(doneDate)
+    if (doneDate !== null) {
       const doneDay = byDate.get(doneDate)
       if (doneDay) doneDay.todos_done += 1
     }
@@ -160,7 +124,7 @@ export function computeGuestStatsSummary({
     days.push({ local_date, ...metrics, ...streakAt(local_date) })
   }
 
-  const opening = streakAt(addDaysLocalDate(from, -1))
+  const opening = streakAt(previousDay(from))
   return {
     opening_streak: opening.streak,
     opening_streak_may_be_longer: opening.streak_may_be_longer,
