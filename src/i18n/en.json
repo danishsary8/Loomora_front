@@ -391,7 +391,8 @@
     "category": "Category (optional)",
     "submit": "Add",
     "submitting": "Adding…",
-    "lead": "Capture the thought. Details can come later."
+    "lead": "Capture the thought. Details can come later.",
+    "startSimple": "Start simple."
   },
   "weekdays": {
     "short": {

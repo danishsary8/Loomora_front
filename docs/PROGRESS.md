@@ -1707,3 +1707,16 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (`e2e/insights.spec.ts` including offline, axe, 320–1440 px & 200% text passed).
   - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux024-insights-375.png`, `ux024-insights-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-025 (Add/Edit task sheet).
+
+### 2026-11-27 UX-025: Add/Edit task sheet concept v3 alignment
+
+- **Branch:** `feat/UX-025-add-task-sheet` stacked on `feat/UX-024-insights-polish` (PR #110 — merge #106–#110 first).
+- **What changed:**
+  - Added `BellIcon` and `FlagIcon` in `src/components/ui/icons.tsx` and `todoForm.startSimple` in `src/i18n/en.json`.
+  - Upgraded `AddTodoSheet.tsx` with the `"Start simple."` display lead + subtitle when creating (keeping accessible dialog title `"Add a to-do"`), tinted category chips directly under title, a single hairline-divided paper card grouping Due date + expandable More options (Reminder, Repeat, Priority, Notes) with leading icons, and a full-width primary submit button with trailing `ArrowRightIcon`.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`AddTodoSheet.test.tsx`, `TodayPage.test.tsx`): all passed.
+  - Playwright `phone-375` (`a11y`, `today`, `subtasks`, `repeat`, `reminders` — 24/24 passed including 375 px 200% text scaling on `AddTodoSheet`).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux025-add-sheet-375.png`, `ux025-add-sheet-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-026 (Notes).

@@ -1377,3 +1377,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/insights/InsightsPage.tsx`, `src/i18n/en.json`, `docs/screenshots/ux024-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-025: Add/Edit task sheet concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #110 `UX-024`).
+- **Plan:**
+  1. Add `BellIcon` and `FlagIcon` to `src/components/ui/icons.tsx` and `todoForm.startSimple` to `src/i18n/en.json`.
+  2. Upgrade `AddTodoSheet.tsx` with the editorial `"Start simple."` display header + subtitle when creating (preserving dialog `aria-labelledby` `"Add a to-do"`), category chips with icons, a single hairline-divided grouped card for optional rows (Due date, More options → Reminder, Repeat, Priority, Notes) with leading icons, and a full-width primary CTA with trailing `ArrowRightIcon`.
+  3. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Add/Edit task sheet matches concept v3 editorial header, tinted category chips, grouped icon-row optional fields, and primary CTA with arrow at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/i18n/en.json`, `docs/screenshots/ux025-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

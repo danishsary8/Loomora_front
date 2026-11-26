@@ -2,7 +2,15 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input, Sheet, Textarea } from '@/components/ui'
 import { ClockInput } from '@/components/ui/ClockInput'
-import { ChevronDownIcon } from '@/components/ui/icons'
+import {
+  ArrowRightIcon,
+  BellIcon,
+  ChevronDownIcon,
+  FlagIcon,
+  NotesIcon,
+  RepeatIcon,
+  WeekIcon,
+} from '@/components/ui/icons'
 import { deviceTimeZone } from '@/features/auth/timezone'
 import { localReminderValue, reminderInstant } from '@/features/reminders/reminderTime'
 import { useSession } from '@/lib/api'
@@ -203,36 +211,52 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
 
   const priorityAndNotes = (
     <>
-      <Field label={t('todoForm.priority')}>
-        {(field) => (
-          <select
-            {...field}
-            value={priority}
-            onChange={(event) => setPriority(event.target.value as Priority)}
-            className={cn('min-h-touch motion-reduce:transition-none', fieldClasses())}
-          >
-            {PRIORITIES.map((value) => (
-              <option key={value} value={value}>
-                {t(`todoForm.priorities.${value}`)}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-      <Textarea
-        ref={notesRef}
-        label={t('todoForm.notes')}
-        placeholder={t('todoForm.notesPlaceholder')}
-        hint={notesError ? undefined : notesLimit}
-        error={notesError}
-        rows={3}
-        value={notes}
-        onChange={(event) => {
-          const value = event.target.value
-          setNotes(value)
-          setNotesError(notesTooLong(value) ? notesLimit : undefined)
-        }}
-      />
+      <div className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+        <div className="flex items-center gap-2 text-muted">
+          <FlagIcon className="h-icon-sm w-icon-sm shrink-0" />
+          <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
+            {t('todoForm.priority')}
+          </span>
+        </div>
+        <Field label={t('todoForm.priority')}>
+          {(field) => (
+            <select
+              {...field}
+              value={priority}
+              onChange={(event) => setPriority(event.target.value as Priority)}
+              className={cn('min-h-touch motion-reduce:transition-none', fieldClasses())}
+            >
+              {PRIORITIES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`todoForm.priorities.${value}`)}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+      </div>
+      <div className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+        <div className="flex items-center gap-2 text-muted">
+          <NotesIcon className="h-icon-sm w-icon-sm shrink-0" />
+          <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
+            {t('todoForm.notes')}
+          </span>
+        </div>
+        <Textarea
+          ref={notesRef}
+          label={t('todoForm.notes')}
+          placeholder={t('todoForm.notesPlaceholder')}
+          hint={notesError ? undefined : notesLimit}
+          error={notesError}
+          rows={3}
+          value={notes}
+          onChange={(event) => {
+            const value = event.target.value
+            setNotes(value)
+            setNotesError(notesTooLong(value) ? notesLimit : undefined)
+          }}
+        />
+      </div>
     </>
   )
 
@@ -240,7 +264,12 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
     <Sheet open={open} onClose={onClose} title={heading} initialFocusRef={titleRef}>
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
         {target.type === 'create' && (
-          <p className="-mt-2 text-sm text-muted">{t('todoForm.lead')}</p>
+          <div className="-mt-2 flex flex-col gap-0.5">
+            <p className="font-heading text-xl font-bold tracking-tight text-ink">
+              {t('todoForm.startSimple')}
+            </p>
+            <p className="text-sm text-muted">{t('todoForm.lead')}</p>
+          </div>
         )}
         <Input
           ref={titleRef}
@@ -258,23 +287,6 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
         />
         {!subtask && (
           <>
-            <div className="flex flex-wrap items-end gap-2">
-              <Input
-                ref={dueDateRef}
-                type="date"
-                label={t(repeatMode === 'none' ? 'todoForm.dueDate' : 'todoForm.repeatDueDate')}
-                value={dueDate}
-                aria-required={repeatMode !== 'none'}
-                error={dueDateError ? t('todoForm.repeatDueDateRequired') : undefined}
-                onChange={(e) => changeDueDate(e.target.value)}
-                className="min-w-0 flex-1"
-              />
-              {dueDate !== '' && (
-                <Button variant="ghost" onClick={() => changeDueDate('')}>
-                  {t('todoForm.clearDueDate')}
-                </Button>
-              )}
-            </div>
             <fieldset className="min-w-0">
               <legend className="mb-2 text-sm font-bold text-ink">{t('todoForm.category')}</legend>
               <div className="flex flex-wrap gap-2">
@@ -288,131 +300,179 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                 ))}
               </div>
             </fieldset>
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                aria-expanded={showAdvanced}
-                aria-controls={advancedId}
-                onClick={() => setShowAdvanced((openOptions) => !openOptions)}
-                className={cn(
-                  'flex min-h-touch w-full items-center justify-between gap-2 rounded-md border-control border-border-control bg-subtle/60 px-3.5 py-2.5 text-left text-sm font-semibold text-ink',
-                  'transition-[background-color,border-color] duration-fast ease-elemental hover:bg-subtle motion-reduce:transition-none',
-                )}
-              >
-                <span>{moreOptionsLabel}</span>
-                <ChevronDownIcon
-                  className={cn(
-                    'size-5 shrink-0 text-muted transition-transform duration-fast ease-elemental motion-reduce:transition-none',
-                    showAdvanced && 'rotate-180',
-                  )}
-                />
-              </button>
-              {showAdvanced && (
-                <div
-                  id={advancedId}
-                  className="flex flex-col gap-4 rounded-md border-hairline border-border-subtle bg-subtle/40 p-3.5"
-                >
-                  <fieldset className="flex min-w-0 flex-col gap-2">
-                    <legend className="mb-1 text-sm font-bold text-ink">
-                      {t('todoForm.remindMe')}
-                    </legend>
-                    <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 [&>div]:min-w-0">
-                      <Input
-                        ref={reminderDateRef}
-                        type="date"
-                        label={t('todoForm.reminderDate')}
-                        value={reminderDate}
-                        onChange={(event) => {
-                          setReminderDate(event.target.value)
-                          setReminderError(false)
-                        }}
-                      />
-                      <ClockInput
-                        ref={reminderTimeRef}
-                        label={t('todoForm.reminderClock')}
-                        format={preferences.time_format}
-                        draft={reminderDraft}
-                        wallTime={savedLocalReminder.slice(11)}
-                        onChange={(value) => {
-                          setReminderDraft(value)
-                          setReminderError(false)
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted">
-                      {t('todoForm.reminderTimeZone', { zone: timeZone })}
-                    </p>
-                    {reminderError && (
-                      <p role="alert" className="text-sm font-semibold text-danger">
-                        {t('todoForm.reminderInvalid')}
-                      </p>
-                    )}
-                    {hasReminder && (
-                      <Button
-                        variant="ghost"
-                        className="self-start"
-                        onClick={() => {
-                          setReminderDate('')
-                          setReminderDraft('')
-                          setReminderError(false)
-                          reminderDateRef.current?.focus()
-                        }}
-                      >
-                        {t('todoForm.clearReminder')}
-                      </Button>
-                    )}
-                  </fieldset>
-                  <Field label={t('todoForm.repeat')} error={repeatErrorMessage}>
-                    {(field) => (
-                      <select
-                        ref={repeatRef}
-                        {...field}
-                        value={repeatMode}
-                        onChange={(event) => {
-                          const mode = event.target.value as typeof repeatMode
-                          setRepeatMode(mode)
-                          setRepeatError(false)
-                          if (mode === 'none') setDueDateError(false)
-                        }}
-                        className={cn(
-                          'min-h-touch motion-reduce:transition-none',
-                          fieldClasses(repeatErrorMessage),
-                        )}
-                      >
-                        <option value="none">{t('todoForm.repeatNone')}</option>
-                        <option value="daily">{t('todoForm.repeatDaily')}</option>
-                        <option value="weekly">{t('todoForm.repeatWeekly')}</option>
-                      </select>
-                    )}
-                  </Field>
-                  {repeatMode === 'weekly' && (
-                    <fieldset className="min-w-0">
-                      <legend className="mb-2 text-sm font-bold text-ink">
-                        {t('todoForm.repeatDays')}
-                      </legend>
-                      <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-3">
-                        {WEEKDAYS.map((day) => {
-                          const label = t(`weekdays.long.${day}`)
-                          return (
-                            <DayToggle
-                              key={day}
-                              label={label}
-                              text={label}
-                              selected={repeatDays.includes(day)}
-                              onClick={() => toggleRepeatDay(day)}
-                            />
-                          )
-                        })}
-                      </div>
-                    </fieldset>
-                  )}
-                  {priorityAndNotes}
+            <div className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm">
+              <div className="flex flex-col gap-2 p-3.5">
+                <div className="flex items-center gap-2 text-muted">
+                  <WeekIcon className="h-icon-sm w-icon-sm shrink-0" />
+                  <span
+                    aria-hidden="true"
+                    className="text-xs font-semibold uppercase tracking-wide"
+                  >
+                    {t('todoForm.repeatDueDate')}
+                  </span>
                 </div>
-              )}
+                <div className="flex flex-wrap items-end gap-2">
+                  <Input
+                    ref={dueDateRef}
+                    type="date"
+                    label={t(repeatMode === 'none' ? 'todoForm.dueDate' : 'todoForm.repeatDueDate')}
+                    value={dueDate}
+                    aria-required={repeatMode !== 'none'}
+                    error={dueDateError ? t('todoForm.repeatDueDateRequired') : undefined}
+                    onChange={(e) => changeDueDate(e.target.value)}
+                    className="min-w-0 flex-1"
+                  />
+                  {dueDate !== '' && (
+                    <Button variant="ghost" onClick={() => changeDueDate('')}>
+                      {t('todoForm.clearDueDate')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  aria-expanded={showAdvanced}
+                  aria-controls={advancedId}
+                  onClick={() => setShowAdvanced((openOptions) => !openOptions)}
+                  className={cn(
+                    'flex min-h-touch w-full items-center justify-between gap-2 bg-paper px-3.5 py-2.5 text-left text-sm font-semibold text-ink',
+                    'transition-colors duration-fast ease-elemental hover:bg-subtle/60 motion-reduce:transition-none',
+                  )}
+                >
+                  <span>{moreOptionsLabel}</span>
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-icon-md w-icon-md shrink-0 text-muted transition-transform duration-fast ease-elemental motion-reduce:transition-none',
+                      showAdvanced && 'rotate-180',
+                    )}
+                  />
+                </button>
+                {showAdvanced && (
+                  <div
+                    id={advancedId}
+                    className="divide-y divide-border-subtle border-t-hairline border-border-subtle bg-subtle/30 px-3.5 py-2"
+                  >
+                    <fieldset className="flex min-w-0 flex-col gap-2 py-3 first:pt-1">
+                      <div className="flex items-center gap-2 text-muted">
+                        <BellIcon className="h-icon-sm w-icon-sm shrink-0" />
+                        <legend className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          {t('todoForm.remindMe')}
+                        </legend>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 [&>div]:min-w-0">
+                        <Input
+                          ref={reminderDateRef}
+                          type="date"
+                          label={t('todoForm.reminderDate')}
+                          value={reminderDate}
+                          onChange={(event) => {
+                            setReminderDate(event.target.value)
+                            setReminderError(false)
+                          }}
+                        />
+                        <ClockInput
+                          ref={reminderTimeRef}
+                          label={t('todoForm.reminderClock')}
+                          format={preferences.time_format}
+                          draft={reminderDraft}
+                          wallTime={savedLocalReminder.slice(11)}
+                          onChange={(value) => {
+                            setReminderDraft(value)
+                            setReminderError(false)
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted">
+                        {t('todoForm.reminderTimeZone', { zone: timeZone })}
+                      </p>
+                      {reminderError && (
+                        <p role="alert" className="text-sm font-semibold text-danger">
+                          {t('todoForm.reminderInvalid')}
+                        </p>
+                      )}
+                      {hasReminder && (
+                        <Button
+                          variant="ghost"
+                          className="self-start"
+                          onClick={() => {
+                            setReminderDate('')
+                            setReminderDraft('')
+                            setReminderError(false)
+                            reminderDateRef.current?.focus()
+                          }}
+                        >
+                          {t('todoForm.clearReminder')}
+                        </Button>
+                      )}
+                    </fieldset>
+                    <div className="flex flex-col gap-2.5 py-3">
+                      <div className="flex items-center gap-2 text-muted">
+                        <RepeatIcon className="h-icon-sm w-icon-sm shrink-0" />
+                        <span
+                          aria-hidden="true"
+                          className="text-xs font-semibold uppercase tracking-wide"
+                        >
+                          {t('todoForm.repeat')}
+                        </span>
+                      </div>
+                      <Field label={t('todoForm.repeat')} error={repeatErrorMessage}>
+                        {(field) => (
+                          <select
+                            ref={repeatRef}
+                            {...field}
+                            value={repeatMode}
+                            onChange={(event) => {
+                              const mode = event.target.value as typeof repeatMode
+                              setRepeatMode(mode)
+                              setRepeatError(false)
+                              if (mode === 'none') setDueDateError(false)
+                            }}
+                            className={cn(
+                              'min-h-touch motion-reduce:transition-none',
+                              fieldClasses(repeatErrorMessage),
+                            )}
+                          >
+                            <option value="none">{t('todoForm.repeatNone')}</option>
+                            <option value="daily">{t('todoForm.repeatDaily')}</option>
+                            <option value="weekly">{t('todoForm.repeatWeekly')}</option>
+                          </select>
+                        )}
+                      </Field>
+                      {repeatMode === 'weekly' && (
+                        <fieldset className="min-w-0">
+                          <legend className="mb-2 text-sm font-bold text-ink">
+                            {t('todoForm.repeatDays')}
+                          </legend>
+                          <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-3">
+                            {WEEKDAYS.map((day) => {
+                              const label = t(`weekdays.long.${day}`)
+                              return (
+                                <DayToggle
+                                  key={day}
+                                  label={label}
+                                  text={label}
+                                  selected={repeatDays.includes(day)}
+                                  onClick={() => toggleRepeatDay(day)}
+                                />
+                              )
+                            })}
+                          </div>
+                        </fieldset>
+                      )}
+                    </div>
+                    {priorityAndNotes}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
-        {subtask && priorityAndNotes}
+        {subtask && (
+          <div className="divide-y divide-border-subtle rounded-lg border-hairline border-border-subtle bg-paper px-3.5 py-2 shadow-soft-sm">
+            {priorityAndNotes}
+          </div>
+        )}
         {formError && (
           <p
             role="alert"
@@ -422,7 +482,8 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
           </p>
         )}
         <Button type="submit" size="lg" fullWidth disabled={pending} className="mt-1">
-          {submit}
+          <span>{submit}</span>
+          <ArrowRightIcon className="h-icon-sm w-icon-sm" />
         </Button>
       </form>
     </Sheet>

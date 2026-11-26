@@ -319,3 +319,21 @@ export function SparkleIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8Z" />
+      <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+    </IconBase>
+  )
+}
+
+export function FlagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 4v16" />
+      <path d="M5 4h11l-2 4.5L16 13H5" />
+    </IconBase>
+  )
+}
