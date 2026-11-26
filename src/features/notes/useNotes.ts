@@ -56,13 +56,21 @@ export function useUpdateNote() {
 
   return useMutation({
     networkMode,
-    mutationFn: async ({ id, fields }: { id: string; fields: NoteFields }) => {
+    mutationFn: async ({
+      id,
+      fields,
+      revision,
+    }: {
+      id: string
+      fields: NoteFields
+      revision?: number
+    }) => {
       if (useSession.getState().generation !== generation) {
         throw new Error('Session changed')
       }
-      return repo.update(id, fields)
+      return repo.update(id, fields, revision)
     },
-    onSuccess: async () => {
+    onSettled: async () => {
       if (useSession.getState().generation === generation) {
         await queryClient.invalidateQueries({ queryKey: notesKeys.all })
       }
@@ -78,13 +86,13 @@ export function useDeleteNote() {
 
   return useMutation({
     networkMode,
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, revision }: { id: string; revision?: number }) => {
       if (useSession.getState().generation !== generation) {
         throw new Error('Session changed')
       }
-      await repo.delete(id)
+      await repo.delete(id, revision)
     },
-    onSuccess: async () => {
+    onSettled: async () => {
       if (useSession.getState().generation === generation) {
         await queryClient.invalidateQueries({ queryKey: notesKeys.all })
       }

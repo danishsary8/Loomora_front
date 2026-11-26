@@ -6,6 +6,7 @@ import { ActionToast, Button, Card, Input, SegmentedControl, Sheet } from '@/com
 import { PencilIcon, TrashIcon } from '@/components/ui/icons'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { ApiError, errorMessageKey, useSession } from '@/lib/api'
+import { NoteConflictError } from '@/lib/storage'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { NoteSheet } from './NoteSheet'
 import type { Note } from './types'
@@ -107,16 +108,21 @@ function NotesPageSession() {
     if (!confirmDelete || deleteNote.isPending) return
     const target = confirmDelete
     try {
-      await deleteNote.mutateAsync(target.id)
+      await deleteNote.mutateAsync({ id: target.id, revision: target.revision })
       setConfirmDelete(null)
       showToast({
         message: t('notes.deletedToast'),
         tone: 'default',
         undoId: target.id,
       })
-    } catch {
+    } catch (error) {
       setConfirmDelete(null)
-      showToast({ message: t('notes.deleteError'), tone: 'danger' })
+      showToast({
+        message: t(
+          error instanceof NoteConflictError ? 'notes.deleteConflict' : 'notes.deleteError',
+        ),
+        tone: 'danger',
+      })
     }
   }
 
@@ -333,7 +339,7 @@ function NotesPageSession() {
         saving={createNote.isPending || updateNote.isPending}
         onClose={() => setEditorOpen(false)}
         onCreate={(input) => createNote.mutateAsync(input)}
-        onUpdate={(id, fields) => updateNote.mutateAsync({ id, fields })}
+        onUpdate={(id, fields, revision) => updateNote.mutateAsync({ id, fields, revision })}
       />
 
       <Sheet

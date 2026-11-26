@@ -132,6 +132,69 @@ describe('NotesPage (F-R4-02)', () => {
     ).toBeInTheDocument()
   })
 
+  it('offers the latest version or a new note when an edit conflicts (F-R4-05)', async () => {
+    const user = makeUser({ survey_done: true })
+    useSession.getState().signIn(makeTokenResponse(user))
+    const noteId = crypto.randomUUID()
+    const base = {
+      id: noteId,
+      title: 'Shared note',
+      body: 'Original',
+      schedule_item_id: null,
+      local_date: null,
+      revision: 2,
+      created_at: '2026-11-26T09:00:00.000Z',
+      updated_at: '2026-11-26T09:00:00.000Z',
+    }
+    const latest = { ...base, body: 'Changed on phone', revision: 3 }
+    let patchBody: unknown
+    let created: unknown
+
+    server.use(
+      http.get(`${API}/reminders/due`, () => HttpResponse.json({ data: [] })),
+      http.get(`${API}/schedule/items`, () => HttpResponse.json({ data: [] })),
+      http.get(`${API}/notes`, () =>
+        HttpResponse.json({
+          data: [created ? latest : base],
+          links: { prev: null, next: null },
+          meta: { current_page: 1, per_page: 50 },
+        }),
+      ),
+      http.get(`${API}/notes/${noteId}`, () => HttpResponse.json({ data: latest })),
+      http.patch(`${API}/notes/${noteId}`, async ({ request }) => {
+        patchBody = await request.json()
+        return HttpResponse.json({ message: 'Changed' }, { status: 409 })
+      }),
+      http.post(`${API}/notes`, async ({ request }) => {
+        created = await request.json()
+        return HttpResponse.json(
+          { data: { ...base, ...(created as object), revision: 1 } },
+          { status: 201 },
+        )
+      }),
+    )
+
+    renderRoute('/notes')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit note Shared note' }))
+    const editor = await screen.findByRole('dialog', { name: 'Edit note' })
+    const bodyField = within(editor).getByLabelText('Note (optional)')
+    await userEvent.clear(bodyField)
+    await userEvent.type(bodyField, 'Mine')
+    await userEvent.click(within(editor).getByRole('button', { name: 'Save note' }))
+
+    const conflict = await screen.findByRole('dialog', {
+      name: 'This note changed on another device',
+    })
+    expect(patchBody).toMatchObject({ body: 'Mine', expected_revision: 2 })
+    expect(within(conflict).getByRole('button', { name: 'Use the latest version' })).toBeVisible()
+    await userEvent.click(within(conflict).getByRole('button', { name: 'Save mine as a new note' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(created).toMatchObject({ title: 'Shared note', body: 'Mine' })
+    expect((created as { id: string }).id).not.toBe(noteId)
+  })
+
   it('shows a single primary New note button when empty and hides creation for offline accounts while keeping guest offline creation', async () => {
     const onLineSpy = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
     try {

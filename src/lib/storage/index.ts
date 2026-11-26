@@ -1,4 +1,4 @@
-export { ValidationError } from './errors'
+export { NoteConflictError, ValidationError } from './errors'
 export { GuestTodoRepository } from './GuestTodoRepository'
 export { TodoRepositoryContext, useTodoRepository } from './context'
 export { GuestScheduleRepository } from './GuestScheduleRepository'
