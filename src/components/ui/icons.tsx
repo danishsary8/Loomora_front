@@ -175,3 +175,24 @@ export function GoogleIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+/** Notes document icon in the unified 1.75 px Elemental stroke style. */
+export function NotesIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+      <path d="M15 3v4h4" />
+      <path d="M8 12h8M8 16h5" />
+    </svg>
+  )
+}

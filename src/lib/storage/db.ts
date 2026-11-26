@@ -2,6 +2,7 @@ import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { PendingFocusTimer } from '@/features/focus/focusRuntime'
 import type { FocusTimerSnapshot } from '@/features/focus/focusTimerState'
 import type { FocusSession } from '@/features/focus/types'
+import type { Note } from '@/features/notes/types'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import { DEFAULT_PRIORITY, type Todo } from '@/features/todos/types'
 
@@ -16,12 +17,17 @@ export type StoredFocusSession = FocusSession & {
   deleted_at?: string | null
 }
 
+export type StoredNote = Note & {
+  deleted_at?: string | null
+}
+
 /** Guest data in IndexedDB (A8-4). Rows keep their client UUIDs for the later import. */
 export class GuestDatabase extends Dexie {
   focus_timers!: EntityTable<FocusTimerSnapshot, 'scope'>
   focus_timer_pending!: Table<PendingFocusTimer, [string, string]>
   focus_sessions!: EntityTable<StoredFocusSession, 'id'>
   focus_outbox!: Table<FocusOutboxRecord, [string, string]>
+  notes!: EntityTable<StoredNote, 'id'>
   meta!: EntityTable<{ key: string; value: TimePreferences }, 'key'>
   dailyIntentions!: EntityTable<DailyIntentionRecord, 'date'>
   todos!: EntityTable<Todo, 'id'>
@@ -69,6 +75,9 @@ export class GuestDatabase extends Dexie {
     this.version(10).stores({
       focus_timers: 'scope',
       focus_timer_pending: '[scope+id], scope',
+    })
+    this.version(11).stores({
+      notes: 'id, updated_at, schedule_item_id, deleted_at',
     })
   }
 }
