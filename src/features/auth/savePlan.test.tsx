@@ -185,36 +185,39 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     expect(await repo.listAll()).toEqual([])
   })
 
-  it('shows the note conflict and keeps guest data when an account copy differs', async () => {
-    const { db, repo, schedule } = setup()
-    const notes = new GuestNoteRepository({ db })
-    const note = await notes.create({ id: crypto.randomUUID(), title: 'Newer guest text' })
-    useSession.getState().signIn(makeTokenResponse(makeUser({ survey_done: true })))
-    useSavePlanIntent.getState().request()
-    server.use(
-      ...accountToday(),
-      http.post(API + '/import', async ({ request }) =>
-        HttpResponse.json({
-          data: {
-            ...acknowledgeImport((await request.json()) as ImportBody),
-            notes: { created: 0, skipped: 1 },
-          },
+  it.each(['different', 'deleted'] as const)(
+    'shows the note conflict and keeps guest data when B-052 reports a %s account note without fetching GET /notes',
+    async (status) => {
+      const { db, repo, schedule } = setup()
+      const notes = new GuestNoteRepository({ db })
+      const note = await notes.create({ id: crypto.randomUUID(), title: 'Newer guest text' })
+      useSession.getState().signIn(makeTokenResponse(makeUser({ survey_done: true })))
+      useSavePlanIntent.getState().request()
+      let notesReads = 0
+      server.use(
+        ...accountToday(),
+        http.post(API + '/import', async ({ request }) =>
+          HttpResponse.json({
+            data: {
+              ...acknowledgeImport((await request.json()) as ImportBody),
+              notes: { created: 0, skipped: 1, skipped_details: [{ id: note.id, status }] },
+            },
+          }),
+        ),
+        http.get(API + '/notes', () => {
+          notesReads += 1
+          return HttpResponse.json({ data: [], links: { next: null } })
         }),
-      ),
-      http.get(API + '/notes', () =>
-        HttpResponse.json({
-          data: [{ ...note, title: 'Account text' }],
-          links: { next: null },
-        }),
-      ),
-    )
+      )
 
-    renderRoute('/today', repo, schedule, db)
-    const sheet = await screen.findByRole('dialog', { name: 'We could not save your plan' })
-    expect(within(sheet).getByText(/Review your account Notes/)).toBeInTheDocument()
-    expect(screen.queryByText('Your plan is saved')).not.toBeInTheDocument()
-    expect(await notes.get(note.id)).toEqual(note)
-  })
+      renderRoute('/today', repo, schedule, db)
+      const sheet = await screen.findByRole('dialog', { name: 'We could not save your plan' })
+      expect(within(sheet).getByText(/Review your account Notes/)).toBeInTheDocument()
+      expect(screen.queryByText('Your plan is saved')).not.toBeInTheDocument()
+      expect(notesReads).toBe(0)
+      expect(await notes.get(note.id)).toEqual(note)
+    },
+  )
 
   it('"Not now" after a failure leaves the plan on the device and stops asking', async () => {
     const { repo, schedule } = await signedInWithPlan()
