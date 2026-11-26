@@ -71,7 +71,16 @@
     "sheetBody": "Sheets slide up from the bottom. Press Escape or tap outside to close.",
     "progressRing": "Progress ring",
     "scheduleSheet": "Schedule item sheet",
-    "openScheduleSheet": "Open the schedule sheet"
+    "openScheduleSheet": "Open the schedule sheet",
+    "motionStates": "Motion & states",
+    "motionCountLabel": "KPI count-up",
+    "motionStep": "Step +10",
+    "motionStaggerLabel": "Staggered list",
+    "skeletonPreview": "Skeleton loaders",
+    "emptyPreview": "Empty state",
+    "emptySampleTitle": "A quiet space to start",
+    "emptySampleBody": "Add one small thing to set the rhythm for your day.",
+    "emptySampleCta": "Add first item"
   },
   "nav": {
     "label": "Main",

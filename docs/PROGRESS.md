@@ -1623,3 +1623,22 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **What changed:** See TASKS F-R4-06. `CATEGORY_ICONS` moved from `icons.tsx` to `categoryIcons.ts` (clears a react-refresh lint warning from UX-018).
 - **How it was verified:** lint, typecheck, Knip, format check, Vitest 951/951, Redocly valid; `docs/openapi.yaml` is byte-identical to backend B-056. 320 and 375 px screenshots of the sheet and list. Playwright `phone-375` 126/128 in this sandbox; `focus-presentation` and `pwa` failed once and passed on rerun, and neither touches Notes.
 - **Depends on:** backend PR #62 (B-056), green in CI. Until it is deployed, the server ignores the new fields.
+
+### 2026-11-27 UX-020: Motion foundation + skeletons and empty states
+
+- **Branch:** `feat/UX-020-motion-skeletons-empty-states` from `origin/v2-rebuild` (`8398a20`).
+- **What changed:**
+  - **Tokens & cleanup:** Added `iconSize` tokens (`sm: 16px`, `md: 20px`, `lg: 24px`, `xl: 32px`) in `src/styles/tokens.ts` and wired `w-icon-*`/`h-icon-*` utilities in `tailwind.config.ts`. Removed unused legacy `.press-md`/`.press-sm` rules from `src/styles/index.css`.
+  - **Shared motion foundation (`src/styles/motion.ts`):** Added DEC-003 durations (`160/200/240 ms`), single easing (`[0.2, 0.8, 0.2, 1]`), and 7 Framer Motion / React presets with zero-movement reduced-motion fallbacks: `pageEnterMotion` (fade + 8 px rise), `listStaggerContainer` / `listStaggerItem` (30 ms stagger), `sheetPanelMotion` / `sheetBackdropMotion` (bottom-sheet spring), `pressTapProps` (scale `0.97`), `checkOffPopMotion`, `progressDrawTransition`, and `useCountUp` (KPI count-up).
+  - **Wired into shared UI primitives:** `Sheet.tsx` (sheet spring), `DoneStamp.tsx` (check-off pop), `ProgressRing.tsx` (`m.circle` mount draw-in), `press.ts` (unified `scale-[0.97]`, updated style-pinning assertion in `Button.test.tsx`), and `AppLayout.tsx` (client-side route transition skipping initial mount so LCP and first-paint a11y checks stay immediate).
+  - **Skeletons & empty states:** Added reusable `Skeleton` primitive and `list`/`cards`/`summary`/`inline` variants to `LoadingState.tsx`; replaced plain visible `"Loading…"` in `DailyIntention.tsx` with an accessible skeleton + `sr-only` status; added optional `icon` prop and default calm `SproutIcon` badge to `EmptyState.tsx`; added a "Motion & states" showcase section to `/styleguide` with i18n keys in `src/i18n/en.json`.
+- **How it was verified:**
+  - `npm run lint`: passed (0 errors, 0 warnings).
+  - `npm run typecheck`: passed (`tsc -b`).
+  - `npm run knip`: passed (0 unused files/exports/dependencies).
+  - `npm run format:check`: passed.
+  - `npm test`: passed (84 files / 961 tests, including 8 new motion tests and expanded state/token tests).
+  - `npm run build`: passed (PWA precache 38 entries, 1101.39 KiB).
+  - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 horizontal overflow across 320–1440 px and 200% text).
+  - Screenshots captured and visually inspected at 375 px and 1440 px (`docs/screenshots/ux020-styleguide-375.png`, `ux020-styleguide-1440.png`, `ux020-empty-notes-375.png`, `ux020-empty-notes-1440.png`); verified 0 px overflow and instant reduced-motion KPI update.
+- **Problems / Questions:** None. Ready for owner review before starting UX-021 (Today).

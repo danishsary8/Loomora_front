@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUnsavedDraft } from '@/app/pwaUpdate'
+import { Skeleton } from '@/components/states'
 import { Button, Input } from '@/components/ui'
 import { guestPlanKey } from '@/features/auth/useGuestPlan'
 import type { LocalDate } from '@/features/todos/types'
@@ -161,9 +162,10 @@ function ScopedIntention({
             </Button>
           </>
         ) : (
-          <p role="status" className="text-sm text-muted">
-            {t('common.loading')}
-          </p>
+          <div role="status" aria-busy="true" className="py-1">
+            <span className="sr-only">{t('common.loading')}</span>
+            <Skeleton className="h-3.5 w-28 rounded-sm" />
+          </div>
         )}
       </div>
     )

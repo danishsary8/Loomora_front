@@ -1,5 +1,13 @@
 import type { Config } from 'tailwindcss'
-import { borderWidth, colors, elevation, fontFamily, motion, radius } from './src/styles/tokens'
+import {
+  borderWidth,
+  colors,
+  elevation,
+  fontFamily,
+  iconSize,
+  motion,
+  radius,
+} from './src/styles/tokens'
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -55,6 +63,18 @@ export default {
       },
       minWidth: {
         touch: '44px',
+      },
+      width: {
+        'icon-sm': iconSize.sm,
+        'icon-md': iconSize.md,
+        'icon-lg': iconSize.lg,
+        'icon-xl': iconSize.xl,
+      },
+      height: {
+        'icon-sm': iconSize.sm,
+        'icon-md': iconSize.md,
+        'icon-lg': iconSize.lg,
+        'icon-xl': iconSize.xl,
       },
     },
   },

@@ -1292,3 +1292,21 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] lint, typecheck, Knip, format check, Vitest (951/951), build and Redocly pass; no horizontal overflow at 320/375 px.
   - [x] CI end-to-end (375 px) passes on the PR.
 - **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/storage/{db,GuestNoteRepository,ServerNoteRepository,saveGuestPlan}.ts`, `src/lib/storage/noteOrganization.test.ts`, `src/components/ui/{icons,categoryIcons,Chip}.ts(x)`, `src/i18n/en.json`
+
+### UX-020: Motion foundation + skeletons and empty states
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged).
+- **Plan:**
+  1. Add `iconSize` tokens in `src/styles/tokens.ts` / `tailwind.config.ts` and remove unused legacy `.press-md`/`.press-sm` CSS from `src/styles/index.css`.
+  2. Create `src/styles/motion.ts` with DEC-003 durations (160/200/240 ms), single easing, and Framer Motion presets (page enter, 30 ms list stagger, sheet spring, 0.97 press scale, check-off pop, progress draw-in, KPI `useCountUp`) — all with reduced-motion fallbacks and unit tests.
+  3. Wire shared presets into `Sheet`, `DoneStamp`, `ProgressRing`, `press.ts`, and `AppLayout` (client-side route enter with no initial-paint delay).
+  4. Upgrade `LoadingState` with reusable `Skeleton` variants, replace plain `"Loading…"` in `DailyIntention` with an accessible skeleton, enhance `EmptyState` with a calm Elemental illustration-style icon badge, and showcase everything on `/styleguide`.
+  5. Verify with lint, typecheck, Knip, format check, Vitest, build, Playwright `phone-375`, and 375 px + 1440 px screenshots.
+- **Done when:**
+  - [x] `src/styles/motion.ts` exports all 7 motion primitives with verified reduced-motion fallbacks and unit tests.
+  - [x] `LoadingState` / `Skeleton` and `EmptyState` (with illustration-style icon badge) render cleanly across 320–1440 px and 200% text with zero overflow.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/styles/{tokens,motion,index.css,tokens.test.ts,motion.test.tsx}`, `tailwind.config.ts`, `src/components/ui/{Sheet,ProgressRing,press,icons,Button.test.tsx}`, `src/components/states/{LoadingState,EmptyState,states.test.tsx,index.ts}`, `src/app/layout/AppLayout.tsx`, `src/features/today/{DoneStamp,DailyIntention}.tsx`, `src/features/styleguide/StyleguidePage.tsx`, `src/i18n/en.json`, `docs/screenshots/ux020-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

@@ -4,6 +4,7 @@ import {
   colors,
   contrastRatio,
   fontFamily,
+  iconSize,
   motion,
   radius,
 } from './tokens'
@@ -71,6 +72,7 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     expect(fontFamily.body[0]).toBe('"Inter Variable"')
     expect(fontFamily.heading).toEqual(fontFamily.body)
     expect(radius).toEqual({ sm: '8px', md: '14px', lg: '22px' })
+    expect(iconSize).toEqual({ sm: '16px', md: '20px', lg: '24px', xl: '32px' })
     expect(motion.duration).toEqual({ fast: '160ms', base: '200ms', slow: '240ms' })
   })
 

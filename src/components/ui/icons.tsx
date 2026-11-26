@@ -276,3 +276,13 @@ export function PinIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+export function SproutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 20V11" />
+      <path d="M12 12c0-4.2 3-7 7-7 0 4-2.8 7-7 7Z" />
+      <path d="M12 14c0-3.5-2.5-6-6-6 0 3.5 2.5 6 6 6Z" />
+    </IconBase>
+  )
+}

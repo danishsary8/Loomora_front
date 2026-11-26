@@ -1,15 +1,28 @@
-import { Suspense } from 'react'
+import { m, useReducedMotion } from 'framer-motion'
+import { Suspense, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
 import { cn } from '@/lib/cn'
+import { pageEnterMotion } from '@/styles/motion'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
 /** Shell for the signed-in / guest app screens: Today, Week, Focus, Insights, Profile. */
 export function AppLayout() {
+  const { pathname } = useLocation()
+  const reduceMotion = useReducedMotion()
+  // Skip fade on initial mount so first paint and LCP stay immediate; animate client-side route changes.
+  const [initialPath] = useState(pathname)
+  const [hasNavigated, setHasNavigated] = useState(false)
+  if (!hasNavigated && pathname !== initialPath) {
+    setHasNavigated(true)
+  }
+
   // The Week screen needs room for seven columns.
-  const wide = useLocation().pathname === '/week'
+  const wide = pathname === '/week'
+  const enter = pageEnterMotion(Boolean(reduceMotion) || !hasNavigated)
+
   return (
     <div className="flex min-h-dvh">
       <Sidebar />
@@ -24,7 +37,9 @@ export function AppLayout() {
           )}
         >
           <Suspense fallback={<LoadingState />}>
-            <Outlet />
+            <m.div key={pathname} {...enter}>
+              <Outlet />
+            </m.div>
           </Suspense>
         </main>
       </div>

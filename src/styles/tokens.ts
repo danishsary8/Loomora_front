@@ -49,6 +49,13 @@ export const radius = {
   lg: '22px',
 } as const
 
+export const iconSize = {
+  sm: '16px',
+  md: '20px',
+  lg: '24px',
+  xl: '32px',
+} as const
+
 // Soft ambient elevation for Elemental Edition surfaces (DEC-003).
 export const elevation = {
   sm: '0 1px 2px rgba(19, 42, 35, 0.06)',
