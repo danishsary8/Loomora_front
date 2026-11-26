@@ -1,12 +1,22 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Input, Sheet, Textarea } from '@/components/ui'
+import { Button, Checkbox, Chip, Input, Sheet, Textarea } from '@/components/ui'
 import { FormError } from '@/features/auth/FormError'
 import type { ScheduleItem } from '@/features/schedule/types'
 import { errorMessageKey } from '@/lib/api'
+import { cn } from '@/lib/cn'
 import { newId } from '@/lib/id'
 import { NoteConflictError, ValidationError } from '@/lib/storage'
-import { MAX_NOTE_BODY, MAX_NOTE_TITLE, type Note, type NoteFields, type NoteInput } from './types'
+import { CATEGORIES } from '@/styles/tokens'
+import { parseTagInput, tagProblem } from './tags'
+import {
+  MAX_NOTE_BODY,
+  MAX_NOTE_TITLE,
+  type Note,
+  type NoteColor,
+  type NoteFields,
+  type NoteInput,
+} from './types'
 
 interface NoteSheetProps {
   open: boolean
@@ -36,6 +46,9 @@ export function NoteSheet({
   const [body, setBody] = useState(note?.body ?? '')
   const [scheduleItemId, setScheduleItemId] = useState(note?.schedule_item_id ?? '')
   const [localDate, setLocalDate] = useState(note?.local_date ?? '')
+  const [pinned, setPinned] = useState(note?.pinned ?? false)
+  const [color, setColor] = useState<NoteColor | null>(note?.color ?? null)
+  const [tagText, setTagText] = useState(note?.tags.join(', ') ?? '')
   const [error, setError] = useState<string | null>(null)
   const [conflict, setConflict] = useState<{ fields: NoteFields; deleted: boolean } | null>(null)
 
@@ -60,6 +73,13 @@ export function NoteSheet({
       return
     }
 
+    const tags = parseTagInput(tagText)
+    const problem = tagProblem(tags)
+    if (problem) {
+      setError(t(problem === 'tooMany' ? 'notes.form.tagsTooMany' : 'notes.form.tagsTooLong'))
+      return
+    }
+
     setError(null)
     const blockId = scheduleItemId || null
     const dateValue = blockId && localDate ? localDate : null
@@ -69,6 +89,9 @@ export function NoteSheet({
       body: cleanBody || null,
       schedule_item_id: blockId,
       local_date: dateValue,
+      pinned,
+      color,
+      tags,
     }
 
     try {
@@ -199,6 +222,50 @@ export function NoteSheet({
             />
           </div>
         )}
+
+        <fieldset className="flex flex-col gap-2" disabled={saving}>
+          <legend className="mb-2 text-sm font-semibold text-ink">
+            {t('notes.form.colorLabel')}
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-pressed={color === null}
+              onClick={() => setColor(null)}
+              className={cn(
+                'min-h-touch rounded-full border-control bg-paper px-4 text-sm font-semibold text-ink',
+                color === null ? 'border-primary ring-1 ring-primary' : 'border-border-control',
+              )}
+            >
+              {t('notes.form.colorNone')}
+            </button>
+            {CATEGORIES.map((category) => (
+              <Chip
+                key={category}
+                category={category}
+                selected={color === category}
+                onClick={() => setColor(color === category ? null : category)}
+              />
+            ))}
+          </div>
+        </fieldset>
+
+        <Input
+          label={t('notes.form.tagsLabel')}
+          placeholder={t('notes.form.tagsPlaceholder')}
+          hint={t('notes.form.tagsHint')}
+          value={tagText}
+          autoComplete="off"
+          onChange={(event) => setTagText(event.target.value)}
+          disabled={saving}
+        />
+
+        <Checkbox
+          label={t('notes.form.pinLabel')}
+          checked={pinned}
+          onChange={(event) => setPinned(event.target.checked)}
+          disabled={saving}
+        />
 
         <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>

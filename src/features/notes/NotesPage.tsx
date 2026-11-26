@@ -11,7 +11,7 @@ import {
   SegmentedControl,
   Sheet,
 } from '@/components/ui'
-import { PencilIcon, TrashIcon } from '@/components/ui/icons'
+import { PencilIcon, PinIcon, TrashIcon } from '@/components/ui/icons'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { ApiError, errorMessageKey, useSession } from '@/lib/api'
 import { NoteConflictError } from '@/lib/storage'
@@ -20,7 +20,7 @@ import { NoteSheet } from './NoteSheet'
 import type { Note } from './types'
 import { useCreateNote, useDeleteNote, useNotes, useRestoreNote, useUpdateNote } from './useNotes'
 
-type NoteFilter = 'all' | 'standalone' | 'attached'
+type NoteFilter = 'all' | 'pinned' | 'standalone' | 'attached'
 
 const UNDO_TOAST_MS = 6000
 
@@ -85,16 +85,20 @@ function NotesPageSession() {
   const filteredNotes = useMemo(() => {
     const query = search.trim().toLowerCase()
     return (notes.data ?? []).filter((note) => {
+      if (filter === 'pinned' && !note.pinned) return false
       if (filter === 'standalone' && note.schedule_item_id !== null) return false
       if (filter === 'attached' && note.schedule_item_id === null) return false
       if (!query) return true
+      // "#tag" (from a tag chip) matches that tag exactly; plain text also searches tags.
+      if (query.startsWith('#')) return note.tags.includes(query.slice(1))
       const blockTitle = note.schedule_item_id
         ? (scheduleById.get(note.schedule_item_id)?.title ?? '')
         : ''
       return (
         (note.title ?? '').toLowerCase().includes(query) ||
         (note.body ?? '').toLowerCase().includes(query) ||
-        blockTitle.toLowerCase().includes(query)
+        blockTitle.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.includes(query))
       )
     })
   }, [notes.data, filter, search, scheduleById])
@@ -147,6 +151,7 @@ function NotesPageSession() {
 
   const filterOptions = [
     { value: 'all' as const, label: t('notes.filters.all') },
+    { value: 'pinned' as const, label: t('notes.filters.pinned') },
     { value: 'standalone' as const, label: t('notes.filters.standalone') },
     { value: 'attached' as const, label: t('notes.filters.attached') },
   ]
@@ -284,12 +289,20 @@ function NotesPageSession() {
 
                 return (
                   <li key={note.id}>
-                    <Card>
+                    <Card tone={note.color ?? 'paper'}>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h2 className="font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
-                              {headingText}
+                            <h2 className="flex items-start gap-1.5 font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
+                              {note.pinned && (
+                                <PinIcon
+                                  className="mt-0.5 size-4 shrink-0 text-primary"
+                                  role="img"
+                                  aria-hidden={false}
+                                  aria-label={t('notes.pinned')}
+                                />
+                              )}
+                              <span className="min-w-0">{headingText}</span>
                             </h2>
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
                               <span className="inline-block max-w-full rounded-md bg-subtle px-2.5 py-0.5 font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
@@ -326,6 +339,22 @@ function NotesPageSession() {
                           <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink/90 [overflow-wrap:anywhere]">
                             {note.body}
                           </p>
+                        )}
+                        {note.tags.length > 0 && (
+                          <ul className="flex flex-wrap gap-1.5">
+                            {note.tags.map((tag) => (
+                              <li key={tag}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSearch(`#${tag}`)}
+                                  aria-label={t('notes.filterByTag', { tag })}
+                                  className="inline-flex min-h-touch items-center rounded-full px-2 text-sm font-semibold text-primary underline-offset-2 hover:underline [overflow-wrap:anywhere]"
+                                >
+                                  #{tag}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
                         )}
                       </div>
                     </Card>

@@ -1,4 +1,5 @@
 import type { Note, NoteFields, NoteInput } from '@/features/notes/types'
+import { normalizeTags, sameTags } from '@/features/notes/tags'
 import { ApiError, type NotesApi } from '@/lib/api'
 import { NoteConflictError, ValidationError } from './errors'
 import type { NoteRepository } from './NoteRepository'
@@ -26,7 +27,10 @@ function hasFields(note: Note, fields: NoteFields): boolean {
     (fields.body === undefined || note.body === fields.body) &&
     (fields.schedule_item_id === undefined ||
       sameId(note.schedule_item_id, fields.schedule_item_id)) &&
-    (fields.local_date === undefined || note.local_date === fields.local_date)
+    (fields.local_date === undefined || note.local_date === fields.local_date) &&
+    (fields.pinned === undefined || note.pinned === fields.pinned) &&
+    (fields.color === undefined || note.color === fields.color) &&
+    (fields.tags === undefined || sameTags(note.tags, normalizeTags(fields.tags)))
   )
 }
 

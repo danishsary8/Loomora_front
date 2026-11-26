@@ -847,7 +847,8 @@
     "filters": {
       "all": "All",
       "standalone": "Standalone",
-      "attached": "Attached"
+      "attached": "Attached",
+      "pinned": "Pinned"
     },
     "clearFilters": "Clear filters",
     "noMatches": "No notes match your search or filter.",
@@ -892,7 +893,17 @@
       "saving": "Saving…",
       "requiredContent": "Enter a title or note body.",
       "titleTooLong": "Title must be at most 120 characters.",
-      "bodyTooLong": "Note body must be at most 10,000 characters."
-    }
+      "bodyTooLong": "Note body must be at most 10,000 characters.",
+      "pinLabel": "Pin to the top",
+      "colorLabel": "Color (optional)",
+      "colorNone": "None",
+      "tagsLabel": "Tags (optional)",
+      "tagsPlaceholder": "work, ideas",
+      "tagsHint": "Up to 5, separated by commas.",
+      "tagsTooMany": "Use at most 5 tags.",
+      "tagsTooLong": "Keep each tag to 24 characters or fewer."
+    },
+    "pinned": "Pinned",
+    "filterByTag": "Show notes tagged {{tag}}"
   }
 }

@@ -788,6 +788,9 @@ describe('ServerNoteRepository', () => {
       body: 'Details',
       schedule_item_id: null,
       local_date: null,
+      pinned: false,
+      color: null,
+      tags: [],
       created_at: '2026-11-26T09:00:00.000Z',
       updated_at: '2026-11-26T09:00:00.000Z',
     }

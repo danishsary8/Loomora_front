@@ -1,5 +1,5 @@
 import type { FocusSession, FocusSessionInput } from '@/features/focus/types'
-import type { Note } from '@/features/notes/types'
+import { normalizeTags } from '@/features/notes/tags'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { LocalDate, Todo } from '@/features/todos/types'
 import { ApiError, type AccountDataApi, type ImportBody } from '@/lib/api'
@@ -32,7 +32,7 @@ export interface GuestPlan {
   checkins: ScheduleCheckin[]
   intentions: DailyIntentionRecord[]
   focusSessions: FocusSession[]
-  notes: Note[]
+  notes: StoredNote[]
 }
 
 export async function readGuestPlan(
@@ -102,7 +102,18 @@ function toImportBody(plan: GuestPlan): ImportBody {
   const todoIds = new Set(plan.todos.map(({ id }) => id))
   const scheduleItemIds = new Set(plan.items.map(({ id }) => id))
   const notes = plan.notes.map(
-    ({ id, title, body, schedule_item_id, local_date, created_at, updated_at }) => {
+    ({
+      id,
+      title,
+      body,
+      schedule_item_id,
+      local_date,
+      pinned,
+      color,
+      tags,
+      created_at,
+      updated_at,
+    }) => {
       const validBlock =
         schedule_item_id && scheduleItemIds.has(schedule_item_id) ? schedule_item_id : null
       return {
@@ -111,6 +122,9 @@ function toImportBody(plan: GuestPlan): ImportBody {
         body,
         schedule_item_id: validBlock,
         local_date: validBlock ? local_date : null,
+        pinned: pinned ?? false,
+        color: color ?? null,
+        tags: normalizeTags(tags),
         created_at,
         updated_at,
       }

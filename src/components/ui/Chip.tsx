@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import type { Category } from '@/styles/tokens'
-import { CATEGORY_ICONS, CheckIcon } from './icons'
+import { CATEGORY_ICONS } from './categoryIcons'
+import { CheckIcon } from './icons'
 import { pressSm } from './press'
 
 export interface ChipProps {
