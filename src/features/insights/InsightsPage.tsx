@@ -513,12 +513,12 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
 }
 
 const tileTones = {
-  study: 'bg-category-study',
-  health: 'bg-category-health',
-  life: 'bg-category-life',
+  study: { surface: 'bg-category-study', icon: 'text-category-accent-study' },
+  health: { surface: 'bg-category-health', icon: 'text-category-accent-health' },
+  life: { surface: 'bg-category-life', icon: 'text-category-accent-life' },
 } as const
 
-/** Concept v3 KPI tile: tinted surface, icon, value, and sentence-case label. */
+/** Concept v3 KPI tile: tinted surface, colored icon badge, value, and sentence-case label. */
 function MetricTile({
   tone,
   Icon,
@@ -536,12 +536,15 @@ function MetricTile({
     <div
       className={cn(
         'flex min-w-0 flex-col items-center gap-1 rounded-lg border-hairline border-ink/10 p-3 text-center text-ink shadow-soft-sm',
-        tileTones[tone],
+        tileTones[tone].surface,
       )}
     >
       <span
         aria-hidden="true"
-        className="grid size-8 shrink-0 place-items-center rounded-full bg-paper/75 text-ink"
+        className={cn(
+          'grid size-8 shrink-0 place-items-center rounded-full bg-paper/90 shadow-soft-sm',
+          tileTones[tone].icon,
+        )}
       >
         <Icon className="h-icon-sm w-icon-sm" />
       </span>

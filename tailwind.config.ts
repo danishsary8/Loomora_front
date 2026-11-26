@@ -32,6 +32,7 @@ export default {
         'warning-surface': colors.warningSurface,
         danger: colors.danger,
         category: colors.category,
+        'category-accent': colors.categoryAccent,
       },
       borderWidth: {
         hairline: borderWidth.hairline,

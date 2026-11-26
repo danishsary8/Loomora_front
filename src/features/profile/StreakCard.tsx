@@ -28,7 +28,7 @@ export function StreakCard({
         <div className="flex flex-wrap items-center gap-3 rounded-lg border-hairline border-accent/35 bg-warning-surface p-4 text-ink shadow-soft-sm">
           <span
             aria-hidden="true"
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-paper text-ink shadow-soft-sm"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-paper text-warning shadow-soft-sm"
           >
             <StreakIcon className="h-icon-md w-icon-md" />
           </span>
@@ -48,7 +48,7 @@ export function StreakCard({
         <div className="flex flex-wrap items-center gap-3 rounded-lg border-hairline border-primary/15 bg-category-health p-4 text-ink shadow-soft-sm">
           <span
             aria-hidden="true"
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-paper text-primary shadow-soft-sm"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-paper text-category-accent-health shadow-soft-sm"
           >
             <CheckIcon className="h-icon-md w-icon-md" />
           </span>

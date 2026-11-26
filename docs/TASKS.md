@@ -1455,3 +1455,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `Intl.DateTimeFormat` allocations are memoized and date/number edge cases are guarded without throwing.
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, full `npm test` (85/85, 969/969), `npm run build`, and `npx playwright test --project=phone-375 --trace off` (128/128) pass.
 - **Files:** `src/features/insights/{completionRhythm.ts,CompletionRhythmCard.tsx,CompletionRhythmCard.test.tsx,InsightsPage.tsx}`, `src/features/profile/{ProfileHero.tsx,ProfilePage.tsx}`, `src/features/today/AddTodoSheet.tsx`, `src/features/schedule/week/{WeekPage.tsx,weekPlan.ts,weekPlan.test.ts}`, `src/features/notes/NotesPage.tsx`, `src/styles/{motion.ts,motion.test.tsx}`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-030: Concept v3 vibrancy, colored category icons, and Profile hero hills
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 visual alignment follow-up (stacked on PR #115 `UX-029`).
+- **Plan:**
+  1. Enrich the 6 WCAG-verified pastel category fills (`colors.category`) and add jewel-toned `colors.categoryAccent` icon/chart tokens in `src/styles/tokens.ts` + `tailwind.config.ts`, verifying all 12 new non-text contrast pairs (>= 3:1) in `src/styles/tokens.test.ts`.
+  2. Color category icons inside `Chip.tsx`, Week `DayColumn.tsx` icon tiles, Insights `MetricTile` badges, and Profile `StreakCard.tsx` tiles; update `completionRhythm.ts` to use the multi-category bar palette.
+  3. Upgrade `ProfileHero.tsx` with decorative token-colored layered hills behind the centered avatar (inline SVG, zero raster assets) and enrich `DailyIntention.tsx` with a crisper mint surface.
+  4. Run full verification (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture fresh 375 px screenshots (`docs/screenshots/ux030-*.png`), and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] All 6 pastel fills and 6 `categoryAccent` tokens pass WCAG 2.2 AA contrast tests (`tokens.test.ts`).
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, full `npm test` (85/85, 981/981), `npm run build`, and `npx playwright test --project=phone-375 --trace off` (128/128) pass.
+  - [x] Fresh 375 px screenshots saved to `docs/screenshots/ux030-*.png`.
+- **Files:** `src/styles/{tokens.ts,tokens.test.ts}`, `tailwind.config.ts`, `src/components/ui/Chip.tsx`, `src/features/schedule/week/DayColumn.tsx`, `src/features/insights/{completionRhythm.ts,InsightsPage.tsx}`, `src/features/profile/{ProfileHero.tsx,StreakCard.tsx}`, `src/features/today/DailyIntention.tsx`, `docs/screenshots/ux030-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

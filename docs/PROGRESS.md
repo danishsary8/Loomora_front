@@ -1776,3 +1776,17 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Full Vitest (`npm test`): **85 files / 969 tests passed**.
   - Full Playwright `phone-375` (`npx playwright test --project=phone-375 --trace off`): **128/128 passed**.
 - **Problems / Questions:** None. PR #115 is open for review (stacked on PR #114).
+
+### 2026-11-27 UX-030: Concept v3 vibrancy, colored category icons, and Profile hero hills
+
+- **Branch:** `feat/UX-030-concept-v3-vibrancy` stacked on `refactor/UX-029-modular-hardening` (PR #115 — merge #106–#115 in order).
+- **What changed:**
+  - Enriched the 6 WCAG-verified pastel category fills (`colors.category`) and added `colors.categoryAccent` jewel-toned icon/chart tokens in `src/styles/tokens.ts` and `tailwind.config.ts`, with 12 new automated WCAG 2.2 SC 1.4.11 contrast tests in `src/styles/tokens.test.ts`.
+  - Applied `category-accent-*` icon colors across `Chip.tsx`, Week `DayColumn.tsx` icon tiles, Insights `MetricTile` badges, and Profile `StreakCard.tsx` tiles, and switched `completionRhythm.ts` to the multi-category bar palette.
+  - Upgraded `ProfileHero.tsx` with decorative token-colored layered green hills + apricot sun behind the centered avatar circle (inline SVG, zero raster assets) and gave `DailyIntention.tsx` a crisper mint card surface.
+- **How it was verified:**
+  - `npm run lint` (0 errors, 0 warnings), `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Full Vitest (`npm test`): **85 files / 981 tests passed** (including all 48 token contrast & config assertions).
+  - Full Playwright `phone-375`: **128/128 passed**.
+  - Fresh 375 px screenshots visually verified and saved to `docs/screenshots/ux030-{today,week,add-sheet,insights,profile}-375.png`.
+- **Problems / Questions:** None. PR #116 is open for review (stacked on PR #115).

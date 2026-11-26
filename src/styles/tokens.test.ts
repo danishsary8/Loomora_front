@@ -59,6 +59,16 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     ['borderControl on paper', colors.borderControl, colors.paper],
     ['primary focus outline on canvas', colors.primary, colors.cream],
     ['primary focus outline on paper', colors.primary, colors.paper],
+    ...CATEGORIES.map((c): [string, string, string] => [
+      `categoryAccent.${c} on paper`,
+      colors.categoryAccent[c],
+      colors.paper,
+    ]),
+    ...CATEGORIES.map((c): [string, string, string] => [
+      `categoryAccent.${c} on category.${c}`,
+      colors.categoryAccent[c],
+      colors.category[c],
+    ]),
   ]
 
   it.each(controlBorderPairs)('%s meets WCAG 2.2 SC 1.4.11 non-text contrast (3:1)', (_n, a, b) => {

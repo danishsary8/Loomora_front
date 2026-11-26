@@ -2,7 +2,17 @@ import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
 import { CATEGORY_ICONS } from '@/components/ui/categoryIcons'
 import { cn } from '@/lib/cn'
+import type { Category } from '@/styles/tokens'
 import type { ScheduleItem, Weekday } from '../types'
+
+const blockIconAccent: Record<Category, string> = {
+  study: 'text-category-accent-study',
+  work: 'text-category-accent-work',
+  health: 'text-category-accent-health',
+  life: 'text-category-accent-life',
+  rest: 'text-category-accent-rest',
+  other: 'text-category-accent-other',
+}
 
 export interface DayColumnProps {
   day: Weekday
@@ -163,7 +173,12 @@ function ItemCard({ item, formatTime, onOpen }: ItemCardProps) {
         compact
         className="flex min-h-touch items-start gap-3 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md md:p-2.5"
       >
-        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-paper/75 text-ink shadow-soft-sm md:hidden">
+        <span
+          className={cn(
+            'grid size-9 shrink-0 place-items-center rounded-md bg-paper/85 shadow-soft-sm md:hidden',
+            blockIconAccent[item.category],
+          )}
+        >
           <Icon className="h-icon-md w-icon-md" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">

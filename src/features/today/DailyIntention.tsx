@@ -298,7 +298,7 @@ function IntentionEditor({
   if (previousDateLabel && status !== 'error') return null
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-lg border-hairline border-primary/15 bg-primary-soft px-4 pb-2 pt-3.5">
+    <div className="flex flex-col gap-1.5 rounded-lg border-hairline border-primary/20 bg-category-health/65 px-4 pb-2 pt-3.5 shadow-soft-sm">
       {!previousDateLabel && (
         <>
           <Input

@@ -3,12 +3,12 @@ import type { StatsDayRow } from '@/lib/api'
 import { colors } from '@/styles/tokens'
 
 const RHYTHM_BAR_COLORS = [
-  colors.primary,
+  colors.categoryAccent.health,
   colors.primaryLight,
   colors.accent,
-  colors.primary,
-  colors.primaryLight,
-  colors.accent,
+  colors.categoryAccent.study,
+  colors.categoryAccent.rest,
+  colors.categoryAccent.life,
   colors.primary,
 ] as const
 

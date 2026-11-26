@@ -27,15 +27,23 @@ export const colors = {
   warning: '#9A5B04',
   warningSurface: '#FEF4E4',
   danger: '#C62F36',
-  // Provisional WCAG-verified Elemental pastel category fills (DEC-003),
-  // pending final reconciliation if raw reference assets are added later.
+  // WCAG-verified Elemental pastel category fills aligned with Concept v3 (DEC-003).
   category: {
-    study: '#E3F0FC',
-    work: '#FBF0D9',
-    health: '#E2F5EA',
-    life: '#FDE8EE',
-    rest: '#EEE9FC',
-    other: '#ECE8DF',
+    study: '#D4E7FB',
+    work: '#FBE6B8',
+    health: '#CEEFDB',
+    life: '#FADBE3',
+    rest: '#E5DCFA',
+    other: '#E7E3DA',
+  } satisfies Record<Category, string>,
+  // Jewel-toned icon and chart accents paired with category pastels (>= 3:1 WCAG SC 1.4.11).
+  categoryAccent: {
+    study: '#2563A6',
+    work: '#9A6304',
+    health: '#1B7A49',
+    life: '#BE345B',
+    rest: '#6341B8',
+    other: '#54685B',
   } satisfies Record<Category, string>,
 } as const
 
