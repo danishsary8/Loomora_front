@@ -1,19 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
-import {
-  ActionToast,
-  Button,
-  Card,
-  iconActionClass,
-  Input,
-  SegmentedControl,
-  Sheet,
-} from '@/components/ui'
-import { PencilIcon, PinIcon, TrashIcon } from '@/components/ui/icons'
+import { ActionToast, Button, Card, iconActionClass, Sheet } from '@/components/ui'
+import { fieldClasses } from '@/components/ui/fieldClasses'
+import { PencilIcon, PinIcon, SearchIcon, TrashIcon } from '@/components/ui/icons'
+import { pressSmAny } from '@/components/ui'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { ApiError, errorMessageKey, useSession } from '@/lib/api'
+import { cn } from '@/lib/cn'
 import { NoteConflictError } from '@/lib/storage'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { NoteSheet } from './NoteSheet'
@@ -55,6 +50,7 @@ function NotesPageSession() {
 
   const [filter, setFilter] = useState<NoteFilter>('all')
   const [search, setSearch] = useState('')
+  const searchId = useId()
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<Note | null>(null)
@@ -162,24 +158,10 @@ function NotesPageSession() {
         title={t('pages.notes.title')}
         headline={t('pages.notes.headline')}
         subtitle={t('notes.subtitle')}
-        aside={
-          showHeaderAdd && (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => {
-                setEditingNote(null)
-                setEditorOpen(true)
-              }}
-            >
-              {t('notes.add')}
-            </Button>
-          )
-        }
       />
 
       {isOfflineAccountWithoutData ? (
-        <Card className="bg-warning-surface border-warning/30">
+        <Card className="border-warning/30 bg-warning-surface">
           <div className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-ink">
               {t('notes.offlineTitle')}
@@ -193,7 +175,7 @@ function NotesPageSession() {
           </div>
         </Card>
       ) : notes.isPending ? (
-        <LoadingState />
+        <LoadingState variant="cards" />
       ) : notes.isError ? (
         <ErrorState
           message={t(errorMessageKey(notes.error))}
@@ -222,20 +204,44 @@ function NotesPageSession() {
       ) : (
         <>
           <div className="flex flex-col gap-3">
-            <Input
-              type="search"
-              label={t('notes.searchLabel')}
-              placeholder={t('notes.searchPlaceholder')}
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <SegmentedControl
-              label={t('notes.filterLabel')}
-              options={filterOptions}
-              value={filter}
-              onChange={setFilter}
-              className="flex-wrap"
-            />
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={searchId} className="sr-only">
+                {t('notes.searchLabel')}
+              </label>
+              <div className="relative">
+                <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-icon-sm w-icon-sm -translate-y-1/2 text-muted" />
+                <input
+                  id={searchId}
+                  type="search"
+                  placeholder={t('notes.searchPlaceholder')}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  className={cn(fieldClasses(), 'pl-10')}
+                />
+              </div>
+            </div>
+            <div role="group" aria-label={t('notes.filterLabel')} className="flex flex-wrap gap-2">
+              {filterOptions.map((option) => {
+                const selected = filter === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setFilter(option.value)}
+                    className={cn(
+                      'inline-flex min-h-touch items-center rounded-full border-hairline px-4 text-sm font-semibold transition-colors duration-fast ease-elemental',
+                      selected
+                        ? 'border-primary bg-primary text-white shadow-soft-sm'
+                        : 'border-border-subtle bg-paper text-ink hover:bg-subtle',
+                      pressSmAny,
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {filteredNotes.length === 0 ? (
@@ -259,7 +265,7 @@ function NotesPageSession() {
               </div>
             </Card>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 pb-4">
               {filteredNotes.map((note) => {
                 const headingText = note.title ?? t('notes.untitled')
                 const block = note.schedule_item_id
@@ -292,28 +298,18 @@ function NotesPageSession() {
                     <Card tone={note.color ?? 'paper'}>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <h2 className="flex items-start gap-1.5 font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
-                              {note.pinned && (
-                                <PinIcon
-                                  className="mt-0.5 size-4 shrink-0 text-primary"
-                                  role="img"
-                                  aria-hidden={false}
-                                  aria-label={t('notes.pinned')}
-                                />
-                              )}
-                              <span className="min-w-0">{headingText}</span>
-                            </h2>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
-                              <span className="inline-block max-w-full rounded-md bg-subtle px-2.5 py-0.5 font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
-                                {badgeText}
-                              </span>
-                              <time dateTime={note.updated_at} className="shrink-0 tabular-nums">
-                                {updatedLabel}
-                              </time>
-                            </div>
-                          </div>
-                          <div className="-mr-1.5 flex shrink-0 items-center">
+                          <h2 className="flex min-w-0 flex-1 items-start justify-between gap-2 font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
+                            <span className="min-w-0">{headingText}</span>
+                            {note.pinned && (
+                              <PinIcon
+                                className="mt-0.5 h-icon-sm w-icon-sm shrink-0 text-primary"
+                                role="img"
+                                aria-hidden={false}
+                                aria-label={t('notes.pinned')}
+                              />
+                            )}
+                          </h2>
+                          <div className="-mr-1.5 -mt-1 flex shrink-0 items-center">
                             <button
                               type="button"
                               aria-label={t('notes.editLabel', { title: headingText })}
@@ -323,7 +319,7 @@ function NotesPageSession() {
                               }}
                               className={iconActionClass}
                             >
-                              <PencilIcon className="size-4" />
+                              <PencilIcon className="h-icon-sm w-icon-sm" />
                             </button>
                             <button
                               type="button"
@@ -331,7 +327,7 @@ function NotesPageSession() {
                               onClick={() => setConfirmDelete(note)}
                               className={iconActionClass}
                             >
-                              <TrashIcon className="size-4" />
+                              <TrashIcon className="h-icon-sm w-icon-sm" />
                             </button>
                           </div>
                         </div>
@@ -340,28 +336,58 @@ function NotesPageSession() {
                             {note.body}
                           </p>
                         )}
-                        {note.tags.length > 0 && (
-                          <ul className="flex flex-wrap gap-1.5">
-                            {note.tags.map((tag) => (
-                              <li key={tag}>
-                                <button
-                                  type="button"
-                                  onClick={() => setSearch(`#${tag}`)}
-                                  aria-label={t('notes.filterByTag', { tag })}
-                                  className="inline-flex min-h-touch items-center rounded-full px-2 text-sm font-semibold text-primary underline-offset-2 hover:underline [overflow-wrap:anywhere]"
-                                >
-                                  #{tag}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                          {note.tags.length > 0 ? (
+                            <ul className="flex flex-wrap gap-1.5">
+                              {note.tags.map((tag) => (
+                                <li key={tag}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSearch(`#${tag}`)}
+                                    aria-label={t('notes.filterByTag', { tag })}
+                                    className="inline-flex min-h-touch items-center rounded-full px-2 text-xs font-semibold text-primary underline-offset-2 hover:underline [overflow-wrap:anywhere]"
+                                  >
+                                    #{tag}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span />
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                            <span className="inline-block max-w-full rounded-md bg-paper/70 px-2 py-0.5 font-medium leading-snug text-ink [overflow-wrap:anywhere]">
+                              {badgeText}
+                            </span>
+                            <time dateTime={note.updated_at} className="shrink-0 tabular-nums">
+                              {updatedLabel}
+                            </time>
+                          </div>
+                        </div>
                       </div>
                     </Card>
                   </li>
                 )
               })}
             </ul>
+          )}
+
+          {showHeaderAdd && (
+            <div className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 pt-2 md:bottom-4">
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="shadow-soft-md"
+                onClick={() => {
+                  setEditingNote(null)
+                  setEditorOpen(true)
+                }}
+              >
+                <span aria-hidden="true">+</span>
+                <span>{t('notes.add')}</span>
+              </Button>
+            </div>
           )}
         </>
       )}

@@ -1720,3 +1720,16 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Playwright `phone-375` (`a11y`, `today`, `subtasks`, `repeat`, `reminders` — 24/24 passed including 375 px 200% text scaling on `AddTodoSheet`).
   - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux025-add-sheet-375.png`, `ux025-add-sheet-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-026 (Notes).
+
+### 2026-11-27 UX-026: Notes screen concept v3 alignment
+
+- **Branch:** `feat/UX-026-notes-polish` stacked on `feat/UX-025-add-task-sheet` (PR #111 — merge #106–#111 first).
+- **What changed:**
+  - Added `SearchIcon` in `src/components/ui/icons.tsx`.
+  - Upgraded `NotesPage.tsx` with an icon-prefixed search input, pill-shaped filter chips (`All` / `Pinned` / `Standalone` / `Attached`), tinted note cards with top-right `PinIcon` (inside `<h2>` to preserve accessible heading semantics), bottom `#tags` + date/badge footer, `<LoadingState variant="cards" />`, and a sticky bottom primary `"+ New note"` bar when notes exist.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`NotesPage.test.tsx`): 6/6 passed.
+  - Playwright `phone-375` (`notes`, `a11y`, `page-heading` — 20/20 passed across 320–1440 px & 200% text).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux026-notes-375.png`, `ux026-notes-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-027 (Profile + Preferences).

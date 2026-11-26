@@ -1392,3 +1392,18 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/i18n/en.json`, `docs/screenshots/ux025-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-026: Notes screen concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #111 `UX-025`).
+- **Plan:**
+  1. Add `SearchIcon` to `src/components/ui/icons.tsx`.
+  2. Upgrade `NotesPage.tsx` with a search field with leading `SearchIcon`, pill-shaped filter chips (`All` / `Pinned` / `Standalone` / `Attached`), tinted note cards with top-right `PinIcon`, bottom `#tags` + date line, `<LoadingState variant="cards" />`, and a floating primary `"+ New note"` bar at the bottom when notes exist.
+  3. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Notes matches concept v3 search with icon, pill filter chips, tinted cards with top-right pin + bottom `#tags` + date line, and floating `"+ New note"` primary bar at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/notes/NotesPage.tsx`, `docs/screenshots/ux026-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
