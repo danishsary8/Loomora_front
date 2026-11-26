@@ -68,6 +68,19 @@ export class GuestFocusSessionRepository implements FocusSessionRepository {
     return toPublicSession(session)
   }
 
+  async listForRange(from: LocalDate, to: LocalDate): Promise<FocusSession[]> {
+    if (!isLocalDate(from) || !isLocalDate(to) || from > to) {
+      invalidFocusSession('date', 'Use a valid calendar date range.')
+    }
+    const rows = await (
+      await this.open()
+    ).focus_sessions
+      .where('local_date')
+      .between(from, to, true, true)
+      .toArray()
+    return rows.filter((row) => !row.deleted_at).map(toPublicSession)
+  }
+
   async listForDate(date: LocalDate): Promise<FocusSession[]> {
     if (!isLocalDate(date)) invalidFocusSession('date', 'Use a valid calendar date.')
     const rows = await (

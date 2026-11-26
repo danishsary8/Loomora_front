@@ -12,7 +12,7 @@ export class ServerStreakRepository implements StreakRepository {
   }
 
   async get(today: LocalDate): Promise<Streak> {
-    const { current_streak, today_counted } = await this.api.streak(today)
-    return { count: current_streak, todayCounted: today_counted }
+    const { current_streak, longest_streak, today_counted } = await this.api.streak(today)
+    return { count: current_streak, longest: longest_streak, todayCounted: today_counted }
   }
 }

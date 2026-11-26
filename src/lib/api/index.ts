@@ -15,7 +15,7 @@ export type { GoogleIntent } from './auth'
 export type { AccountDataApi } from './account'
 export type { ScheduleApi } from './schedule'
 export type { TodosApi } from './todos'
-export type { Goal, ImportBody, User } from './types'
+export type { Goal, ImportBody, StatsDayRow, StatsSummary, User } from './types'
 
 const DEFAULT_API_URL = 'http://localhost:8000/api/v1'
 
