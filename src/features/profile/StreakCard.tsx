@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Button, Card } from '@/components/ui'
-import { StreakBadge, useStreak } from '@/features/streak'
+import { StreakIcon } from '@/components/ui/icons'
+import { useStreak } from '@/features/streak'
 import type { LocalDate } from '@/features/todos/types'
 
 /** The streak summary, with its loading, offline and error states. */
@@ -11,18 +12,20 @@ export function StreakCard({ today }: { today: LocalDate }) {
 
   if (streak.data) {
     return (
-      <Card className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border-hairline border-accent/30 bg-accent/15 p-4 text-ink shadow-soft-sm">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-paper text-ink shadow-soft-sm">
+          <StreakIcon className="size-6" />
+        </span>
         <div className="flex min-w-0 flex-col gap-1">
           {title}
-          <p className="text-2xl font-bold tracking-tight tabular-nums text-ink">
+          <p className="text-2xl font-bold tracking-tight tabular-nums text-ink [overflow-wrap:anywhere]">
             {t('profile.streakDays', { count: streak.data.count })}
           </p>
           <p className="text-sm text-muted">
             {t(streak.data.todayCounted ? 'profile.streakTodayCounted' : 'profile.streakTodayOpen')}
           </p>
         </div>
-        <StreakBadge {...streak.data} />
-      </Card>
+      </div>
     )
   }
 

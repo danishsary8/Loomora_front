@@ -13,6 +13,7 @@ import { AccountCard } from './AccountCard'
 import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { FeedbackSheet } from './FeedbackSheet'
 import { GuestPreferencesCard } from './GuestPreferencesCard'
+import { ChatIcon, SignOutIcon, TrashIcon } from '@/components/ui/icons'
 import { SettingsGroup, SettingsRow } from './SettingsList'
 import { StreakCard } from './StreakCard'
 
@@ -88,6 +89,7 @@ export function ProfilePage() {
 
       <SettingsGroup title={t('profile.supportTitle')}>
         <SettingsRow
+          Icon={ChatIcon}
           label={t('profile.feedback')}
           description={t('profile.feedbackRowHint')}
           onClick={() => setFeedbackOpen(true)}
@@ -97,12 +99,14 @@ export function ProfilePage() {
       {user && (
         <SettingsGroup title={t('profile.accountActionsTitle')}>
           <SettingsRow
+            Icon={SignOutIcon}
             label={t('profile.signOut')}
             disabled={signingOut}
             aria-busy={signingOut}
             onClick={() => void leave()}
           />
           <SettingsRow
+            Icon={TrashIcon}
             label={t('profile.deleteAccount')}
             description={t('profile.deleteHint')}
             tone="danger"

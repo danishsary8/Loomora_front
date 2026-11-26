@@ -376,7 +376,8 @@
     "repeatDaysRequired": "Choose at least one weekday.",
     "category": "Category (optional)",
     "submit": "Add",
-    "submitting": "Adding…"
+    "submitting": "Adding…",
+    "lead": "Capture the thought. Details can come later."
   },
   "weekdays": {
     "short": {

@@ -30,6 +30,9 @@ export function LandingPage() {
               <BrandMark className="size-11 shrink-0 rounded-md shadow-soft-sm sm:size-12" />
               <h1 className="font-heading text-[length:clamp(2.125rem,13vw,3.5rem)] font-bold leading-none tracking-[-0.03em] text-ink [overflow-wrap:anywhere]">
                 {t('common.appName')}
+                <span aria-hidden="true" className="text-accent">
+                  .
+                </span>
               </h1>
             </div>
             <p className="max-w-md text-lg font-medium leading-relaxed text-ink/90 sm:text-2xl sm:leading-snug">

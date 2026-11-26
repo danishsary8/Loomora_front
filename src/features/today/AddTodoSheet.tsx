@@ -239,6 +239,9 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
   return (
     <Sheet open={open} onClose={onClose} title={heading} initialFocusRef={titleRef}>
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+        {target.type === 'create' && (
+          <p className="-mt-2 text-sm text-muted">{t('todoForm.lead')}</p>
+        )}
         <Input
           ref={titleRef}
           label={t('todoForm.title')}

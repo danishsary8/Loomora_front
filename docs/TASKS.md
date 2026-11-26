@@ -1256,12 +1256,25 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-018: Elemental concept v3 alignment (all app screens)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #99](https://github.com/danishsary8/Loomora_front/pull/99) at `288d1e6`.
 - **Owner:** claude
 - **Source:** Owner-supplied `LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3.png` and `LOOMORA_ELEMENTAL_UI_UX_ALIGNMENT_V3.md` (DEC-003 tokens unchanged). Guidance from the UI UX Pro Max skill (UX rules and pre-delivery checklist; its generic palette and font suggestions were not used because DEC-003 fixes them).
 - **Scope:** Visual composition only, no behavior change: `Loomora.` wordmark with accent full stop and the user's initial in the top bar; solid primary pill for the selected tab (bottom nav and sidebar); editorial screen header (screen name stays the `h1`, concept headline as display text) on Today, Week, Focus, Insights, Notes, Profile; Today progress card (count, bar, percentage ring), tinted intention card, visible "Your to-dos" heading, `N-day streak` pill, accent `+`; category icons in chips and Week blocks; Focus timer as a progress ring; Insights KPI tiles tinted with icons and sentence-case labels; quiet icon actions on to-dos and notes (shared `iconActionClass`). Concept extras outside docs/02 (pinned notes, tags, Profile illustration) were not added.
 - **Done when:**
   - [x] lint, typecheck, Knip, format check, Vitest (944/944) pass.
   - [x] No horizontal overflow at 320/375/768/1440 px, including 200% text on Today, Focus and Profile.
-  - [ ] CI end-to-end (375 px) passes on the PR.
+  - [x] CI end-to-end (375 px) passes on the PR.
 - **Files:** `src/app/layout/*`, `src/components/page/AppPageHeader.tsx`, `src/components/ui/{Chip,FloatingAddButton,buttonStyles,icons,index}.ts(x)`, `src/features/{today,streak,focus,insights,notes,profile,schedule/week}/*`, `src/i18n/en.json`, tests, `e2e/page-heading.spec.ts`
+
+### UX-019: Elemental concept v3 alignment (Add sheet, Profile, Landing)
+
+- **Status:** review
+- **Owner:** claude
+- **Source:** Follow-up to UX-018 with the same concept assets.
+- **Scope:** Visual only. Category chips are always tinted with their icon (selected adds a primary ring and check); the Add to-do sheet shows "Capture the thought. Details can come later." when creating; Profile streak becomes a warm tile with a flame icon (the duplicate badge is removed), and settings rows get leading icons (feedback, sign out, delete); the Landing wordmark gets the accent full stop.
+- **Done when:**
+  - [x] lint, typecheck, Knip, format check, Vitest (944/944) pass.
+  - [x] No overflow on Profile at 768 px with 200% text.
+  - [ ] CI end-to-end (375 px) passes on the PR.
+- **Files:** `src/components/ui/{Chip,icons}.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/profile/{ProfilePage,SettingsList,StreakCard}.tsx`, `src/features/landing/LandingPage.tsx`, `src/i18n/en.json`
