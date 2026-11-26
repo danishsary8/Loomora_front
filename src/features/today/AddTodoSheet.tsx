@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type ComponentType, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Chip, Input, Sheet, Textarea } from '@/components/ui'
 import { ClockInput } from '@/components/ui/ClockInput'
@@ -211,13 +211,11 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
 
   const priorityAndNotes = (
     <>
-      <div className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
-        <div className="flex items-center gap-2 text-muted">
-          <FlagIcon className="h-icon-sm w-icon-sm shrink-0" />
-          <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
-            {t('todoForm.priority')}
-          </span>
-        </div>
+      <OptionalFieldSection
+        Icon={FlagIcon}
+        label={t('todoForm.priority')}
+        className="py-3 first:pt-0 last:pb-0"
+      >
         <Field label={t('todoForm.priority')}>
           {(field) => (
             <select
@@ -234,14 +232,12 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
             </select>
           )}
         </Field>
-      </div>
-      <div className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
-        <div className="flex items-center gap-2 text-muted">
-          <NotesIcon className="h-icon-sm w-icon-sm shrink-0" />
-          <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
-            {t('todoForm.notes')}
-          </span>
-        </div>
+      </OptionalFieldSection>
+      <OptionalFieldSection
+        Icon={NotesIcon}
+        label={t('todoForm.notes')}
+        className="py-3 first:pt-0 last:pb-0"
+      >
         <Textarea
           ref={notesRef}
           label={t('todoForm.notes')}
@@ -256,7 +252,7 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
             setNotesError(notesTooLong(value) ? notesLimit : undefined)
           }}
         />
-      </div>
+      </OptionalFieldSection>
     </>
   )
 
@@ -301,16 +297,11 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
               </div>
             </fieldset>
             <div className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm">
-              <div className="flex flex-col gap-2 p-3.5">
-                <div className="flex items-center gap-2 text-muted">
-                  <WeekIcon className="h-icon-sm w-icon-sm shrink-0" />
-                  <span
-                    aria-hidden="true"
-                    className="text-xs font-semibold uppercase tracking-wide"
-                  >
-                    {t('todoForm.repeatDueDate')}
-                  </span>
-                </div>
+              <OptionalFieldSection
+                Icon={WeekIcon}
+                label={t('todoForm.repeatDueDate')}
+                className="p-3.5"
+              >
                 <div className="flex flex-wrap items-end gap-2">
                   <Input
                     ref={dueDateRef}
@@ -328,7 +319,7 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                     </Button>
                   )}
                 </div>
-              </div>
+              </OptionalFieldSection>
               <div className="flex flex-col">
                 <button
                   type="button"
@@ -353,13 +344,12 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                     id={advancedId}
                     className="divide-y divide-border-subtle border-t-hairline border-border-subtle bg-subtle/30 px-3.5 py-2"
                   >
-                    <fieldset className="flex min-w-0 flex-col gap-2 py-3 first:pt-1">
-                      <div className="flex items-center gap-2 text-muted">
-                        <BellIcon className="h-icon-sm w-icon-sm shrink-0" />
-                        <legend className="text-xs font-semibold uppercase tracking-wide text-muted">
-                          {t('todoForm.remindMe')}
-                        </legend>
-                      </div>
+                    <OptionalFieldSection
+                      Icon={BellIcon}
+                      label={t('todoForm.remindMe')}
+                      asLegend
+                      className="py-3 first:pt-1"
+                    >
                       <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 [&>div]:min-w-0">
                         <Input
                           ref={reminderDateRef}
@@ -405,17 +395,12 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                           {t('todoForm.clearReminder')}
                         </Button>
                       )}
-                    </fieldset>
-                    <div className="flex flex-col gap-2.5 py-3">
-                      <div className="flex items-center gap-2 text-muted">
-                        <RepeatIcon className="h-icon-sm w-icon-sm shrink-0" />
-                        <span
-                          aria-hidden="true"
-                          className="text-xs font-semibold uppercase tracking-wide"
-                        >
-                          {t('todoForm.repeat')}
-                        </span>
-                      </div>
+                    </OptionalFieldSection>
+                    <OptionalFieldSection
+                      Icon={RepeatIcon}
+                      label={t('todoForm.repeat')}
+                      className="gap-2.5 py-3"
+                    >
                       <Field label={t('todoForm.repeat')} error={repeatErrorMessage}>
                         {(field) => (
                           <select
@@ -460,7 +445,7 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                           </div>
                         </fieldset>
                       )}
-                    </div>
+                    </OptionalFieldSection>
                     {priorityAndNotes}
                   </div>
                 )}
@@ -487,5 +472,45 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
         </Button>
       </form>
     </Sheet>
+  )
+}
+
+interface OptionalFieldSectionProps {
+  Icon: ComponentType<{ className?: string }>
+  label: string
+  asLegend?: boolean
+  className?: string
+  children: ReactNode
+}
+
+/** Shared icon-prefixed optional row section inside the grouped task options card. */
+function OptionalFieldSection({
+  Icon,
+  label,
+  asLegend = false,
+  className,
+  children,
+}: OptionalFieldSectionProps) {
+  if (asLegend) {
+    return (
+      <fieldset className={cn('flex min-w-0 flex-col gap-2', className)}>
+        <legend className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+          <Icon className="h-icon-sm w-icon-sm shrink-0" />
+          <span>{label}</span>
+        </legend>
+        {children}
+      </fieldset>
+    )
+  }
+  return (
+    <div className={cn('flex flex-col gap-2', className)}>
+      <div className="flex items-center gap-2 text-muted">
+        <Icon className="h-icon-sm w-icon-sm shrink-0" />
+        <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
+          {label}
+        </span>
+      </div>
+      {children}
+    </div>
   )
 }

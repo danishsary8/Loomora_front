@@ -154,20 +154,21 @@ export function useCountUp(
   options: { reduced?: boolean; durationMs?: number } = {},
 ): number {
   const { reduced = false, durationMs = 240 } = options
-  const [display, setDisplay] = useState(target)
-  const previousRef = useRef(target)
+  const safeTarget = Number.isFinite(target) ? target : 0
+  const [display, setDisplay] = useState(safeTarget)
+  const previousRef = useRef(safeTarget)
 
   useEffect(() => {
     const startValue = previousRef.current
-    if (reduced || durationMs <= 0 || startValue === target) {
-      previousRef.current = target
-      setDisplay(target)
+    if (reduced || durationMs <= 0 || startValue === safeTarget) {
+      previousRef.current = safeTarget
+      setDisplay(safeTarget)
       return
     }
 
     let rafId = 0
     const startTime = performance.now()
-    const delta = target - startValue
+    const delta = safeTarget - startValue
 
     const tick = (now: number) => {
       const progress = Math.min(1, (now - startTime) / durationMs)
@@ -177,16 +178,16 @@ export function useCountUp(
       if (progress < 1) {
         rafId = requestAnimationFrame(tick)
       } else {
-        previousRef.current = target
+        previousRef.current = safeTarget
       }
     }
 
     rafId = requestAnimationFrame(tick)
     return () => {
       cancelAnimationFrame(rafId)
-      previousRef.current = target
+      previousRef.current = safeTarget
     }
-  }, [target, reduced, durationMs])
+  }, [safeTarget, reduced, durationMs])
 
-  return reduced ? target : display
+  return reduced ? safeTarget : display
 }

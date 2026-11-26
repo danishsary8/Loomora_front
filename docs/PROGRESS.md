@@ -1762,3 +1762,17 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Multi-viewport sweep across all 8 screens (`/`, `/today`, `/week`, `/focus`, `/insights`, `/notes`, `/profile`, `/styleguide`) at `320, 375, 390, 768, 1024, 1440 px`, `200%` text scaling, `prefers-reduced-motion: reduce`, and axe-core WCAG 2.2 AA: **`AUDIT_ISSUES_COUNT: 0`**.
   - **Lighthouse note:** Lighthouse CLI is not installed in `devDependencies`; production bundle size stayed nearly flat (+0.6 kB gzip across the entire UX-020–UX-028 series with zero new chart or UI libraries added) and accessibility is verified at 0 axe violations across all screens.
 - **Problems / Questions:** None. All 9 Concept v3 PRs (UX-020 through UX-028) are open and ready for owner review in order (#106 → #114).
+
+### 2026-11-27 UX-029: Modularity, memoization, edge-case hardening, and unit tests
+
+- **Branch:** `refactor/UX-029-modular-hardening` stacked on `feat/UX-028-final-consistency-pass` (PR #114 — merge #106–#114 in order).
+- **What changed:**
+  - **Modularization:** Extracted `CompletionRhythmCard.tsx` and pure math/geometry helpers in `completionRhythm.ts` (`dayActivityScore`, `buildRhythmBars`, `RHYTHM_CHART_HEIGHT`) out of `InsightsPage.tsx` (keeping React Fast Refresh warning-free); extracted `ProfileHero.tsx` out of `ProfilePage.tsx`; deduplicated the 5 repeated icon-prefixed optional row blocks in `AddTodoSheet.tsx` into `OptionalFieldSection` with valid direct `<fieldset><legend>` semantics.
+  - **Performance (memoization):** Memoized `weekdays`, `weekDates`, `dayNumFmt`, and `weekRangeLabel` in `WeekPage.tsx`, and hoisted `Intl.DateTimeFormat` out of `filteredNotes.map(...)` in `NotesPage.tsx`.
+  - **Robust error handling & type safety:** Replaced unsafe `as [number, number, number]` cast in `weekPlan.ts` (`weekDatesFor`) with defensive length/finiteness validation and empty-array guard; guarded `new Date(iso)` against `NaN` in `NotesPage.tsx` (`formatUpdatedDate`) and `completionRhythm.ts` (`buildRhythmBars`); sanitized `NaN`/`Infinity` targets in `src/styles/motion.ts` (`useCountUp`).
+  - **Tests:** Added `src/features/insights/CompletionRhythmCard.test.tsx` (4 tests) and expanded `src/styles/motion.test.tsx` (non-finite targets + unmount `cancelAnimationFrame`) and `src/features/schedule/week/weekPlan.test.ts` (month/year boundary + empty weekdays).
+- **How it was verified:**
+  - `npm run lint` (0 errors, 0 warnings), `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Full Vitest (`npm test`): **85 files / 969 tests passed**.
+  - Full Playwright `phone-375` (`npx playwright test --project=phone-375 --trace off`): **128/128 passed**.
+- **Problems / Questions:** None. PR #115 is open for review (stacked on PR #114).

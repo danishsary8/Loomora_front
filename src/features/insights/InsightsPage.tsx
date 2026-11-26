@@ -20,7 +20,8 @@ import { addDaysLocalDate, daysBetweenLocalDates, toLocalDate } from '@/lib/date
 import { useTimePreferences } from '@/lib/time/useTimePreferences'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { progressDrawTransition, useCountUp } from '@/styles/motion'
-import { colors } from '@/styles/tokens'
+import { CompletionRhythmCard } from './CompletionRhythmCard'
+import { dayActivityScore } from './completionRhythm'
 import { isEmptyStatsSummary, weekBoundsForDate } from './computeStatsSummary'
 import { StreakHistoryCard } from './StreakHistoryCard'
 import { useStatsSummary } from './useStatsSummary'
@@ -65,20 +66,8 @@ function formatWeekdayShort(date: LocalDate, locale: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d)))
 }
 
-function formatWeekdayNarrow(date: LocalDate, locale: string): string {
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number]
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: 'UTC',
-    weekday: 'narrow',
-  }).format(new Date(Date.UTC(y, m - 1, d)))
-}
-
 function isActiveDay(day: StatsDayRow): boolean {
   return day.focus_ms > 0 || day.todos_done > 0 || day.blocks_checked > 0
-}
-
-function dayActivityScore(day: StatsDayRow): number {
-  return day.focus_ms + day.todos_done * 300_000 + day.blocks_checked * 300_000
 }
 
 /** R4 Insights dashboard: analytics, Completion Rhythm chart, Weekly Recap, and Plan vs Reality. */
@@ -278,97 +267,6 @@ function OverviewSection({
         }
       />
     </section>
-  )
-}
-
-const RHYTHM_BAR_COLORS = [
-  colors.primary,
-  colors.primaryLight,
-  colors.accent,
-  colors.primary,
-  colors.primaryLight,
-  colors.accent,
-  colors.primary,
-] as const
-
-/** Concept v3 "Completion rhythm" 7-bar SVG chart built from real daily activity scores. */
-function CompletionRhythmCard({ summary, locale }: { summary: StatsSummary; locale: string }) {
-  const { t } = useTranslation()
-  const reduceMotion = useReducedMotion()
-  const reduced = Boolean(reduceMotion)
-  const days = summary.days.slice(-7)
-  if (days.length === 0) return null
-
-  const scores = days.map(dayActivityScore)
-  const maxScore = Math.max(...scores, 1)
-  const drawTransition = progressDrawTransition(reduced)
-  const chartHeight = 96
-  const barWidth = 22
-  const slotWidth = 42
-  const svgWidth = days.length * slotWidth
-
-  return (
-    <Card>
-      <div className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-semibold text-ink">
-          {t('insights.rhythm.title')}
-        </h2>
-        <div className="w-full overflow-hidden">
-          <svg
-            role="img"
-            aria-label={t('insights.rhythm.ariaLabel', { count: days.length })}
-            viewBox={`0 0 ${svgWidth} ${chartHeight + 24}`}
-            className="h-auto w-full"
-          >
-            {days.map((day, index) => {
-              const score = scores[index] ?? 0
-              const active = score > 0
-              const barHeight = active
-                ? Math.max(16, Math.round((score / maxScore) * (chartHeight - 8)))
-                : 10
-              const x = index * slotWidth + (slotWidth - barWidth) / 2
-              const y = chartHeight - barHeight
-              const fill = active
-                ? (RHYTHM_BAR_COLORS[index % RHYTHM_BAR_COLORS.length] ?? colors.primary)
-                : colors.subtle
-              const label = formatWeekdayNarrow(day.local_date, locale)
-              return (
-                <g key={day.local_date}>
-                  <rect
-                    x={x}
-                    y={8}
-                    width={barWidth}
-                    height={chartHeight - 8}
-                    rx={8}
-                    fill={colors.subtle}
-                    opacity={0.45}
-                  />
-                  <m.rect
-                    x={x}
-                    width={barWidth}
-                    rx={8}
-                    fill={fill}
-                    initial={reduced ? false : { y: chartHeight, height: 0 }}
-                    animate={{ y, height: barHeight }}
-                    transition={drawTransition}
-                  />
-                  <text
-                    x={x + barWidth / 2}
-                    y={chartHeight + 18}
-                    textAnchor="middle"
-                    fill={colors.muted}
-                    fontSize="11"
-                    fontWeight="600"
-                  >
-                    {label}
-                  </text>
-                </g>
-              )
-            })}
-          </svg>
-        </div>
-      </div>
-    </Card>
   )
 }
 

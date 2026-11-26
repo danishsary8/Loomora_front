@@ -17,10 +17,23 @@ export function weekDatesFor(
   date: Date = new Date(),
   zone?: string,
 ): Record<Weekday, Date> {
-  const local = toLocalDate(date, zone)
-  const [y, m, d] = local.split('-').map(Number) as [number, number, number]
-  const todayIndex = weekdays.indexOf(weekdayOf(local))
   const result = {} as Record<Weekday, Date>
+  if (weekdays.length === 0) return result
+  const local = toLocalDate(date, zone)
+  const parts = local.split('-').map(Number)
+  const [y, m, d] = parts
+  if (
+    parts.length !== 3 ||
+    y === undefined ||
+    m === undefined ||
+    d === undefined ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(m) ||
+    !Number.isFinite(d)
+  ) {
+    return result
+  }
+  const todayIndex = weekdays.indexOf(weekdayOf(local))
   weekdays.forEach((day, i) => {
     const offset = i - (todayIndex >= 0 ? todayIndex : 0)
     result[day] = new Date(Date.UTC(y, m - 1, d + offset))

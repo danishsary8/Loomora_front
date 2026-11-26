@@ -125,4 +125,28 @@ describe('shared motion foundation (UX-020)', () => {
       perfSpy.mockRestore()
     }
   })
+
+  it('useCountUp guards non-finite targets, zero duration, and cancels rAF on unmount', () => {
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 42)
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+
+    try {
+      const { rerender, unmount } = render(<CountUpProbe target={Number.NaN} reduced={false} />)
+      expect(screen.getByTestId('count')).toHaveTextContent('0')
+      expect(rafSpy).not.toHaveBeenCalled()
+
+      rerender(<CountUpProbe target={Number.POSITIVE_INFINITY} reduced={false} />)
+      expect(screen.getByTestId('count')).toHaveTextContent('0')
+      expect(rafSpy).not.toHaveBeenCalled()
+
+      rerender(<CountUpProbe target={75} reduced={false} />)
+      expect(rafSpy).toHaveBeenCalledTimes(1)
+
+      unmount()
+      expect(cancelSpy).toHaveBeenCalledWith(42)
+    } finally {
+      rafSpy.mockRestore()
+      cancelSpy.mockRestore()
+    }
+  })
 })

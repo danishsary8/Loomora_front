@@ -30,6 +30,11 @@ function formatOccurrenceDate(localDate: string, locale: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d)))
 }
 
+function formatUpdatedDate(iso: string, formatter: Intl.DateTimeFormat): string {
+  const parsed = new Date(iso)
+  return Number.isNaN(parsed.getTime()) ? '' : formatter.format(parsed)
+}
+
 export function NotesPage() {
   const generation = useSession((s) => s.generation)
   return <NotesPageSession key={generation} />
@@ -72,6 +77,11 @@ function NotesPageSession() {
     setToast(next)
     toastTimer.current = setTimeout(() => setToast(null), UNDO_TOAST_MS)
   }
+
+  const updatedFmt = useMemo(
+    () => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }),
+    [locale],
+  )
 
   const scheduleById = useMemo(
     () => new Map((scheduleItems.data ?? []).map((item) => [item.id, item])),
@@ -288,10 +298,7 @@ function NotesPageSession() {
                         ? t('notes.detachedBlockOnDate', { date: formattedOccurrenceDate })
                         : t('notes.detachedBlock')
 
-                const updatedLabel = new Intl.DateTimeFormat(locale, {
-                  month: 'short',
-                  day: 'numeric',
-                }).format(new Date(note.updated_at))
+                const updatedLabel = formatUpdatedDate(note.updated_at, updatedFmt)
 
                 return (
                   <li key={note.id}>

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSession } from '@/lib/api'
+import { toLocalDate } from '@/lib/date'
 import { useTranslation } from 'react-i18next'
 import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
@@ -28,24 +29,35 @@ export function WeekPage() {
 function WeekSchedule() {
   const { t, i18n } = useTranslation()
   const { values } = useTimePreferences()
-  const weekdays = orderedWeekdays(values.week_starts_on)
+  const weekdays = useMemo(() => orderedWeekdays(values.week_starts_on), [values.week_starts_on])
   const formatTime = (time: string) => formatWallTime(time, values.time_format, i18n.language)
   const zone = useSession((state) => state.user?.timezone)
   const items = useScheduleItems()
   const del = useUndoableDelete()
-  const today = todayWeekday(new Date(), zone)
-  const weekDates = weekDatesFor(weekdays, new Date(), zone)
-  const dayNumFmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', timeZone: 'UTC' })
-  const firstDay = weekdays[0]
-  const lastDay = weekdays[weekdays.length - 1]
-  const weekRangeLabel =
-    firstDay !== undefined && lastDay !== undefined
-      ? new Intl.DateTimeFormat(i18n.language, {
-          month: 'short',
-          day: 'numeric',
-          timeZone: 'UTC',
-        }).formatRange(weekDates[firstDay], weekDates[lastDay])
-      : ''
+  const now = new Date()
+  const today = todayWeekday(now, zone)
+  const todayDateKey = toLocalDate(now, zone)
+  const weekDates = useMemo(
+    () => weekDatesFor(weekdays, new Date(`${todayDateKey}T12:00:00Z`), 'UTC'),
+    [weekdays, todayDateKey],
+  )
+  const dayNumFmt = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { day: 'numeric', timeZone: 'UTC' }),
+    [i18n.language],
+  )
+  const weekRangeLabel = useMemo(() => {
+    const firstDay = weekdays[0]
+    const lastDay = weekdays[weekdays.length - 1]
+    if (firstDay === undefined || lastDay === undefined) return ''
+    const firstDate = weekDates[firstDay]
+    const lastDate = weekDates[lastDay]
+    if (!firstDate || !lastDate) return ''
+    return new Intl.DateTimeFormat(i18n.language, {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).formatRange(firstDate, lastDate)
+  }, [i18n.language, weekdays, weekDates])
   const [selected, setSelected] = useState<Weekday>(today)
   const [view, setView] = useState<WeekView>('day')
   const overview = view === 'week'

@@ -85,4 +85,15 @@ describe('weekDatesFor', () => {
     expect(sunFirst[0].getUTCDate()).toBe(23)
     expect(sunFirst[5].getUTCDate()).toBe(28)
   })
+
+  it('crosses month and year boundaries cleanly and handles empty weekdays', () => {
+    // 2026-12-31 is Thursday (weekday 3)
+    const newYearsEve = new Date('2026-12-31T12:00:00Z')
+    const dates = weekDatesFor([0, 1, 2, 3, 4, 5, 6], newYearsEve, 'UTC')
+    expect(dates[0].toISOString().slice(0, 10)).toBe('2026-12-28')
+    expect(dates[3].toISOString().slice(0, 10)).toBe('2026-12-31')
+    expect(dates[4].toISOString().slice(0, 10)).toBe('2027-01-01')
+    expect(dates[6].toISOString().slice(0, 10)).toBe('2027-01-03')
+    expect(weekDatesFor([], newYearsEve, 'UTC')).toEqual({})
+  })
 })

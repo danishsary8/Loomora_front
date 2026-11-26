@@ -1439,3 +1439,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Zero horizontal overflow across 320–1440 px and 200% text scaling; zero axe violations; reduced motion shows zero movement (`AUDIT_ISSUES_COUNT: 0`).
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, full `npm test` (84/84, 963/963), `npm run build`, and `npx playwright test --project=phone-375 --trace off` (128/128) pass.
 - **Files:** `src/app/layout/AppLayout.tsx`, `e2e/profile.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-029: Modularity, memoization, edge-case hardening, and unit test coverage
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Post-UX-028 code quality and maintainability pass (stacked on PR #114 `UX-028`).
+- **Plan:**
+  1. Extract `CompletionRhythmCard.tsx` + pure `completionRhythm.ts` helpers from `InsightsPage.tsx` (preserving React Fast Refresh with 0 warnings) and `ProfileHero.tsx` from `ProfilePage.tsx`.
+  2. Deduplicate the 5× repeated icon-prefixed optional row markup in `AddTodoSheet.tsx` via an internal `OptionalFieldSection` helper (keeping direct `<fieldset><legend>` HTML semantics).
+  3. Memoize `Intl.DateTimeFormat` and week date range computations in `WeekPage.tsx` and `NotesPage.tsx`, and harden `weekDatesFor`, `formatUpdatedDate`, `buildRhythmBars`, and `useCountUp` against malformed dates, empty weekday arrays, and non-finite numeric targets.
+  4. Add unit tests (`CompletionRhythmCard.test.tsx`, `motion.test.tsx`, `weekPlan.test.ts`), run the full verification suite + Playwright `phone-375`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] `InsightsPage`, `ProfilePage`, and `AddTodoSheet` are cleanly modularized with 0 ESLint warnings/errors.
+  - [x] `Intl.DateTimeFormat` allocations are memoized and date/number edge cases are guarded without throwing.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, full `npm test` (85/85, 969/969), `npm run build`, and `npx playwright test --project=phone-375 --trace off` (128/128) pass.
+- **Files:** `src/features/insights/{completionRhythm.ts,CompletionRhythmCard.tsx,CompletionRhythmCard.test.tsx,InsightsPage.tsx}`, `src/features/profile/{ProfileHero.tsx,ProfilePage.tsx}`, `src/features/today/AddTodoSheet.tsx`, `src/features/schedule/week/{WeekPage.tsx,weekPlan.ts,weekPlan.test.ts}`, `src/features/notes/NotesPage.tsx`, `src/styles/{motion.ts,motion.test.tsx}`, `docs/TASKS.md`, `docs/PROGRESS.md`
