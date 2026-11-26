@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Sheet, Toast } from '@/components/ui'
 import { useSession } from '@/lib/api'
+import { GuestNoteImportConflict } from '@/lib/storage/errors'
 import { useSavePlanIntent } from './savePlanIntent'
 import { useSavePlan } from './useSavePlan'
 
@@ -50,7 +51,13 @@ function SavePlanImportSession() {
       <Toast message={message} />
       <Sheet open={save.isError} onClose={giveUp} title={t('savePlan.failedTitle')}>
         <div className="flex flex-col gap-4">
-          <p>{t('savePlan.failedBody')}</p>
+          <p>
+            {t(
+              save.error instanceof GuestNoteImportConflict
+                ? 'savePlan.noteConflict'
+                : 'savePlan.failedBody',
+            )}
+          </p>
           <Button size="lg" fullWidth onClick={() => mutate()}>
             {t('savePlan.retry')}
           </Button>

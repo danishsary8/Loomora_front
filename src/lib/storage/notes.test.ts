@@ -1,5 +1,6 @@
 import { accountDataApi, notesApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
+import { acknowledgeImport } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
 import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
@@ -158,6 +159,7 @@ describe('GuestNoteRepository (B-048 parity)', () => {
             schedule_items: { created: body.schedule_items.length, skipped: 0 },
             exceptions: { created: 0, skipped: 0 },
             checkins: { created: 0, skipped: 0 },
+            focus_sessions: { created: body.focus_sessions.length, skipped: 0 },
             notes: { created: body.notes?.length ?? 0, skipped: 0 },
             daily_intentions: { created: 0, skipped: 0 },
           },
@@ -184,6 +186,127 @@ describe('GuestNoteRepository (B-048 parity)', () => {
       local_date: null,
     })
     expect(await db.notes.count()).toBe(0)
+  })
+
+  it.each([
+    ['notes', undefined],
+    ['notes', { created: '1', skipped: 0 }],
+    ['todos', { created: 0, skipped: 0 }],
+    ['notes', { created: 1, skipped: 1 }],
+  ])('retains every collection when %s has invalid acknowledgment %j', async (key, value) => {
+    const todo = await guest.todos.create({ title: 'Keep the task' })
+    const note = await notesRepo.create({ id: crypto.randomUUID(), title: 'Keep the note' })
+    server.use(
+      http.post(API + '/import', async ({ request }) => {
+        const body = (await request.json()) as ImportBody
+        return HttpResponse.json({ data: { ...acknowledgeImport(body), [key]: value } })
+      }),
+    )
+
+    await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 502 })
+    expect(await notesRepo.get(note.id)).toEqual(note)
+    expect(await guest.todos.listAll()).toContainEqual(todo)
+  })
+
+  it.each(['unchanged', 'edited', 'invalid final acknowledgment'])(
+    'handles a 501-note partial import retry with %s',
+    async (retry) => {
+      const notes = Array.from({ length: 501 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        title: 'Original ' + index,
+        body: null,
+        schedule_item_id: null,
+        local_date: null,
+        created_at: new Date(nowMs).toISOString(),
+        updated_at: new Date(nowMs).toISOString(),
+      }))
+      await db.notes.bulkAdd(notes)
+      const account = new Map<string, NonNullable<ImportBody['notes']>[number]>()
+      let batches = 0
+      server.use(
+        http.post(API + '/import', async ({ request }) => {
+          const body = (await request.json()) as ImportBody
+          if (++batches === 2) return HttpResponse.error()
+          const rows = body.notes ?? []
+          let created = 0
+          for (const note of rows) {
+            if (account.has(note.id)) continue
+            account.set(note.id, note)
+            created++
+          }
+          return HttpResponse.json({
+            data: {
+              ...acknowledgeImport(body),
+              notes:
+                batches === 4 && retry === 'invalid final acknowledgment'
+                  ? undefined
+                  : { created, skipped: rows.length - created },
+            },
+          })
+        }),
+        http.get(API + '/notes', ({ request }) => {
+          const page = Number(new URL(request.url).searchParams.get('page') ?? 1)
+          const end = page * 50
+          return HttpResponse.json({
+            data: [...account.values()].slice(end - 50, end),
+            links: { next: end < account.size ? API + '/notes?page=' + (page + 1) : null },
+          })
+        }),
+      )
+
+      await expect(saveGuestPlan(guest, accountDataApi)).rejects.toBeDefined()
+      expect(await db.notes.count()).toBe(501)
+      const original = [...account.values()][0]
+      if (!original) throw new Error('Expected the first batch to commit')
+      if (retry === 'edited') {
+        nowMs += 1000
+        await notesRepo.update(original.id, { title: 'Edit made after the failure' })
+        await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({
+          name: 'GuestNoteImportConflict',
+        })
+        expect((await notesRepo.get(original.id)).title).toBe('Edit made after the failure')
+        expect(await db.notes.count()).toBe(501)
+      } else if (retry === 'invalid final acknowledgment') {
+        await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 502 })
+        expect(await db.notes.count()).toBe(501)
+      } else {
+        await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+        expect(await db.notes.count()).toBe(0)
+      }
+      expect(account.get(original.id)).toEqual(original)
+    },
+  )
+
+  it('stops account-note verification when the session changes between pages', async () => {
+    const note = await notesRepo.create({ id: crypto.randomUUID(), title: 'Keep this' })
+    const generation = useSession.getState().generation
+    let reads = 0
+    server.use(
+      http.post(API + '/import', async ({ request }) =>
+        HttpResponse.json({
+          data: {
+            ...acknowledgeImport((await request.json()) as ImportBody),
+            notes: { created: 0, skipped: 1 },
+          },
+        }),
+      ),
+      http.get(API + '/notes', () => {
+        reads++
+        useSession.getState().signIn(makeTokenResponse())
+        return HttpResponse.json({
+          data: [note],
+          links: { next: API + '/notes?page=2' },
+        })
+      }),
+    )
+
+    await expect(
+      saveGuestPlan(guest, accountDataApi, () => {
+        if (useSession.getState().generation !== generation) throw new Error('Session changed')
+      }),
+    ).rejects.toThrow('Session changed')
+    expect(reads).toBe(1)
+    expect(await notesRepo.get(note.id)).toEqual(note)
   })
 
   it('migrates Focus sessions and Notes together in dependency order with zero data loss on retry', async () => {

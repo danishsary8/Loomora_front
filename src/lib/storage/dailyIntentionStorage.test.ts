@@ -1,6 +1,7 @@
 import Dexie from 'dexie'
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
+import { acknowledgeImport } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
 import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
@@ -95,7 +96,9 @@ describe('daily intentions in Save Plan', () => {
           if (serverRows.has(date)) skipped++
           else serverRows.set(date, text)
         }
-        return HttpResponse.json({ data: { daily_intentions: { created: 1, skipped } } })
+        return HttpResponse.json({
+          data: { ...acknowledgeImport(body), daily_intentions: { created: 1, skipped } },
+        })
       }),
     )
     expect(isEmptyPlan(await readGuestPlan(guest()))).toBe(false)
@@ -126,10 +129,13 @@ describe('daily intentions in Save Plan', () => {
       start = resolve
     })
     server.use(
-      http.post(`${API}/import`, async () => {
+      http.post(`${API}/import`, async ({ request }) => {
+        const body = (await request.json()) as ImportBody
         start()
         await requestPending
-        return HttpResponse.json({ data: { daily_intentions: { created: 1, skipped: 0 } } })
+        return HttpResponse.json({
+          data: { ...acknowledgeImport(body), daily_intentions: { created: 1, skipped: 0 } },
+        })
       }),
     )
     const repositories = guest()
@@ -171,10 +177,13 @@ describe('daily intentions in Save Plan', () => {
       start = resolve
     })
     server.use(
-      http.post(`${API}/import`, async () => {
+      http.post(`${API}/import`, async ({ request }) => {
+        const body = (await request.json()) as ImportBody
         start()
         await requestPending
-        return HttpResponse.json({ data: { daily_intentions: { created: 1, skipped: 0 } } })
+        return HttpResponse.json({
+          data: { ...acknowledgeImport(body), daily_intentions: { created: 1, skipped: 0 } },
+        })
       }),
     )
     const importing = saveGuestPlan(repositories, accountDataApi)
@@ -207,14 +216,18 @@ describe('daily intentions in Save Plan', () => {
     const serverDates = new Set<string>()
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
-        const { daily_intentions } = (await request.json()) as { daily_intentions: typeof rows }
+        const body = (await request.json()) as ImportBody
+        const { daily_intentions } = body
         sizes.push(daily_intentions.length)
         if (sizes.length === 2) return HttpResponse.json({ message: 'Rejected' }, { status: 422 })
         const priorSize = serverDates.size
         for (const row of daily_intentions) serverDates.add(row.date)
         const created = serverDates.size - priorSize
         return HttpResponse.json({
-          data: { daily_intentions: { created, skipped: daily_intentions.length - created } },
+          data: {
+            ...acknowledgeImport(body),
+            daily_intentions: { created, skipped: daily_intentions.length - created },
+          },
         })
       }),
     )
