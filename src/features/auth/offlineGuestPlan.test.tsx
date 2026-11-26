@@ -254,6 +254,8 @@ it('isolates useGuestPlan across session transitions and clears after online imp
             schedule_items: { created: 0, skipped: 0 },
             exceptions: { created: 0, skipped: 0 },
             checkins: { created: 0, skipped: 0 },
+            focus_sessions: { created: 0, skipped: 0 },
+            daily_intentions: { created: 0, skipped: 0 },
           },
         }),
       ),

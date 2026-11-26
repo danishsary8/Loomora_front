@@ -16,12 +16,13 @@ export class ServerNoteRepository implements NoteRepository {
 
   constructor(private readonly api: NotesApi) {}
 
-  async list(signal?: AbortSignal): Promise<Note[]> {
+  async list(signal?: AbortSignal, beforePage?: () => void): Promise<Note[]> {
     const notes: Note[] = []
     const seenIds = new Set<string>()
     const seenNextLinks = new Set<string>()
     let page = 1
     while (true) {
+      beforePage?.()
       const response = await this.api.list(page, signal)
       for (const note of response.data) {
         if (!seenIds.has(note.id)) {

@@ -1,3 +1,4 @@
+import type { ImportBody } from '@/lib/api'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AppProviders } from '@/app/AppProviders'
 import { useSavePlanIntent } from '@/features/auth/savePlanIntent'
@@ -5,6 +6,7 @@ import { onlineManager } from '@tanstack/react-query'
 import { useSession } from '@/lib/api'
 import { toLocalDate } from '@/lib/date'
 import { API, http, HttpResponse, makeTokenResponse, makeUser, server } from '@/test/apiMocks'
+import { acknowledgeImport } from '@/test/importBackend'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 import { DailyIntention } from './DailyIntention'
 
@@ -350,10 +352,13 @@ it('retains an unsaved account draft when Save Plan refreshes the intention', as
   let importing = false
   server.use(
     http.post(`${API}/import`, async ({ request }) => {
-      expect(await request.json()).toMatchObject({ daily_intentions: [device] })
+      const body = (await request.json()) as ImportBody
+      expect(body).toMatchObject({ daily_intentions: [device] })
       await imported.promise
       importing = true
-      return HttpResponse.json({ data: { daily_intentions: { created: 0, skipped: 1 } } })
+      return HttpResponse.json({
+        data: { ...acknowledgeImport(body), daily_intentions: { created: 0, skipped: 1 } },
+      })
     }),
     http.get(`${API}/days/${date}/intention`, async () => {
       if (importing) await refresh.promise

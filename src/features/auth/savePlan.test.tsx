@@ -2,20 +2,15 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useSession, type ImportBody } from '@/lib/api'
 import { GuestScheduleRepository } from '@/lib/storage'
+import { GuestNoteRepository } from '@/lib/storage/GuestNoteRepository'
 import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
 import { API, http, HttpResponse, makeTokenResponse, makeUser, server } from '@/test/apiMocks'
+import { acknowledgeImport } from '@/test/importBackend'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
 import { toLocalDate } from '@/lib/date'
 import { useSavePlanIntent } from './savePlanIntent'
 
 const today = toLocalDate()
-const COUNTS = { created: 1, skipped: 0 }
-const IMPORT_RESULT = {
-  todos: COUNTS,
-  schedule_items: COUNTS,
-  exceptions: COUNTS,
-  checkins: COUNTS,
-}
 
 function setup() {
   const { db, repo } = createTestRepository()
@@ -152,9 +147,9 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     let imports = 0
     server.use(
       ...accountToday(),
-      http.post(`${API}/import`, () => {
+      http.post(`${API}/import`, async ({ request }) => {
         imports += 1
-        return HttpResponse.json({ data: IMPORT_RESULT })
+        return HttpResponse.json({ data: acknowledgeImport((await request.json()) as ImportBody) })
       }),
     )
 
@@ -171,11 +166,11 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     let calls = 0
     server.use(
       ...accountToday(),
-      http.post(`${API}/import`, () => {
+      http.post(`${API}/import`, async ({ request }) => {
         calls += 1
         return calls === 1
           ? HttpResponse.json({ message: 'Boom' }, { status: 500 })
-          : HttpResponse.json({ data: IMPORT_RESULT })
+          : HttpResponse.json({ data: acknowledgeImport((await request.json()) as ImportBody) })
       }),
     )
 
@@ -188,6 +183,37 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     expect(await screen.findByText('Your plan is saved')).toBeInTheDocument()
     expect(calls).toBe(2)
     expect(await repo.listAll()).toEqual([])
+  })
+
+  it('shows the note conflict and keeps guest data when an account copy differs', async () => {
+    const { db, repo, schedule } = setup()
+    const notes = new GuestNoteRepository({ db })
+    const note = await notes.create({ id: crypto.randomUUID(), title: 'Newer guest text' })
+    useSession.getState().signIn(makeTokenResponse(makeUser({ survey_done: true })))
+    useSavePlanIntent.getState().request()
+    server.use(
+      ...accountToday(),
+      http.post(API + '/import', async ({ request }) =>
+        HttpResponse.json({
+          data: {
+            ...acknowledgeImport((await request.json()) as ImportBody),
+            notes: { created: 0, skipped: 1 },
+          },
+        }),
+      ),
+      http.get(API + '/notes', () =>
+        HttpResponse.json({
+          data: [{ ...note, title: 'Account text' }],
+          links: { next: null },
+        }),
+      ),
+    )
+
+    renderRoute('/today', repo, schedule, db)
+    const sheet = await screen.findByRole('dialog', { name: 'We could not save your plan' })
+    expect(within(sheet).getByText(/Review your account Notes/)).toBeInTheDocument()
+    expect(screen.queryByText('Your plan is saved')).not.toBeInTheDocument()
+    expect(await notes.get(note.id)).toEqual(note)
   })
 
   it('"Not now" after a failure leaves the plan on the device and stops asking', async () => {
@@ -223,7 +249,9 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     useSession.getState().signIn(makeTokenResponse(makeUser({ survey_done: true })))
     server.use(
       ...accountToday(),
-      http.post(`${API}/import`, () => HttpResponse.json({ data: IMPORT_RESULT })),
+      http.post(`${API}/import`, async ({ request }) =>
+        HttpResponse.json({ data: acknowledgeImport((await request.json()) as ImportBody) }),
+      ),
     )
     renderRoute('/profile', repo, schedule)
 
@@ -260,12 +288,13 @@ describe('Moving the plan into the account (docs/04 Flow 3)', () => {
     server.use(
       ...accountToday(),
       http.post(`${API}/import`, async ({ request }) => {
-        payloads.push((await request.json()) as ImportBody)
+        const body = (await request.json()) as ImportBody
+        payloads.push(body)
         if (payloads.length === 1) {
           return HttpResponse.json({ message: 'Conflict' }, { status: 409 })
         }
         return HttpResponse.json({
-          data: { ...IMPORT_RESULT, focus_sessions: { created: 1, skipped: 0 } },
+          data: acknowledgeImport(body),
         })
       }),
     )
