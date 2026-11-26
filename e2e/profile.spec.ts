@@ -152,7 +152,7 @@ test('account Profile keeps editing and guarded account actions without writing'
   await expect(page.getByRole('group', { name: 'Display settings' })).toBeVisible()
 
   const actions = page.getByRole('region', { name: 'Account actions' })
-  await expect(actions.getByRole('button', { name: 'Sign out' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
   const remove = actions.getByRole('button', { name: 'Delete my account' })
   await remove.press('Enter')
   const sheet = page.getByRole('dialog', { name: 'Delete your account' })

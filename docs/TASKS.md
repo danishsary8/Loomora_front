@@ -1423,3 +1423,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/features/profile/{ProfilePage,StreakCard,SettingsList,ProfilePage.test}.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `docs/screenshots/ux027-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-028: Final consistency pass (responsive, a11y, reduced motion, contrast, perf)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #113 `UX-027`).
+- **Plan:**
+  1. Audit `src/` for raw hex colors, unused code, debug logs, and TODOs; harmonize `AppLayout.tsx` mobile screen horizontal padding (`16 px` below 375 px, `20 px` at 375 px+, `24 px` desktop) per global polish spec.
+  2. Run a full multi-viewport Playwright audit across `/`, `/today`, `/week`, `/focus`, `/insights`, `/notes`, `/profile`, and `/styleguide` at 320, 375, 390, 768, 1024, and 1440 px + 200% text scaling + `prefers-reduced-motion: reduce` + axe-core WCAG 2.2 AA contrast.
+  3. Update `e2e/profile.spec.ts` to match UX-027's centered danger `Sign out` placement and run the complete verification suite (`lint`, `typecheck`, `knip`, `format:check`, full `npm test`, `npm run build`, full `playwright --project=phone-375 --trace off`).
+  4. Update `docs/TASKS.md`, append final `docs/PROGRESS.md` summary, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Zero raw hex colors in app components (only `tokens.ts`, brand/Google SVG marks, and token tests); zero debug logs or TODOs.
+  - [x] Zero horizontal overflow across 320–1440 px and 200% text scaling; zero axe violations; reduced motion shows zero movement (`AUDIT_ISSUES_COUNT: 0`).
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, full `npm test` (84/84, 963/963), `npm run build`, and `npx playwright test --project=phone-375 --trace off` (128/128) pass.
+- **Files:** `src/app/layout/AppLayout.tsx`, `e2e/profile.spec.ts`, `docs/TASKS.md`, `docs/PROGRESS.md`

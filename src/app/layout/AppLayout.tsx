@@ -32,7 +32,7 @@ export function AppLayout() {
           id="main"
           tabIndex={-1}
           className={cn(
-            'mx-auto w-full flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-3 focus-visible:outline-none md:px-6 md:pb-12 md:pt-4',
+            'mx-auto w-full flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-3 focus-visible:outline-none min-[375px]:pl-[max(1.25rem,env(safe-area-inset-left))] min-[375px]:pr-[max(1.25rem,env(safe-area-inset-right))] md:px-6 md:pb-12 md:pt-4',
             wide ? 'max-w-6xl' : 'max-w-2xl',
           )}
         >

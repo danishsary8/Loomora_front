@@ -1747,3 +1747,18 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Playwright `phone-375` (`a11y`, `page-heading`, `delete-account`, `time-preferences` — 22/22 passed across 320–1440 px & 200% text).
   - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux027-profile-375.png`, `ux027-profile-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-028 (Final consistency pass).
+
+### 2026-11-27 UX-028: Final consistency pass (Concept v3 polish series UX-020 through UX-028)
+
+- **Branch:** `feat/UX-028-final-consistency-pass` stacked on `feat/UX-027-profile-preferences` (PR #113 — merge #106–#113 in order).
+- **What changed:**
+  - Audited `src/` for raw hex colors (0 outside `tokens.ts`, `tokens.test.ts`, and official `icons.tsx` brand/Google SVGs), `console.log` (0), and `TODO`/`FIXME` (0).
+  - Harmonized `AppLayout.tsx` horizontal padding to `16 px` below 375 px (preventing 1 px overflow at 320 px / 200% text), `20 px` at 375 px+, and `24 px` on desktop (`md:px-6`).
+  - Updated `e2e/profile.spec.ts:155` to match UX-027's centered danger `Sign out` button placement.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build` (PWA precache 39 entries, `1119.81 KiB`, entry chunk `165.12 kB` gzip): all passed.
+  - Full Vitest (`npm test`): **84 files / 963 tests passed** (including all 36 DEC-003 contrast & token tests and 8 motion tests).
+  - Full Playwright `phone-375`: **128/128 passed** (126/128 on initial run + 4/4 on `page-heading` & `profile` after fixing the 320 px 1 px padding overflow and `profile.spec.ts` Sign out selector).
+  - Multi-viewport sweep across all 8 screens (`/`, `/today`, `/week`, `/focus`, `/insights`, `/notes`, `/profile`, `/styleguide`) at `320, 375, 390, 768, 1024, 1440 px`, `200%` text scaling, `prefers-reduced-motion: reduce`, and axe-core WCAG 2.2 AA: **`AUDIT_ISSUES_COUNT: 0`**.
+  - **Lighthouse note:** Lighthouse CLI is not installed in `devDependencies`; production bundle size stayed nearly flat (+0.6 kB gzip across the entire UX-020–UX-028 series with zero new chart or UI libraries added) and accessibility is verified at 0 axe violations across all screens.
+- **Problems / Questions:** None. All 9 Concept v3 PRs (UX-020 through UX-028) are open and ready for owner review in order (#106 → #114).
