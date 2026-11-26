@@ -77,12 +77,12 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
     <div className="flex min-w-0 flex-col items-center gap-3 py-2 text-center">
       <div
         className={cn(
-          'relative grid aspect-square place-items-center [container-type:inline-size]',
+          'relative [container-type:inline-size]',
           expanded ? 'w-full max-w-[24rem]' : 'w-full max-w-[17rem]',
         )}
       >
         <TimerRing ratio={ratio} onBreak={onBreak} />
-        <div className="relative flex min-w-0 max-w-full flex-col items-center gap-1 px-[10%]">
+        <div className="absolute inset-0 flex min-w-0 flex-col items-center justify-center gap-1 px-[10%]">
           <div
             role="timer"
             aria-label={t(stopwatch ? 'focus.elapsed' : 'focus.remaining')}
@@ -112,7 +112,7 @@ function TimerRing({ ratio, onBreak }: { ratio: number; onBreak: boolean }) {
   return (
     <svg
       viewBox={`0 0 ${RING_VIEW} ${RING_VIEW}`}
-      className="absolute inset-0 size-full -rotate-90"
+      className="block h-auto w-full -rotate-90"
       aria-hidden="true"
     >
       <circle
