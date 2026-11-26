@@ -37,7 +37,7 @@ describe('NotesPage (F-R4-02)', () => {
     renderRoute('/notes', repo, schedule, db)
 
     expect(await screen.findByText('Orphaned note')).toBeInTheDocument()
-    expect(screen.getByText('Schedule block removed · 2026-11-23')).toBeInTheDocument()
+    expect(screen.getByText('Schedule block removed · Nov 23')).toBeInTheDocument()
 
     // Create an attached note.
     await userEvent.click(screen.getByRole('button', { name: 'New note' }))
@@ -115,10 +115,13 @@ describe('NotesPage (F-R4-02)', () => {
     expect(
       await screen.findByText('Loomora is having trouble right now. Please try again in a moment.'),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New note' })).not.toBeInTheDocument()
     shouldFail = false
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByText('Account note')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New note' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit note Account note' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Delete note Account note' }))
     const confirm = await screen.findByRole('dialog', { name: 'Delete this note?' })
     await userEvent.click(within(confirm).getByRole('button', { name: 'Delete note' }))
@@ -127,5 +130,29 @@ describe('NotesPage (F-R4-02)', () => {
     expect(
       await screen.findByText('The 7-day undo window for this note has expired.'),
     ).toBeInTheDocument()
+  })
+
+  it('shows a single primary New note button when empty and hides creation for offline accounts while keeping guest offline creation', async () => {
+    const onLineSpy = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    try {
+      // Guest offline: single New note button in empty state remains usable.
+      const { db, repo } = createTestRepository()
+      const schedule = new GuestScheduleRepository({ db })
+      const guestView = renderRoute('/notes', repo, schedule, db)
+
+      expect(await screen.findByText('No notes yet')).toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: 'New note' })).toHaveLength(1)
+      guestView.unmount()
+
+      // Account offline: hides New note button and displays offline card.
+      const user = makeUser({ survey_done: true })
+      useSession.getState().signIn(makeTokenResponse(user))
+      renderRoute('/notes')
+
+      expect(await screen.findByText('Notes are unavailable offline')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'New note' })).not.toBeInTheDocument()
+    } finally {
+      onLineSpy.mockRestore()
+    }
   })
 })

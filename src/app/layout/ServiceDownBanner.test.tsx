@@ -76,4 +76,57 @@ describe('ServiceDownBanner', () => {
     await act(() => vi.advanceTimersByTimeAsync(30_000))
     await vi.waitFor(() => expect(screen.queryByText(bannerText)).not.toBeInTheDocument())
   })
+
+  it('hides while offline, pauses polling, and re-checks /health on reconnect', async () => {
+    let online = true
+    let healthy = false
+    let healthCalls = 0
+    const onLineSpy = vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => online)
+    server.use(
+      http.get(`${API}/health`, () => {
+        healthCalls += 1
+        return healthy
+          ? HttpResponse.json({ status: 'ok' })
+          : new HttpResponse(null, { status: 500 })
+      }),
+    )
+
+    try {
+      renderBanner()
+      signInAndFail()
+      expect(screen.getByText(bannerText)).toBeVisible()
+
+      // Going offline hides ServiceDownBanner so OfflineBanner owns the connectivity notice.
+      online = false
+      act(() => {
+        window.dispatchEvent(new Event('offline'))
+      })
+      expect(screen.queryByText(bannerText)).not.toBeInTheDocument()
+
+      // Reconnecting while backend still returns 500 brings ServiceDownBanner back.
+      online = true
+      act(() => {
+        window.dispatchEvent(new Event('online'))
+      })
+      await vi.waitFor(() => expect(healthCalls).toBe(1))
+      expect(screen.getByText(bannerText)).toBeVisible()
+
+      // Going offline and reconnecting once backend is healthy clears ServiceDownBanner.
+      online = false
+      act(() => {
+        window.dispatchEvent(new Event('offline'))
+      })
+      expect(screen.queryByText(bannerText)).not.toBeInTheDocument()
+
+      healthy = true
+      online = true
+      act(() => {
+        window.dispatchEvent(new Event('online'))
+      })
+      await vi.waitFor(() => expect(healthCalls).toBe(2))
+      await vi.waitFor(() => expect(screen.queryByText(bannerText)).not.toBeInTheDocument())
+    } finally {
+      onLineSpy.mockRestore()
+    }
+  })
 })

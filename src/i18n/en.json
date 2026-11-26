@@ -800,10 +800,13 @@
       "title": "Daily breakdown",
       "subtitle": "Daily Focus time, to-dos done, and schedule blocks checked.",
       "focus": "Focus {{time}}",
-      "todos": "{{count}} to-dos",
-      "blocks": "{{count}} blocks",
+      "todos_one": "{{count}} to-do",
+      "todos_other": "{{count}} to-dos",
+      "blocks_one": "{{count}} block",
+      "blocks_other": "{{count}} blocks",
       "noActiveDays": "No active days in this range.",
-      "showingActiveOnly": "Showing {{active}} active days out of {{total}}."
+      "showingActiveOnly_one": "Showing {{count}} active day out of {{total}}.",
+      "showingActiveOnly_other": "Showing {{count}} active days out of {{total}}."
     }
   },
   "notes": {
@@ -830,8 +833,6 @@
     "detachedBlock": "Schedule block removed",
     "detachedBlockOnDate": "Schedule block removed · {{date}}",
     "standaloneBadge": "Standalone",
-    "editAction": "Edit",
-    "deleteAction": "Delete",
     "deleteLabel": "Delete note {{title}}",
     "editLabel": "Edit note {{title}}",
     "confirmDeleteTitle": "Delete this note?",

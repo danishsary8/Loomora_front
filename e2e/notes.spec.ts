@@ -11,10 +11,11 @@ test('creates, edits, filters, deletes, and restores guest notes offline with ze
   await page.getByRole('link', { name: 'Notes' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Notes' })).toBeVisible()
   await expect(page.getByText('No notes yet')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'New note' })).toHaveCount(1)
 
   // Create a note while offline (guest Dexie storage).
   await context.setOffline(true)
-  await page.getByRole('button', { name: 'New note' }).first().click()
+  await page.getByRole('button', { name: 'New note' }).click()
   const dialog = page.getByRole('dialog', { name: 'New note' })
   await dialog.getByLabel('Title (optional)').fill('Study plan')
   await dialog.getByLabel('Note (optional)').fill('Review algebra notes before Friday.')
