@@ -1587,3 +1587,7 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `src/lib/storage/saveGuestPlan.ts`: Removed the legacy paginated `GET /notes` verification walk (`ServerNoteRepository.list`), validated `result.notes` directly as defense-in-depth, accepted explicit `identical` skipped Notes, and raised `GuestNoteImportConflict` while retaining the complete guest plan on any `different` or `deleted` status (never auto-overwriting or restoring account Notes; preserving `QA-027` and `QA-028` protections).
   - `src/test/importBackend.ts`, `src/lib/storage/notes.test.ts`, `src/features/auth/savePlan.test.tsx`: Updated `acknowledgeImport` to emit `skipped_details: []` and added tests for `identical`, `different`, `deleted`, mixed statuses, missing/malformed/duplicate/foreign/count-mismatch/extra-property diagnostics, 501-note partial-failure retries, session-change chunk guards, and zero `GET /notes` or `/restore` calls.
 - **Verified:** `lint`, `typecheck`, `knip`, `format:check`, Vitest, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint (valid, 4 baseline warnings), Playwright `phone-375`, and `git diff --check`.
+
+### 2026-11-26 F-R4-04 status synchronization (docs-only)
+
+- Marked `F-R4-04` `done` (PR #95 merged at `6f4ba00`). No `todo` tasks remain; `QA-016` stays blocked on owner Vercel access. Backend dependency advisories are being fixed in `loomora_back` B-055 (PR #60).
