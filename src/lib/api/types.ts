@@ -1,3 +1,4 @@
+import type { NoteImportInput } from '@/features/notes/types'
 import type { Priority, RepeatRule } from '@/features/todos/types'
 
 import type { TimePreferences } from '@/lib/time/time'
@@ -185,6 +186,7 @@ export interface ImportBody {
     end_time: string | null
   }>
   checkins: Array<{ id: string; schedule_item_id: string; date: string; done_at: string }>
+  notes?: NoteImportInput[]
   daily_intentions: DailyIntentionRecord[]
 }
 
@@ -198,5 +200,6 @@ export interface ImportResult {
   schedule_items: ImportCount
   exceptions: ImportCount
   checkins: ImportCount
+  notes?: ImportCount
   daily_intentions: ImportCount
 }

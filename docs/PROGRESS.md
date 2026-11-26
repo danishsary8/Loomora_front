@@ -1481,3 +1481,12 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Built `useFocusHistoryDelete` and updated `FocusHistory` with an accessible per-row Delete button, Elemental confirmation `Sheet`, and shared `ActionToast` Undo (`actionDisabled` double-submit protection), plus `Sheet.tsx` `duration: 0` when `prefers-reduced-motion: reduce` is active.
   - Added repository, UI, and 375 px E2E tests covering guest (including offline) and account delete, Undo, 410 expired restore, error rollback/retention, double-submission prevention, filter preservation, and session-switch isolation.
 - **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Focus/Sheet/Toast Vitest (`68/68` across 5 files), and full `phone-375` Playwright (`125/125`).
+
+### 2026-11-26 F-R4-02: Notes (Standalone & Schedule-Attached)
+
+- **Branch / Worktree:** `feat/F-R4-02-notes` in `loomora-front-F-R4-02`, branched from `origin/v2-rebuild` (`2087660`, PR #84 merged). Preserved `loomora-front-F-R3-10` and `loomora-front-UX-013` untouched.
+- **What changed:**
+  - Synced `docs/openapi.yaml` from merged backend `v2-rebuild` (including B-048 Notes endpoints, schemas, and `POST /import` `notes`).
+  - Added `notesApi`, Dexie v11 `notes` store, `GuestNoteRepository`, `ServerNoteRepository`, `NoteRepositoryContext`, and `saveGuestPlan` note migration (500-note chunks, stale deleted schedule-block link clearing, soft-deleted exclusion, snapshot-safe cleanup, and idempotent retry).
+  - Built Elemental `/notes` (`NotesPage`, `NoteSheet`, `useNotes`, `NotesIcon`, `TopBar` shortcut) supporting standalone notes, schedule-block + optional occurrence-date attachments, deleted parent block fallback badges, search & filter, confirmation Sheet + shared `ActionToast` Undo (with 410 expired restore messaging), and loading/empty/error/retry/offline states.
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev` (0 vulnerabilities), Redocly OpenAPI lint, Vitest (`notes.test.ts`, `NotesPage.test.tsx`, `dailyIntentionStorage.test.ts`, `routes.test.tsx`), and Playwright `phone-375` (`e2e/notes.spec.ts` + axe + 320–1440 px / 200% text).

@@ -3,6 +3,7 @@ import { createAccountDataApi } from './account'
 import { createApiClient } from './client'
 import { createFocusSessionsApi } from './focusSessions'
 import { createHealthApi, useServiceStatus } from './health'
+import { createNotesApi } from './notes'
 import { createScheduleApi } from './schedule'
 import { useSession } from './session'
 import { createTodosApi } from './todos'
@@ -13,6 +14,7 @@ export { useServiceStatus } from './health'
 export { errorMessageKey } from './errorMessages'
 export type { GoogleIntent } from './auth'
 export type { AccountDataApi } from './account'
+export type { NotesApi } from './notes'
 export type { ScheduleApi } from './schedule'
 export type { TodosApi } from './todos'
 export type { Goal, ImportBody, User } from './types'
@@ -33,4 +35,5 @@ export const todosApi = createTodosApi(client)
 export const scheduleApi = createScheduleApi(client)
 export const accountDataApi = createAccountDataApi(client)
 export const focusSessionsApi = createFocusSessionsApi(client)
+export const notesApi = createNotesApi(client)
 export const healthApi = createHealthApi(client)

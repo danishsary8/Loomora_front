@@ -13,6 +13,9 @@ export const FocusPage = lazy(() =>
 export const InsightsPage = lazy(() =>
   import('@/features/insights/InsightsPage').then((m) => ({ default: m.InsightsPage })),
 )
+export const NotesPage = lazy(() =>
+  import('@/features/notes/NotesPage').then((m) => ({ default: m.NotesPage })),
+)
 export const ProfilePage = lazy(() =>
   import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )
