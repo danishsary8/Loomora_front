@@ -1,8 +1,12 @@
+import type { FocusSession, FocusSessionInput } from '@/features/focus/types'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { LocalDate, Todo } from '@/features/todos/types'
 import type { AccountDataApi, ImportBody } from '@/lib/api'
 import type { DailyIntentionRecord } from '@/lib/api/types'
+import type { StoredFocusSession } from './db'
+import { canonicalFocusPayload } from './focusSessionPayload'
 import type { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import type { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
 import { orderForImport } from './guestImportOrder'
 import type { GuestScheduleRepository } from './GuestScheduleRepository'
 import type { GuestTodoRepository } from './GuestTodoRepository'
@@ -12,6 +16,7 @@ export interface GuestStorage {
   todos: GuestTodoRepository
   schedule: GuestScheduleRepository
   intentions: GuestDailyIntentionRepository
+  focusSessions: GuestFocusSessionRepository
 }
 
 /** Everything a guest has on this device. */
@@ -21,24 +26,40 @@ export interface GuestPlan {
   exceptions: ScheduleException[]
   checkins: ScheduleCheckin[]
   intentions: DailyIntentionRecord[]
+  focusSessions: FocusSession[]
 }
 
 export async function readGuestPlan(
-  { todos, schedule, intentions }: GuestStorage,
+  { todos, schedule, intentions, focusSessions }: GuestStorage,
   activeTodos: Todo[] | Promise<Todo[]> = todos.listAll(),
+  activeFocusSessions:
+    StoredFocusSession[] | Promise<StoredFocusSession[]> = focusSessions.listAll(),
 ): Promise<GuestPlan> {
-  const [allTodos, items, exceptions, checkins, dailyIntentions] = await Promise.all([
+  const [allTodos, items, exceptions, checkins, dailyIntentions, sessions] = await Promise.all([
     activeTodos,
     schedule.listItems(),
     schedule.listExceptions(),
     schedule.listCheckins(),
     intentions.list(),
+    activeFocusSessions,
   ])
-  return { todos: allTodos, items, exceptions, checkins, intentions: dailyIntentions }
+  return {
+    todos: allTodos,
+    items,
+    exceptions,
+    checkins,
+    intentions: dailyIntentions,
+    focusSessions: sessions,
+  }
 }
 
 export function isEmptyPlan(plan: GuestPlan): boolean {
-  return plan.todos.length === 0 && plan.items.length === 0 && plan.intentions.length === 0
+  return (
+    plan.todos.length === 0 &&
+    plan.items.length === 0 &&
+    plan.intentions.length === 0 &&
+    plan.focusSessions.length === 0
+  )
 }
 
 /** Things checked off so far (to-dos and schedule occurrences). */
@@ -61,11 +82,13 @@ export function hadFullDay(plan: GuestPlan, today: LocalDate): boolean {
 const MAX_TODOS_PER_CALL = 500
 const MAX_EXCEPTIONS_PER_CALL = 5000
 const MAX_CHECKINS_PER_CALL = 10000
+const MAX_FOCUS_SESSIONS_PER_CALL = 500
 const MAX_INTENTIONS_PER_CALL = 1000
 
 /** Rows keep their client UUIDs, so sending the same plan again creates no duplicates. */
 function toImportBody(plan: GuestPlan): ImportBody {
   const todoIds = new Set(plan.todos.map(({ id }) => id))
+  const scheduleItemIds = new Set(plan.items.map(({ id }) => id))
   return {
     todos: orderForImport(
       plan.todos.map(
@@ -116,21 +139,62 @@ function toImportBody(plan: GuestPlan): ImportBody {
     ),
     exceptions: plan.exceptions,
     checkins: plan.checkins,
+    focus_sessions: plan.focusSessions.map((session) => {
+      const payload = canonicalFocusPayload(session)
+      return {
+        ...payload,
+        // Deleted guest planner items are excluded from import and cannot be referenced.
+        todo_id: payload.todo_id && todoIds.has(payload.todo_id) ? payload.todo_id : null,
+        schedule_item_id:
+          payload.schedule_item_id && scheduleItemIds.has(payload.schedule_item_id)
+            ? payload.schedule_item_id
+            : null,
+      }
+    }),
     daily_intentions: plan.intentions,
   }
 }
 
 /**
- * The first call carries the items; to-dos keep their import order across calls, and every call
- * stays under the API caps.
+ * Place every Focus session in the same or a later call than its linked to-do or schedule item,
+ * staying within `MAX_FOCUS_SESSIONS_PER_CALL` per call.
+ */
+function bucketFocusSessions(
+  sessions: FocusSessionInput[],
+  todos: ImportBody['todos'],
+): FocusSessionInput[][] {
+  if (sessions.length === 0) return []
+  const todoChunkById = new Map<string, number>()
+  todos.forEach(({ id }, index) => {
+    todoChunkById.set(id.toLowerCase(), Math.floor(index / MAX_TODOS_PER_CALL))
+  })
+  const buckets: FocusSessionInput[][] = []
+  for (const session of sessions) {
+    // Schedule items are always sent in chunk 0.
+    let target = session.todo_id ? (todoChunkById.get(session.todo_id.toLowerCase()) ?? 0) : 0
+    while ((buckets[target]?.length ?? 0) >= MAX_FOCUS_SESSIONS_PER_CALL) {
+      target += 1
+    }
+    const bucket = buckets[target]
+    if (bucket) bucket.push(session)
+    else buckets[target] = [session]
+  }
+  return buckets
+}
+
+/**
+ * The first call carries the items; to-dos keep their import order across calls, Focus sessions
+ * follow their linked planner items, and every call stays under the API caps.
  */
 function chunkImportBody(body: ImportBody): ImportBody[] {
+  const focusBuckets = bucketFocusSessions(body.focus_sessions, body.todos)
   const count = Math.max(
     1,
     Math.ceil(body.todos.length / MAX_TODOS_PER_CALL),
     Math.ceil(body.exceptions.length / MAX_EXCEPTIONS_PER_CALL),
     Math.ceil(body.checkins.length / MAX_CHECKINS_PER_CALL),
     Math.ceil(body.daily_intentions.length / MAX_INTENTIONS_PER_CALL),
+    focusBuckets.length,
   )
   const part = <T>(rows: T[], size: number, index: number) =>
     rows.slice(index * size, (index + 1) * size)
@@ -139,6 +203,7 @@ function chunkImportBody(body: ImportBody): ImportBody[] {
     schedule_items: index === 0 ? body.schedule_items : [],
     exceptions: part(body.exceptions, MAX_EXCEPTIONS_PER_CALL, index),
     checkins: part(body.checkins, MAX_CHECKINS_PER_CALL, index),
+    focus_sessions: focusBuckets[index] ?? [],
     daily_intentions: part(body.daily_intentions, MAX_INTENTIONS_PER_CALL, index),
   }))
 }
@@ -153,10 +218,14 @@ export async function saveGuestPlan(
   api: Pick<AccountDataApi, 'importGuestData'>,
   assertSession = () => {},
 ): Promise<boolean> {
-  const todoSnapshot = await guest.todos.listAll({ includeDeleted: true })
+  const [todoSnapshot, focusSnapshot] = await Promise.all([
+    guest.todos.listAll({ includeDeleted: true }),
+    guest.focusSessions.listAll({ includeDeleted: true }),
+  ])
   const plan = await readGuestPlan(
     guest,
     todoSnapshot.filter((todo) => !todo.deleted_at),
+    focusSnapshot.filter((session) => !session.deleted_at),
   )
   if (isEmptyPlan(plan)) return false
   for (const chunk of chunkImportBody(toImportBody(plan))) {
@@ -168,6 +237,7 @@ export async function saveGuestPlan(
     guest.todos.clearImported(todoSnapshot),
     guest.schedule.clearImported(plan),
     guest.intentions.clearImported(plan.intentions),
+    guest.focusSessions.clearImported(focusSnapshot),
   ])
   return true
 }

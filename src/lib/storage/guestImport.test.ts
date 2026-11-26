@@ -4,6 +4,7 @@ import { HttpResponse, makeTokenResponse } from '@/test/apiMocks'
 import { importBackend, type AccountTodo } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
 import { saveGuestPlan, type GuestStorage } from './saveGuestPlan'
@@ -18,6 +19,7 @@ function openGuest() {
     todos: new GuestTodoRepository({ db }),
     schedule: new GuestScheduleRepository({ db }),
     intentions: new GuestDailyIntentionRepository(db),
+    focusSessions: new GuestFocusSessionRepository({ db }),
   }
 }
 
