@@ -56,11 +56,13 @@ export function AppProviders({
   guestDatabase,
 }: AppProvidersProps) {
   const [client] = useState(() => queryClient ?? createQueryClient())
+  const [guestFocus] = useState(() => new GuestFocusSessionRepository({ db: guestDatabase }))
   const [guestNotes] = useState(() => new GuestNoteRepository({ db: guestDatabase }))
   const [guest] = useState<GuestStorage>(() => ({
     todos: todoRepository ?? new GuestTodoRepository(),
     schedule: scheduleRepository ?? new GuestScheduleRepository(),
     intentions: new GuestDailyIntentionRepository(guestDatabase),
+    focusSessions: guestFocus,
     notes: guestNotes,
   }))
   const [guestStreak] = useState(() => new GuestStreakRepository(guest.todos, guest.schedule))
@@ -71,7 +73,6 @@ export function AppProviders({
     notes: new ServerNoteRepository(notesApi),
   }))
 
-  const [guestFocus] = useState(() => new GuestFocusSessionRepository({ db: guestDatabase }))
   const generation = useSession((s) => s.generation)
   const accountFocus = useMemo(
     () => new ServerFocusSessionRepository(focusSessionsApi, guestDatabase, generation),

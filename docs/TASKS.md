@@ -1091,7 +1091,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R3-14: Focus History Delete + Undo
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #84](https://github.com/danishsary8/Loomora_front/pull/84) at `2087660`.
 - **Owner:** antigravity
 - **Source:** Merged backend B-046 (`DELETE /focus-sessions/{focusSession}`, `POST /focus-sessions/{focusSession}/restore`, backend PR #54 @ `6a8fb15`) and `DEC-003` Elemental Edition.
 - **Scope:** Sync B-046 into `docs/openapi.yaml`, implement Focus session soft-delete and 7-day restore parity in `focusSessionsApi`, `GuestFocusSessionRepository`, and `ServerFocusSessionRepository`, add an accessible per-row Delete action with Elemental confirmation `Sheet` and shared `ActionToast` Undo, and cover deletion, Undo, expired 410 restoration, errors, double submissions, auth boundaries, and guest/account parity.
@@ -1102,14 +1103,29 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Vitest, and full `phone-375` Playwright (**125/125**) pass.
 - **Files:** `docs/openapi.yaml`, `src/lib/api/focusSessions.ts`, `src/lib/storage/FocusSessionRepository.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/ServerFocusSessionRepository.ts`, `src/lib/storage/db.ts`, `src/lib/storage/focusSessions.test.ts`, `src/components/ui/Toast.tsx`, `src/components/ui/Sheet.tsx`, `src/features/focus/useFocusHistory.ts`, `src/features/focus/useFocusHistoryDelete.ts`, `src/features/focus/FocusHistory.tsx`, `src/features/focus/FocusHistory.test.tsx`, `src/features/focus/focusRuntime.test.ts`, `src/i18n/en.json`, `e2e/focus-history.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R3-15: Guest Focus History Import Integration
+
+- **Status:** done
+- **Merge:** [PR #85](https://github.com/danishsary8/Loomora_front/pull/85) at `9fb692b`.
+- **Owner:** antigravity
+- **Source:** Merged backend B-049 (`POST /import` `focus_sessions`, backend PR #53) and merged frontend PR #84 (`F-R3-14` at `2087660`). Task ID verified unused before registration.
+- **Scope:** Sync merged backend `docs/openapi.yaml` (B-049 + B-047), extend `GuestFocusSessionRepository`, `GuestStorage`, `ImportBody`, and `saveGuestPlan` to migrate active non-deleted guest Focus sessions in dependency-ordered batches of up to 500 sessions while preserving canonical payloads, original UUIDs, idempotent retries, concurrent-edit protection, and account isolation.
+- **Done when:**
+  - [x] `docs/openapi.yaml` synced from merged backend `v2-rebuild` (B-049 `POST /import` `focus_sessions` + `409`, B-047 `GET /stats/summary`).
+  - [x] Eligible non-deleted guest Focus sessions are imported in dependency order (after or alongside their linked to-do / schedule item) in batches of at most 500 sessions using `canonicalFocusPayload`.
+  - [x] Local guest Focus sessions (and all other guest records) are retained until every import batch succeeds; soft-deleted sessions are excluded from import and cleaned up only after full success; stale links to deleted guest items are cleared without dropping the session.
+  - [x] Unit/integration tests cover 499/500/501 boundaries, cross-chunk linked to-dos, schedule links, stopwatch laps, deleted sessions, 409 conflicts, failed later batches + reload replay, concurrent edits, and session-switch isolation; Playwright `phone-375` covers guest-to-account migration with retry.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and full `phone-375` Playwright pass.
+- **Files:** `docs/openapi.yaml`, `src/lib/api/types.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/app/AppProviders.tsx`, `src/test/importBackend.ts`, `src/lib/storage/focusImport.test.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `src/lib/storage/dailyIntentionStorage.test.ts`, `src/features/auth/savePlan.test.tsx`, `e2e/focus-import.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
 ### F-R4-02: Notes (Standalone & Schedule-Attached)
 
 - **Status:** review
 - **Owner:** antigravity
 - **Source:** Merged backend B-048 (`/notes`, `/notes/{note}`, `/notes/{note}/restore`, `POST /import` `notes`, backend PR #52) and `DEC-003` Elemental Edition. Task ID verified unused before registration.
-- **Scope:** Sync merged backend `docs/openapi.yaml`, implement `notesApi`, Dexie v11 `notes` store, `GuestNoteRepository` & `ServerNoteRepository` (B-048 validation, 7-day soft-delete/restore with 410 expiry, 409 conflict, occurrence-date clearing), guest-to-account migration in `saveGuestPlan` (500-note chunks, stale deleted schedule-block link clearing, idempotent retry), Elemental `/notes` page (`NotesPage`, `NoteSheet`, `TopBar` shortcut, search/filter, deleted parent badge, confirmation Sheet + `ActionToast` Undo, loading/empty/error/retry/offline states).
+- **Scope:** Sync merged backend `docs/openapi.yaml`, implement `notesApi`, Dexie v11 `notes` store, `GuestNoteRepository` & `ServerNoteRepository` (B-048 validation, 7-day soft-delete/restore with 410 expiry, 409 conflict, occurrence-date clearing), guest-to-account migration in `saveGuestPlan` (500-note chunks alongside F-R3-15 Focus sessions, stale deleted schedule-block link clearing, idempotent retry), Elemental `/notes` page (`NotesPage`, `NoteSheet`, `TopBar` shortcut, search/filter, deleted parent badge, confirmation Sheet + `ActionToast` Undo, loading/empty/error/retry/offline states).
 - **Done when:**
   - [x] Guest and account repositories share identical validation, standalone and schedule-block (+ optional occurrence date) attachment, soft-delete, 7-day restore (`410`), and deleted-parent resilience.
-  - [x] `saveGuestPlan` migrates active guest notes in 500-note batches after/alongside schedule items, clears stale links to deleted guest blocks, excludes soft-deleted notes, and retains local data on failure.
-  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and Playwright `phone-375` (`e2e/notes.spec.ts` + axe + 320–1440 px / 200% text) pass.
-- **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/api/types.ts`, `src/lib/api/index.ts`, `src/lib/storage/db.ts`, `src/lib/storage/NoteRepository.ts`, `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/ServerNoteRepository.ts`, `src/lib/storage/noteContext.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/notes.test.ts`, `src/app/AppProviders.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/TopBar.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+  - [x] `saveGuestPlan` migrates active guest notes in 500-note batches after/alongside schedule items and alongside F-R3-15 Focus sessions, clears stale links to deleted guest blocks, excludes soft-deleted notes, and retains local data on failure.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and full Playwright `phone-375` pass.
+- **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/api/types.ts`, `src/lib/api/index.ts`, `src/lib/storage/db.ts`, `src/lib/storage/NoteRepository.ts`, `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/ServerNoteRepository.ts`, `src/lib/storage/noteContext.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/notes.test.ts`, `src/app/AppProviders.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/TopBar.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `e2e/focus-recovery.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

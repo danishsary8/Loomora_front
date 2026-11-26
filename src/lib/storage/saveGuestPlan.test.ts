@@ -4,6 +4,7 @@ import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMo
 import { importBackend } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
 import type { GuestStorage } from './saveGuestPlan'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
@@ -42,6 +43,7 @@ beforeEach(() => {
     todos: new GuestTodoRepository({ db }),
     schedule: new GuestScheduleRepository({ db }),
     intentions: new GuestDailyIntentionRepository(db),
+    focusSessions: new GuestFocusSessionRepository({ db }),
   }
   useSession.getState().signIn(makeTokenResponse())
 })

@@ -2,6 +2,7 @@ import { accountDataApi, notesApi, useSession, type ImportBody } from '@/lib/api
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
+import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
 import { GuestNoteRepository } from './GuestNoteRepository'
 import { GuestScheduleRepository } from './GuestScheduleRepository'
 import { GuestTodoRepository } from './GuestTodoRepository'
@@ -21,6 +22,7 @@ beforeEach(() => {
     todos: new GuestTodoRepository({ db }),
     schedule: new GuestScheduleRepository({ db }),
     intentions: new GuestDailyIntentionRepository(db),
+    focusSessions: new GuestFocusSessionRepository({ db, timeZone: 'UTC' }),
     notes: notesRepo,
   }
   useSession.getState().signIn(makeTokenResponse())
@@ -181,6 +183,101 @@ describe('GuestNoteRepository (B-048 parity)', () => {
       schedule_item_id: null,
       local_date: null,
     })
+    expect(await db.notes.count()).toBe(0)
+  })
+
+  it('migrates Focus sessions and Notes together in dependency order with zero data loss on retry', async () => {
+    const todo = await guest.todos.create({ title: 'Study math', due_date: '2026-11-26' })
+    const block = await guest.schedule.create({
+      title: 'Morning focus',
+      start_time: '08:00',
+      end_time: '09:00',
+      days: [0],
+      starts_on: '2026-11-01',
+    })
+    await guest.intentions.save('2026-11-26', 'Stay calm')
+    const session = await guest.focusSessions.record({
+      id: crypto.randomUUID(),
+      mode: 'countdown',
+      started_at: '2026-11-26T08:00:00.000Z',
+      ended_at: '2026-11-26T08:25:00.000Z',
+      end_reason: 'completed',
+      planned_focus_ms: 1_500_000,
+      todo_id: todo.id,
+      label: 'Study math',
+      segments: [
+        {
+          type: 'focus',
+          started_at: '2026-11-26T08:00:00.000Z',
+          ended_at: '2026-11-26T08:25:00.000Z',
+          active_ms: 1_500_000,
+        },
+      ],
+    })
+    const linkedNote = await notesRepo.create({
+      id: crypto.randomUUID(),
+      title: 'Block note',
+      body: 'Summary',
+      schedule_item_id: block.id,
+      local_date: '2026-11-23',
+    })
+    await db.notes.bulkAdd(
+      Array.from({ length: 500 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        title: `Batch note ${index}`,
+        body: null,
+        schedule_item_id: null,
+        local_date: null,
+        created_at: '2026-11-26T08:00:00.000Z',
+        updated_at: '2026-11-26T08:00:00.000Z',
+      })),
+    )
+
+    const calls: ImportBody[] = []
+    server.use(
+      http.post(`${API}/import`, async ({ request }) => {
+        const body = (await request.json()) as ImportBody
+        calls.push(body)
+        if (calls.length === 2) {
+          return HttpResponse.json({ message: 'Transient error' }, { status: 500 })
+        }
+        return HttpResponse.json({
+          data: {
+            todos: { created: body.todos.length, skipped: 0 },
+            schedule_items: { created: body.schedule_items.length, skipped: 0 },
+            exceptions: { created: 0, skipped: 0 },
+            checkins: { created: 0, skipped: 0 },
+            focus_sessions: { created: body.focus_sessions.length, skipped: 0 },
+            notes: { created: body.notes?.length ?? 0, skipped: 0 },
+            daily_intentions: { created: body.daily_intentions.length, skipped: 0 },
+          },
+        })
+      }),
+    )
+
+    // Batch 2 fails -> ALL local guest records (todos, schedule, intentions, focus, notes) retained.
+    await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 500 })
+    expect(await guest.todos.listAll()).toHaveLength(1)
+    expect(await guest.schedule.listItems()).toHaveLength(1)
+    expect(await guest.intentions.list()).toHaveLength(1)
+    expect(await guest.focusSessions.listAll()).toHaveLength(1)
+    expect(await db.notes.count()).toBe(501)
+
+    // Retry succeeds -> exact same chunks replayed, schedule items in chunk 0, all local data cleared.
+    await expect(saveGuestPlan(guest, accountDataApi)).resolves.toBe(true)
+    expect(calls).toHaveLength(4)
+    expect(calls.slice(2, 4)).toEqual(calls.slice(0, 2))
+    expect(calls[2]?.schedule_items.map(({ id }) => id)).toEqual([block.id])
+    expect(calls[2]?.todos.map(({ id }) => id)).toEqual([todo.id])
+    expect(calls[2]?.focus_sessions.map(({ id }) => id)).toEqual([session.id])
+    expect(calls[2]?.notes?.some(({ id }) => id === linkedNote.id)).toBe(true)
+    expect(calls[3]?.schedule_items).toEqual([])
+    expect(calls[3]?.notes).toHaveLength(1)
+
+    expect(await guest.todos.listAll()).toEqual([])
+    expect(await guest.schedule.listItems()).toEqual([])
+    expect(await guest.intentions.list()).toEqual([])
+    expect(await guest.focusSessions.listAll()).toEqual([])
     expect(await db.notes.count()).toBe(0)
   })
 })
