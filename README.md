@@ -109,7 +109,7 @@ The app as built, at 375 px with sample data (UX-018, UX-019, F-R4-06). More scr
 | API health check | https://loomora-api.onrender.com/api/v1/health |
 
 > [!NOTE]
-> Production serves `v2-rebuild`. Automatic Vercel deployments for `v2-rebuild` are turned off in [`vercel.json`](vercel.json) (`git.deploymentEnabled`), so each release is deployed manually from the Vercel dashboard (**Deployments → Create Deployment → `v2-rebuild`**). Remove `"v2-rebuild": false` there to deploy on every merge.
+> Production serves `v2-rebuild`, and every merge into it deploys automatically on Vercel.
 >
 > The API runs on Render's free tier, so the first request after a quiet period can take a while.
 
@@ -298,7 +298,7 @@ The suite includes accessibility checks with axe (`e2e/a11y.spec.ts`), security 
 - Vite framework preset, build command `npm run build`, output directory `dist`.
 - SPA rewrite to `/index.html` for every path except `/api`, `/assets`, `sw.js`, the manifest and Workbox files.
 - Security headers on every response: a strict Content Security Policy, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS and `Permissions-Policy`. The Google deletion callback is also `no-store` and `no-referrer`. `sw.js` is always revalidated.
-- `git.deploymentEnabled` turns off automatic Vercel deployments for `v2-rebuild` and for a list of feature branches, so production is deployed manually (see [Live demo](#live-demo)).
+- `git.deploymentEnabled` turns off automatic Vercel deployments for a list of old feature branches; `v2-rebuild` deploys automatically.
 
 ## API integration
 
