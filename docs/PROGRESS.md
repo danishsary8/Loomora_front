@@ -1733,3 +1733,17 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Playwright `phone-375` (`notes`, `a11y`, `page-heading` — 20/20 passed across 320–1440 px & 200% text).
   - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux026-notes-375.png`, `ux026-notes-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-027 (Profile + Preferences).
+
+### 2026-11-27 UX-027: Profile & Preferences concept v3 alignment
+
+- **Branch:** `feat/UX-027-profile-preferences` stacked on `feat/UX-026-notes-polish` (PR #112 — merge #106–#112 first).
+- **What changed:**
+  - Added a soft green CSS-gradient hero band with centered large initial avatar circle (or `ProfileIcon` for guests) in `ProfilePage.tsx`, keeping `Profile` as `h1` and `"Your space."` as `data-page-headline`.
+  - Upgraded `StreakCard.tsx` to a 2-tile stat row (`Your streak` + `Tasks completed` for guests / `Longest streak` for accounts — 100% real data, zero extra API calls).
+  - Updated `SettingsList.tsx` with uppercase section headers and `ChevronRightIcon`, added `My activity` (`/insights`) and `My notes` (`/notes`) quick rows, moved `Sign out` to centered danger text (updating the UX-009 layout-pinning test in `ProfilePage.test.tsx`), and removed unused `SignOutIcon` from `icons.tsx`.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`ProfilePage.test.tsx`, `TimePreferences.test.tsx`): 50/50 passed.
+  - Playwright `phone-375` (`a11y`, `page-heading`, `delete-account`, `time-preferences` — 22/22 passed across 320–1440 px & 200% text).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux027-profile-375.png`, `ux027-profile-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-028 (Final consistency pass).

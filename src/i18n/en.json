@@ -586,6 +586,10 @@
   },
   "profile": {
     "streakTitle": "Your streak",
+    "tasksCompletedTitle": "Tasks completed",
+    "longestStreakTitle": "Longest streak",
+    "myActivity": "My activity",
+    "myNotes": "My notes",
     "subtitle": "Your streak, settings and account.",
     "subtitleGuest": "You are using Loomora as a guest on this device.",
     "streakLoadError": "Could not load your streak.",

@@ -1,5 +1,5 @@
 import { useId, type ButtonHTMLAttributes, type ComponentType, type ReactNode } from 'react'
-import { ChevronDownIcon } from '@/components/ui/icons'
+import { ChevronRightIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
 interface SettingsGroupProps {
@@ -12,7 +12,7 @@ export function SettingsGroup({ title, children }: SettingsGroupProps) {
   const id = useId()
   return (
     <section aria-labelledby={id} className="flex flex-col gap-2">
-      <h2 id={id} className="px-1 text-sm font-semibold text-muted">
+      <h2 id={id} className="px-1 text-xs font-semibold uppercase tracking-wider text-muted">
         {title}
       </h2>
       <ul className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm">
@@ -61,7 +61,7 @@ export function SettingsRow({
               tone === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary-soft text-primary',
             )}
           >
-            <Icon className="size-5" />
+            <Icon className="h-icon-md w-icon-md" />
           </span>
         )}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -83,7 +83,7 @@ export function SettingsRow({
             </span>
           )}
         </span>
-        <ChevronDownIcon className="size-5 shrink-0 -rotate-90 text-muted" />
+        <ChevronRightIcon className="h-icon-sm w-icon-sm shrink-0 text-muted" />
       </button>
     </li>
   )

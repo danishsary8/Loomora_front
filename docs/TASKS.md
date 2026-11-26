@@ -1407,3 +1407,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/notes/NotesPage.tsx`, `docs/screenshots/ux026-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-027: Profile & Preferences concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #112 `UX-026`).
+- **Plan:**
+  1. Add a soft green CSS-gradient hero band with a centered large initial avatar circle (or `ProfileIcon` for guests) on `ProfilePage.tsx`, keeping `Profile` as the level-1 heading and `"Your space."` as `data-page-headline`.
+  2. Upgrade `StreakCard.tsx` to a 2-tile stat row (Current streak + Tasks completed for guests / Longest streak for accounts — 100% real data, zero extra API calls).
+  3. Polish `SettingsList.tsx` with uppercase section labels (`GENERAL` / `YOUR ACCOUNT` style) and crisp `ChevronRightIcon`, add quick navigation rows (`My activity` → `/insights`, `My notes` → `/notes`) to `ProfilePage.tsx`, style `Sign out` as centered danger text, and remove unused `SignOutIcon`.
+  4. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Profile matches concept v3 soft green hero band + large initial avatar, 2 real-data stat tiles, grouped icon rows with chevrons, uppercase section labels, and centered danger Sign out at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/features/profile/{ProfilePage,StreakCard,SettingsList,ProfilePage.test}.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `docs/screenshots/ux027-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

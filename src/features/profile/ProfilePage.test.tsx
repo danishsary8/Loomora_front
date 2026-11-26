@@ -579,13 +579,12 @@ describe('Profile Elemental layout for accounts (UX-009)', () => {
     server.use(...accountProfile())
   })
 
-  it('groups sign out and delete as account actions, with delete in danger text', async () => {
+  it('places delete in account actions and sign out as centered danger text', async () => {
     await openProfile()
     expect(screen.getByText('Your streak, settings and account.')).toBeInTheDocument()
     const actions = screen.getByRole('region', { name: 'Account actions' })
     const rows = within(actions).getAllByRole('button')
     expect(rows.map((row) => row.textContent)).toEqual([
-      'Sign out',
       'Delete my accountRemoves your account, to-dos and schedule for good.',
     ])
     for (const row of rows) expect(row).toHaveClass('min-h-[52px]')
@@ -594,6 +593,8 @@ describe('Profile Elemental layout for accounts (UX-009)', () => {
     expect(remove).toHaveAccessibleDescription(
       'Removes your account, to-dos and schedule for good.',
     )
+    const signOut = screen.getByRole('button', { name: 'Sign out' })
+    expect(signOut).toHaveClass('text-danger', 'min-h-touch')
   })
 
   it('groups display settings inside the account card', async () => {

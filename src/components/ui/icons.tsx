@@ -259,15 +259,6 @@ export function ChatIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-export function SignOutIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <IconBase {...props}>
-      <path d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" />
-      <path d="M10.5 12H20M16.5 8.5 20 12l-3.5 3.5" />
-    </IconBase>
-  )
-}
-
 export function PinIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>
