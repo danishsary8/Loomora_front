@@ -1242,7 +1242,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-05: Revision-aware Notes (B-053)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #97](https://github.com/danishsary8/Loomora_front/pull/97) at `fab37a0`.
 - **Owner:** claude
 - **Source:** Merged backend B-053 (`danishsary8/loomora_back` PR #59 at `2c95ed6`) and its owner-approved rules: new frontend writes send `expected_revision`, an account note is never silently overwritten, and conflicts are resolved one note at a time (no bulk action).
 - **Scope:** Sync `docs/openapi.yaml` byte-for-byte from backend `v2-rebuild`. Send `expected_revision` on account-note `PATCH` and `DELETE`; accept `200` for an identical `POST /notes` replay. On a revision `409`, read the note: matching content is success (lost response), otherwise raise `NoteConflictError`. The edit sheet then offers "Use the latest version" or "Save mine as a new note"; a delete conflict shows a toast and refreshes. Guest notes are unchanged.
