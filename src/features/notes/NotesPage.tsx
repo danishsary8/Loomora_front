@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { PageHeading } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { ActionToast, Button, Card, Input, SegmentedControl, Sheet } from '@/components/ui'
-import { TrashIcon } from '@/components/ui/icons'
+import { PencilIcon, TrashIcon } from '@/components/ui/icons'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { ApiError, errorMessageKey, useSession } from '@/lib/api'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
@@ -14,6 +14,20 @@ import { useCreateNote, useDeleteNote, useNotes, useRestoreNote, useUpdateNote }
 type NoteFilter = 'all' | 'standalone' | 'attached'
 
 const UNDO_TOAST_MS = 6000
+
+const cardActionClass =
+  'grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control/70 bg-paper text-ink transition-[background-color,transform] duration-fast ease-elemental hover:bg-subtle active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100'
+
+function formatOccurrenceDate(localDate: string, locale: string): string {
+  const parts = localDate.split('-').map(Number)
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return localDate
+  const [y, m, d] = parts as [number, number, number]
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(Date.UTC(y, m - 1, d)))
+}
 
 export function NotesPage() {
   const generation = useSession((s) => s.generation)
@@ -81,6 +95,13 @@ function NotesPageSession() {
 
   const hasFilters = filter !== 'all' || search.trim().length > 0
   const isOfflineAccountWithoutData = signedIn && !online && !notes.data
+  const canCreate = !signedIn || online
+  const showHeaderAdd =
+    !isOfflineAccountWithoutData &&
+    !notes.isPending &&
+    !notes.isError &&
+    notes.data.length > 0 &&
+    canCreate
 
   async function handleConfirmDelete() {
     if (!confirmDelete || deleteNote.isPending) return
@@ -121,21 +142,23 @@ function NotesPageSession() {
 
   return (
     <div className="flex flex-col gap-5 pb-4">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
+      <header className="flex flex-col gap-0.5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <PageHeading>{t('pages.notes.title')}</PageHeading>
-          <p className="text-sm font-medium text-muted">{t('notes.subtitle')}</p>
+          {showHeaderAdd && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                setEditingNote(null)
+                setEditorOpen(true)
+              }}
+            >
+              {t('notes.add')}
+            </Button>
+          )}
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => {
-            setEditingNote(null)
-            setEditorOpen(true)
-          }}
-        >
-          {t('notes.add')}
-        </Button>
+        <p className="text-sm font-medium text-muted">{t('notes.subtitle')}</p>
       </header>
 
       {isOfflineAccountWithoutData ? (
@@ -164,17 +187,19 @@ function NotesPageSession() {
           title={t('notes.emptyTitle')}
           message={t('notes.emptyBody')}
           actions={
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={() => {
-                setEditingNote(null)
-                setEditorOpen(true)
-              }}
-            >
-              {t('notes.add')}
-            </Button>
+            canCreate ? (
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => {
+                  setEditingNote(null)
+                  setEditorOpen(true)
+                }}
+              >
+                {t('notes.add')}
+              </Button>
+            ) : undefined
           }
         />
       ) : (
@@ -223,15 +248,21 @@ function NotesPageSession() {
                 const block = note.schedule_item_id
                   ? scheduleById.get(note.schedule_item_id)
                   : undefined
+                const formattedOccurrenceDate = note.local_date
+                  ? formatOccurrenceDate(note.local_date, locale)
+                  : null
                 const badgeText =
                   note.schedule_item_id === null
                     ? t('notes.standaloneBadge')
                     : block
-                      ? note.local_date
-                        ? t('notes.attachedOnDate', { title: block.title, date: note.local_date })
+                      ? formattedOccurrenceDate
+                        ? t('notes.attachedOnDate', {
+                            title: block.title,
+                            date: formattedOccurrenceDate,
+                          })
                         : t('notes.attachedTo', { title: block.title })
-                      : note.local_date
-                        ? t('notes.detachedBlockOnDate', { date: note.local_date })
+                      : formattedOccurrenceDate
+                        ? t('notes.detachedBlockOnDate', { date: formattedOccurrenceDate })
                         : t('notes.detachedBlock')
 
                 const updatedLabel = new Intl.DateTimeFormat(locale, {
@@ -248,32 +279,32 @@ function NotesPageSession() {
                             <h2 className="font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
                               {headingText}
                             </h2>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                              <span className="rounded-full bg-subtle px-2.5 py-0.5 font-semibold text-ink">
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                              <span className="inline-block max-w-full rounded-md bg-subtle px-2.5 py-0.5 font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
                                 {badgeText}
                               </span>
-                              <time dateTime={note.updated_at} className="tabular-nums">
+                              <time dateTime={note.updated_at} className="shrink-0 tabular-nums">
                                 {updatedLabel}
                               </time>
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            <Button
-                              variant="ghost"
-                              size="md"
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
                               aria-label={t('notes.editLabel', { title: headingText })}
                               onClick={() => {
                                 setEditingNote(note)
                                 setEditorOpen(true)
                               }}
+                              className={cardActionClass}
                             >
-                              {t('notes.editAction')}
-                            </Button>
+                              <PencilIcon className="size-4" />
+                            </button>
                             <button
                               type="button"
                               aria-label={t('notes.deleteLabel', { title: headingText })}
                               onClick={() => setConfirmDelete(note)}
-                              className="grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control/70 bg-paper text-ink transition-[background-color,transform] duration-fast ease-elemental hover:bg-subtle active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                              className={cardActionClass}
                             >
                               <TrashIcon className="size-4" />
                             </button>

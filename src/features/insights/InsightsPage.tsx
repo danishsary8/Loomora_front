@@ -213,15 +213,12 @@ function OverviewSection({
   const { totals } = summary
 
   return (
-    <section
-      aria-label={t('insights.overviewLabel')}
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
-    >
-      <Card compact>
+    <section aria-label={t('insights.overviewLabel')} className="grid grid-cols-2 gap-3">
+      <Card compact className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           {t('insights.metrics.focusTime')}
         </p>
-        <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-ink">
+        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
           {formatDurationMs(totals.focus_ms, locale)}
         </p>
         <p className="mt-0.5 text-xs text-muted tabular-nums">
@@ -229,11 +226,11 @@ function OverviewSection({
         </p>
       </Card>
 
-      <Card compact>
+      <Card compact className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           {t('insights.metrics.todosDone')}
         </p>
-        <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-ink">
+        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
           {totals.todos_done}
         </p>
         <p className="mt-0.5 text-xs text-muted tabular-nums">
@@ -241,11 +238,11 @@ function OverviewSection({
         </p>
       </Card>
 
-      <Card compact>
+      <Card compact className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           {t('insights.metrics.blocksChecked')}
         </p>
-        <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-ink">
+        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
           {totals.blocks_checked}
         </p>
         <p className="mt-0.5 text-xs text-muted tabular-nums">
@@ -255,11 +252,11 @@ function OverviewSection({
         </p>
       </Card>
 
-      <Card compact>
+      <Card compact className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           {t('insights.metrics.currentStreak')}
         </p>
-        <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-ink">
+        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
           {streakCount !== undefined
             ? t('insights.metrics.streakDays', { count: streakCount })
             : '—'}
@@ -438,7 +435,7 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
           {compactMode && (
             <p className="mt-0.5 text-xs text-muted tabular-nums">
               {t('insights.trends.showingActiveOnly', {
-                active: rows.length,
+                count: rows.length,
                 total: summary.days.length,
               })}
             </p>

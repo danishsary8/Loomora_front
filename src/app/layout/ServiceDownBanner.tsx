@@ -1,14 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { healthApi, useServiceStatus, useSession } from '@/lib/api'
+import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { Button } from '@/components/ui'
 
 const POLL_MS = 30_000
 
 /**
- * Account mode only: shown after a request failed with a network error or a 5xx. Retry and a
- * 30 s poll ask `GET /health`; once it answers, the banner goes and the screens reload.
+ * Account mode only: shown after a request failed with a network error or a 5xx while online.
+ * While offline, OfflineBanner owns the connectivity notice and polling pauses until reconnect.
+ * Retry and a 30 s poll ask `GET /health`; once it answers, the banner goes and the screens reload.
  * Guests never call the API, so they never see it.
  */
 export function ServiceDownBanner() {
@@ -16,7 +18,9 @@ export function ServiceDownBanner() {
   const queryClient = useQueryClient()
   const signedIn = useSession((s) => s.token !== null)
   const down = useServiceStatus((s) => s.down)
-  const visible = signedIn && down
+  const online = useOnlineStatus()
+  const visible = signedIn && down && online
+  const wasOffline = useRef(!online)
 
   const check = useCallback(async () => {
     try {
@@ -27,6 +31,19 @@ export function ServiceDownBanner() {
     useServiceStatus.getState().markUp()
     await queryClient.invalidateQueries()
   }, [queryClient])
+
+  useEffect(() => {
+    if (!online) {
+      wasOffline.current = true
+      return
+    }
+    if (wasOffline.current && visible) {
+      wasOffline.current = false
+      void check()
+    } else {
+      wasOffline.current = false
+    }
+  }, [online, visible, check])
 
   useEffect(() => {
     if (!visible) return

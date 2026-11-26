@@ -106,6 +106,7 @@ describe('InsightsPage (F-R4-01)', () => {
     expect(screen.getByText('Linked to plan: 25 min')).toBeInTheDocument()
     expect(screen.getByText('Unplanned focus: 0 min')).toBeInTheDocument()
     expect(screen.getByText('Countdown: 25 min')).toBeInTheDocument()
+    expect(screen.getByText('1 to-do')).toBeInTheDocument()
 
     // Navigate to previous week (empty) and back to current week.
     await userEvent.click(screen.getByRole('button', { name: 'Previous week' }))
@@ -113,11 +114,12 @@ describe('InsightsPage (F-R4-01)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Next week' }))
     expect(await screen.findByRole('heading', { name: 'Weekly recap' })).toBeInTheDocument()
 
-    // Switch to 30 days preset (hides Weekly Recap card, keeps Plan vs Reality).
+    // Switch to 30 days preset (hides Weekly Recap card, keeps Plan vs Reality, pluralizes active day).
     await userEvent.click(screen.getByRole('button', { name: '30 days' }))
     await waitFor(() =>
       expect(screen.queryByRole('heading', { name: 'Weekly recap' })).not.toBeInTheDocument(),
     )
+    expect(screen.getByText('Showing 1 active day out of 30.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Plan vs reality' })).toBeInTheDocument()
   })
 
@@ -162,6 +164,7 @@ describe('InsightsPage (F-R4-01)', () => {
     expect(await screen.findByText('3 done / 4 due')).toBeInTheDocument()
     expect(screen.getByText('Linked to plan: 20 min')).toBeInTheDocument()
     expect(screen.getByText('Unplanned focus: 5 min')).toBeInTheDocument()
+    expect(screen.getByText('1 block')).toBeInTheDocument()
     expect(screen.getByText('Longest: 12')).toBeInTheDocument()
     const history = within(screen.getByRole('region', { name: 'Streak history' }))
     expect(history.getByText('At least 2 days')).toBeInTheDocument()

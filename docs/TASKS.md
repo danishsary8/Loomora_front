@@ -1133,7 +1133,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-01: Insights, Analytics, Weekly Recap & Plan vs Reality
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #86](https://github.com/danishsary8/Loomora_front/pull/86) at `16adadc`.
 - **Owner:** antigravity
 - **Source:** Merged backend B-047 (`GET /stats/summary`, backend PR #51) and `DEC-003` Elemental Edition. Task ID verified unused before registration.
 - **Scope:** Sync merged backend `docs/openapi.yaml` and shared `stats-summary-cases.json` fixture, implement guest/account parity for B-047 analytics (`useStatsSummary` + `computeGuestStatsSummary` + `GuestFocusSessionRepository.listForRange`), build the Elemental `/insights` dashboard with range selector (Week with Previous/Next navigation respecting `week_starts_on`, 7d, 30d, 90d within the 92-day cap), Overview & Streak summary (using `GET /streak` without fabricating historical streak timelines), Weekly Recap (partial/empty weeks), Plan vs Reality (to-dos, schedule, linked vs unplanned focus, countdown vs stopwatch), Daily Breakdown, and loading/empty/error/retry/offline states. Remove unused `ComingSoon`.
@@ -1145,7 +1146,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-03: Historical Streak Timeline Integration
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #88](https://github.com/danishsary8/Loomora_front/pull/88) at `5c15812`.
 - **Owner:** codex
 - **Source:** Frontend PR #86 and backend B-051 PR #56, both merged into their respective v2-rebuild branches.
 - **Scope:** Sync B-051 OpenAPI, reconstruct historical streaks for guests, and display the opening and daily values in Elemental Insights.
@@ -1153,3 +1155,24 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Guests and accounts show opening and daily streaks with the same local-date, check-in, planning, deletion, current-day, and 400-day lookback semantics.
   - [x] Positive lower bounds have explicit translated labels, exact values display their count, and existing Insights states and current/longest streak metrics are preserved.
   - [x] Regression tests cover guest/account parity and the history UI, including offline guest reads.
+
+### UX-017: Post-Merge Visual Polish for Insights, Notes & Offline Banners
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Post-merge visual QA audit of `F-R4-01` (PR #86, `16adadc`) and `F-R4-02` (PR #87, `a76d95d`); reconciled with merged `F-R4-03` (PR #88, `5c15812`). Task ID verified unused across `docs/` and branches (`F-R4-03` remains Codex's historical streak task).
+- **Owner decisions recorded:**
+  - **P2-4 (Desktop Notes Navigation) — Resolved by owner decision:** Keep Notes in the top-right `TopBar` toolbar on desktop; do not add Notes to desktop `Sidebar` or change the 4 mobile `BottomNav` tabs.
+  - **Explicit exclusions:** No historical streak changes (Codex `F-R4-03` preserved untouched), no break-time metrics on Insights, no new features.
+- **Scope:**
+  - **P1-1 (`/notes`):** Show a single deep forest green `New note` primary CTA in empty state; hide creation when account notes cannot load or save while preserving guest offline creation.
+  - **P1-2 (`/insights`):** Use a balanced 2×2 KPI overview grid (`grid-cols-2`) across 375 px mobile and desktop so `Weekly recap` sits above the fold on mobile and durations (`1 hr 45 min`) stay single-line on desktop.
+  - **P1-3 (`/insights`):** Use i18next pluralization (`_one`/`_other`) for Daily Breakdown `to-do`/`to-dos`, `block`/`blocks`, and `showingActiveOnly`.
+  - **P1-4 (`/notes`):** Localize occurrence dates in attachment badges via `Intl.DateTimeFormat` and use `rounded-md` wrapping for narrow screens.
+  - **P2-1 & P2-2 (`/notes`):** Align mobile `Notes` heading and `New note` button on one row; pair `Edit` (`PencilIcon`) and `Delete` (`TrashIcon`) as matching 44×44 bordered icon buttons.
+  - **P2-3 (Shell):** Hide `ServiceDownBanner` and pause `/health` polling while offline (`!online`), re-checking `/health` on reconnect.
+- **Done when:**
+  - [x] P1-1..P1-4 and P2-1..P2-3 implemented with zero changes to historical streak or desktop Sidebar/BottomNav navigation.
+  - [x] Vitest (`InsightsPage`, `computeStatsSummary`, `NotesPage`, `ServiceDownBanner`, `i18n`) and Playwright `phone-375` (`insights`, `notes`, `a11y`, `page-heading`) pass with 0 axe violations and 0 px overflow at 320–1440 px and 200% text.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and before/after 375 px & 1440 px visual checks pass.
+- **Files:** `src/features/notes/NotesPage.tsx`, `src/features/notes/NotesPage.test.tsx`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/ServiceDownBanner.test.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
