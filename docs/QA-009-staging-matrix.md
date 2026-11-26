@@ -19,7 +19,7 @@ This runbook extends [QA-022 paired staging evidence and runbook](QA-022-staging
 | Area | Baseline Commit / PR | Automated Coverage Verified |
 |---|---|---|
 | **Frontend `v2-rebuild` HEAD** | `257938f` (PR #92 `QA-009-PREP` & PR #93 `QA-029` merged) | `eslint`, `tsc -b`, `knip`, `prettier --check`, production Vite/PWA build, `npm audit --omit=dev` (0 prod advisories), Redocly OpenAPI lint (valid, 4 baseline warnings) |
-| **R1/R2 Today, Week, Auth, Legal, PWA** | `QA-013`–`QA-025`, `UX-002`–`UX-016` | Full Vitest suite (915 passed), 128 Playwright `phone-375` E2E tests, cross-browser `QA-021`, `QA-019` prompt-based SW update (`Q21`), `QA-015` CSP/headers simulator |
+| **R1/R2 Today, Week, Auth, Legal, PWA** | `QA-013`–`QA-025`, `UX-002`–`UX-016` | Full Vitest suite (81 files, 919 passed), 128 Playwright `phone-375` E2E tests, cross-browser `QA-021`, `QA-019` prompt-based SW update (`Q21`), `QA-015` CSP/headers simulator |
 | **R3 Focus & History Migration** | `F-R3-01`–`F-R3-15` (PR #84, #85) | Countdown/stopwatch/laps/alarm/recovery, soft-delete + 7-day Undo, 499/500/501 Focus import chunks + 409 rollback |
 | **R4 Insights, Historical Streaks & Notes** | `F-R4-01` (#86), `F-R4-02` (#87), `F-R4-03` (#88), `UX-017` (#89), `QA-029` (#93) | Shared backend `stats-summary-cases.json` parity, unified 400-day guest current & historical streak evaluator (`QA-029`), Notes CRUD + 7-day restore + >500-note pagination, Elemental Edition 320–1440 px & 200% text |
 | **Data Integrity & Import Containment** | `QA-027` (#90), `QA-028` (#91) | Fail-closed import acknowledgment validation & skipped-Note verification; atomic single-transaction Dexie CRUD + two-instance concurrency tests |

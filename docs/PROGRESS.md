@@ -1574,6 +1574,6 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `QA-029`: PR #93 merged at `257938f` (`2026-11-26T06:15:56Z`).
 - **What changed:**
   - `docs/TASKS.md`: Marked `QA-009-PREP` `done` (PR #92, `756f584`) and `QA-029` `done` (PR #93, `257938f`); kept `QA-009` explicitly **blocked / not executed**.
-  - `docs/QA-009-staging-matrix.md`: Updated Section 1A verified automated baseline to `257938f` (915 Vitest / 128 Playwright `phone-375`), moved `QA-029` out of Section 1D active code blockers while keeping backend revision-aware Notes reconciliation and all owner gates (`QA-022` disposable pair, `QA-016`, `QA-004`, `Q23`, `Q25`) open, and updated `STG-06`/`STG-07` prerequisites while keeping every staging scenario `NOT RUN — BLOCKED`.
+  - `docs/QA-009-staging-matrix.md`: Updated Section 1A verified automated baseline to `257938f` (81 files / 919 Vitest, 128 Playwright `phone-375`), moved `QA-029` out of Section 1D active code blockers while keeping backend revision-aware Notes reconciliation and all owner gates (`QA-022` disposable pair, `QA-016`, `QA-004`, `Q23`, `Q25`) open, and updated `STG-06`/`STG-07` prerequisites while keeping every staging scenario `NOT RUN — BLOCKED`.
   - Preserved all prior historical `docs/PROGRESS.md` entries unchanged.
 - **Verified:** Strictly docs-only diff (3 files under `docs/`), internal Markdown links verified, `git diff --check` passed (0 errors), and zero staging tests marked passed.
