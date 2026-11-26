@@ -1598,6 +1598,14 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **What changed:** Synced `docs/openapi.yaml` from backend `v2-rebuild` (B-053). `Note` gains optional `revision` (guest notes have none). `notesApi.update`/`delete` send `expected_revision` when known; `create` accepts `200` replays. `ServerNoteRepository` turns a revision `409` into success when the re-read note already matches the edit, otherwise into `NoteConflictError` (with the latest note, or `null` if it was deleted elsewhere); a stale delete of a note that is already gone succeeds. Update and delete hooks pass the revision and refresh the list on success or failure. `NoteSheet` shows a conflict view with "Use the latest version" (close and show the refreshed note) or "Save mine as a new note" (new UUID, account copy untouched); `NotesPage` shows a toast for a delete conflict. New strings are in `en.json`.
 - **How it was verified:** Notes tests (45) pass, including the new `noteRevisions.test.ts` and conflict-sheet test. Full Vitest 944/944, lint, typecheck, Knip, format check, build, Redocly (valid, four existing warnings), `npm audit --omit=dev` (0) and `git diff --check` passed. Playwright `phone-375`: 127/128 in this sandbox; the failing spec differed between runs (Focus import/timer, Legal desktop layout), none touches Notes. CI is authoritative.
 
+### 2026-11-26 Responsive audit (UX)
+
+- **Branch:** `claude/happy-faraday-y2jsqe` from `origin/v2-rebuild`.
+- **Audit:** Production build checked with Playwright at 320, 375, 414, 768, 1024 and 1440 px on all 15 public and guest routes (horizontal scroll, elements past the viewport, tap targets under 44 px, clipped text), then at 320 and 375 px with very long to-do, schedule and note titles and open add sheets. No horizontal scroll, off-screen element or undersized control was found; the only hits were the visually hidden skip link and landing heading. Screenshots were reviewed at 320, 375, 768 and 1440 px.
+- **Fix:** At 320 px the Insights range options ("30 days", "90 days") wrapped onto two lines. `SegmentedControl` now uses `px-1.5` below `sm` (`px-3` from `sm`), so all four options sit on one line at 320 and 375 px with 44 px height; text can still wrap at 200% zoom instead of overflowing.
+- **Not covered:** signed-in account pages with server data, Google callback and survey pages, and real iOS/Android devices.
+- **Verified:** lint, typecheck, Knip, format check, Vitest 944/944. Playwright `phone-375` 124/128 in this sandbox; the failing specs (Focus import, Legal desktop measure) also fail on the unchanged base here and do not use `SegmentedControl`.
+
 ### 2026-11-26 UX-018: Elemental concept v3 alignment
 
 - **Why:** The owner supplied the concept image and alignment pack that DEC-003 named but the workspace lacked. Tokens already matched; screen composition did not.
