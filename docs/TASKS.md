@@ -1204,10 +1204,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-009-PREP: Staging QA Matrix & Release Readiness Preparation (docs-only)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #92](https://github.com/danishsary8/Loomora_front/pull/92) at `756f584`.
 - **Owner:** antigravity
 - **Parent gate (`QA-009`):** **BLOCKED / NOT EXECUTED** — no staging tests have been run, no live services touched, and the release is NOT declared ready.
-- **Scope:** Documentation-only preparation extending [QA-022 paired staging evidence and runbook](QA-022-staging-evidence.md) to the full merged R1–R4 baseline (`2f5d56b`, including `QA-027` and `QA-028`) with a reproducible 9-scenario staging QA matrix (`STG-01`–`STG-09`), release evidence & rollback readiness checklist, and explicit separation of automated local/CI checks, pending manual staging checks, owner gates (`QA-016`, `QA-004`, `Q23`, `Q25`, `QA-022` disposable pair), and active blockers (`QA-029` streak consistency, backend revision-aware Notes reconciliation).
+- **Scope:** Documentation-only preparation extending [QA-022 paired staging evidence and runbook](QA-022-staging-evidence.md) to the full merged R1–R4 baseline (`2f5d56b`, including `QA-027` and `QA-028`) with a reproducible 9-scenario staging QA matrix (`STG-01`–`STG-09`), release evidence & rollback readiness checklist, and explicit separation of automated local/CI checks, pending manual staging checks, owner gates (`QA-016`, `QA-004`, `Q23`, `Q25`, `QA-022` disposable pair), and active blockers (`QA-029` streak consistency — now resolved in PR #93 — and backend revision-aware Notes reconciliation).
 - **Done when:**
   - [x] Reproducible staging QA matrix (`docs/QA-009-staging-matrix.md`) defines prerequisites, synthetic data, execution steps, expected results, redacted evidence, and pass/fail criteria for all R1–R4 flows.
   - [x] Release evidence checklist covers deployed frontend/backend SHAs, OpenAPI parity, staging origin/CORS/CSP, environment separation, migrations, health checks, rate limits, log redaction, and rollback readiness.
@@ -1217,7 +1218,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### QA-029: Guest Current Streak Consistency
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #93](https://github.com/danishsary8/Loomora_front/pull/93) at `257938f`.
 - **Owner:** codex (handed off to claude for verification)
 - **Priority:** P2
 - **Scope:** Match B-051's inclusive 400-preceding-local-day window using one evaluator for guest current and historical streak values.
