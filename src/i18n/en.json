@@ -798,6 +798,7 @@
     "emptyBody": "Check off a to-do, complete a schedule block, or finish a Focus session to see your progress here.",
     "overviewLabel": "Summary totals",
     "metrics": {
+      "completed": "Completed",
       "focusTime": "Focus time",
       "sessions_one": "{{count}} session",
       "sessions_other": "{{count}} sessions",
@@ -838,6 +839,10 @@
       "lowerBound_one": "At least {{count}} day",
       "lowerBound_other": "At least {{count}} days",
       "lowerBoundHint": "The lookback covers up to 400 preceding days. Earlier completions may make a streak longer."
+    },
+    "rhythm": {
+      "title": "Completion rhythm",
+      "ariaLabel": "Completion rhythm across the last {{count}} days"
     },
     "trends": {
       "title": "Daily breakdown",

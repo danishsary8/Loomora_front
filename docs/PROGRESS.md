@@ -1692,3 +1692,18 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npx playwright test --project=phone-375 --trace off`: all 128 specs passed (including all 19 Focus/alarm/history/laps/page-heading checks across 320–1440 px and 200% text scaling after fixing the 768 px 200%-text `min-w` overflow).
   - Screenshots inspected at 375 px (idle + active) and 1440 px (active) (`docs/screenshots/ux023-focus-*.png`) with 0 px overflow.
 - **Problems / Questions:** None. Moving to UX-024 (Insights).
+
+### 2026-11-27 UX-024: Insights screen concept v3 alignment (with SVG bar chart)
+
+- **Branch:** `feat/UX-024-insights-polish` stacked on `feat/UX-023-focus-polish` (PR #109 — merge #106–#109 first).
+- **What changed:**
+  - Added `SparkleIcon` in `src/components/ui/icons.tsx` and `insights.metrics.completed` / `insights.rhythm.*` keys in `src/i18n/en.json`.
+  - Upgraded `OverviewSection` to 3 compact tinted KPI tiles (`Completed %`, `Focus time`, `Day streak`) with circular icon badges and `useCountUp` animation from real app data.
+  - Added accessible zero-dependency SVG `CompletionRhythmCard` (7 rounded bars scaled from real daily activity scores, weekday labels, mount draw-in respecting `prefers-reduced-motion`).
+  - Upgraded `PlanVsRealityCard` with two animated progress bars (Tasks + Focus attribution) and `WeeklyRecapCard` with an accent `SparkleIcon` badge and trailing chevron; wired `<LoadingState variant="summary" />`; preserved `StreakHistoryCard` and `DailyTrendsCard` intact.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`InsightsPage.test.tsx`, `computeStatsSummary.test.ts`): all passed.
+  - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (`e2e/insights.spec.ts` including offline, axe, 320–1440 px & 200% text passed).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux024-insights-375.png`, `ux024-insights-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-025 (Add/Edit task sheet).

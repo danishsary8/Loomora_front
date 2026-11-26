@@ -310,3 +310,12 @@ export function ArrowUpRightIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+export function SparkleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6-5.6-1.9 5.6-1.9L12 3Z" />
+      <path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z" />
+    </IconBase>
+  )
+}

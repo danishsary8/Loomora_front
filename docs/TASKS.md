@@ -1360,3 +1360,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/components/ui/icons.tsx`, `src/features/focus/{FocusPage,FocusReadout,FocusAttachment}.tsx`, `src/i18n/en.json`, `docs/screenshots/ux023-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-024: Insights screen concept v3 alignment (with SVG bar chart)
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #109 `UX-023`).
+- **Plan:**
+  1. Add `SparkleIcon` to `src/components/ui/icons.tsx` and add `insights.metrics.completed` / `insights.rhythm.*` i18n keys in `src/i18n/en.json`.
+  2. Upgrade `OverviewSection` to 3 compact tinted KPI tiles (`Completed %`, `Focus time`, `Day streak`) with icon badges and `useCountUp` numeric animation (all real data; zero fake metrics).
+  3. Build a lightweight, accessible, zero-dependency SVG `CompletionRhythmChart` (7 rounded bars reflecting real daily activity, category-colored fills, weekday labels, reduced-motion mount draw-in).
+  4. Upgrade `PlanVsRealityCard` with two animated progress bars (Tasks + Focus attribution) and `WeeklyRecapCard` with an accent `SparkleIcon` badge and trailing chevron, while preserving `StreakHistoryCard` and `DailyTrendsCard` intact and using `<LoadingState variant="summary" />`.
+  5. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Insights matches concept v3 3-KPI grid, 7-bar SVG completion rhythm chart, two-bar Plan vs reality card, and sparkle Weekly recap card at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/components/ui/icons.tsx`, `src/features/insights/InsightsPage.tsx`, `src/i18n/en.json`, `docs/screenshots/ux024-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
