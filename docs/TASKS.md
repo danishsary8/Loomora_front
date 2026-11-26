@@ -1227,7 +1227,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-04: Notes Import Diagnostics Integration (B-052)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #95](https://github.com/danishsary8/Loomora_front/pull/95) at `6f4ba00`.
 - **Owner:** antigravity
 - **Source:** Merged backend B-052 (`POST /import` `notes.skipped_details`, backend PR #57 at `259cf90`). Task ID verified unused before registration (`F-030` was already assigned to Google account deletion frontend, PR #45).
 - **Scope:** Sync merged backend `docs/openapi.yaml` (`259cf90`), type and strictly validate `notes.skipped_details` in `createAccountDataApi.importGuestData` and `saveGuestPlan` (exact skipped count, valid UUIDs, case-insensitive uniqueness, membership in submitted batch, allowed statuses `identical | different | deleted`, no unexpected properties), remove the legacy paginated `GET /notes` verification walk, accept explicit `identical` skipped Notes, fail closed (`502`) on missing/malformed/inconsistent diagnostics (including older servers), and raise `GuestNoteImportConflict` while retaining the complete guest plan for `different`, `deleted`, or mixed statuses without overwriting or restoring account Notes.
