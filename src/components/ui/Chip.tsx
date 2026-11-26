@@ -53,22 +53,14 @@ export function Chip({ category, label, onClick, selected = false, className }: 
       className={cn(
         base,
         'min-h-touch border-control px-4 text-sm font-semibold',
+        fillClasses[category],
         selected
-          ? cn('border-ink/40', fillClasses[category], pressSm)
-          : cn('border-border-control bg-paper hover:bg-subtle', pressSm),
+          ? cn('border-primary ring-1 ring-primary', pressSm)
+          : cn('border-ink/15 hover:border-ink/40', pressSm),
         className,
       )}
     >
-      {selected ? (
-        <CheckIcon className="size-4" />
-      ) : (
-        <span
-          aria-hidden="true"
-          className={cn('grid size-6 place-items-center rounded-full', fillClasses[category])}
-        >
-          <Icon className="size-3.5" />
-        </span>
-      )}
+      {selected ? <CheckIcon className="size-4" /> : <Icon className="size-4" />}
       {text}
     </button>
   )

@@ -1,4 +1,4 @@
-import { useId, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useId, type ButtonHTMLAttributes, type ComponentType, type ReactNode } from 'react'
 import { ChevronDownIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
@@ -27,6 +27,8 @@ interface SettingsRowProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>,
   /** Extra line under the label, read as the row's description. */
   description?: string
   tone?: 'default' | 'danger'
+  /** Leading outline icon (concept v3 settings rows). */
+  Icon?: ComponentType<{ className?: string }>
 }
 
 /** One full-width row that opens a sheet or runs an action. */
@@ -34,6 +36,7 @@ export function SettingsRow({
   label,
   description,
   tone = 'default',
+  Icon,
   className,
   ...rest
 }: SettingsRowProps) {
@@ -51,17 +54,31 @@ export function SettingsRow({
         )}
         {...rest}
       >
+        {Icon && (
+          <span
+            className={cn(
+              'grid size-9 shrink-0 place-items-center rounded-md',
+              tone === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary-soft text-primary',
+            )}
+          >
+            <Icon className="size-5" />
+          </span>
+        )}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span
             className={cn(
-              'break-words font-semibold',
+              'font-semibold [overflow-wrap:anywhere]',
               tone === 'danger' ? 'text-danger' : 'text-ink',
             )}
           >
             {label}
           </span>
           {description && (
-            <span id={descriptionId} aria-hidden="true" className="text-sm text-muted">
+            <span
+              id={descriptionId}
+              aria-hidden="true"
+              className="text-sm text-muted [overflow-wrap:anywhere]"
+            >
               {description}
             </span>
           )}

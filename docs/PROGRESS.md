@@ -1612,3 +1612,8 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **What changed:** See TASKS UX-018. Headings: the screen name remains the level-1 heading (78 tests and assistive tech rely on it); the concept headline is display text marked `data-page-headline`. `e2e/page-heading.spec.ts` now waits for the root text scale instead of a fixed `h1` size and checks both the `h1` and the headline for overflow.
 - **How it was verified:** lint, typecheck, Knip, format check, Vitest 944/944. Screenshots at 320, 375 and 1440 px with seeded to-dos, schedule blocks and a note compared against the concept. Playwright `phone-375` in this sandbox: 125/128; `focus-import` and `pwa` failures also occur on the unchanged base here, and `focus-timer` "six widths" is intermittent on the base here as well (it failed more often with the ring). CI is authoritative.
 - **Not changed:** behavior, data, API, the Add sheet structure, Profile/Preferences list layout, and the Landing page (later passes if wanted).
+
+### 2026-11-26 UX-019: Concept alignment for the Add sheet, Profile and Landing
+
+- **What changed:** See TASKS UX-019. UX-018 marked done (PR #99 at `288d1e6`).
+- **How it was verified:** lint, typecheck, Knip, format check, Vitest 944/944; 375 px screenshots of the Add sheet, Profile and Landing compared with the concept. A 200% text check at 768 px found the new streak tile and settings rows too rigid; both now wrap. Playwright `phone-375`: 125/128 in this sandbox; `focus-import` fails on the unchanged base here, and `legal` and `pwa` pass when run alone.
