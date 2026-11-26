@@ -16,6 +16,8 @@ export interface StreakInput {
 
 export interface Streak {
   count: number
+  /** Longest consecutive streak of counted days (computed locally for guests, from GET /streak for accounts). */
+  longest?: number
   /** True once something was checked off today. */
   todayCounted: boolean
 }

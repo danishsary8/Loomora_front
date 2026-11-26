@@ -29,9 +29,10 @@ describe('routes', () => {
     expect(await screen.findByRole('button', { name: 'Start' })).toBeVisible()
   })
 
-  it('/insights shows "Coming soon"', async () => {
+  it('/insights shows the Insights dashboard', async () => {
     renderRoute('/insights')
-    expect(await screen.findByText('Coming soon')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Insights' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Date range' })).toBeInTheDocument()
   })
 
   it('landing goes to Today with "Try it now" (guest, no signup)', async () => {

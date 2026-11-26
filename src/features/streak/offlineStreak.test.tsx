@@ -185,7 +185,9 @@ it('keeps account streak dependent on the API and never falls back to guest Dexi
     expect(apiCalls).toBe(0)
 
     goOnline()
-    await waitFor(() => expect(result.current.data).toEqual({ count: 7, todayCounted: false }))
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ count: 7, longest: 7, todayCounted: false }),
+    )
     expect(apiCalls).toBe(1)
   } finally {
     db.close()
@@ -210,7 +212,9 @@ it('isolates streak across offline account transitions and cross-tab sign-out', 
     )
 
     const { result } = renderHook(() => useStreak(today), { wrapper })
-    await waitFor(() => expect(result.current.data).toEqual({ count: 9, todayCounted: true }))
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ count: 9, longest: 9, todayCounted: true }),
+    )
 
     // Cross-tab sign-out while offline immediately clears Account A streak and loads guest streak.
     act(() => {
@@ -225,7 +229,9 @@ it('isolates streak across offline account transitions and cross-tab sign-out', 
     await waitFor(() => expect(result.current.isPaused).toBe(true))
 
     goOnline()
-    await waitFor(() => expect(result.current.data).toEqual({ count: 3, todayCounted: true }))
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ count: 3, longest: 3, todayCounted: true }),
+    )
   } finally {
     db.close()
   }
@@ -258,13 +264,15 @@ it('does not leak an in-flight guest streak read into a subsequent account sessi
       onlineManager.setOnline(true)
       useSession.getState().signIn(accountA)
     })
-    await waitFor(() => expect(result.current.data).toEqual({ count: 4, todayCounted: false }))
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ count: 4, longest: 4, todayCounted: false }),
+    )
 
     releaseRead()
     await act(async () => {
       await gate
     })
-    expect(result.current.data).toEqual({ count: 4, todayCounted: false })
+    expect(result.current.data).toEqual({ count: 4, longest: 4, todayCounted: false })
   } finally {
     db.close()
   }

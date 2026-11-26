@@ -1120,7 +1120,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### F-R4-02: Notes (Standalone & Schedule-Attached)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #87](https://github.com/danishsary8/Loomora_front/pull/87) at `a76d95d`.
 - **Owner:** antigravity
 - **Source:** Merged backend B-048 (`/notes`, `/notes/{note}`, `/notes/{note}/restore`, `POST /import` `notes`, backend PR #52) and `DEC-003` Elemental Edition. Task ID verified unused before registration.
 - **Scope:** Sync merged backend `docs/openapi.yaml`, implement `notesApi`, Dexie v11 `notes` store, `GuestNoteRepository` & `ServerNoteRepository` (B-048 validation, 7-day soft-delete/restore with 410 expiry, 409 conflict, occurrence-date clearing), guest-to-account migration in `saveGuestPlan` (500-note chunks alongside F-R3-15 Focus sessions, stale deleted schedule-block link clearing, idempotent retry), Elemental `/notes` page (`NotesPage`, `NoteSheet`, `TopBar` shortcut, search/filter, deleted parent badge, confirmation Sheet + `ActionToast` Undo, loading/empty/error/retry/offline states).
@@ -1129,3 +1130,15 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `saveGuestPlan` migrates active guest notes in 500-note batches after/alongside schedule items and alongside F-R3-15 Focus sessions, clears stale links to deleted guest blocks, excludes soft-deleted notes, and retains local data on failure.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and full Playwright `phone-375` pass.
 - **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/api/types.ts`, `src/lib/api/index.ts`, `src/lib/storage/db.ts`, `src/lib/storage/NoteRepository.ts`, `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/ServerNoteRepository.ts`, `src/lib/storage/noteContext.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/notes.test.ts`, `src/app/AppProviders.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/TopBar.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `e2e/focus-recovery.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### F-R4-01: Insights, Analytics, Weekly Recap & Plan vs Reality
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Merged backend B-047 (`GET /stats/summary`, backend PR #51) and `DEC-003` Elemental Edition. Task ID verified unused before registration.
+- **Scope:** Sync merged backend `docs/openapi.yaml` and shared `stats-summary-cases.json` fixture, implement guest/account parity for B-047 analytics (`useStatsSummary` + `computeGuestStatsSummary` + `GuestFocusSessionRepository.listForRange`), build the Elemental `/insights` dashboard with range selector (Week with Previous/Next navigation respecting `week_starts_on`, 7d, 30d, 90d within the 92-day cap), Overview & Streak summary (using `GET /streak` without fabricating historical streak timelines), Weekly Recap (partial/empty weeks), Plan vs Reality (to-dos, schedule, linked vs unplanned focus, countdown vs stopwatch), Daily Breakdown, and loading/empty/error/retry/offline states. Remove unused `ComingSoon`.
+- **Done when:**
+  - [x] `computeGuestStatsSummary` matches the shared backend `stats-summary-cases.json` fixture identically, enforces the 92-day limit, excludes deleted records, and applies timezone rules for `done_at`.
+  - [x] `/insights` renders Overview, Weekly Recap, Plan vs Reality, and Daily Breakdown in Elemental Edition with full i18next localization, guest/account parity, and loading/empty/error/retry/offline states.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and Playwright `phone-375` (including `e2e/insights.spec.ts`, axe, 320–1440 px, and 200% text) pass.
+- **Files:** `docs/openapi.yaml`, `src/features/insights/fixtures/stats-summary-cases.json`, `src/features/insights/computeStatsSummary.ts`, `src/features/insights/computeStatsSummary.test.ts`, `src/features/insights/useStatsSummary.ts`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/lib/api/types.ts`, `src/lib/api/account.ts`, `src/lib/api/index.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/ServerStreakRepository.ts`, `src/features/streak/streak.ts`, `src/components/page/index.ts`, `src/app/routes.test.tsx`, `src/i18n/en.json`, `e2e/insights.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`

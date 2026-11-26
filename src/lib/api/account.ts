@@ -1,11 +1,16 @@
 import type { ApiClient } from './client'
-import type { ApiDailyIntention, ApiStreak, ImportBody, ImportResult } from './types'
+import type { ApiDailyIntention, ApiStreak, ImportBody, ImportResult, StatsSummary } from './types'
 
-/** The streak, guest import and feedback endpoints of docs/openapi.yaml. */
+/** The streak, stats summary, guest import and feedback endpoints of docs/openapi.yaml. */
 export function createAccountDataApi({ request }: ApiClient) {
   return {
     streak: (date: string) =>
       request<{ data: ApiStreak }>('GET', '/streak', { query: { date } }).then((r) => r.data),
+    getStatsSummary: (from: string, to: string, signal?: AbortSignal) =>
+      request<{ data: StatsSummary }>('GET', '/stats/summary', {
+        query: { from, to },
+        signal,
+      }).then((r) => r.data),
     getDailyIntention: (date: string, signal?: AbortSignal) =>
       request<{ data: ApiDailyIntention }>('GET', `/days/${date}/intention`, { signal }).then(
         (r) => r.data,

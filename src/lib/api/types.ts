@@ -160,6 +160,33 @@ export interface ApiDailyIntention {
   text: string | null
 }
 
+export interface StatsMetrics {
+  focus_ms: number
+  break_ms: number
+  sessions: number
+  todos_done: number
+  todos_due: number
+  planned_block_minutes: number
+  blocks_checked: number
+  focus_ms_linked: number
+  focus_ms_unplanned: number
+}
+
+export interface StatsDayRow extends StatsMetrics {
+  local_date: string
+}
+
+export interface StatsByMode {
+  countdown: number
+  stopwatch: number
+}
+
+export interface StatsSummary {
+  days: StatsDayRow[]
+  totals: StatsMetrics
+  by_mode: StatsByMode
+}
+
 export interface ImportBody {
   todos: Array<{
     id: string
