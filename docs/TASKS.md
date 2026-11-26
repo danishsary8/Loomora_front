@@ -1118,6 +1118,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and full `phone-375` Playwright pass.
 - **Files:** `docs/openapi.yaml`, `src/lib/api/types.ts`, `src/lib/storage/GuestFocusSessionRepository.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/app/AppProviders.tsx`, `src/test/importBackend.ts`, `src/lib/storage/focusImport.test.ts`, `src/lib/storage/saveGuestPlan.test.ts`, `src/lib/storage/guestImport.test.ts`, `src/lib/storage/dailyIntentionStorage.test.ts`, `src/features/auth/savePlan.test.tsx`, `e2e/focus-import.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
 
+### F-R4-02: Notes (Standalone & Schedule-Attached)
+
+- **Status:** done
+- **Merge:** [PR #87](https://github.com/danishsary8/Loomora_front/pull/87) at `a76d95d`.
+- **Owner:** antigravity
+- **Source:** Merged backend B-048 (`/notes`, `/notes/{note}`, `/notes/{note}/restore`, `POST /import` `notes`, backend PR #52) and `DEC-003` Elemental Edition. Task ID verified unused before registration.
+- **Scope:** Sync merged backend `docs/openapi.yaml`, implement `notesApi`, Dexie v11 `notes` store, `GuestNoteRepository` & `ServerNoteRepository` (B-048 validation, 7-day soft-delete/restore with 410 expiry, 409 conflict, occurrence-date clearing), guest-to-account migration in `saveGuestPlan` (500-note chunks alongside F-R3-15 Focus sessions, stale deleted schedule-block link clearing, idempotent retry), Elemental `/notes` page (`NotesPage`, `NoteSheet`, `TopBar` shortcut, search/filter, deleted parent badge, confirmation Sheet + `ActionToast` Undo, loading/empty/error/retry/offline states).
+- **Done when:**
+  - [x] Guest and account repositories share identical validation, standalone and schedule-block (+ optional occurrence date) attachment, soft-delete, 7-day restore (`410`), and deleted-parent resilience.
+  - [x] `saveGuestPlan` migrates active guest notes in 500-note batches after/alongside schedule items and alongside F-R3-15 Focus sessions, clears stale links to deleted guest blocks, excludes soft-deleted notes, and retains local data on failure.
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, Vitest, and full Playwright `phone-375` pass.
+- **Files:** `docs/openapi.yaml`, `src/features/notes/*`, `src/lib/api/notes.ts`, `src/lib/api/types.ts`, `src/lib/api/index.ts`, `src/lib/storage/db.ts`, `src/lib/storage/NoteRepository.ts`, `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/ServerNoteRepository.ts`, `src/lib/storage/noteContext.ts`, `src/lib/storage/saveGuestPlan.ts`, `src/lib/storage/notes.test.ts`, `src/app/AppProviders.tsx`, `src/app/pages.ts`, `src/app/routes.tsx`, `src/app/layout/TopBar.tsx`, `src/components/ui/icons.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `e2e/focus-recovery.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
 ### F-R4-01: Insights, Analytics, Weekly Recap & Plan vs Reality
 
 - **Status:** review

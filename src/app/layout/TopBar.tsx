@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import { pressSmAny } from '@/components/ui'
-import { ProfileIcon } from '@/components/ui/icons'
+import { NotesIcon, ProfileIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
-/** App name (phones only; the sidebar shows it on wide screens) and the profile avatar. */
+/** App name (phones only; the sidebar shows it on wide screens), notes shortcut, and profile avatar. */
 export function TopBar() {
   const { t } = useTranslation()
   return (
@@ -12,21 +12,38 @@ export function TopBar() {
       <p className="min-w-0 font-heading text-[min(1.5rem,10vw)] font-bold leading-none text-ink [overflow-wrap:anywhere] md:hidden">
         {t('common.appName')}
       </p>
-      <NavLink
-        to="/profile"
-        aria-label={t('nav.profile')}
-        className={({ isActive }) =>
-          cn(
-            'ml-auto grid size-11 shrink-0 place-items-center rounded-full border-control',
-            isActive
-              ? 'border-primary bg-primary-soft text-primary'
-              : 'border-border-control bg-paper text-ink hover:bg-subtle',
-            pressSmAny,
-          )
-        }
-      >
-        <ProfileIcon className="size-5" />
-      </NavLink>
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <NavLink
+          to="/notes"
+          aria-label={t('nav.notes')}
+          className={({ isActive }) =>
+            cn(
+              'grid size-11 shrink-0 place-items-center rounded-full border-control',
+              isActive
+                ? 'border-primary bg-primary-soft text-primary'
+                : 'border-border-control bg-paper text-ink hover:bg-subtle',
+              pressSmAny,
+            )
+          }
+        >
+          <NotesIcon className="size-5" />
+        </NavLink>
+        <NavLink
+          to="/profile"
+          aria-label={t('nav.profile')}
+          className={({ isActive }) =>
+            cn(
+              'grid size-11 shrink-0 place-items-center rounded-full border-control',
+              isActive
+                ? 'border-primary bg-primary-soft text-primary'
+                : 'border-border-control bg-paper text-ink hover:bg-subtle',
+              pressSmAny,
+            )
+          }
+        >
+          <ProfileIcon className="size-5" />
+        </NavLink>
+      </div>
     </header>
   )
 }

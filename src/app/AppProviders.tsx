@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   accountDataApi,
   focusSessionsApi,
+  notesApi,
   scheduleApi,
   todosApi,
   useServiceStatus,
@@ -25,8 +26,11 @@ import {
 } from '@/lib/storage'
 import { GuestDailyIntentionRepository } from '@/lib/storage/GuestDailyIntentionRepository'
 import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
+import { GuestNoteRepository } from '@/lib/storage/GuestNoteRepository'
 import { ServerFocusSessionRepository } from '@/lib/storage/ServerFocusSessionRepository'
+import { ServerNoteRepository } from '@/lib/storage/ServerNoteRepository'
 import { FocusSessionRepositoryContext } from '@/lib/storage/focusSessionContext'
+import { NoteRepositoryContext } from '@/lib/storage/noteContext'
 import type { GuestDatabase } from '@/lib/storage/db'
 import { GuestPreferenceDatabaseContext } from '@/lib/storage/guestPreferences'
 import { createQueryClient } from './queryClient'
@@ -53,17 +57,20 @@ export function AppProviders({
 }: AppProvidersProps) {
   const [client] = useState(() => queryClient ?? createQueryClient())
   const [guestFocus] = useState(() => new GuestFocusSessionRepository({ db: guestDatabase }))
+  const [guestNotes] = useState(() => new GuestNoteRepository({ db: guestDatabase }))
   const [guest] = useState<GuestStorage>(() => ({
     todos: todoRepository ?? new GuestTodoRepository(),
     schedule: scheduleRepository ?? new GuestScheduleRepository(),
     intentions: new GuestDailyIntentionRepository(guestDatabase),
     focusSessions: guestFocus,
+    notes: guestNotes,
   }))
   const [guestStreak] = useState(() => new GuestStreakRepository(guest.todos, guest.schedule))
   const [server] = useState(() => ({
     todos: new ServerTodoRepository(todosApi),
     schedule: new ServerScheduleRepository(scheduleApi),
     streak: new ServerStreakRepository(accountDataApi),
+    notes: new ServerNoteRepository(notesApi),
   }))
 
   const generation = useSession((s) => s.generation)
@@ -89,6 +96,7 @@ export function AppProviders({
     : { todos: guest.todos, schedule: guest.schedule, streak: guestStreak }
 
   const focusRepository = signedIn ? accountFocus : guestFocus
+  const noteRepository = signedIn ? server.notes : guestNotes
 
   return (
     <LazyMotion features={loadMotionFeatures} strict>
@@ -97,17 +105,19 @@ export function AppProviders({
           <TodoRepositoryContext.Provider value={active.todos}>
             <ScheduleRepositoryContext.Provider value={active.schedule}>
               <StreakRepositoryContext.Provider value={active.streak}>
-                <GuestPreferenceDatabaseContext.Provider value={guestDatabase}>
-                  <FocusSessionRepositoryContext.Provider value={focusRepository}>
-                    <FocusRuntimeProvider
-                      database={guestDatabase}
-                      repository={focusRepository}
-                      generation={generation}
-                    >
-                      {children}
-                    </FocusRuntimeProvider>
-                  </FocusSessionRepositoryContext.Provider>
-                </GuestPreferenceDatabaseContext.Provider>
+                <NoteRepositoryContext.Provider value={noteRepository}>
+                  <GuestPreferenceDatabaseContext.Provider value={guestDatabase}>
+                    <FocusSessionRepositoryContext.Provider value={focusRepository}>
+                      <FocusRuntimeProvider
+                        database={guestDatabase}
+                        repository={focusRepository}
+                        generation={generation}
+                      >
+                        {children}
+                      </FocusRuntimeProvider>
+                    </FocusSessionRepositoryContext.Provider>
+                  </GuestPreferenceDatabaseContext.Provider>
+                </NoteRepositoryContext.Provider>
               </StreakRepositoryContext.Provider>
             </ScheduleRepositoryContext.Provider>
           </TodoRepositoryContext.Provider>

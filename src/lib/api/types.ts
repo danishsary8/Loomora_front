@@ -1,4 +1,5 @@
 import type { FocusSessionInput } from '@/features/focus/types'
+import type { NoteImportInput } from '@/features/notes/types'
 import type { Priority, RepeatRule } from '@/features/todos/types'
 
 import type { TimePreferences } from '@/lib/time/time'
@@ -214,6 +215,7 @@ export interface ImportBody {
   }>
   checkins: Array<{ id: string; schedule_item_id: string; date: string; done_at: string }>
   focus_sessions: FocusSessionInput[]
+  notes?: NoteImportInput[]
   daily_intentions: DailyIntentionRecord[]
 }
 
@@ -228,5 +230,6 @@ export interface ImportResult {
   exceptions: ImportCount
   checkins: ImportCount
   focus_sessions?: ImportCount
+  notes?: ImportCount
   daily_intentions: ImportCount
 }
