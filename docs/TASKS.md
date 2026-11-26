@@ -1269,12 +1269,13 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-019: Elemental concept v3 alignment (Add sheet, Profile, Landing)
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #100](https://github.com/danishsary8/Loomora_front/pull/100) at `0090c18`.
 - **Owner:** claude
 - **Source:** Follow-up to UX-018 with the same concept assets.
 - **Scope:** Visual only. Category chips are always tinted with their icon (selected adds a primary ring and check); the Add to-do sheet shows "Capture the thought. Details can come later." when creating; Profile streak becomes a warm tile with a flame icon (the duplicate badge is removed), and settings rows get leading icons (feedback, sign out, delete); the Landing wordmark gets the accent full stop.
 - **Done when:**
   - [x] lint, typecheck, Knip, format check, Vitest (944/944) pass.
   - [x] No overflow on Profile at 768 px with 200% text.
-  - [ ] CI end-to-end (375 px) passes on the PR.
+  - [x] CI end-to-end (375 px) passes on the PR.
 - **Files:** `src/components/ui/{Chip,icons}.tsx`, `src/features/today/AddTodoSheet.tsx`, `src/features/profile/{ProfilePage,SettingsList,StreakCard}.tsx`, `src/features/landing/LandingPage.tsx`, `src/i18n/en.json`
