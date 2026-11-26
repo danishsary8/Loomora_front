@@ -1565,3 +1565,15 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **Regression coverage:** October 20, 2025 completion on November 26, 2026, days 400 and 401, local midnight at the cutoff, today with all 400 preceding days counted, deleted to-dos, and orphaned check-ins. Existing streak, Insights, and server longest-streak tests remain in the verification suite.
 - **Handoff:** Codex stopped at its usage limit during the full phone-375 run. Claude reviewed the change against backend B-051 `StreakService` (`calculate` and `history` both use an inclusive `WINDOW_DAYS = 400` with today unjudged) and completed verification without code changes.
 - **Local checks:** Lint, typecheck, Knip, format check, diff whitespace check, build, OpenAPI lint (four existing warnings), full Vitest (915 passed), and full Playwright phone-375 (128 passed) all passed.
+
+### 2026-11-26 QA-029 / QA-009-PREP status synchronization (docs-only)
+
+- **Branch / Worktree:** `docs/qa029-staging-status-sync` in `loomora-front-qa029-status-sync`, based on `origin/v2-rebuild` (`257938f`). No application code, configuration, OpenAPI, or other agents' worktrees were modified.
+- **Verified merges:**
+  - `QA-009-PREP`: PR #92 merged at `756f584` (`2026-11-26T05:52:37Z`).
+  - `QA-029`: PR #93 merged at `257938f` (`2026-11-26T06:15:56Z`).
+- **What changed:**
+  - `docs/TASKS.md`: Marked `QA-009-PREP` `done` (PR #92, `756f584`) and `QA-029` `done` (PR #93, `257938f`); kept `QA-009` explicitly **blocked / not executed**.
+  - `docs/QA-009-staging-matrix.md`: Updated Section 1A verified automated baseline to `257938f` (915 Vitest / 128 Playwright `phone-375`), moved `QA-029` out of Section 1D active code blockers while keeping backend revision-aware Notes reconciliation and all owner gates (`QA-022` disposable pair, `QA-016`, `QA-004`, `Q23`, `Q25`) open, and updated `STG-06`/`STG-07` prerequisites while keeping every staging scenario `NOT RUN — BLOCKED`.
+  - Preserved all prior historical `docs/PROGRESS.md` entries unchanged.
+- **Verified:** Strictly docs-only diff (3 files under `docs/`), internal Markdown links verified, `git diff --check` passed (0 errors), and zero staging tests marked passed.

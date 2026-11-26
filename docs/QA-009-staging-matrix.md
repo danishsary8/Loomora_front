@@ -18,10 +18,10 @@ This runbook extends [QA-022 paired staging evidence and runbook](QA-022-staging
 
 | Area | Baseline Commit / PR | Automated Coverage Verified |
 |---|---|---|
-| **Frontend `v2-rebuild` HEAD** | `2f5d56b` (PR #91 `QA-028` merged) | `eslint`, `tsc -b`, `knip`, `prettier --check`, production Vite/PWA build, `npm audit --omit=dev` (0 prod advisories), Redocly OpenAPI lint (valid, 4 baseline warnings) |
-| **R1/R2 Today, Week, Auth, Legal, PWA** | `QA-013`–`QA-025`, `UX-002`–`UX-016` | Full Vitest suite (81 files), 128 Playwright `phone-375` E2E tests, cross-browser `QA-021`, `QA-019` prompt-based SW update (`Q21`), `QA-015` CSP/headers simulator |
+| **Frontend `v2-rebuild` HEAD** | `257938f` (PR #92 `QA-009-PREP` & PR #93 `QA-029` merged) | `eslint`, `tsc -b`, `knip`, `prettier --check`, production Vite/PWA build, `npm audit --omit=dev` (0 prod advisories), Redocly OpenAPI lint (valid, 4 baseline warnings) |
+| **R1/R2 Today, Week, Auth, Legal, PWA** | `QA-013`–`QA-025`, `UX-002`–`UX-016` | Full Vitest suite (915 passed), 128 Playwright `phone-375` E2E tests, cross-browser `QA-021`, `QA-019` prompt-based SW update (`Q21`), `QA-015` CSP/headers simulator |
 | **R3 Focus & History Migration** | `F-R3-01`–`F-R3-15` (PR #84, #85) | Countdown/stopwatch/laps/alarm/recovery, soft-delete + 7-day Undo, 499/500/501 Focus import chunks + 409 rollback |
-| **R4 Insights, Historical Streaks & Notes** | `F-R4-01` (#86), `F-R4-02` (#87), `F-R4-03` (#88), `UX-017` (#89) | Shared backend `stats-summary-cases.json` parity, 400-day historical streak reconstruction, Notes CRUD + 7-day restore + >500-note pagination, Elemental Edition 320–1440 px & 200% text |
+| **R4 Insights, Historical Streaks & Notes** | `F-R4-01` (#86), `F-R4-02` (#87), `F-R4-03` (#88), `UX-017` (#89), `QA-029` (#93) | Shared backend `stats-summary-cases.json` parity, unified 400-day guest current & historical streak evaluator (`QA-029`), Notes CRUD + 7-day restore + >500-note pagination, Elemental Edition 320–1440 px & 200% text |
 | **Data Integrity & Import Containment** | `QA-027` (#90), `QA-028` (#91) | Fail-closed import acknowledgment validation & skipped-Note verification; atomic single-transaction Dexie CRUD + two-instance concurrency tests |
 
 *Automated checks run against mocked APIs (MSW / Playwright route stubs) and local preview builds. They do **not** satisfy hosted staging verification (`QA-009`).*
@@ -44,8 +44,9 @@ All 9 staging matrix scenarios (`STG-01` through `STG-09`) in [Section 3](#3-rep
 
 | Blocker | Owner / Scope | Affected Matrix Cases |
 |---|---|---|
-| **`QA-029` (Streak Consistency)** | Codex (in progress on frontend; do not alter streak code here) | `STG-06` (Insights & Historical Streaks), `STG-07` (Midnight/Time-Zone Rollover) |
 | **Revision-Aware Notes Reconciliation** | Backend-first contract required (recorded in `QA-027`; aggregate skip counts cannot identify a conflicting Note row or version; do not invent an API contract) | `STG-03` (Divergent Note conflict retry reconciliation beyond fail-closed local retention) |
+
+*Resolved frontend code blocker:* **`QA-029` (Guest Current Streak Consistency)** merged into `v2-rebuild` via PR #93 (`257938f`). Staging execution for `STG-06` and `STG-07` remains **`NOT RUN — BLOCKED`** on owner staging approval (`QA-022` / `QA-009`).
 
 ---
 
@@ -128,8 +129,8 @@ All 9 staging matrix scenarios (`STG-01` through `STG-09`) in [Section 3](#3-rep
 - **Pass/Fail criteria:** PASS iff timer recovery, history delete/undo, and combined migration succeed with zero dropped sessions or 409/500 errors; FAIL otherwise.
 
 ### `STG-06` — Insights, Historical Streaks, Weekly Recap & Plan vs Reality
-- **Status:** `NOT RUN — BLOCKED` (**also blocked on Codex `QA-029` streak consistency**)
-- **Prerequisites:** Approved staging pair with `QA-029` merged; Guest & Account `<runId>-a` seeded with identical multi-day to-dos, schedule check-ins, and linked/unplanned Focus sessions.
+- **Status:** `NOT RUN — BLOCKED` (awaiting owner staging approval; `QA-029` code fix resolved in PR #93 at `257938f`)
+- **Prerequisites:** Approved staging pair deployed from `v2-rebuild` `257938f`+ (includes `QA-029`); Guest & Account `<runId>-a` seeded with identical multi-day to-dos, schedule check-ins, and linked/unplanned Focus sessions.
 - **Synthetic test data:** 3 active days within the current week (1 to-do + 1 block on one day to verify singular pluralization), 1 empty prior week, and activity spanning 30 days.
 - **Execution steps:**
   1. Open `/insights` at 375 px and 1440 px in Guest and Account modes.
@@ -140,8 +141,8 @@ All 9 staging matrix scenarios (`STG-01` through `STG-09`) in [Section 3](#3-rep
 - **Pass/Fail criteria:** PASS iff Guest and Account values match 100% across all presets and `QA-029` streak invariants hold; FAIL on any metric divergence or layout/pluralization regression.
 
 ### `STG-07` — Offline, Reconnect, Cross-Tab Session Switching & Midnight / Time-Zone Boundaries
-- **Status:** `NOT RUN — BLOCKED` (midnight/streak portion also tracks `QA-029`)
-- **Prerequisites:** Approved staging pair; two browser tabs; timezone test profiles (`UTC` and `Asia/Phnom_Penh`).
+- **Status:** `NOT RUN — BLOCKED` (awaiting owner staging approval; `QA-029` 400-day guest streak fix resolved in PR #93 at `257938f`)
+- **Prerequisites:** Approved staging pair deployed from `v2-rebuild` `257938f`+ (includes `QA-029`); two browser tabs; timezone test profiles (`UTC` and `Asia/Phnom_Penh`).
 - **Synthetic test data:** Guest local plan + Accounts `<runId>-a` (`Asia/Phnom_Penh`) and `<runId>-b` (`UTC`).
 - **Execution steps:**
   1. As Guest, go offline; reload `/today`, `/week`, `/focus`, `/insights`, and `/notes`; create/edit a to-do and a note; reconnect and verify zero duplication.
@@ -212,4 +213,4 @@ All items below are **`PENDING`** until executed and signed off by the owner.
 - [ ] **Previous Production Backend Deploy ID Recorded:** `PENDING` (Render rollback target)
 - [ ] **Database Backup / PITR Confirmed:** Neon PostgreSQL branch/snapshot or PITR window confirmed before production migration
 - [ ] **Rollback Dry-Run / Procedure Confirmed:** Owner confirms Vercel rollback + Render rollback steps and staging fixture disposal procedure
-- [ ] **Final Owner Go / No-Go Sign-Off:** `PENDING` (requires `QA-009` executed & green, `QA-016`, `QA-004`, `Q23`, `Q25`, and `QA-029` resolved)
+- [ ] **Final Owner Go / No-Go Sign-Off:** `PENDING` (requires `QA-009` executed & green, `QA-016`, `QA-004`, `Q23`, and `Q25` resolved; backend revision-aware Notes reconciliation tracked separately)
