@@ -19,6 +19,7 @@ This repository is the **frontend**: React, TypeScript, Vite and Tailwind CSS, h
 ## Contents
 
 - [Overview](#overview)
+- [UI concept](#ui-concept)
 - [Screenshots](#screenshots)
 - [Live demo](#live-demo)
 - [Tech stack](#tech-stack)
@@ -31,6 +32,7 @@ This repository is the **frontend**: React, TypeScript, Vite and Tailwind CSS, h
 - [PWA and deployment](#pwa-and-deployment)
 - [API integration](#api-integration)
 - [Roadmap](#roadmap)
+- [Future features](#future-features)
 - [Project documentation](#project-documentation)
 - [Author](#author)
 
@@ -40,9 +42,9 @@ Loomora is built around three pillars, released in stages (see [`docs/02-feature
 
 | Pillar | Release | Status in this repo |
 |---|---|---|
-| **Plan** | R1 Today, R2 Repeat, subtasks, reminders | Implemented |
-| **Focus** | R3 Focus | Implemented, with history deletion pending |
-| **Review** | R4 Review | Planned. `/insights` shows a "Coming soon" screen |
+| **Plan** | R1 Today, R2 Repeat, subtasks, reminders | Done |
+| **Focus** | R3 Focus | Done |
+| **Review** | R4 Insights and Notes | Done |
 
 ### Plan (R1 and R2): implemented
 
@@ -66,31 +68,38 @@ Loomora is built around three pillars, released in stages (see [`docs/02-feature
 - The timer keeps running when you change pages and is recovered after a reload. Ending early keeps the recorded time.
 - **Focus history** by date with Countdown and Stopwatch filters, search, and a full-day Focus total.
 - **Timer-end alarm:** three synthesized sounds (Chime, Wood, Bell), a volume setting, and three play modes. Once is the default. Repeat 3× plays three times, and Until I stop repeats until dismissed, up to two minutes. Mute takes precedence, and a Stop alarm control appears while it rings. These settings are saved in this browser for both guests and accounts.
-- History deletion with undo is planned for R3.
+- History filters, search, and delete with undo; guest Focus sessions move to the account on sign-up.
 
-### Review (R4): planned
+### Review (R4)
 
-Analytics (completion trends, Focus time, streak history), notes, a weekly recap and Plan vs Reality. None of this is implemented yet.
+- **Insights:** Focus time, to-dos done, schedule blocks checked and the current streak as tinted tiles, plus a weekly recap, Plan vs Reality, a daily breakdown and the streak history, for this week or the last 7, 30 or 90 days.
+- **Notes:** standalone or attached to a schedule block (optionally a single date). Search, filters (All, Pinned, Standalone, Attached), **pin to the top**, a **color** from the six category pastels, and up to five **tags** with one-tap tag search. Delete with a 7-day undo.
+- **Safe across devices:** note edits carry a revision, so an edit from another device is never silently overwritten; the app offers "Use the latest version" or "Save mine as a new note".
+
+## UI concept
+
+The visual direction is the **Elemental Edition** concept ([DEC-003](docs/DECISIONS.md)): warm ivory, deep forest green, Inter, pastel category colors with icons, and one obvious next action per screen. The iPhone frames are presentation only.
+
+<p align="center">
+  <img src="docs/concept/loomora-concept-v3.webp" alt="Loomora Elemental Edition UI concept: Today, Week, Focus, Insights, New task, Notes, Account and Preferences screens" width="900">
+</p>
 
 ## Screenshots
 
-These screenshots are committed in [`docs/screenshots/`](docs/screenshots/). They show the current Elemental Edition design ([DEC-003](docs/DECISIONS.md)) with sample data.
+The app as built, at 375 px with sample data (UX-018, UX-019, F-R4-06). More screenshots are in [`docs/screenshots/`](docs/screenshots/).
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/landing-375.png" width="220" alt="Landing page at 375 px"><br><sub>Landing</sub></td>
-    <td align="center"><img src="docs/screenshots/today-375.png" width="220" alt="Today screen at 375 px"><br><sub>Today</sub></td>
-    <td align="center"><img src="docs/screenshots/week-375.png" width="220" alt="Week screen at 375 px"><br><sub>Week</sub></td>
-    <td align="center"><img src="docs/screenshots/profile-375.png" width="220" alt="Guest profile at 375 px"><br><sub>Profile (guest)</sub></td>
+    <td align="center"><img src="docs/screenshots/v3-today-375.png" width="200" alt="Today: progress card, intention, Now and Next, to-dos"><br><sub>Today</sub></td>
+    <td align="center"><img src="docs/screenshots/v3-week-375.png" width="200" alt="Week: day strip and category blocks with icons"><br><sub>Week</sub></td>
+    <td align="center"><img src="docs/screenshots/v3-focus-375.png" width="200" alt="Focus: countdown progress ring"><br><sub>Focus</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/v3-insights-375.png" width="200" alt="Insights: tinted KPI tiles and weekly recap"><br><sub>Insights</sub></td>
+    <td align="center"><img src="docs/screenshots/v3-notes-375.png" width="200" alt="Notes: pinned, colored and tagged notes"><br><sub>Notes</sub></td>
+    <td align="center"><img src="docs/screenshots/v3-profile-375.png" width="200" alt="Profile: streak tile and settings"><br><sub>Profile</sub></td>
   </tr>
 </table>
-
-<p align="center">
-  <img src="docs/screenshots/today-1440.png" width="760" alt="Today screen on desktop at 1440 px with the sidebar navigation">
-  <br><sub>Today on desktop (1440 px)</sub>
-</p>
-
-There is no committed screenshot of the Focus screen yet.
 
 ## Live demo
 
@@ -100,7 +109,7 @@ There is no committed screenshot of the Focus screen yet.
 | API health check | https://loomora-api.onrender.com/api/v1/health |
 
 > [!NOTE]
-> The production deployment is **behind `v2-rebuild`**. On 2026-11-25 it still served an older build that uses the earlier cream design and a "Coming soon" Focus page. Promoting the latest `v2-rebuild` is tracked as task QA-016 in [`docs/TASKS.md`](docs/TASKS.md). To see the current app, run it locally (see [Getting started](#getting-started)).
+> Production serves `v2-rebuild`. Automatic Vercel deployments for `v2-rebuild` are turned off in [`vercel.json`](vercel.json) (`git.deploymentEnabled`), so each release is deployed manually from the Vercel dashboard (**Deployments → Create Deployment → `v2-rebuild`**). Remove `"v2-rebuild": false` there to deploy on every merge.
 >
 > The API runs on Render's free tier, so the first request after a quiet period can take a while.
 
@@ -146,6 +155,7 @@ e2e/                  Playwright specs (e2e/staging/ is a separate, approval-gat
 docs/                 product, design and API documentation, task queue and progress log
 public/               PWA icons
 scripts/              icon generation
+docs/concept/         the UI concept image
 legacy/               the previous app, kept for reference only (ignored by lint and Knip)
 ```
 
@@ -156,7 +166,7 @@ Routes are defined in [`src/app/routes.tsx`](src/app/routes.tsx). Pages are lazy
 | Group | Paths |
 |---|---|
 | Public | `/` landing, `/privacy`, `/terms`, `/styleguide` |
-| App shell (bottom nav on phones, sidebar on wide screens) | `/today`, `/week`, `/focus`, `/insights`, `/profile` |
+| App shell (bottom nav on phones, sidebar on wide screens) | `/today`, `/week`, `/focus`, `/insights`, `/notes`, `/profile` |
 | Auth | `/sign-in`, `/sign-up`, `/sign-up/survey` (signed in only), `/forgot-password`, `/reset-password`, `/verify-email`, `/auth/google/callback` |
 | Account deletion | `/auth/google/deletion/callback` |
 | Fallback | `*` not-found page |
@@ -177,7 +187,7 @@ flowchart LR
     Client --> API["Loomora API<br/>/api/v1"]
 ```
 
-- **Repositories:** `TodoRepository`, `ScheduleRepository`, `StreakRepository` and `FocusSessionRepository` each have a guest (Dexie) and a server implementation in [`src/lib/storage/`](src/lib/storage/). [`AppProviders`](src/app/AppProviders.tsx) chooses which one to use from the session state.
+- **Repositories:** `TodoRepository`, `ScheduleRepository`, `StreakRepository`, `FocusSessionRepository` and `NoteRepository` each have a guest (Dexie) and a server implementation in [`src/lib/storage/`](src/lib/storage/). [`AppProviders`](src/app/AppProviders.tsx) chooses which one to use from the session state.
 - **API client:** [`src/lib/api/`](src/lib/api/) builds requests against `VITE_API_URL`. It attaches the Sanctum bearer token and signs the user out after a `401`. It also marks the service as down when the API cannot be reached, which shows a banner.
 - **Shared rules:** Today-list rules, schedule occurrences, Now/Next and the streak are pure functions with unit tests. The client sends its local date and time zone so that "today" is correct for every user.
 
@@ -288,7 +298,7 @@ The suite includes accessibility checks with axe (`e2e/a11y.spec.ts`), security 
 - Vite framework preset, build command `npm run build`, output directory `dist`.
 - SPA rewrite to `/index.html` for every path except `/api`, `/assets`, `sw.js`, the manifest and Workbox files.
 - Security headers on every response: a strict Content Security Policy, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS and `Permissions-Policy`. The Google deletion callback is also `no-store` and `no-referrer`. `sw.js` is always revalidated.
-- `git.deploymentEnabled` turns off automatic Vercel deployments for `v2-rebuild` and for a list of feature branches.
+- `git.deploymentEnabled` turns off automatic Vercel deployments for `v2-rebuild` and for a list of feature branches, so production is deployed manually (see [Live demo](#live-demo)).
 
 ## API integration
 
@@ -304,14 +314,28 @@ The API has no hosted documentation page. Read the OpenAPI file directly or load
 | Stage | Status |
 |---|---|
 | **R1 Today**: to-dos, weekly schedule, Now/Next, Week, guest mode, accounts, streak, PWA | Done |
-| **R2 Repeat, subtasks, reminders**: plus priority, notes, daily intention, time preferences | Done |
-| **Elemental Edition redesign** (DEC-003) | Main screens (Today, Week, Focus, Profile, Landing, Auth) updated; refinement continues |
-| **R3 Focus**: timer, countdown, stopwatch, history with filters and search, alarm sound and play mode, presets, full-screen view | History deletion with undo is still planned |
-| **Release and production verification** (QA-016 and related QA tasks) | Open: promote the latest `v2-rebuild` to production |
-| **R4 Review**: analytics, notes, weekly recap, Plan vs Reality | Planned |
-| **After R4**: Khmer language, push notifications, quick-add by typing, data export | Later |
+| **R2 Repeat, subtasks, reminders**: plus priority, notes on to-dos, daily intention, time preferences | Done |
+| **R3 Focus**: countdown cycles, stopwatch with laps, history with filters, search and delete, alarm settings, full-screen view | Done |
+| **R4 Review**: Insights, weekly recap, Plan vs Reality, streak history, Notes with search, pin, color and tags | Done |
+| **Elemental concept v3** (UX-018, UX-019) | Done |
+| **Release**: production deploy, legal details (QA-004), staging test pass (QA-009), open questions Q23 and Q25 | In progress, owner actions |
 
 The task queue is [`docs/TASKS.md`](docs/TASKS.md), and each session's notes are in [`docs/PROGRESS.md`](docs/PROGRESS.md).
+
+## Future features
+
+Push notifications, the Today insight sentence, achievements, avatars and a custom alarm sound are marked **Later** in [`docs/02-feature-list.md`](docs/02-feature-list.md); Khmer is planned in the project rules, and quick add and data export are earlier roadmap ideas. None is started, and each needs owner approval before work begins.
+
+| Feature | What it adds |
+|---|---|
+| **Khmer language** | A second UI language. All text already goes through i18next, so this is translation plus Khmer font pairing. |
+| **Push notifications** | Reminders that arrive when the app is closed (today's reminders are in-app only). |
+| **Today insight sentence** | One plain sentence on Today about how the week is going, from the Insights data. |
+| **Achievements** | Server-side milestones, such as streak lengths and Focus hours. |
+| **Avatar** | A profile picture instead of the initial in the top bar. |
+| **Custom alarm sound** | Your own sound for the Focus timer alarm. |
+| **Quick add by typing** | Type "Gym tomorrow 6pm" to create a to-do or schedule item. |
+| **Data export** | Download your plan, Focus history and notes. |
 
 ## Project documentation
 
@@ -328,6 +352,7 @@ The task queue is [`docs/TASKS.md`](docs/TASKS.md), and each session's notes are
 | [API design](docs/09-api-design.md) | API design notes |
 | [Tech and structure](docs/10-tech-and-structure.md) | Stack and architecture decisions |
 | [Decisions log](docs/DECISIONS.md) | Design and runtime decisions (DEC-001 to DEC-004) |
+| [UI concept](docs/concept/loomora-concept-v3.webp) | Elemental Edition concept image (v3) |
 | [Security findings](docs/SECURITY-FINDINGS.md) | Security review notes |
 
 Contributor rules are in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md).
