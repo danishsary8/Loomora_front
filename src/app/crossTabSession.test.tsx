@@ -91,7 +91,7 @@ describe('Cross-tab session synchronization', () => {
         await screen.findByText('Account A secret todo', undefined, { timeout: 4000 }),
       ).toBeInTheDocument()
       expect(await screen.findByDisplayValue('Account A intention')).toBeInTheDocument()
-      expect(await screen.findByText('7')).toBeInTheDocument()
+      expect(await screen.findByText('7-day streak')).toBeInTheDocument()
 
       act(() => {
         dispatchCrossTabStorage(null)

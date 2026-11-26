@@ -1,5 +1,5 @@
 export { Button } from './Button'
-export { buttonClasses } from './buttonStyles'
+export { buttonClasses, iconActionClass } from './buttonStyles'
 export { Card } from './Card'
 export { Checkbox } from './Checkbox'
 export { Chip } from './Chip'

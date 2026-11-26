@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
-import { FloatingAddButton, ProgressRing } from '@/components/ui'
+import { FloatingAddButton } from '@/components/ui'
 import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, useScheduleDay } from '@/features/schedule'
@@ -19,6 +19,7 @@ import type { TodoSheetTarget } from './AddTodoSheet'
 import { DailyIntention } from './DailyIntention'
 import { NowNextStrip } from './NowNextStrip'
 import { TodayEmpty } from './TodayEmpty'
+import { TodayProgressCard } from './TodayProgressCard'
 import { TodoRow } from './TodoRow'
 import { useNow } from './useNow'
 
@@ -77,15 +78,12 @@ export function TodayPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <PageHeading>{t('pages.today.title')}</PageHeading>
-          <p className="text-sm font-medium text-muted">
-            {formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-        </div>
-        {streak && <StreakBadge {...streak} />}
-      </header>
+      <AppPageHeader
+        title={t('pages.today.title')}
+        headline={t('pages.today.headline')}
+        subtitle={formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
+        aside={streak && <StreakBadge {...streak} />}
+      />
 
       <DailyIntention
         date={intentionDate}
@@ -109,16 +107,10 @@ export function TodayPage() {
         />
       ) : (
         <>
-          <div className="flex justify-center py-1">
-            <ProgressRing
-              value={doneCount}
-              max={list.length}
-              label={t('progress.doneOfTotal', { done: doneCount, total: list.length })}
-            />
-          </div>
+          <TodayProgressCard done={doneCount} total={list.length} />
           {/* pb-20: room to scroll the last row clear of the floating + */}
           <section aria-labelledby="todo-list-heading" className="flex flex-col gap-3 pb-20">
-            <h2 id="todo-list-heading" className="sr-only">
+            <h2 id="todo-list-heading" className="text-base font-bold text-ink">
               {t('today.list')}
             </h2>
             <ul className="flex flex-col gap-3">

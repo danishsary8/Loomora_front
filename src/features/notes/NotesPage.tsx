@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
-import { ActionToast, Button, Card, Input, SegmentedControl, Sheet } from '@/components/ui'
+import {
+  ActionToast,
+  Button,
+  Card,
+  iconActionClass,
+  Input,
+  SegmentedControl,
+  Sheet,
+} from '@/components/ui'
 import { PencilIcon, TrashIcon } from '@/components/ui/icons'
 import { useScheduleItems } from '@/features/schedule/useSchedule'
 import { ApiError, errorMessageKey, useSession } from '@/lib/api'
@@ -15,9 +23,6 @@ import { useCreateNote, useDeleteNote, useNotes, useRestoreNote, useUpdateNote }
 type NoteFilter = 'all' | 'standalone' | 'attached'
 
 const UNDO_TOAST_MS = 6000
-
-const cardActionClass =
-  'grid size-11 shrink-0 place-items-center rounded-md border-control border-border-control/70 bg-paper text-ink transition-[background-color,transform] duration-fast ease-elemental hover:bg-subtle active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100'
 
 function formatOccurrenceDate(localDate: string, locale: string): string {
   const parts = localDate.split('-').map(Number)
@@ -148,10 +153,12 @@ function NotesPageSession() {
 
   return (
     <div className="flex flex-col gap-5 pb-4">
-      <header className="flex flex-col gap-0.5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <PageHeading>{t('pages.notes.title')}</PageHeading>
-          {showHeaderAdd && (
+      <AppPageHeader
+        title={t('pages.notes.title')}
+        headline={t('pages.notes.headline')}
+        subtitle={t('notes.subtitle')}
+        aside={
+          showHeaderAdd && (
             <Button
               variant="primary"
               size="md"
@@ -162,10 +169,9 @@ function NotesPageSession() {
             >
               {t('notes.add')}
             </Button>
-          )}
-        </div>
-        <p className="text-sm font-medium text-muted">{t('notes.subtitle')}</p>
-      </header>
+          )
+        }
+      />
 
       {isOfflineAccountWithoutData ? (
         <Card className="bg-warning-surface border-warning/30">
@@ -294,7 +300,7 @@ function NotesPageSession() {
                               </time>
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-2">
+                          <div className="-mr-1.5 flex shrink-0 items-center">
                             <button
                               type="button"
                               aria-label={t('notes.editLabel', { title: headingText })}
@@ -302,7 +308,7 @@ function NotesPageSession() {
                                 setEditingNote(note)
                                 setEditorOpen(true)
                               }}
-                              className={cardActionClass}
+                              className={iconActionClass}
                             >
                               <PencilIcon className="size-4" />
                             </button>
@@ -310,7 +316,7 @@ function NotesPageSession() {
                               type="button"
                               aria-label={t('notes.deleteLabel', { title: headingText })}
                               onClick={() => setConfirmDelete(note)}
-                              className={cardActionClass}
+                              className={iconActionClass}
                             >
                               <TrashIcon className="size-4" />
                             </button>

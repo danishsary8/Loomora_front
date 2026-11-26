@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { colors } from '@/styles/tokens'
 import type { FocusRuntime } from './focusRuntime'
 import { readCountdownCycle, type FocusTimerSnapshot, type TimerConfig } from './focusTimerState'
 import { formatCentiseconds, getLap } from './timerMath'
@@ -68,25 +69,29 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
             : t('focus.initialTime', { minutes: String(minutes).padStart(2, '0') })
   const heading = stopwatch ? t('focus.stopwatch') : t(`focus.phase.${phaseType ?? 'focus'}`)
 
+  const total = (time?.elapsedMs ?? 0) + (time?.remainingMs ?? 0)
+  const ratio = !stopwatch && time?.remainingMs != null && total > 0 ? time.remainingMs / total : 1
+  const onBreak = Boolean(phaseType && phaseType !== 'focus')
+
   return (
-    <div
-      className={cn(
-        'flex min-w-0 flex-col items-center gap-2 rounded-lg px-2 py-6 text-center [container-type:inline-size] sm:py-10',
-        phaseType && phaseType !== 'focus' ? 'bg-category-rest/25' : 'bg-primary-soft',
-      )}
-    >
-      <p className="text-sm font-semibold text-ink">{heading}</p>
+    <div className="flex min-w-0 flex-col items-center gap-3 py-2 text-center">
       <div
-        role="timer"
-        aria-label={t(stopwatch ? 'focus.elapsed' : 'focus.remaining')}
         className={cn(
-          'max-w-full text-4xl font-bold leading-tight tracking-tight text-ink tabular-nums [overflow-wrap:anywhere]',
-          expanded
-            ? 'supports-[width:1cqi]:text-[min(5.5rem,16cqi)]'
-            : 'supports-[width:1cqi]:text-[min(3.75rem,18cqi)]',
+          'relative grid aspect-square place-items-center [container-type:inline-size]',
+          expanded ? 'w-full max-w-[24rem]' : 'w-full max-w-[17rem]',
         )}
       >
-        {value}
+        <TimerRing ratio={ratio} onBreak={onBreak} />
+        <div className="relative flex min-w-0 max-w-full flex-col items-center gap-1 px-[10%]">
+          <div
+            role="timer"
+            aria-label={t(stopwatch ? 'focus.elapsed' : 'focus.remaining')}
+            className="max-w-full text-4xl font-bold leading-none tracking-tight text-ink tabular-nums [overflow-wrap:anywhere] supports-[width:1cqi]:text-[min(5rem,19cqi)]"
+          >
+            {value}
+          </div>
+          <p className="text-sm font-semibold text-muted">{heading}</p>
+        </div>
       </div>
       {snapshot && !stopwatch && (
         <p className="text-sm text-muted">
@@ -94,6 +99,43 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
         </p>
       )}
     </div>
+  )
+}
+
+const RING_VIEW = 100
+const RING_STROKE = 4
+
+/** Concept v3 progress ring: remaining share of the current phase (full for a stopwatch). */
+function TimerRing({ ratio, onBreak }: { ratio: number; onBreak: boolean }) {
+  const radius = RING_VIEW / 2 - RING_STROKE / 2
+  const circumference = 2 * Math.PI * radius
+  return (
+    <svg
+      viewBox={`0 0 ${RING_VIEW} ${RING_VIEW}`}
+      className="absolute inset-0 size-full -rotate-90"
+      aria-hidden="true"
+    >
+      <circle
+        cx={RING_VIEW / 2}
+        cy={RING_VIEW / 2}
+        r={radius}
+        fill="none"
+        stroke={colors.primarySoft}
+        strokeWidth={RING_STROKE}
+      />
+      <circle
+        cx={RING_VIEW / 2}
+        cy={RING_VIEW / 2}
+        r={radius}
+        fill="none"
+        stroke={onBreak ? colors.accent : colors.primary}
+        strokeWidth={RING_STROKE}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - Math.min(Math.max(ratio, 0), 1))}
+        className="transition-[stroke-dashoffset] duration-slow ease-elemental motion-reduce:transition-none"
+      />
+    </svg>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { Button } from '@/components/ui'
 import { SavePlanSheet } from '@/features/auth/SavePlanSheet'
 import { useSavePlanIntent } from '@/features/auth/savePlanIntent'
@@ -63,12 +63,11 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-5 pb-4">
-      <header className="flex min-w-0 flex-col gap-0.5">
-        <PageHeading>{t('pages.profile.title')}</PageHeading>
-        <p className="text-sm font-medium text-muted">
-          {t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
-        </p>
-      </header>
+      <AppPageHeader
+        title={t('pages.profile.title')}
+        headline={t('pages.profile.headline')}
+        subtitle={t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
+      />
 
       {isGuest && (
         <DeviceDataNotice onSave={() => setSaveOpen(true)}>

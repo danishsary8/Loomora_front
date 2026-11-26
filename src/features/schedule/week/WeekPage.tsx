@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSession } from '@/lib/api'
 import { useTranslation } from 'react-i18next'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Button, FloatingAddButton, SegmentedControl } from '@/components/ui'
 import { formatWallTime, orderedWeekdays } from '@/lib/time/time'
@@ -48,10 +48,11 @@ function WeekSchedule() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex min-w-0 flex-col gap-0.5">
-        <PageHeading>{t('pages.week.title')}</PageHeading>
-        <p className="text-sm font-medium text-muted">{t('week.subtitle')}</p>
-      </header>
+      <AppPageHeader
+        title={t('pages.week.title')}
+        headline={t('pages.week.headline')}
+        subtitle={t('week.subtitle')}
+      />
 
       {items.isPending ? (
         <LoadingState />

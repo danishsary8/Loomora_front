@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { Button, Card, Input, SegmentedControl } from '@/components/ui'
 import { CheckIcon } from '@/components/ui/icons'
 import { useSession } from '@/lib/api'
@@ -52,7 +52,11 @@ export function FocusPage() {
   const generation = useSession((state) => state.generation)
   return (
     <div className="mx-auto flex w-full max-w-xl min-w-0 flex-col gap-4 [overflow-wrap:anywhere]">
-      <PageHeading>{t('pages.focus.title')}</PageHeading>
+      <AppPageHeader
+        title={t('pages.focus.title')}
+        headline={t('pages.focus.headline')}
+        subtitle={t('pages.focus.tagline')}
+      />
       {runtime ? (
         <FocusSession key={generation} runtime={runtime} />
       ) : (

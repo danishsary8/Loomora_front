@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PageHeading } from '@/components/page'
+import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Button, Card, SegmentedControl } from '@/components/ui'
+import { CheckIcon, FocusIcon, StreakIcon, WeekIcon } from '@/components/ui/icons'
+import { cn } from '@/lib/cn'
 import { useStreak } from '@/features/streak/useStreak'
 import { useNow } from '@/features/today/useNow'
 import type { LocalDate } from '@/features/todos/types'
@@ -104,10 +106,11 @@ export function InsightsPage() {
 
   return (
     <div className="flex flex-col gap-5 pb-4">
-      <header className="flex min-w-0 flex-col gap-0.5">
-        <PageHeading>{t('pages.insights.title')}</PageHeading>
-        <p className="text-sm font-medium text-muted">{t('insights.subtitle')}</p>
-      </header>
+      <AppPageHeader
+        title={t('pages.insights.title')}
+        headline={t('pages.insights.headline')}
+        subtitle={t('insights.subtitle')}
+      />
 
       <section aria-label={t('insights.rangeLabel')} className="flex flex-col gap-3">
         <SegmentedControl
@@ -214,59 +217,42 @@ function OverviewSection({
 
   return (
     <section aria-label={t('insights.overviewLabel')} className="grid grid-cols-2 gap-3">
-      <Card compact className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-          {t('insights.metrics.focusTime')}
-        </p>
-        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
-          {formatDurationMs(totals.focus_ms, locale)}
-        </p>
-        <p className="mt-0.5 text-xs text-muted tabular-nums">
-          {t('insights.metrics.sessions', { count: totals.sessions })}
-        </p>
-      </Card>
-
-      <Card compact className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-          {t('insights.metrics.todosDone')}
-        </p>
-        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
-          {totals.todos_done}
-        </p>
-        <p className="mt-0.5 text-xs text-muted tabular-nums">
-          {t('insights.metrics.todosDue', { count: totals.todos_due })}
-        </p>
-      </Card>
-
-      <Card compact className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-          {t('insights.metrics.blocksChecked')}
-        </p>
-        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
-          {totals.blocks_checked}
-        </p>
-        <p className="mt-0.5 text-xs text-muted tabular-nums">
-          {t('insights.metrics.plannedMinutes', {
-            time: formatMinutes(totals.planned_block_minutes, locale),
-          })}
-        </p>
-      </Card>
-
-      <Card compact className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-          {t('insights.metrics.currentStreak')}
-        </p>
-        <p className="mt-1 font-heading text-xl font-semibold tabular-nums text-ink sm:text-2xl">
-          {streakCount !== undefined
-            ? t('insights.metrics.streakDays', { count: streakCount })
-            : '—'}
-        </p>
-        {longestStreak !== undefined && (
-          <p className="mt-0.5 text-xs text-muted tabular-nums">
-            {t('insights.metrics.longestStreak', { count: longestStreak })}
-          </p>
-        )}
-      </Card>
+      <MetricTile
+        tone="study"
+        Icon={FocusIcon}
+        label={t('insights.metrics.focusTime')}
+        value={formatDurationMs(totals.focus_ms, locale)}
+        detail={t('insights.metrics.sessions', { count: totals.sessions })}
+      />
+      <MetricTile
+        tone="health"
+        Icon={CheckIcon}
+        label={t('insights.metrics.todosDone')}
+        value={totals.todos_done}
+        detail={t('insights.metrics.todosDue', { count: totals.todos_due })}
+      />
+      <MetricTile
+        tone="work"
+        Icon={WeekIcon}
+        label={t('insights.metrics.blocksChecked')}
+        value={totals.blocks_checked}
+        detail={t('insights.metrics.plannedMinutes', {
+          time: formatMinutes(totals.planned_block_minutes, locale),
+        })}
+      />
+      <MetricTile
+        tone="life"
+        Icon={StreakIcon}
+        label={t('insights.metrics.currentStreak')}
+        value={
+          streakCount !== undefined ? t('insights.metrics.streakDays', { count: streakCount }) : '—'
+        }
+        detail={
+          longestStreak !== undefined
+            ? t('insights.metrics.longestStreak', { count: longestStreak })
+            : undefined
+        }
+      />
     </section>
   )
 }
@@ -483,5 +469,43 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
         )}
       </div>
     </Card>
+  )
+}
+
+const tileTones = {
+  study: 'bg-category-study',
+  health: 'bg-category-health',
+  work: 'bg-category-work',
+  life: 'bg-category-life',
+} as const
+
+/** Concept v3 KPI tile: tinted surface, icon, value, and the sentence-case label that explains it. */
+function MetricTile({
+  tone,
+  Icon,
+  label,
+  value,
+  detail,
+}: {
+  tone: keyof typeof tileTones
+  Icon: ComponentType<{ className?: string }>
+  label: string
+  value: ReactNode
+  detail?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 rounded-lg border-hairline border-ink/10 p-3.5 text-ink',
+        tileTones[tone],
+      )}
+    >
+      <Icon className="size-5 shrink-0" />
+      <p className="mt-1 font-heading text-xl font-bold tabular-nums leading-tight sm:text-2xl">
+        {value}
+      </p>
+      <p className="text-sm font-semibold">{label}</p>
+      {detail && <p className="text-xs tabular-nums text-ink/75">{detail}</p>}
+    </div>
   )
 }

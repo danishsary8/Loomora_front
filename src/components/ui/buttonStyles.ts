@@ -47,3 +47,7 @@ export function buttonClasses({
     fullWidth && 'w-full',
   )
 }
+
+/** Quiet 44 px icon action (edit, delete) for list rows: no box, muted until hovered or pressed. */
+export const iconActionClass =
+  'grid size-11 shrink-0 place-items-center rounded-full text-muted transition-[background-color,color] duration-fast ease-elemental hover:bg-subtle hover:text-ink active:bg-subtle motion-reduce:transition-none'

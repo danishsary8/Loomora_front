@@ -37,12 +37,14 @@ describe('StreakBadge', () => {
     }
   })
 
-  it('uses Elemental surfaces and tabular numerals for open and counted states', () => {
+  it('shows the day count as a streak label on paper, then a warm accent once counted', () => {
     const { rerender } = render(<StreakBadge count={4} todayCounted={false} />)
     const badge = screen.getByTestId('streak-badge')
-    expect(badge).toHaveClass('bg-paper', 'tabular-nums', 'text-ink')
+    expect(badge).toHaveClass('bg-paper', 'text-ink')
+    expect(badge).toHaveTextContent('4-day streak')
 
     rerender(<StreakBadge count={5} todayCounted />)
-    expect(badge).toHaveClass('bg-accent', 'tabular-nums', 'text-ink')
+    expect(badge).toHaveClass('bg-accent/40', 'text-ink')
+    expect(badge).toHaveTextContent('5-day streak')
   })
 })

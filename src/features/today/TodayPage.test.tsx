@@ -361,7 +361,7 @@ describe('Elemental Today accessibility & interactions (UX-007)', () => {
     await user.keyboard(' ')
 
     await waitFor(() => expect(row).toHaveAttribute('data-done', 'true'))
-    expect(row).toHaveClass('bg-subtle/60')
+    expect(row).toHaveClass('bg-paper/70')
     expect(screen.getByText('Done!')).toBeInTheDocument()
 
     const editBtn = screen.getByRole('button', { name: 'Edit “Keyboard task”' })

@@ -22,21 +22,21 @@ function renderShell(initialPath: string) {
 }
 
 describe('Elemental App Shell (UX-005)', () => {
-  it('marks the active route with aria-current and Elemental primary-soft styling in BottomNav and Sidebar', () => {
+  it('marks the active route with aria-current and the solid Elemental primary pill in BottomNav and Sidebar', () => {
     renderShell('/today')
 
     const bottomNav = screen.getByTestId('bottom-nav')
     const bottomToday = within(bottomNav).getByRole('link', { name: 'Today' })
     const bottomWeek = within(bottomNav).getByRole('link', { name: 'Week' })
     expect(bottomToday).toHaveAttribute('aria-current', 'page')
-    expect(bottomToday).toHaveClass('bg-primary-soft', 'text-primary')
+    expect(bottomToday).toHaveClass('bg-primary', 'text-white')
     expect(bottomWeek).not.toHaveAttribute('aria-current')
     expect(bottomWeek).toHaveClass('text-muted')
 
     const sidebar = screen.getByTestId('sidebar')
     const sideToday = within(sidebar).getByRole('link', { name: 'Today' })
     expect(sideToday).toHaveAttribute('aria-current', 'page')
-    expect(sideToday).toHaveClass('bg-primary-soft', 'text-primary')
+    expect(sideToday).toHaveClass('bg-primary', 'text-white')
   })
 
   it('highlights the TopBar Profile avatar with Elemental active classes on /profile', () => {
