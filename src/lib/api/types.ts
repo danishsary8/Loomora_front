@@ -174,6 +174,8 @@ export interface StatsMetrics {
 
 export interface StatsDayRow extends StatsMetrics {
   local_date: string
+  streak: number
+  streak_may_be_longer: boolean
 }
 
 export interface StatsByMode {
@@ -182,6 +184,8 @@ export interface StatsByMode {
 }
 
 export interface StatsSummary {
+  opening_streak: number
+  opening_streak_may_be_longer: boolean
   days: StatsDayRow[]
   totals: StatsMetrics
   by_mode: StatsByMode

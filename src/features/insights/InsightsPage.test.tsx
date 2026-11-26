@@ -1,20 +1,24 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useSession, type StatsSummary } from '@/lib/api'
-import { toLocalDate } from '@/lib/date'
+import { addDaysLocalDate, toLocalDate } from '@/lib/date'
 import { GuestScheduleRepository } from '@/lib/storage'
 import { GuestFocusSessionRepository } from '@/lib/storage/GuestFocusSessionRepository'
 import { API, http, HttpResponse, makeTokenResponse, makeUser, server } from '@/test/apiMocks'
 import { createTestRepository, renderRoute } from '@/test/renderRoute'
-import { addDaysLocalDate, weekBoundsForDate } from './computeStatsSummary'
+import { weekBoundsForDate } from './computeStatsSummary'
 
 const today = toLocalDate()
 
 function makeAccountSummary(from: string, to: string): StatsSummary {
   return {
+    opening_streak: 2,
+    opening_streak_may_be_longer: true,
     days: [
       {
         local_date: from,
+        streak: 3,
+        streak_may_be_longer: false,
         focus_ms: 1_500_000,
         break_ms: 300_000,
         sessions: 2,
@@ -29,6 +33,8 @@ function makeAccountSummary(from: string, to: string): StatsSummary {
         ? [
             {
               local_date: to,
+              streak: 0,
+              streak_may_be_longer: false,
               focus_ms: 0,
               break_ms: 0,
               sessions: 0,
@@ -157,6 +163,9 @@ describe('InsightsPage (F-R4-01)', () => {
     expect(screen.getByText('Linked to plan: 20 min')).toBeInTheDocument()
     expect(screen.getByText('Unplanned focus: 5 min')).toBeInTheDocument()
     expect(screen.getByText('Longest: 12')).toBeInTheDocument()
+    const history = within(screen.getByRole('region', { name: 'Streak history' }))
+    expect(history.getByText('At least 2 days')).toBeInTheDocument()
+    expect(history.getByText('3 days')).toBeInTheDocument()
     expect(queries[0]).toEqual({ from: bounds.from, to: bounds.to })
 
     // Switching to 90 days sends a valid 90-day range within the 92-day limit.
