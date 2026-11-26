@@ -1556,3 +1556,12 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Explicitly separated automated checks already verified locally/CI, manual staging checks not yet run, open owner approvals (`QA-016`, `QA-004`, `Q23`, `Q25`, disposable staging pair), and active blockers (`QA-029` streak consistency owned by Codex; backend revision-aware Notes reconciliation).
   - Updated `docs/TASKS.md` (marked `QA-028` `done` at `2f5d56b`, registered `QA-009-PREP` in `review`, and kept `QA-009` explicitly **blocked / not executed**).
 - **Verified:** Strictly docs-only diff (`git diff --stat`), internal Markdown links verified, `git diff --check` passed (0 whitespace/EOF errors), and `QA-009` remains blocked with zero staging tests falsely marked passed.
+
+### 2026-11-26 QA-029: Guest Current Streak Consistency
+
+- **Base:** v2-rebuild at a546794 (QA-027 merged). Isolated branch feat/QA-029-guest-streak-consistency.
+- **Root cause:** The guest current streak walked back to the earliest stored record. The server current calculation and B-051 history only consider today and the preceding 400 local calendar days.
+- **Change:** Current streak and Insights history share the evaluator and local to-do dates. The inclusive boundary, today's exception, planned breaks, unplanned gaps, valid check-ins, and historical lower-bound flags use the same rules. Insights metrics and the account current and longest streak mapping continue to use their existing response shapes.
+- **Regression coverage:** October 20, 2025 completion on November 26, 2026, days 400 and 401, local midnight at the cutoff, today with all 400 preceding days counted, deleted to-dos, and orphaned check-ins. Existing streak, Insights, and server longest-streak tests remain in the verification suite.
+- **Handoff:** Codex stopped at its usage limit during the full phone-375 run. Claude reviewed the change against backend B-051 `StreakService` (`calculate` and `history` both use an inclusive `WINDOW_DAYS = 400` with today unjudged) and completed verification without code changes.
+- **Local checks:** Lint, typecheck, Knip, format check, diff whitespace check, build, OpenAPI lint (four existing warnings), full Vitest (915 passed), and full Playwright phone-375 (128 passed) all passed.

@@ -1,3 +1,4 @@
+import { computeGuestStatsSummary } from '@/features/insights/computeStatsSummary'
 import type { ScheduleCheckin, ScheduleException, ScheduleItem } from '@/features/schedule/types'
 import type { Todo } from '@/features/todos/types'
 import { computeStreak, type StreakInput } from './streak'
@@ -118,6 +119,63 @@ describe('computeStreak (docs/08 rule 8)', () => {
   it('counts a checked-off day even if nothing was due', () => {
     const undated = todo('a', { done_at: '2026-10-25T09:00:00.000Z' })
     expect(streak({ todos: [undated, doneOn('b', TODAY)] }).count).toBe(2)
+  })
+
+  describe('400 preceding local days, plus today', () => {
+    const today = '2026-11-26'
+    const input = { today, items: [], exceptions: [], checkins: [] }
+
+    it.each([
+      ['reported October 20 completion', '2025-10-20T12:00:00Z', UTC, 0],
+      ['401 days ago', '2025-10-21T12:00:00Z', UTC, 0],
+      ['exactly 400 days ago', '2025-10-22T12:00:00Z', UTC, 1],
+      ['just before local midnight on the cutoff', '2025-10-21T16:59:59Z', 'Asia/Phnom_Penh', 0],
+      ['at local midnight on the cutoff', '2025-10-21T17:00:00Z', 'Asia/Phnom_Penh', 1],
+    ])('matches the history row for %s', (_label, done_at, timeZone, count) => {
+      const records = {
+        ...input,
+        timeZone,
+        todos: [todo('a', { done_at }), missedOn('today', today)],
+      }
+      const current = computeStreak(records)
+      const summary = computeGuestStatsSummary({ ...records, from: today, to: today, sessions: [] })
+
+      expect(current).toEqual({ count, todayCounted: false })
+      expect(summary.days[0]).toMatchObject({ streak: count, streak_may_be_longer: count > 0 })
+    })
+
+    it('counts today even when all 400 preceding days already counted', () => {
+      const start = Date.parse('2025-10-22T12:00:00Z')
+      const todos = Array.from({ length: 401 }, (_, i) =>
+        todo(String(i), { done_at: new Date(start + i * 86_400_000).toISOString() }),
+      )
+      const records = { ...input, timeZone: UTC, todos }
+      const current = computeStreak(records)
+      const summary = computeGuestStatsSummary({ ...records, from: today, to: today, sessions: [] })
+      expect(current).toEqual({ count: 401, todayCounted: true })
+      expect(summary.days[0]?.streak).toBe(current.count)
+    })
+  })
+
+  it('ignores deleted completions', () => {
+    const deleted_at = '2026-10-26T15:00:00Z'
+    const todos = [doneOn('earlier', '2026-10-23'), { ...doneOn('deleted', TODAY), deleted_at }]
+    expect(streak({ todos })).toEqual({ count: 1, todayCounted: false })
+  })
+
+  it('does not break a streak on a deleted missed to-do', () => {
+    const todos = [
+      doneOn('earlier', '2026-10-23'),
+      { ...missedOn('deleted', '2026-10-24'), deleted_at: '2026-10-26T15:00:00Z' },
+    ]
+    expect(streak({ todos })).toEqual({ count: 1, todayCounted: false })
+  })
+
+  it('ignores check-ins for schedule items that no longer exist', () => {
+    expect(streak({ checkins: [checkin('removed', TODAY)] })).toEqual({
+      count: 0,
+      todayCounted: false,
+    })
   })
 
   describe('schedule items', () => {

@@ -1214,3 +1214,11 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `QA-009` remains explicitly **blocked / not executed** with zero staging cases falsely marked passed.
   - [x] Strictly docs-only diff; links, formatting, and `git diff --check` pass.
 - **Files:** `docs/QA-009-staging-matrix.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-029: Guest Current Streak Consistency
+
+- **Status:** review
+- **Owner:** codex (handed off to claude for verification)
+- **Priority:** P2
+- **Scope:** Match B-051's inclusive 400-preceding-local-day window using one evaluator for guest current and historical streak values.
+- **Regression coverage:** Audit reproduction, inclusive cutoff, local-midnight completion bucketing, today and historical parity, deleted records, and existing planned-day and schedule-exception rules.

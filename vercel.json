@@ -41,6 +41,7 @@
       "feat/UX-017-insights-notes-ui-polish": false,
       "feat/QA-027-guest-import-containment": false,
       "feat/QA-028-atomic-guest-notes": false,
+      "feat/QA-029-guest-streak-consistency": false,
       "v2-rebuild": false
     }
   },
