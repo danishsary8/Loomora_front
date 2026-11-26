@@ -15,7 +15,7 @@ import { useUndoableDelete } from '../useUndoableDelete'
 import { CopyDaySheet } from './CopyDaySheet'
 import { DayColumn } from './DayColumn'
 import { useHorizontalOverflow } from './useHorizontalOverflow'
-import { itemsOnWeekday, todayWeekday } from './weekPlan'
+import { itemsOnWeekday, todayWeekday, weekDatesFor } from './weekPlan'
 
 type WeekView = 'day' | 'week'
 
@@ -34,6 +34,18 @@ function WeekSchedule() {
   const items = useScheduleItems()
   const del = useUndoableDelete()
   const today = todayWeekday(new Date(), zone)
+  const weekDates = weekDatesFor(weekdays, new Date(), zone)
+  const dayNumFmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', timeZone: 'UTC' })
+  const firstDay = weekdays[0]
+  const lastDay = weekdays[weekdays.length - 1]
+  const weekRangeLabel =
+    firstDay !== undefined && lastDay !== undefined
+      ? new Intl.DateTimeFormat(i18n.language, {
+          month: 'short',
+          day: 'numeric',
+          timeZone: 'UTC',
+        }).formatRange(weekDates[firstDay], weekDates[lastDay])
+      : ''
   const [selected, setSelected] = useState<Weekday>(today)
   const [view, setView] = useState<WeekView>('day')
   const overview = view === 'week'
@@ -71,6 +83,9 @@ function WeekSchedule() {
       ) : (
         <>
           <div className="flex flex-col gap-3 md:hidden">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold tabular-nums text-ink">{weekRangeLabel}</p>
+            </div>
             <SegmentedControl
               label={t('week.viewMode')}
               options={[
@@ -94,6 +109,7 @@ function WeekSchedule() {
                   key={day}
                   label={t(`weekdays.long.${day}`)}
                   text={t(`weekdays.short.${day}`)}
+                  dayNumber={dayNumFmt.format(weekDates[day])}
                   selected={day === selected}
                   current={day === today}
                   variant="strip"
@@ -128,9 +144,11 @@ function WeekSchedule() {
                   items={itemsOnWeekday(list, day)}
                   formatTime={formatTime}
                   isToday={day === today}
+                  singleDay={!overview}
                   className={overview || day === selected ? undefined : 'hidden md:flex'}
                   onOpenItem={openItem}
                   onCopy={setCopyFrom}
+                  onAddItem={openAdd}
                 />
               ))}
             </div>

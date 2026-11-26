@@ -448,6 +448,8 @@
     "overview": "Week overview",
     "singleDay": "Single day",
     "addItem": "Add to my schedule",
+    "addBlock": "Add block",
+    "dayRhythm": "{{day}}’s rhythm",
     "dayStrip": "Days of the week",
     "columns": "Week schedule, scroll sideways for more days",
     "nothingPlanned": "Nothing planned.",

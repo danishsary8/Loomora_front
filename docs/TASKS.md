@@ -1327,3 +1327,19 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/styles/{tokens,tokens.test.ts}`, `tailwind.config.ts`, `src/components/page/AppPageHeader.tsx`, `src/components/ui/{Checkbox,FloatingAddButton,icons}.tsx`, `src/features/streak/{StreakBadge,StreakBadge.test}.tsx`, `src/features/today/{TodayPage,TodayProgressCard,NowNextStrip,TodoRow,TodayPage.test}.tsx`, `src/i18n/en.json`, `docs/screenshots/ux021-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-022: Week screen concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #107 `UX-021`).
+- **Plan:**
+  1. Add `weekDatesFor` pure helper in `src/features/schedule/week/weekPlan.ts` (with unit test in `weekPlan.test.ts`) to compute real calendar dates for the displayed week respecting `week_starts_on` and user time zone.
+  2. Enhance `DayToggle` with an optional `dayNumber` line so the phone day strip shows weekday + date number in a dark green selected tile.
+  3. Update `DayColumn` and `WeekPage` to show the current week range, `"{{day}}’s rhythm"` header with `"+ Add block"` pill on phone, left time gutter aligned with category-tinted block cards, and `"time · category"` detail row while preserving 7-column desktop layout and all keyboard/touch/a11y rules.
+  4. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Week matches concept v3 day strip (weekday + date number), `"Monday’s rhythm"` + `"+ Add block"` pill, left time gutter, and tinted block cards at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/features/schedule/{DayToggle.tsx,week/{weekPlan,weekPlan.test,DayColumn,WeekPage}.ts(x)}`, `src/i18n/en.json`, `docs/screenshots/ux022-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

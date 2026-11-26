@@ -1662,3 +1662,18 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (known unrelated cold-load flake; all Today, a11y, overflow, 200% text, subtasks, repeat, reminders specs passed).
   - Populated Today screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux021-today-375.png`, `ux021-today-1440.png`) with 0 px overflow.
 - **Problems / Questions:** None. Ready for owner review before starting UX-022 (Week).
+
+### 2026-11-27 UX-022: Week screen concept v3 alignment
+
+- **Branch:** `feat/UX-022-week-polish` stacked on `feat/UX-021-today-polish` (PR #107 — merge #106, #107 first).
+- **What changed:**
+  - **Week date calculation (`weekPlan.ts` / `weekPlan.test.ts`):** Added `weekDatesFor(weekdays, date, zone)` pure helper respecting Monday-first and Sunday-first preferences and user time zone.
+  - **Day strip (`DayToggle.tsx` / `WeekPage.tsx`):** Added current week range label (`Intl.DateTimeFormat.formatRange`) and stacked weekday + calendar date number (`dayNumber`) in dark-green selected tiles while preserving 44×44 px touch targets.
+  - **Day rhythm & time gutter (`DayColumn.tsx` / `en.json`):** Phone single-day view now displays `"{{day}}’s rhythm"` + `"+ Add block"` pill, a left-aligned `tabular-nums` start-time gutter beside category-tinted block cards, and `"time · category"` detail rows, while preserving the 7-column desktop grid.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`: all passed.
+  - `npm test`: passed (84 files / 963 tests).
+  - `npm run build`: passed.
+  - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 px overflow across 320–1440 px).
+  - Populated Week screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux022-week-375.png`, `ux022-week-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-023 (Focus).
