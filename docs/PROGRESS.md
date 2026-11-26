@@ -1539,6 +1539,24 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **Regression coverage:** Acknowledged imports, missing or malformed Notes and Focus counts, inconsistent counts, combined Notes and Focus, an interrupted 501-note import and unchanged or edited retries, conflict UI, network failures, and session switching.
 - **Local checks:** Lint, typecheck, Knip, format check, build, OpenAPI lint (four existing warnings), diff whitespace check, and both phone-375 Focus import and Notes scenarios passed. Full Vitest and CI results are recorded in the task PR.
 
+### 2026-11-26 QA-028: Atomic Guest Notes Mutations
+
+- **Branch / Worktree:** `feat/QA-028-atomic-guest-notes` in `loomora-front-QA-028`, branched from `origin/v2-rebuild` (`1c4e850`, PR #89 `UX-017` merged) and reconciled with merged `origin/v2-rebuild` (`a546794`, PR #90 `QA-027` preserved untouched). Left `clearImported()`, `saveGuestPlan.ts`, and Codex's `QA-027` work untouched.
+- **Root cause reproduced (RED):** `GuestNoteRepository.update()` performed `db.notes.get()`, optional `db.schedule_items.get()`, and `db.notes.put()` in separate IndexedDB transactions. Under a two-instance `Promise.allSettled([delete, update])` race, `update()` read the active row before `delete()` wrote `deleted_at`, then overwrote the row without `deleted_at` — both operations succeeded while resurrecting the deleted note (`notes.test.ts` RED failure reproduced `"Stale edit 2"` remaining active in `list()`). `create()` also checked `db.schedule_items.get()` outside its `db.notes` transaction.
+- **Solution (GREEN):** Wrapped `GuestNoteRepository.update()` (read, deletion guard, field merge, validation, optional `schedule_items` check, `notes.put`) and `create()` (optional `schedule_items` check, duplicate UUID 409 check, `notes.add`) in single Dexie `'rw'` transactions spanning `db.notes` and `db.schedule_items` with zero non-IDB async work inside transactions. Preserved atomic `delete()` (soft-delete timestamp, repeat-delete deadline retention) and `restore()` (7-day window, 410 expiry).
+- **Concurrency tests added:** `src/lib/storage/notes.test.ts` (`GuestNoteRepository concurrency (QA-028)`): two repository instances sharing one IndexedDB database testing update/delete races (both orders, standalone and schedule-attached), update/restore races (both orders), and disjoint concurrent updates (no lost updates).
+- **Verified:** `lint`, `typecheck`, `knip`, `format:check`, full `npm test`, `npm run build`, full Playwright `phone-375` (128/128), Redocly OpenAPI lint (valid, 4 baseline warnings), `npm audit --omit=dev` (0 vulnerabilities), and `git diff --check`.
+
+### 2026-11-26 QA-009-PREP: Staging QA Matrix & Release Readiness Preparation (docs-only)
+
+- **Branch / Worktree:** `docs/QA-009-staging-preparation` in `loomora-front-QA-009-prep`, branched from `origin/v2-rebuild` (`2f5d56b`, PR #90 `QA-027` & PR #91 `QA-028` merged). No application code, config, tests, live services, or Codex's `QA-029` work were modified.
+- **What changed:**
+  - Created `docs/QA-009-staging-matrix.md` extending `docs/QA-022-staging-evidence.md` to the full merged R1–R4 baseline (`2f5d56b`) with 9 reproducible staging scenarios (`STG-01`–`STG-09` covering Today/Week & isolation, Auth/Brevo/Google, Guest import + `QA-027` containment, Notes CRUD + `QA-028` concurrency, Focus & combined migration, Insights & historical streaks, Offline/cross-tab/midnight timezones, 375 px accessibility/PWA `Q21`, and Security/CORS/CSP/rate-limits/legal/OpenAPI), each with prerequisites, synthetic test data, steps, expected result, redacted evidence requirements, and pass/fail criteria.
+  - Added a complete Release Evidence Checklist covering deployed frontend/backend SHAs, OpenAPI parity, staging origin/CORS/CSP, environment separation, migrations, health checks, rate limits, logging redaction, and rollback readiness.
+  - Explicitly separated automated checks already verified locally/CI, manual staging checks not yet run, open owner approvals (`QA-016`, `QA-004`, `Q23`, `Q25`, disposable staging pair), and active blockers (`QA-029` streak consistency owned by Codex; backend revision-aware Notes reconciliation).
+  - Updated `docs/TASKS.md` (marked `QA-028` `done` at `2f5d56b`, registered `QA-009-PREP` in `review`, and kept `QA-009` explicitly **blocked / not executed**).
+- **Verified:** Strictly docs-only diff (`git diff --stat`), internal Markdown links verified, `git diff --check` passed (0 whitespace/EOF errors), and `QA-009` remains blocked with zero staging tests falsely marked passed.
+
 ### 2026-11-26 QA-029: Guest Current Streak Consistency
 
 - **Base:** v2-rebuild at a546794 (QA-027 merged). Isolated branch feat/QA-029-guest-streak-consistency.

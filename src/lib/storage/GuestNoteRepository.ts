@@ -123,11 +123,6 @@ export class GuestNoteRepository implements NoteRepository {
     validateNoteState({ title, body, schedule_item_id, local_date })
 
     const db = await this.open()
-    if (schedule_item_id) {
-      const block = await db.schedule_items.get(schedule_item_id)
-      if (!block) throw new ValidationError('schedule_item_id', 'Schedule block not found.')
-    }
-
     const stamp = this.now().toISOString()
     const note: Note = {
       id,
@@ -138,61 +133,64 @@ export class GuestNoteRepository implements NoteRepository {
       created_at: stamp,
       updated_at: stamp,
     }
-    let conflict = false
-    await db.transaction('rw', db.notes, async () => {
+    await db.transaction('rw', db.notes, db.schedule_items, async () => {
+      if (schedule_item_id) {
+        const block = await db.schedule_items.get(schedule_item_id)
+        if (!block) throw new ValidationError('schedule_item_id', 'Schedule block not found.')
+      }
       const existing = await db.notes.get(id)
       if (existing) {
-        conflict = true
-        return
+        throw new ApiError(409, { message: 'Note UUID already exists.' })
       }
       await db.notes.add(note)
     })
-    if (conflict) throw new ApiError(409, { message: 'Note UUID already exists.' })
     return note
   }
 
   async update(id: string, fields: NoteFields): Promise<Note> {
     const key = id.toLowerCase()
     const db = await this.open()
-    const existing = await db.notes.get(key)
-    if (!existing || existing.deleted_at) throw new ApiError(404)
+    return db.transaction('rw', db.notes, db.schedule_items, async () => {
+      const existing = await db.notes.get(key)
+      if (!existing || existing.deleted_at) throw new ApiError(404)
 
-    const title = fields.title !== undefined ? cleanText(fields.title) : existing.title
-    const body = fields.body !== undefined ? cleanText(fields.body) : existing.body
-    const scheduleChanged = fields.schedule_item_id !== undefined
-    const schedule_item_id = scheduleChanged
-      ? fields.schedule_item_id
-        ? fields.schedule_item_id.toLowerCase()
-        : null
-      : existing.schedule_item_id
+      const title = fields.title !== undefined ? cleanText(fields.title) : existing.title
+      const body = fields.body !== undefined ? cleanText(fields.body) : existing.body
+      const scheduleChanged = fields.schedule_item_id !== undefined
+      const schedule_item_id = scheduleChanged
+        ? fields.schedule_item_id
+          ? fields.schedule_item_id.toLowerCase()
+          : null
+        : existing.schedule_item_id
 
-    // Per B-048: a changed or cleared block clears an omitted occurrence date.
-    let local_date =
-      fields.local_date !== undefined
-        ? fields.local_date
-        : scheduleChanged && schedule_item_id !== existing.schedule_item_id
-          ? null
-          : existing.local_date
-    if (schedule_item_id === null && fields.local_date === undefined) {
-      local_date = null
-    }
+      // Per B-048: a changed or cleared block clears an omitted occurrence date.
+      let local_date =
+        fields.local_date !== undefined
+          ? fields.local_date
+          : scheduleChanged && schedule_item_id !== existing.schedule_item_id
+            ? null
+            : existing.local_date
+      if (schedule_item_id === null && fields.local_date === undefined) {
+        local_date = null
+      }
 
-    validateNoteState({ title, body, schedule_item_id, local_date })
-    if (schedule_item_id && schedule_item_id !== existing.schedule_item_id) {
-      const block = await db.schedule_items.get(schedule_item_id)
-      if (!block) throw new ValidationError('schedule_item_id', 'Schedule block not found.')
-    }
+      validateNoteState({ title, body, schedule_item_id, local_date })
+      if (schedule_item_id && schedule_item_id !== existing.schedule_item_id) {
+        const block = await db.schedule_items.get(schedule_item_id)
+        if (!block) throw new ValidationError('schedule_item_id', 'Schedule block not found.')
+      }
 
-    const updated: Note = {
-      ...toPublicNote(existing),
-      title,
-      body,
-      schedule_item_id,
-      local_date,
-      updated_at: this.now().toISOString(),
-    }
-    await db.notes.put(updated)
-    return updated
+      const updated: Note = {
+        ...toPublicNote(existing),
+        title,
+        body,
+        schedule_item_id,
+        local_date,
+        updated_at: this.now().toISOString(),
+      }
+      await db.notes.put(updated)
+      return updated
+    })
   }
 
   async delete(id: string): Promise<void> {
