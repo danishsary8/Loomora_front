@@ -1,7 +1,7 @@
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { MAX_TODOS } from '@/features/todos/types'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
-import { importBackend } from '@/test/importBackend'
+import { acknowledgeImport, importBackend } from '@/test/importBackend'
 import { GuestDatabase } from './db'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
 import { GuestFocusSessionRepository } from './GuestFocusSessionRepository'
@@ -15,9 +15,6 @@ import {
   readGuestPlan,
   saveGuestPlan,
 } from './saveGuestPlan'
-
-const COUNTS = { created: 1, skipped: 0 }
-const RESULT = { todos: COUNTS, schedule_items: COUNTS, exceptions: COUNTS, checkins: COUNTS }
 
 let db: GuestDatabase
 let guest: GuestStorage
@@ -124,9 +121,10 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     const calls: ImportBody[] = []
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
-        calls.push((await request.json()) as ImportBody)
+        const body = (await request.json()) as ImportBody
+        calls.push(body)
         if (calls.length === 1) return HttpResponse.json({ message: 'Invalid' }, { status: 422 })
-        return HttpResponse.json({ data: RESULT })
+        return HttpResponse.json({ data: acknowledgeImport(body) })
       }),
     )
     await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 422 })
@@ -153,7 +151,7 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
         body = (await request.json()) as ImportBody
-        return HttpResponse.json({ data: RESULT })
+        return HttpResponse.json({ data: acknowledgeImport(body) })
       }),
     )
 
@@ -206,12 +204,18 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     let calls = 0
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
-        bodies.push((await request.json()) as ImportBody)
+        const body = (await request.json()) as ImportBody
+        bodies.push(body)
         calls += 1
         if (calls === 1) return HttpResponse.json({ message: 'Boom' }, { status: 500 })
-        const skipped = { created: 0, skipped: 1 }
+        const result = acknowledgeImport(body)
         return HttpResponse.json({
-          data: { todos: skipped, schedule_items: skipped, exceptions: skipped, checkins: skipped },
+          data: Object.fromEntries(
+            Object.entries(result).map(([key, count]) => [
+              key,
+              { created: 0, skipped: count.created },
+            ]),
+          ),
         })
       }),
     )
@@ -233,7 +237,7 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
         payload = (await request.json()) as ImportBody
-        return HttpResponse.json({ data: RESULT })
+        return HttpResponse.json({ data: acknowledgeImport(payload) })
       }),
     )
 
@@ -260,12 +264,16 @@ describe('saveGuestPlan (docs/08 rule 9)', () => {
         start = resolve
       })
       server.use(
-        http.post(`${API}/import`, async () => {
+        http.post(`${API}/import`, async ({ request }) => {
+          const body = (await request.json()) as ImportBody
           start()
           await pending
-          return HttpResponse.json(status === 200 ? { data: RESULT } : { message: 'Invalid' }, {
-            status,
-          })
+          return HttpResponse.json(
+            status === 200 ? { data: acknowledgeImport(body) } : { message: 'Invalid' },
+            {
+              status,
+            },
+          )
         }),
       )
 
@@ -316,8 +324,9 @@ describe('saveGuestPlan in chunks', () => {
     const bodies: ImportBody[] = []
     server.use(
       http.post(`${API}/import`, async ({ request }) => {
-        bodies.push((await request.json()) as ImportBody)
-        return HttpResponse.json({ data: RESULT })
+        const body = (await request.json()) as ImportBody
+        bodies.push(body)
+        return HttpResponse.json({ data: acknowledgeImport(body) })
       }),
     )
 
@@ -351,7 +360,7 @@ describe('saveGuestPlan in chunks', () => {
         const body = (await request.json()) as ImportBody
         seenTodos.push(body.todos)
         body.checkins.forEach((c) => sent.add(c.id))
-        return HttpResponse.json({ data: RESULT })
+        return HttpResponse.json({ data: acknowledgeImport(body) })
       }),
     )
 

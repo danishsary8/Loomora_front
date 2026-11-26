@@ -634,6 +634,7 @@
     "saved": "Your plan is saved",
     "failedTitle": "We could not save your plan",
     "failedBody": "Your plan is still on this device. Check your connection and try again.",
+    "noteConflict": "A guest note differs from the account copy or is missing from your account. Your guest plan is still on this device. Review your account Notes, then sign out to open your guest Notes and keep any edits you need before trying again.",
     "retry": "Try again"
   },
   "offline": {

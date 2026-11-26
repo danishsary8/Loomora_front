@@ -1,7 +1,7 @@
 import type { FocusSessionInput } from '@/features/focus/types'
 import { accountDataApi, useSession, type ImportBody } from '@/lib/api'
 import { API, http, HttpResponse, makeTokenResponse, server } from '@/test/apiMocks'
-import { importBackend } from '@/test/importBackend'
+import { acknowledgeImport, importBackend } from '@/test/importBackend'
 import { GuestDatabase, type StoredFocusSession } from './db'
 import { canonicalFocusPayload } from './focusSessionPayload'
 import { GuestDailyIntentionRepository } from './GuestDailyIntentionRepository'
@@ -71,6 +71,25 @@ beforeEach(() => {
 afterEach(() => db.delete())
 
 describe('F-R3-15 guest Focus history import (B-049)', () => {
+  it.each([undefined, { created: 0.5, skipped: 0 }])(
+    'keeps Focus data when the acknowledgment is %j',
+    async (focus_sessions) => {
+      const session = await guest.focusSessions.record(makeCountdownInput(0))
+      await guest.todos.create({ title: 'Keep this too' })
+      server.use(
+        http.post(API + '/import', async ({ request }) => {
+          const body = (await request.json()) as ImportBody
+          expect(body.focus_sessions).toHaveLength(1)
+          return HttpResponse.json({ data: { ...acknowledgeImport(body), focus_sessions } })
+        }),
+      )
+
+      await expect(saveGuestPlan(guest, accountDataApi)).rejects.toMatchObject({ status: 502 })
+      expect(await guest.focusSessions.listAll()).toEqual([session])
+      expect(await guest.todos.listAll()).toHaveLength(1)
+    },
+  )
+
   it.each([
     { count: 499, chunks: [499] },
     { count: 500, chunks: [500] },

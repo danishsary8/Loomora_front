@@ -22,6 +22,19 @@ const MAX_ITEMS = 100
 const MAX_FOCUS_SESSIONS = 500
 const counts = (created: number, skipped = 0) => ({ created, skipped })
 
+/** Successful acknowledgment for every collection submitted in a test batch. */
+export function acknowledgeImport(body: ImportBody) {
+  return {
+    todos: counts(body.todos.length),
+    schedule_items: counts(body.schedule_items.length),
+    exceptions: counts(body.exceptions.length),
+    checkins: counts(body.checkins.length),
+    focus_sessions: counts(body.focus_sessions.length),
+    daily_intentions: counts(body.daily_intentions.length),
+    ...(body.notes ? { notes: counts(body.notes.length) } : {}),
+  }
+}
+
 interface ImportBackendOptions {
   /** Rows the account already has. */
   todos?: AccountTodo[]

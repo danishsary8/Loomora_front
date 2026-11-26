@@ -1176,3 +1176,12 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Vitest (`InsightsPage`, `computeStatsSummary`, `NotesPage`, `ServiceDownBanner`, `i18n`) and Playwright `phone-375` (`insights`, `notes`, `a11y`, `page-heading`) pass with 0 axe violations and 0 px overflow at 320–1440 px and 200% text.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and before/after 375 px & 1440 px visual checks pass.
 - **Files:** `src/features/notes/NotesPage.tsx`, `src/features/notes/NotesPage.test.tsx`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/ServiceDownBanner.test.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-027: Fail-Closed Guest Import Containment
+
+- **Status:** review
+- **Owner:** codex
+- **Priority:** P1
+- **Scope:** Validate all import batch acknowledgments and retain the complete guest plan when a response is invalid or a skipped Note cannot be verified against the account copy.
+- **Verified behavior:** Acknowledged imports and matching Note retries can finish. Partial failure and subsequent divergent Notes, missing or invalid counts, failed requests, and session changes leave local records intact.
+- **Open backend-first follow-up:** Revision-aware Notes reconciliation remains blocked. Existing aggregate skip counts do not identify a row or its version. This task only verifies the Note content and attachment from existing account reads and leaves divergent copies in place.
