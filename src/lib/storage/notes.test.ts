@@ -282,6 +282,171 @@ describe('GuestNoteRepository (B-048 parity)', () => {
   })
 })
 
+describe('GuestNoteRepository concurrency (QA-028)', () => {
+  it('never resurrects a deleted note when update and delete race across two instances (both orders)', async () => {
+    const sharedDbB = new GuestDatabase(db.name)
+    const tabA = new GuestNoteRepository({ db, now: () => new Date(nowMs) })
+    const tabB = new GuestNoteRepository({ db: sharedDbB, now: () => new Date(nowMs + 1000) })
+
+    try {
+      // Order 1: update starts first, delete runs concurrently.
+      const note1 = await tabA.create({
+        id: crypto.randomUUID(),
+        title: 'Original 1',
+        body: 'Body 1',
+      })
+      const [update1, delete1] = await Promise.allSettled([
+        tabA.update(note1.id, { title: 'Updated 1' }),
+        tabB.delete(note1.id),
+      ])
+
+      expect(delete1.status).toBe('fulfilled')
+      if (update1.status === 'rejected') {
+        expect(update1.reason).toMatchObject({ status: 404 })
+      }
+      // Regardless of transaction order, the deleted note must NEVER remain active.
+      expect(await tabA.list()).toEqual([])
+      expect(await tabB.list()).toEqual([])
+      await expect(tabA.get(note1.id)).rejects.toMatchObject({ status: 404 })
+      const stored1 = await db.notes.get(note1.id)
+      expect(stored1?.deleted_at).toBeTruthy()
+      if (update1.status === 'fulfilled') {
+        // Update serialized before delete -> delete preserved updated title.
+        expect(stored1?.title).toBe('Updated 1')
+      }
+
+      // Order 2: delete starts first, update runs concurrently.
+      const note2 = await tabA.create({
+        id: crypto.randomUUID(),
+        title: 'Original 2',
+        body: 'Body 2',
+      })
+      const [delete2, update2] = await Promise.allSettled([
+        tabB.delete(note2.id),
+        tabA.update(note2.id, { title: 'Stale edit 2' }),
+      ])
+
+      expect(delete2.status).toBe('fulfilled')
+      if (update2.status === 'rejected') {
+        expect(update2.reason).toMatchObject({ status: 404 })
+      }
+      expect(await tabA.list()).toEqual([])
+      await expect(tabB.get(note2.id)).rejects.toMatchObject({ status: 404 })
+      const stored2 = await db.notes.get(note2.id)
+      expect(stored2?.deleted_at).toBeTruthy()
+    } finally {
+      sharedDbB.close()
+    }
+  })
+
+  it('keeps schedule-attached update and delete atomic so schedule lookup cannot open a resurrection window', async () => {
+    const sharedDbB = new GuestDatabase(db.name)
+    const tabA = new GuestNoteRepository({ db, now: () => new Date(nowMs) })
+    const tabB = new GuestNoteRepository({ db: sharedDbB, now: () => new Date(nowMs + 1000) })
+
+    try {
+      const block = await guest.schedule.create({
+        title: 'Physics',
+        start_time: '09:00',
+        end_time: '10:00',
+        days: [0],
+        starts_on: '2026-11-01',
+      })
+      const note = await tabA.create({
+        id: crypto.randomUUID(),
+        title: 'Lab notes',
+        body: 'Initial',
+      })
+
+      const [updateRes, deleteRes] = await Promise.allSettled([
+        tabA.update(note.id, { schedule_item_id: block.id, local_date: '2026-11-26' }),
+        tabB.delete(note.id),
+      ])
+
+      expect(deleteRes.status).toBe('fulfilled')
+      if (updateRes.status === 'rejected') {
+        expect(updateRes.reason).toMatchObject({ status: 404 })
+      }
+      expect(await tabA.list()).toEqual([])
+      const stored = await db.notes.get(note.id)
+      expect(stored?.deleted_at).toBeTruthy()
+    } finally {
+      sharedDbB.close()
+    }
+  })
+
+  it('serializes concurrent update and restore on a deleted note in both orders', async () => {
+    const sharedDbB = new GuestDatabase(db.name)
+    const tabA = new GuestNoteRepository({ db, now: () => new Date(nowMs) })
+    const tabB = new GuestNoteRepository({ db: sharedDbB, now: () => new Date(nowMs + 1000) })
+
+    try {
+      // Order 1: update starts first, restore runs concurrently on a deleted note.
+      const note1 = await tabA.create({ id: crypto.randomUUID(), title: 'Deleted 1' })
+      await tabA.delete(note1.id)
+
+      const [update1, restore1] = await Promise.allSettled([
+        tabA.update(note1.id, { title: 'Edited 1' }),
+        tabB.restore(note1.id),
+      ])
+
+      expect(restore1.status).toBe('fulfilled')
+      const final1 = await tabA.get(note1.id)
+      if (update1.status === 'rejected') {
+        expect(update1.reason).toMatchObject({ status: 404 })
+        expect(final1.title).toBe('Deleted 1')
+      } else {
+        expect(final1.title).toBe('Edited 1')
+      }
+
+      // Order 2: restore starts first, update runs concurrently.
+      const note2 = await tabA.create({ id: crypto.randomUUID(), title: 'Deleted 2' })
+      await tabA.delete(note2.id)
+
+      const [restore2, update2] = await Promise.allSettled([
+        tabB.restore(note2.id),
+        tabA.update(note2.id, { title: 'Edited 2' }),
+      ])
+
+      expect(restore2.status).toBe('fulfilled')
+      const final2 = await tabA.get(note2.id)
+      if (update2.status === 'fulfilled') {
+        expect(final2.title).toBe('Edited 2')
+      } else {
+        expect(update2.reason).toMatchObject({ status: 404 })
+        expect(final2.title).toBe('Deleted 2')
+      }
+    } finally {
+      sharedDbB.close()
+    }
+  })
+
+  it('preserves disjoint field edits from two concurrent updates without lost updates', async () => {
+    const sharedDbB = new GuestDatabase(db.name)
+    const tabA = new GuestNoteRepository({ db, now: () => new Date(nowMs) })
+    const tabB = new GuestNoteRepository({ db: sharedDbB, now: () => new Date(nowMs + 1000) })
+
+    try {
+      const note = await tabA.create({
+        id: crypto.randomUUID(),
+        title: 'Initial title',
+        body: 'Initial body',
+      })
+
+      await Promise.all([
+        tabA.update(note.id, { title: 'Updated title' }),
+        tabB.update(note.id, { body: 'Updated body' }),
+      ])
+
+      const final = await tabA.get(note.id)
+      expect(final.title).toBe('Updated title')
+      expect(final.body).toBe('Updated body')
+    } finally {
+      sharedDbB.close()
+    }
+  })
+})
+
 describe('ServerNoteRepository', () => {
   it('lists paginated notes, creates, updates, deletes, and restores via API', async () => {
     const repo = new ServerNoteRepository(notesApi)

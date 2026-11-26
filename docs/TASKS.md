@@ -1158,7 +1158,8 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
 
 ### UX-017: Post-Merge Visual Polish for Insights, Notes & Offline Banners
 
-- **Status:** review
+- **Status:** done
+- **Merge:** [PR #89](https://github.com/danishsary8/Loomora_front/pull/89) at `1c4e850`.
 - **Owner:** antigravity
 - **Source:** Post-merge visual QA audit of `F-R4-01` (PR #86, `16adadc`) and `F-R4-02` (PR #87, `a76d95d`); reconciled with merged `F-R4-03` (PR #88, `5c15812`). Task ID verified unused across `docs/` and branches (`F-R4-03` remains Codex's historical streak task).
 - **Owner decisions recorded:**
@@ -1176,3 +1177,16 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] Vitest (`InsightsPage`, `computeStatsSummary`, `NotesPage`, `ServiceDownBanner`, `i18n`) and Playwright `phone-375` (`insights`, `notes`, `a11y`, `page-heading`) pass with 0 axe violations and 0 px overflow at 320–1440 px and 200% text.
   - [x] `lint`, `typecheck`, `knip`, `format:check`, `build`, `npm audit --omit=dev`, Redocly OpenAPI lint, and before/after 375 px & 1440 px visual checks pass.
 - **Files:** `src/features/notes/NotesPage.tsx`, `src/features/notes/NotesPage.test.tsx`, `src/features/insights/InsightsPage.tsx`, `src/features/insights/InsightsPage.test.tsx`, `src/app/layout/ServiceDownBanner.tsx`, `src/app/layout/ServiceDownBanner.test.tsx`, `src/i18n/en.json`, `e2e/notes.spec.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### QA-028: Atomic Guest Notes Mutations
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Codex R1–R4 integration audit P1 finding (concurrent update + delete on a guest note could both succeed and resurrect the deleted note because `GuestNoteRepository.update()` read and wrote in separate IndexedDB transactions). Task ID verified unused across `docs/` and branches (`QA-027` remains Codex's guest import containment task).
+- **Scope:** Notes CRUD transaction atomicity in `GuestNoteRepository.ts` (`create`, `update`, preserving `delete` and `restore` atomicity; leaving `clearImported()` and `saveGuestPlan.ts` untouched for `QA-027`) and deterministic two-instance concurrency regression tests in `src/lib/storage/notes.test.ts`.
+- **Done when:**
+  - [x] `GuestNoteRepository.update()` and `create()` run read, validation, deletion/conflict check, schedule-block lookup, and write within a single Dexie `'rw'` transaction over `db.notes` and `db.schedule_items` with zero non-IDB async calls inside the transaction.
+  - [x] Updating a deleted note returns 404; repeated delete preserves original 7-day deadline; expired restore returns 410; stale concurrent updates can never resurrect a deleted note.
+  - [x] Deterministic two-instance concurrency tests cover update/delete (both orders, standalone and schedule-attached), update/restore (both orders), and disjoint concurrent updates (no lost updates).
+  - [x] `lint`, `typecheck`, `knip`, `format:check`, full `npm test`, `npm run build`, full Playwright `phone-375`, Redocly OpenAPI lint, and `git diff --check` pass.
+- **Files:** `src/lib/storage/GuestNoteRepository.ts`, `src/lib/storage/notes.test.ts`, `vercel.json`, `docs/TASKS.md`, `docs/PROGRESS.md`
