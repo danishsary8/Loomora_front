@@ -1642,3 +1642,23 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 horizontal overflow across 320–1440 px and 200% text).
   - Screenshots captured and visually inspected at 375 px and 1440 px (`docs/screenshots/ux020-styleguide-375.png`, `ux020-styleguide-1440.png`, `ux020-empty-notes-375.png`, `ux020-empty-notes-1440.png`); verified 0 px overflow and instant reduced-motion KPI update.
 - **Problems / Questions:** None. Ready for owner review before starting UX-021 (Today).
+
+### 2026-11-27 UX-021: Today screen concept v3 alignment
+
+- **Branch:** `feat/UX-021-today-polish` stacked on `feat/UX-020-motion-skeletons-empty-states` (PR #106 — merge #106 first).
+- **What changed:**
+  - **Tokens & UI primitives:** Added `primaryLight` (`#26684A`, WCAG AA contrast >= 4.5:1 with `#FFFFFF` verified in `tokens.test.ts`) and `elevation.fab` in `src/styles/tokens.ts` / `tailwind.config.ts`; added `ArrowRightIcon` in `src/components/ui/icons.tsx`; widened `AppPageHeader.headline` to `ReactNode`; added `shape="circle"` to `Checkbox`; applied `shadow-fab` to `FloatingAddButton`.
+  - **Today header & streak:** Styled Today headline as `"Make today "` + `"count."` in primary green via i18n keys (`pages.today.headlinePrefix` / `headlineAccent`); styled `StreakBadge` as a warm peach card (`bg-warning-surface` -> `bg-accent/45` when today is counted) with a circular flame badge.
+  - **Progress card & hierarchy:** Upgraded `TodayProgressCard` with `bg-gradient-to-br from-primary to-primary-light`, soft inner glow, `progressDrawTransition` bar/ring draw-in, and `useCountUp` percentage; placed the progress card above `DailyIntention` and `NowNextStrip` to match concept v3.
+  - **Now → Next & grouped to-dos:** Added a centered `ArrowRightIcon` between the two tinted mini-cards in `NowNextStrip`; grouped `TodoRow` items inside ONE hairline-divided `paper` card (`divide-y divide-border-subtle`) with round check circles (`shape="circle"`), right-aligned category pills, and a quiet `"See all →"` link to `/insights`.
+  - **Tests updated (style-pinning only):** Updated `TodayPage.test.tsx` (grouped list card classes) and `StreakBadge.test.tsx` (warm peach card classes).
+- **How it was verified:**
+  - `npm run lint`: passed (0 errors, 0 warnings).
+  - `npm run typecheck`: passed (`tsc -b`).
+  - `npm run knip`: passed (0 unused files/exports/dependencies).
+  - `npm run format:check`: passed.
+  - `npm test`: passed (84 files / 962 tests).
+  - `npm run build`: passed.
+  - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (known unrelated cold-load flake; all Today, a11y, overflow, 200% text, subtasks, repeat, reminders specs passed).
+  - Populated Today screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux021-today-375.png`, `ux021-today-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Ready for owner review before starting UX-022 (Week).

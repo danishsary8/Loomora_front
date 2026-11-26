@@ -14,6 +14,7 @@ export const colors = {
   muted: '#54685B',
   // Deep forest brand primary and soft tint.
   primary: '#1D5039',
+  primaryLight: '#26684A',
   primaryPressed: '#194631',
   primarySoft: '#E6F0EB',
   // Restrained terracotta accent — pair ONLY with `ink` (#132A23) foreground.
@@ -61,6 +62,7 @@ export const elevation = {
   sm: '0 1px 2px rgba(19, 42, 35, 0.06)',
   md: '0 4px 12px rgba(19, 42, 35, 0.08)',
   sheet: '0 -8px 24px rgba(19, 42, 35, 0.12)',
+  fab: '0 6px 18px rgba(233, 154, 99, 0.42), 0 2px 6px rgba(19, 42, 35, 0.12)',
 } as const
 
 export const motion = {

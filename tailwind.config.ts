@@ -21,6 +21,7 @@ export default {
         ink: colors.ink,
         muted: colors.muted,
         primary: colors.primary,
+        'primary-light': colors.primaryLight,
         'primary-pressed': colors.primaryPressed,
         'primary-soft': colors.primarySoft,
         accent: colors.accent,
@@ -45,6 +46,7 @@ export default {
         'soft-sm': elevation.sm,
         'soft-md': elevation.md,
         'soft-sheet': elevation.sheet,
+        fab: elevation.fab,
       },
       transitionDuration: {
         fast: motion.duration.fast,

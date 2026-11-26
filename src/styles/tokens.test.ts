@@ -27,6 +27,7 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     ['muted on canvas (cream)', colors.muted, colors.cream],
     ['muted on paper', colors.muted, colors.paper],
     ['white on primary', colors.white, colors.primary],
+    ['white on primaryLight', colors.white, colors.primaryLight],
     ['white on primaryPressed', colors.white, colors.primaryPressed],
     ['primary on primarySoft', colors.primary, colors.primarySoft],
     ['primary on canvas', colors.primary, colors.cream],

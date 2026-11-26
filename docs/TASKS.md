@@ -1310,3 +1310,20 @@ Source: `docs/research/daycraft-gap-analysis.md` and `docs/research/daycraft-tas
   - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
   - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
 - **Files:** `src/styles/{tokens,motion,index.css,tokens.test.ts,motion.test.tsx}`, `tailwind.config.ts`, `src/components/ui/{Sheet,ProgressRing,press,icons,Button.test.tsx}`, `src/components/states/{LoadingState,EmptyState,states.test.tsx,index.ts}`, `src/app/layout/AppLayout.tsx`, `src/features/today/{DoneStamp,DailyIntention}.tsx`, `src/features/styleguide/StyleguidePage.tsx`, `src/i18n/en.json`, `docs/screenshots/ux020-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`
+
+### UX-021: Today screen concept v3 alignment
+
+- **Status:** review
+- **Owner:** antigravity
+- **Source:** Concept v3 polish plan (`LOOMORA_PREMIUM_EXCLUSIVE_UI_CONCEPT_V3`, DEC-003 tokens unchanged; stacked on PR #106 `UX-020`).
+- **Plan:**
+  1. Add `primaryLight` (`#26684A`) and `elevation.fab` tokens in `src/styles/tokens.ts` / `tailwind.config.ts` (verified >= 4.5:1 contrast with white), add `ArrowRightIcon` in `icons.tsx`, widen `AppPageHeader.headline` to `ReactNode`, and add `shape="circle"` to `Checkbox`.
+  2. Align Today header ("Make today **count.**" with `"count."` in primary green) and `StreakBadge` as a warm peach card with flame icon.
+  3. Upgrade `TodayProgressCard` with a forest-green gradient + soft inner glow, mount draw-in bar/ring (`progressDrawTransition`), and `useCountUp` percentage; place progress card above `DailyIntention` and `NowNextStrip` to match the concept hierarchy.
+  4. Add an arrow between the two tinted mini-cards in `NowNextStrip`, group `TodoRow` items inside one hairline-divided paper card with round check circles, right-aligned category pills, 30 ms staggered entry, and a quiet `"See all"` link to `/insights`; apply soft accent shadow to `FloatingAddButton`.
+  5. Run all checks (`lint`, `typecheck`, `knip`, `format:check`, `test`, `build`, Playwright `phone-375`), capture 375 px + 1440 px screenshots, update `docs/PROGRESS.md`, and open PR into `v2-rebuild`.
+- **Done when:**
+  - [x] Today matches the concept v3 hierarchy, colors, grouped to-do card, round checkboxes, Now → Next arrow, gradient progress card, peach streak pill, and accent FAB shadow at 375 px and 1440 px.
+  - [x] `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm test`, `npm run build`, and `npx playwright test --project=phone-375 --trace off` pass.
+  - [x] 375 px and 1440 px screenshots saved to `docs/screenshots/`.
+- **Files:** `src/styles/{tokens,tokens.test.ts}`, `tailwind.config.ts`, `src/components/page/AppPageHeader.tsx`, `src/components/ui/{Checkbox,FloatingAddButton,icons}.tsx`, `src/features/streak/{StreakBadge,StreakBadge.test}.tsx`, `src/features/today/{TodayPage,TodayProgressCard,NowNextStrip,TodoRow,TodayPage.test}.tsx`, `src/i18n/en.json`, `docs/screenshots/ux021-*.png`, `docs/TASKS.md`, `docs/PROGRESS.md`

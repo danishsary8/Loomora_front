@@ -241,7 +241,9 @@
   "pages": {
     "today": {
       "title": "Today",
-      "headline": "Make today count."
+      "headline": "Make today count.",
+      "headlinePrefix": "Make today",
+      "headlineAccent": "count."
     },
     "week": {
       "title": "Week",
@@ -321,6 +323,7 @@
     "emptyTitle": "What do you have to do today?",
     "emptyMessage": "Start with one thing.",
     "list": "Your to-dos",
+    "seeAll": "See all",
     "repeatsDaily": "Repeats daily",
     "repeatsWeekly": "Repeats weekly: {{days}}",
     "overdue": "Overdue",

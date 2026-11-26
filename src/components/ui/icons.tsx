@@ -286,3 +286,11 @@ export function SproutIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   )
 }
+
+export function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </IconBase>
+  )
+}

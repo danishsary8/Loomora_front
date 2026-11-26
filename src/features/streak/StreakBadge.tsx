@@ -7,7 +7,7 @@ import type { Streak } from './streak'
 
 const CELEBRATION_MS = 1200
 
-/** Header badge: streak count; filled once today counted, with a small pop on the first check-off. */
+/** Header peach card: streak count with flame; warms up once today counted, with a small pop. */
 export function StreakBadge({ count, todayCounted }: Streak) {
   const { t } = useTranslation()
   const reduceMotion = useReducedMotion()
@@ -32,15 +32,26 @@ export function StreakBadge({ count, todayCounted }: Streak) {
       data-today-counted={todayCounted}
       data-celebrating={celebrating}
       aria-label={t(todayCounted ? 'streak.counted' : 'streak.open', { count })}
-      animate={celebrating && !reduceMotion ? { scale: [1, 1.18, 1] } : { scale: 1 }}
-      transition={{ duration: 0.36 }}
+      animate={celebrating && !reduceMotion ? { scale: [1, 1.14, 1] } : { scale: 1 }}
+      transition={{ duration: 0.32 }}
       className={cn(
-        'inline-flex min-h-touch max-w-full items-center gap-2 rounded-md border-hairline px-3 py-1.5 text-sm font-semibold leading-tight text-ink shadow-soft-sm transition-colors duration-fast ease-elemental',
-        todayCounted ? 'border-accent/60 bg-accent/40' : 'border-accent/30 bg-paper',
+        'inline-flex min-h-touch max-w-full items-center gap-2 rounded-md border-hairline px-3 py-1.5 text-xs font-semibold leading-tight text-ink shadow-soft-sm transition-colors duration-fast ease-elemental',
+        todayCounted ? 'border-accent/65 bg-accent/45' : 'border-accent/40 bg-warning-surface',
       )}
     >
-      <StreakIcon className="size-5 shrink-0" />
-      <span aria-hidden="true" className="min-w-0 max-w-[5rem] [overflow-wrap:anywhere]">
+      <span
+        aria-hidden="true"
+        className={cn(
+          'grid size-7 shrink-0 place-items-center rounded-full text-ink',
+          todayCounted ? 'bg-accent/55' : 'bg-accent/30',
+        )}
+      >
+        <StreakIcon className="h-icon-sm w-icon-sm" />
+      </span>
+      <span
+        aria-hidden="true"
+        className="min-w-0 max-w-[5rem] tabular-nums [overflow-wrap:anywhere]"
+      >
         {t('streak.days', { count })}
       </span>
     </m.p>

@@ -6,10 +6,12 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
   label: ReactNode
   /** Keep the label for screen readers only. */
   hideLabel?: boolean
+  /** Visual box shape: rounded square (default) or round circle for to-do rows. */
+  shape?: 'square' | 'circle'
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, hideLabel = false, className, disabled, ...rest },
+  { label, hideLabel = false, shape = 'square', className, disabled, ...rest },
   ref,
 ) {
   return (
@@ -24,7 +26,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       <span
         aria-hidden="true"
         className={cn(
-          'grid size-6 shrink-0 place-items-center rounded-sm border-control border-border-control bg-paper text-white shadow-soft-sm',
+          'grid size-6 shrink-0 place-items-center border-control border-border-control bg-paper text-white shadow-soft-sm',
+          shape === 'circle' ? 'rounded-full' : 'rounded-sm',
           'transition-[transform,background-color,border-color] duration-fast ease-elemental',
           'peer-checked:border-primary peer-checked:bg-primary peer-checked:[&>svg]:opacity-100',
           'peer-active:scale-95 motion-reduce:peer-active:scale-100',

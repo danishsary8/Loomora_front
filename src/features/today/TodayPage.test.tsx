@@ -353,8 +353,9 @@ describe('Elemental Today accessibility & interactions (UX-007)', () => {
     await repo.create({ title: 'Keyboard task', due_date: today, category: 'study' })
     await openToday()
 
-    const row = await screen.findByTestId('todo-row')
-    expect(row).toHaveClass('border-border-subtle', 'bg-paper', 'shadow-soft-sm')
+    const listCard = await screen.findByTestId('todo-list-card')
+    expect(listCard).toHaveClass('border-border-subtle', 'bg-paper', 'shadow-soft-sm', 'divide-y')
+    const row = screen.getByTestId('todo-row')
 
     const checkbox = screen.getByRole('checkbox', { name: 'Mark “Keyboard task” done' })
     checkbox.focus()

@@ -11,7 +11,7 @@ export function AppPageHeader({
   aside,
 }: {
   title: string
-  headline: string
+  headline: ReactNode
   subtitle?: ReactNode
   aside?: ReactNode
 }) {
