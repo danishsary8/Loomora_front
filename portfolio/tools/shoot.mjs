@@ -1,6 +1,7 @@
 // Captures screens from the dev server with the seeded demo data.
 // Usage: node portfolio/tools/shoot.mjs <outDir> <phone,laptop> <name=path[|action]...>...
-// Actions: btn:<name> clicks a button, scroll:<px> scrolls, wait:<ms> advances the fixed clock.
+// Date is fixed (Fri 27 Nov 2026 10:40, Phnom Penh); timers and animations still run.
+// Actions: top scrolls back up, btn:<name> clicks a button (btn:~regex matches), scroll:<px> scrolls, wait:<ms> moves the fixed time forward.
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
@@ -27,11 +28,13 @@ for (const size of sizes.split(',')) {
   const { prefix, ...opts } = VIEWPORTS[size]
   const context = await browser.newContext({
     ...opts,
+    reducedMotion: 'reduce',
     timezoneId: 'Asia/Phnom_Penh',
     locale: 'en-GB',
   })
   const page = await context.newPage()
-  await page.clock.install({ time: new Date('2026-11-27T03:40:00Z') })
+  const START = Date.parse('2026-11-27T03:40:00Z')
+  await page.clock.setFixedTime(START)
   await page.goto(BASE + '/today')
   await page.evaluate(`(${seedSrc})()`)
   for (const shot of shots) {
@@ -39,13 +42,18 @@ for (const size of sizes.split(',')) {
     const [path, ...actions] = rest.split('|')
     await page.goto(BASE + path)
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(900)
+    await page.clock.setFixedTime(START)
+    await page.waitForTimeout(1500)
     for (const step of actions) {
       const [kind, arg] = step.split(/:(.*)/s)
-      if (kind === 'btn') await page.getByRole('button', { name: arg, exact: true }).first().click()
+      if (kind === 'btn') {
+        const name = arg.startsWith('~') ? new RegExp(arg.slice(1)) : arg
+        await page.getByRole('button', { name, exact: true }).first().click()
+      }
       if (kind === 'scroll') await page.mouse.wheel(0, Number(arg))
-      if (kind === 'wait') await page.clock.runFor(Number(arg))
-      await page.waitForTimeout(900)
+      if (kind === 'wait') await page.clock.setFixedTime(START + Number(arg))
+      if (kind === 'top') await page.evaluate(() => window.scrollTo(0, 0))
+      await page.waitForTimeout(1500)
     }
     await page.screenshot({ path: `${outDir}/${prefix}${name}.png` })
   }
