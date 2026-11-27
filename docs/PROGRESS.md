@@ -1790,3 +1790,28 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Full Playwright `phone-375`: **128/128 passed**.
   - Fresh 375 px screenshots visually verified and saved to `docs/screenshots/ux030-{today,week,add-sheet,insights,profile}-375.png`.
 - **Problems / Questions:** None. PR #116 is open for review (stacked on PR #115).
+
+### 2026-11-27 UX-031: Premium Concept v3 redesign, lag fixes, and portfolio kit refresh
+
+- **Branch:** `claude/relaxed-mendel-4mzu1v` from `v2-rebuild` (2531e7b).
+- **What changed:**
+  - **Lag fixes:** `src/lib/lazyWithPreload.ts` adds `.preload()` to lazy screens; the four tab pages preload on idle from `AppLayout`, and `AddTodoSheet` / `DaySheet` / `ScheduleItemSheet` preload on idle and on `pointerdown` of the floating +. The reminder banner wrapper is no longer `sticky top-0` (it stayed over scrolled to-do rows and blocked their checkboxes); it now sits in the flow. Removed `backdrop-blur-md` from the bottom nav (already 95% opaque; blur repaints on every scroll frame) and the 1 px sheet-backdrop blur.
+  - **Signature motif:** shared `src/components/ui/Hills.tsx` (layered hills, low peach sun, sprouts; tokens only, `aria-hidden`), used by Profile hero, auth panel and landing preview.
+  - **Auth (S10 and follow-ups):** split card like the reference: deep-green panel with wordmark, promise and hills; form on the other side. On phones the panel becomes a short banner above the form.
+  - **Landing:** brand row, eyebrow, `BlurText` hero line, product preview built from cards over the hills (no device frame), six `SpotlightCard` highlights (plan, now, focus, insights, notes, streak; all in `docs/02-feature-list.md`).
+  - **Desktop:** shell widens to `max-w-6xl` from `md`; Today has a main list plus a sticky right rail (intention, Now/Next); Focus timer beside history; Insights rhythm and Plan vs reality side by side; Notes grid (2–3 columns); Profile in two columns.
+  - **Today rows:** add-subtask is now an icon action (same accessible name) instead of its own text line; category pill sits under the title on phones and on the right from `sm`; `ClickSpark` burst on check-off.
+  - **React Bits:** `CountUp`, `BlurText`, `ClickSpark`, `SpotlightCard` adapted into `src/components/reactbits/` from `DavidHDev/react-bits` `src/ts-tailwind` (MIT + Commons Clause). Upstream files are 340–500 lines with many options; they were trimmed to the props used, `motion/react` → `framer-motion` (`m.*`), with reduced-motion fallbacks. `CountUp` replaces `useCountUp` (one count-up implementation; its two tests were removed with it).
+  - Shared `CATEGORY_TONES` literal class map (`src/components/ui/categoryTones.ts`) replaces the Insights-only map; `PlusIcon` added and reused by the floating +.
+  - **Tests:** new `lazyWithPreload.test.ts` and `reactbits.test.tsx`; landing test expects six highlights; e2e `page-heading` tab order includes the auth panel's brand link; `legal` measure test waits for the first section.
+  - **Portfolio kit:** `portfolio/` rebuilt from the new UI (13 screens × laptop/phone, covers, overview, entry, README) with re-runnable `portfolio/tools/{seed,shoot,cover}.mjs`.
+- **How it was verified:**
+  - `npm run lint`, `npm run knip`, `npm run format:check`, `npm run typecheck`, `npm run build`: all passed.
+  - `npm test`: **87 files / 985 tests passed**.
+  - Playwright `phone-375`: full run 124/128; the 4 failures were fixed (Today rail overflow at 1024 px / 200% text, legal measure, auth tab order, a focus-import timing flake) and the affected specs re-run green. `legal.spec.ts` "failed screen load" flaked once and passed on re-run with and without these changes.
+  - Visual pass of every screen at 430 px and 1440 px with seeded demo data.
+- **Problems / Questions:**
+  - Follow-up on the same branch: hills inside the Focus ring with a larger sprout; note cards get a category-icon tile and tag pills; add-to-do sheet rows get forest icon tiles (incl. "More options"); desktop Week blocks show their category icon. `BlurText` no longer animates opacity (axe caught a mid-fade word), and the auth brand link wraps at 320 px / 200% text.
+  - Hand check (scripted Playwright click-through of every visible button on Today, Week, Focus, Insights, Notes, Profile, landing, sign-in, sign-up at 375 px and 1440 px with the demo seed): no page errors, no console errors, no target under 44 px. With a reminder due, the banner scrolls away and a to-do further down can be checked off.
+  - Full Playwright `phone-375` after the follow-up: 126/128 with the two failures above, both fixed and their specs re-run green (32/32).
+  - Portfolio role: owner confirmed "Solo" (27 Nov 2026); the entry and README say so.

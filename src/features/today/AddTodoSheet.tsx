@@ -10,6 +10,7 @@ import {
   NotesIcon,
   RepeatIcon,
   WeekIcon,
+  SparkleIcon,
 } from '@/components/ui/icons'
 import { deviceTimeZone } from '@/features/auth/timezone'
 import { localReminderValue, reminderInstant } from '@/features/reminders/reminderTime'
@@ -331,7 +332,10 @@ export function AddTodoSheet({ open, onClose, today, target }: AddTodoSheetProps
                     'transition-colors duration-fast ease-elemental hover:bg-subtle/60 motion-reduce:transition-none',
                   )}
                 >
-                  <span>{moreOptionsLabel}</span>
+                  <span className="flex items-center gap-2.5">
+                    <RowIcon Icon={SparkleIcon} />
+                    {moreOptionsLabel}
+                  </span>
                   <ChevronDownIcon
                     className={cn(
                       'h-icon-md w-icon-md shrink-0 text-muted transition-transform duration-fast ease-elemental motion-reduce:transition-none',
@@ -494,8 +498,8 @@ function OptionalFieldSection({
   if (asLegend) {
     return (
       <fieldset className={cn('flex min-w-0 flex-col gap-2', className)}>
-        <legend className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
-          <Icon className="h-icon-sm w-icon-sm shrink-0" />
+        <legend className="mb-2 flex items-center gap-2.5 text-sm font-semibold text-ink">
+          <RowIcon Icon={Icon} />
           <span>{label}</span>
         </legend>
         {children}
@@ -504,13 +508,22 @@ function OptionalFieldSection({
   }
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <div className="flex items-center gap-2 text-muted">
-        <Icon className="h-icon-sm w-icon-sm shrink-0" />
-        <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide">
+      <div className="flex items-center gap-2.5">
+        <RowIcon Icon={Icon} />
+        <span aria-hidden="true" className="text-sm font-semibold text-ink">
           {label}
         </span>
       </div>
       {children}
     </div>
+  )
+}
+
+/** Concept v3 sheet-row icon: forest glyph on a soft tinted tile. */
+function RowIcon({ Icon }: { Icon: OptionalFieldSectionProps['Icon'] }) {
+  return (
+    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary-soft text-primary">
+      <Icon className="h-icon-sm w-icon-sm" />
+    </span>
   )
 }

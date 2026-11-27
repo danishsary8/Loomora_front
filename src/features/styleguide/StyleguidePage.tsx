@@ -29,8 +29,9 @@ import {
   TrashIcon,
   WeekIcon,
 } from '@/components/ui/icons'
+import { CountUp } from '@/components/reactbits/CountUp'
 import { ScheduleItemSheet } from '@/features/schedule/ScheduleItemSheet'
-import { listStaggerContainer, listStaggerItem, pressTapProps, useCountUp } from '@/styles/motion'
+import { listStaggerContainer, listStaggerItem, pressTapProps } from '@/styles/motion'
 import { CATEGORIES, colors, type Category } from '@/styles/tokens'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -85,7 +86,6 @@ export function StyleguidePage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
   const [kpiTarget, setKpiTarget] = useState(83)
-  const animatedKpi = useCountUp(kpiTarget, { reduced })
   const tap = pressTapProps(reduced)
 
   return (
@@ -294,7 +294,9 @@ export function StyleguidePage() {
         <Card className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold text-muted">{t('styleguide.motionCountLabel')}</p>
-            <p className="text-2xl font-bold tabular-nums text-ink">{animatedKpi}%</p>
+            <p className="text-2xl font-bold tabular-nums text-ink">
+              <CountUp to={kpiTarget} />%
+            </p>
           </div>
           <m.button
             type="button"

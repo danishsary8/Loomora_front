@@ -1,0 +1,425 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- Source of cover/card.webp and cover/banner.webp.
+     Open with ?mode=card (1600x1000, 16:10) or ?mode=banner (1920x800, 2.4:1) and screenshot at 2x. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap"
+    />
+    <style>
+      :root {
+        /* The portfolio's own "loomora" cover stage (ProjectCover.tsx), so the grid stays one system. */
+        --lit: #3f7d6b;
+        --mid: #1f4a3f;
+        --deep: #0f2722;
+        --mint: #9be3c6;
+        /* From the app (src/styles/tokens.ts). */
+        --accent: #e99a63;
+        --paper: #fcfbf8;
+        --study: #d4e7fb;
+        --work: #fbe6b8;
+        --health: #ceefdb;
+        --life: #fadbe3;
+        --rest: #e5dcfa;
+        --study-ink: #2563a6;
+        --work-ink: #9a6304;
+        --health-ink: #1b7a49;
+        --life-ink: #be345b;
+        --rest-ink: #6341b8;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: var(--w);
+        height: var(--h);
+        background: var(--deep);
+      }
+      body {
+        font-family: 'Geist', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .stage {
+        position: relative;
+        width: var(--w);
+        height: var(--h);
+        overflow: hidden;
+        background: radial-gradient(
+          120% 90% at 15% 10%,
+          var(--lit) 0%,
+          var(--mid) 50%,
+          var(--deep) 100%
+        );
+      }
+
+      /* The hills and the low sun from the app's Profile hero, redrawn in the cover's greens. */
+      .sun {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #f6c39c, var(--accent) 70%);
+        box-shadow: 0 0 120px 30px rgba(233, 154, 99, 0.22);
+      }
+      .hills {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .label {
+        position: absolute;
+        color: #fff;
+      }
+      .kind {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font:
+          500 15px/1 'Geist Mono',
+          monospace;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .kind i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--mint);
+      }
+      h1 {
+        margin-top: 20px;
+        font-weight: 650;
+        font-size: 112px;
+        line-height: 0.9;
+        letter-spacing: -0.05em;
+      }
+      /* The wordmark's round accent dot, as in the app (Geist's own period is square). */
+      h1 b {
+        display: inline-block;
+        width: 0.15em;
+        height: 0.15em;
+        margin-left: 0.03em;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .line {
+        margin-top: 22px;
+        font-size: 25px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.74);
+        max-width: 18em;
+      }
+
+      /* Signature: Friday's rhythm on an hour ruler, with the "now" line the Today screen reads from. */
+      .ribbon {
+        position: absolute;
+      }
+      .ribbon h2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font:
+          500 13px/1 'Geist Mono',
+          monospace;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 44px;
+      }
+      .track {
+        position: relative;
+        height: 46px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
+      .blk {
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
+        border-radius: 9px;
+      }
+      .blk span {
+        position: absolute;
+        left: 0;
+        top: -26px;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      .blk.study {
+        background: var(--study);
+      }
+      .blk.work {
+        background: var(--work);
+      }
+      .blk.health {
+        background: var(--health);
+      }
+      .blk.life {
+        background: var(--life);
+      }
+      .blk.rest {
+        background: var(--rest);
+      }
+      .blk.done {
+        opacity: 0.72;
+      }
+      .now {
+        position: absolute;
+        top: -10px;
+        bottom: -10px;
+        width: 2px;
+        background: var(--mint);
+        border-radius: 2px;
+        box-shadow: 0 0 14px rgba(155, 227, 198, 0.8);
+      }
+      .now em {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translate(-50%, 8px);
+        white-space: nowrap;
+        font:
+          600 12.5px/1 'Geist Mono',
+          monospace;
+        color: var(--deep);
+        background: var(--mint);
+        padding: 5px 8px;
+        border-radius: 99px;
+        font-style: normal;
+      }
+      .ticks {
+        position: relative;
+        height: 18px;
+        margin-top: 10px;
+        font:
+          500 12px/1 'Geist Mono',
+          monospace;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .ticks s {
+        position: absolute;
+        transform: translateX(-50%);
+        text-decoration: none;
+      }
+
+      /* A real laptop: lid with bezel and camera, then the aluminium deck. */
+      .laptop {
+        position: absolute;
+      }
+      .lid {
+        position: relative;
+        border-radius: 18px 18px 6px 6px;
+        background: #0c1512;
+        padding: 2.2% 2.2% 2.6%;
+        box-shadow:
+          0 0 0 1.5px #2b3a35,
+          0 50px 90px -30px rgba(0, 0, 0, 0.65);
+      }
+      .lid::before {
+        content: '';
+        position: absolute;
+        top: 0.9%;
+        left: 50%;
+        width: 7px;
+        height: 7px;
+        margin-left: -3.5px;
+        border-radius: 50%;
+        background: #24312d;
+      }
+      .lid img {
+        display: block;
+        width: 100%;
+        border-radius: 4px;
+      }
+      .deck {
+        position: relative;
+        height: 22px;
+        margin: 0 -8%;
+        border-radius: 2px 2px 16px 16px;
+        background: linear-gradient(#d9dfdc, #a9b2ae 55%, #7d8783);
+        box-shadow: 0 26px 40px -16px rgba(0, 0, 0, 0.6);
+      }
+      .deck::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 16%;
+        height: 8px;
+        transform: translateX(-50%);
+        border-radius: 0 0 10px 10px;
+        background: #9aa39f;
+      }
+
+      .phone {
+        position: absolute;
+        border-radius: 46px;
+        padding: 10px;
+        background: #0c1512;
+        box-shadow:
+          0 0 0 2px #33433d,
+          0 50px 70px -24px rgba(0, 0, 0, 0.7);
+      }
+      .phone img {
+        display: block;
+        width: 100%;
+        border-radius: 37px;
+      }
+      .phone::before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        top: 22px;
+        left: 50%;
+        width: 30%;
+        height: 22px;
+        transform: translateX(-50%);
+        border-radius: 99px;
+        background: #0c1512;
+      }
+
+      /* Card (16:10). */
+      .card .sun {
+        right: 13%;
+        top: 9%;
+      }
+      .card .label {
+        left: 6%;
+        top: 9%;
+      }
+      .card .ribbon {
+        left: 6%;
+        top: 47%;
+        width: 30%;
+      }
+      .card .laptop {
+        left: 47%;
+        top: 22%;
+        width: 50%;
+      }
+      .card .phone {
+        left: 40%;
+        top: 42%;
+        width: 17.5%;
+      }
+
+      /* Banner (2.4:1): no title, the case study prints it above. */
+      .banner .label {
+        display: none;
+      }
+      .banner .sun {
+        left: 74%;
+        top: 1%;
+        width: 150px;
+        height: 150px;
+      }
+      .banner .ribbon {
+        left: 5%;
+        top: 42%;
+        width: 26.5%;
+      }
+      .banner .laptop {
+        left: 42%;
+        top: 9%;
+        width: 50%;
+      }
+      .banner .phone {
+        left: 35%;
+        top: 27%;
+        width: 13%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="sun"></div>
+      <svg class="hills" viewBox="0 0 1600 420" preserveAspectRatio="none" aria-hidden="true">
+        <path
+          d="M0 230 C 220 150, 420 170, 640 215 S 1080 300, 1300 220 S 1520 150, 1600 170 V420 H0Z"
+          fill="#2c6352"
+          opacity=".55"
+        />
+        <path
+          d="M0 300 C 260 240, 520 250, 760 300 S 1220 370, 1600 280 V420 H0Z"
+          fill="#1d4a3d"
+          opacity=".85"
+        />
+        <path d="M0 360 C 300 320, 640 340, 960 370 S 1400 380, 1600 350 V420 H0Z" fill="#12302a" />
+      </svg>
+
+      <div class="label">
+        <p class="kind"><i></i>Day &amp; focus planner</p>
+        <h1>Loomora<b></b></h1>
+        <p class="line">Plan your day. Focus. See how it went.</p>
+      </div>
+
+      <!-- Friday 27 Nov in the demo data, 06:00 to 22:00 (16 h). -->
+      <div class="ribbon" aria-hidden="true">
+        <h2><span>Friday's rhythm</span><span>5 blocks</span></h2>
+        <div class="track" id="track"></div>
+        <div class="ticks" id="ticks"></div>
+      </div>
+
+      <div class="laptop">
+        <div class="lid"><img src="../screens/week.webp" alt="" /></div>
+        <div class="deck"></div>
+      </div>
+      <div class="phone"><img src="../screens/m-today.webp" alt="" /></div>
+    </div>
+    <script>
+      const mode = new URLSearchParams(location.search).get('mode') || 'card'
+      const [w, h] = mode === 'banner' ? [1920, 800] : [1600, 1000]
+      document.documentElement.style.setProperty('--w', w + 'px')
+      document.documentElement.style.setProperty('--h', h + 'px')
+      document.getElementById('stage').classList.add(mode)
+
+      const START = 6,
+        END = 22,
+        pct = (t) => ((t - START) / (END - START)) * 100
+      const hm = (s) => {
+        const [a, b] = s.split(':').map(Number)
+        return a + b / 60
+      }
+      const blocks = [
+        ['Class', 'study', '08:00', '09:30', true],
+        ['Deep work', 'work', '10:00', '12:30'],
+        ['Lunch', 'rest', '12:30', '13:30'],
+        ['Gym', 'health', '17:00', '18:00'],
+        ['Read', 'life', '20:30', '21:30'],
+      ]
+      const track = document.getElementById('track')
+      for (const [name, cat, a, b, done] of blocks) {
+        const el = document.createElement('div')
+        el.className = `blk ${cat}${done ? ' done' : ''}`
+        el.style.left = `calc(${pct(hm(a))}% + 2px)`
+        el.style.width = `calc(${pct(hm(b)) - pct(hm(a))}% - 4px)`
+        if (name !== 'Lunch') el.innerHTML = `<span>${name}</span>`
+        track.append(el)
+      }
+      const now = document.createElement('div')
+      now.className = 'now'
+      now.style.left = `${pct(hm('10:40'))}%`
+      now.innerHTML = '<em>Now 10:40</em>'
+      track.append(now)
+      const ticks = document.getElementById('ticks')
+      for (const t of [6, 14, 18, 22]) {
+        const s = document.createElement('s')
+        s.style.left = `${pct(t)}%`
+        s.textContent = String(t).padStart(2, '0') + ':00'
+        ticks.append(s)
+      }
+    </script>
+  </body>
+</html>

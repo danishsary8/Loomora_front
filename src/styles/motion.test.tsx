@@ -1,4 +1,3 @@
-import { act, render, screen } from '@testing-library/react'
 import {
   checkOffPopMotion,
   LIST_STAGGER_SECONDS,
@@ -11,13 +10,7 @@ import {
   progressDrawTransition,
   sheetBackdropMotion,
   sheetPanelMotion,
-  useCountUp,
 } from './motion'
-
-function CountUpProbe({ target, reduced }: { target: number; reduced: boolean }) {
-  const value = useCountUp(target, { reduced, durationMs: 200 })
-  return <span data-testid="count">{value}</span>
-}
 
 describe('shared motion foundation (UX-020)', () => {
   it('uses DEC-003 durations (160/200/240 ms) and a single easing curve', () => {
@@ -83,70 +76,5 @@ describe('shared motion foundation (UX-020)', () => {
   it('progressDrawTransition draws in 240 ms and is instant under reduced motion', () => {
     expect(progressDrawTransition(false)).toEqual({ duration: 0.24, ease: MOTION_EASE })
     expect(progressDrawTransition(true)).toEqual({ duration: 0 })
-  })
-
-  it('useCountUp returns target immediately under reduced motion and animates toward target otherwise', () => {
-    const rafQueue: FrameRequestCallback[] = []
-    let now = 0
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
-      rafQueue.push(cb)
-      return rafQueue.length
-    })
-    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
-    const perfSpy = vi.spyOn(performance, 'now').mockImplementation(() => now)
-
-    try {
-      const { rerender } = render(<CountUpProbe target={10} reduced={true} />)
-      expect(screen.getByTestId('count')).toHaveTextContent('10')
-
-      rerender(<CountUpProbe target={50} reduced={true} />)
-      expect(screen.getByTestId('count')).toHaveTextContent('50')
-      expect(rafSpy).not.toHaveBeenCalled()
-
-      rerender(<CountUpProbe target={100} reduced={false} />)
-      expect(rafSpy).toHaveBeenCalled()
-
-      now = 100
-      act(() => {
-        rafQueue.shift()?.(now)
-      })
-      const mid = Number(screen.getByTestId('count').textContent)
-      expect(mid).toBeGreaterThan(50)
-      expect(mid).toBeLessThan(100)
-
-      now = 250
-      act(() => {
-        rafQueue.shift()?.(now)
-      })
-      expect(screen.getByTestId('count')).toHaveTextContent('100')
-    } finally {
-      rafSpy.mockRestore()
-      cancelSpy.mockRestore()
-      perfSpy.mockRestore()
-    }
-  })
-
-  it('useCountUp guards non-finite targets, zero duration, and cancels rAF on unmount', () => {
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 42)
-    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
-
-    try {
-      const { rerender, unmount } = render(<CountUpProbe target={Number.NaN} reduced={false} />)
-      expect(screen.getByTestId('count')).toHaveTextContent('0')
-      expect(rafSpy).not.toHaveBeenCalled()
-
-      rerender(<CountUpProbe target={Number.POSITIVE_INFINITY} reduced={false} />)
-      expect(screen.getByTestId('count')).toHaveTextContent('0')
-      expect(rafSpy).not.toHaveBeenCalled()
-
-      rerender(<CountUpProbe target={75} reduced={false} />)
-      expect(rafSpy).toHaveBeenCalledTimes(1)
-
-      unmount()
-      expect(cancelSpy).toHaveBeenCalledWith(42)
-    } finally {
-      rafSpy.mockRestore()
-      cancelSpy.mockRestore()
-    }
   })
 })

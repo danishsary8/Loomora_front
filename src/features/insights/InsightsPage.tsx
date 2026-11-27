@@ -1,3 +1,5 @@
+import { CATEGORY_TONES } from '@/components/ui/categoryTones'
+import type { Category } from '@/styles/tokens'
 import { m, useReducedMotion } from 'framer-motion'
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,7 +21,8 @@ import { errorMessageKey, useSession, type StatsDayRow, type StatsSummary } from
 import { addDaysLocalDate, daysBetweenLocalDates, toLocalDate } from '@/lib/date'
 import { useTimePreferences } from '@/lib/time/useTimePreferences'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
-import { progressDrawTransition, useCountUp } from '@/styles/motion'
+import { CountUp } from '@/components/reactbits/CountUp'
+import { progressDrawTransition } from '@/styles/motion'
 import { CompletionRhythmCard } from './CompletionRhythmCard'
 import { dayActivityScore } from './completionRhythm'
 import { isEmptyStatsSummary, weekBoundsForDate } from './computeStatsSummary'
@@ -189,8 +192,10 @@ export function InsightsPage() {
             longestStreak={streak.data?.longest}
             locale={locale}
           />
-          <CompletionRhythmCard summary={stats.data} locale={locale} />
-          <PlanVsRealityCard summary={stats.data} locale={locale} />
+          <div className="grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start">
+            <CompletionRhythmCard summary={stats.data} locale={locale} />
+            <PlanVsRealityCard summary={stats.data} locale={locale} />
+          </div>
           {preset === 'week' && (
             <WeeklyRecapCard
               summary={stats.data}
@@ -208,6 +213,8 @@ export function InsightsPage() {
   )
 }
 
+const formatPercent = (value: number) => `${Math.round(value)}%`
+
 function OverviewSection({
   summary,
   streakCount,
@@ -220,8 +227,6 @@ function OverviewSection({
   locale: string
 }) {
   const { t } = useTranslation()
-  const reduceMotion = useReducedMotion()
-  const reduced = Boolean(reduceMotion)
   const { totals } = summary
   const completionPct =
     totals.todos_due > 0
@@ -229,8 +234,6 @@ function OverviewSection({
       : totals.todos_done > 0
         ? 100
         : 0
-  const displayedCompletion = useCountUp(completionPct, { reduced })
-  const displayedStreak = useCountUp(streakCount ?? 0, { reduced })
 
   return (
     <section
@@ -241,7 +244,7 @@ function OverviewSection({
         tone="health"
         Icon={CheckIcon}
         label={t('insights.metrics.completed')}
-        value={`${displayedCompletion}%`}
+        value={<CountUp to={completionPct} format={formatPercent} />}
         detail={t('insights.metrics.todosDue', { count: totals.todos_due })}
       />
       <MetricTile
@@ -256,9 +259,7 @@ function OverviewSection({
         Icon={StreakIcon}
         label={t('insights.metrics.currentStreak')}
         value={
-          streakCount !== undefined
-            ? t('insights.metrics.streakDays', { count: displayedStreak })
-            : '—'
+          streakCount !== undefined ? t('insights.metrics.streakDays', { count: streakCount }) : '—'
         }
         detail={
           longestStreak !== undefined
@@ -512,12 +513,6 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
   )
 }
 
-const tileTones = {
-  study: { surface: 'bg-category-study', icon: 'text-category-accent-study' },
-  health: { surface: 'bg-category-health', icon: 'text-category-accent-health' },
-  life: { surface: 'bg-category-life', icon: 'text-category-accent-life' },
-} as const
-
 /** Concept v3 KPI tile: tinted surface, colored icon badge, value, and sentence-case label. */
 function MetricTile({
   tone,
@@ -526,7 +521,7 @@ function MetricTile({
   value,
   detail,
 }: {
-  tone: keyof typeof tileTones
+  tone: Category
   Icon: ComponentType<{ className?: string }>
   label: string
   value: ReactNode
@@ -536,14 +531,14 @@ function MetricTile({
     <div
       className={cn(
         'flex min-w-0 flex-col items-center gap-1 rounded-lg border-hairline border-ink/10 p-3 text-center text-ink shadow-soft-sm',
-        tileTones[tone].surface,
+        CATEGORY_TONES[tone].surface,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
           'grid size-8 shrink-0 place-items-center rounded-full bg-paper/90 shadow-soft-sm',
-          tileTones[tone].icon,
+          CATEGORY_TONES[tone].icon,
         )}
       >
         <Icon className="h-icon-sm w-icon-sm" />

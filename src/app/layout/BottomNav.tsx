@@ -10,7 +10,7 @@ export function BottomNav() {
     <nav
       aria-label={t('nav.label')}
       data-testid="bottom-nav"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-paper/95 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-soft-sheet backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-paper pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-soft-sheet md:hidden"
     >
       <ul className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-1.5">
         {NAV_ITEMS.map(({ to, labelKey, Icon }) => (

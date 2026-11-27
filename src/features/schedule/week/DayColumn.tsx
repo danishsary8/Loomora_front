@@ -171,15 +171,15 @@ function ItemCard({ item, formatTime, onOpen }: ItemCardProps) {
       <Card
         tone={item.category}
         compact
-        className="flex min-h-touch items-start gap-3 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md md:p-2.5"
+        className="flex min-h-touch items-start gap-3 transition-shadow duration-fast ease-elemental group-hover:shadow-soft-md md:flex-col md:gap-1.5 md:p-2.5"
       >
         <span
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-md bg-paper/85 shadow-soft-sm md:hidden',
+            'grid size-9 shrink-0 place-items-center rounded-md bg-paper/85 shadow-soft-sm md:size-7 md:rounded-sm',
             blockIconAccent[item.category],
           )}
         >
-          <Icon className="h-icon-md w-icon-md" />
+          <Icon className="h-icon-md w-icon-md md:h-icon-sm md:w-icon-sm" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="block hyphens-auto break-words text-sm font-semibold leading-snug">

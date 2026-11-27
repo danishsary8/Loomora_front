@@ -136,6 +136,7 @@ test.describe('S13 Elemental legal and recovery pages', () => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/terms')
     const firstSection = page.getByRole('region').first()
+    await expect(firstSection).toBeVisible()
     // Real measure of the longest paragraph: its characters divided by its rendered line count.
     const charsPerLine = await page.locator('main section p').evaluateAll((paragraphs) => {
       const longest = paragraphs.reduce((a, b) =>

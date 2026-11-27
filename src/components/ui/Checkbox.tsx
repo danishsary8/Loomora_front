@@ -8,16 +8,18 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
   hideLabel?: boolean
   /** Visual box shape: rounded square (default) or round circle for to-do rows. */
   shape?: 'square' | 'circle'
+  /** Decorative layer drawn over the box (e.g. a check-off spark). */
+  overlay?: ReactNode
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, hideLabel = false, shape = 'square', className, disabled, ...rest },
+  { label, hideLabel = false, shape = 'square', overlay, className, disabled, ...rest },
   ref,
 ) {
   return (
     <label
       className={cn(
-        'inline-flex min-h-touch min-w-touch select-none items-center gap-3',
+        'relative inline-flex min-h-touch min-w-touch select-none items-center gap-3',
         disabled ? 'cursor-not-allowed' : 'cursor-pointer',
         className,
       )}
@@ -37,6 +39,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       >
         <CheckIcon className="size-4 opacity-0 transition-opacity duration-fast" />
       </span>
+      {overlay}
       <span className={cn(hideLabel && 'sr-only', 'peer-disabled:opacity-50')}>{label}</span>
     </label>
   )

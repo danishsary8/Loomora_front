@@ -1,5 +1,5 @@
 import { m, useReducedMotion } from 'framer-motion'
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { AppPageHeader } from '@/components/page'
@@ -16,6 +16,7 @@ import { UndoDeleteToast } from '@/features/todos/UndoDeleteToast'
 import { useUndoableDelete } from '@/features/todos/useUndoableDelete'
 import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
+import { lazyWithPreload, runWhenIdle } from '@/lib/lazyWithPreload'
 import { useSession } from '@/lib/api'
 import { formatInstantTime } from '@/lib/time/time'
 import { listStaggerContainer } from '@/styles/motion'
@@ -27,11 +28,17 @@ import { TodayProgressCard } from './TodayProgressCard'
 import { TodoRow } from './TodoRow'
 import { useNow } from './useNow'
 
-const AddTodoSheet = lazy(() => import('./AddTodoSheet').then((m) => ({ default: m.AddTodoSheet })))
-const DaySheet = lazy(() => import('./DaySheet').then((m) => ({ default: m.DaySheet })))
-const ScheduleItemSheet = lazy(() =>
+const AddTodoSheet = lazyWithPreload(() =>
+  import('./AddTodoSheet').then((m) => ({ default: m.AddTodoSheet })),
+)
+const DaySheet = lazyWithPreload(() => import('./DaySheet').then((m) => ({ default: m.DaySheet })))
+const ScheduleItemSheet = lazyWithPreload(() =>
   import('@/features/schedule/ScheduleItemSheet').then((m) => ({ default: m.ScheduleItemSheet })),
 )
+
+function preloadSheets() {
+  void Promise.all([AddTodoSheet.preload(), DaySheet.preload(), ScheduleItemSheet.preload()])
+}
 
 type SchedulePanel = { type: 'day' } | { type: 'editor'; target: ScheduleTarget }
 
@@ -53,6 +60,7 @@ export function TodayPage() {
   }>({ open: false, target: { type: 'create' }, instance: 0, generation })
   const [panel, setPanel] = useState<(SchedulePanel & { generation: number }) | null>(null)
   const schedulePanel = panel?.generation === generation ? panel : null
+  useEffect(() => runWhenIdle(preloadSheets), [])
   const streak = useStreak(today).data
   const scheduleDelete = useScheduleDelete()
   const schedule = (useScheduleDay(today).data ?? []).filter(
@@ -95,77 +103,93 @@ export function TodayPage() {
         aside={streak && <StreakBadge {...streak} />}
       />
 
-      {!todos.isPending && !todos.isError && list.length > 0 && (
-        <TodayProgressCard done={doneCount} total={list.length} />
-      )}
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-x-8 lg:gap-y-5">
+        {!todos.isPending && !todos.isError && list.length > 0 && (
+          <div className="lg:col-start-1 lg:row-start-1">
+            <TodayProgressCard done={doneCount} total={list.length} />
+          </div>
+        )}
 
-      <DailyIntention
-        date={intentionDate}
-        {...(intentionDate !== today && {
-          dateHint: formatDate(intentionDate, { dateStyle: 'full' }),
-        })}
-      />
+        <div className="flex flex-col gap-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <DailyIntention
+            date={intentionDate}
+            {...(intentionDate !== today && {
+              dateHint: formatDate(intentionDate, { dateStyle: 'full' }),
+            })}
+          />
 
-      {schedule.length > 0 && (
-        <NowNextStrip now={nowItem} next={nextItem} onOpen={() => openSchedule({ type: 'day' })} />
-      )}
+          {schedule.length > 0 && (
+            <NowNextStrip
+              now={nowItem}
+              next={nextItem}
+              onOpen={() => openSchedule({ type: 'day' })}
+            />
+          )}
+        </div>
 
-      {todos.isPending ? (
-        <LoadingState />
-      ) : todos.isError ? (
-        <ErrorState onRetry={() => void todos.refetch()} />
-      ) : list.length === 0 ? (
-        <TodayEmpty
-          onAddTodo={addTodo}
-          onAddSchedule={() => openSchedule({ type: 'editor', target: { type: 'create' } })}
-        />
-      ) : (
-        <>
-          {/* pb-20: room to scroll the last row clear of the floating + */}
-          <section aria-labelledby="todo-list-heading" className="flex flex-col gap-3 pb-20">
-            <div className="flex items-center justify-between gap-2">
-              <h2 id="todo-list-heading" className="text-base font-bold text-ink">
-                {t('today.list')}
-              </h2>
-              <Link
-                to="/insights"
-                className="inline-flex min-h-touch items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary transition-colors duration-fast ease-elemental hover:bg-primary-soft"
-              >
-                <span>{t('today.seeAll')}</span>
-                <ArrowRightIcon className="h-icon-sm w-icon-sm" />
-              </Link>
-            </div>
-            <m.ul
-              data-testid="todo-list-card"
-              variants={listStaggerContainer(Boolean(reduceMotion))}
-              initial={false}
-              animate="visible"
-              className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm"
-            >
-              {list.map((todo) => (
-                <TodoRow
-                  key={todo.id}
-                  todo={todo}
-                  formatDate={formatDate}
-                  onToggle={(id, done) => setDone.mutate({ id, done })}
-                  onEdit={(target) => openSheet({ type: 'edit', todo: target })}
-                  onAddSubtask={(parent) => openSheet({ type: 'subtask', parent })}
-                  onDelete={(target) => void del.deleteTodo(target)}
-                />
-              ))}
-            </m.ul>
-            {setDone.isError && (
-              <p
-                role="alert"
-                className="rounded-md border-hairline border-danger/30 bg-paper px-3.5 py-2.5 text-sm font-medium text-danger"
-              >
-                {t('today.saveError')}
-              </p>
-            )}
-          </section>
-          <FloatingAddButton onClick={addTodo} label={t('today.addTodo')} />
-        </>
-      )}
+        <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2">
+          {todos.isPending ? (
+            <LoadingState />
+          ) : todos.isError ? (
+            <ErrorState onRetry={() => void todos.refetch()} />
+          ) : list.length === 0 ? (
+            <TodayEmpty
+              onAddTodo={addTodo}
+              onAddSchedule={() => openSchedule({ type: 'editor', target: { type: 'create' } })}
+            />
+          ) : (
+            <>
+              {/* pb-20: room to scroll the last row clear of the floating + */}
+              <section aria-labelledby="todo-list-heading" className="flex flex-col gap-3 pb-20">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 id="todo-list-heading" className="text-base font-bold text-ink">
+                    {t('today.list')}
+                  </h2>
+                  <Link
+                    to="/insights"
+                    className="inline-flex min-h-touch items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary transition-colors duration-fast ease-elemental hover:bg-primary-soft"
+                  >
+                    <span>{t('today.seeAll')}</span>
+                    <ArrowRightIcon className="h-icon-sm w-icon-sm" />
+                  </Link>
+                </div>
+                <m.ul
+                  data-testid="todo-list-card"
+                  variants={listStaggerContainer(Boolean(reduceMotion))}
+                  initial={false}
+                  animate="visible"
+                  className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm"
+                >
+                  {list.map((todo) => (
+                    <TodoRow
+                      key={todo.id}
+                      todo={todo}
+                      formatDate={formatDate}
+                      onToggle={(id, done) => setDone.mutate({ id, done })}
+                      onEdit={(target) => openSheet({ type: 'edit', todo: target })}
+                      onAddSubtask={(parent) => openSheet({ type: 'subtask', parent })}
+                      onDelete={(target) => void del.deleteTodo(target)}
+                    />
+                  ))}
+                </m.ul>
+                {setDone.isError && (
+                  <p
+                    role="alert"
+                    className="rounded-md border-hairline border-danger/30 bg-paper px-3.5 py-2.5 text-sm font-medium text-danger"
+                  >
+                    {t('today.saveError')}
+                  </p>
+                )}
+              </section>
+              <FloatingAddButton
+                onClick={addTodo}
+                onPointerDown={preloadSheets}
+                label={t('today.addTodo')}
+              />
+            </>
+          )}
+        </div>
+      </div>
 
       {schedulePanel?.type === 'day' && (
         <Suspense fallback={null}>

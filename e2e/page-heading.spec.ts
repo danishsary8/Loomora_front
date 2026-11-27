@@ -95,6 +95,7 @@ test('keyboard focus stays on screen on forgot password at 320 px and 200% text'
   await settle(page, 320, 2)
   expect(await overflow(page)).toEqual({ heading: 0, page: 0 })
   const order = [
+    page.getByRole('link', { name: 'Loomora', exact: true }),
     page.getByLabel('Email'),
     page.getByRole('button', { name: 'Send reset link' }),
     page.getByRole('link', { name: 'Back to sign in' }),

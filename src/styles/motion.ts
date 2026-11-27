@@ -1,5 +1,4 @@
 import type { Transition, Variants } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
 
 /**
  * Shared Elemental Edition motion foundation (DEC-003).
@@ -143,51 +142,4 @@ export function checkOffPopMotion(reduced: boolean) {
 export function progressDrawTransition(reduced: boolean): Transition {
   if (reduced) return INSTANT_TRANSITION
   return { duration: MOTION_DURATION.slow, ease: MOTION_EASE }
-}
-
-/**
- * Smooth numeric count-up for KPI values.
- * Returns `target` immediately with zero animation frames when `reduced` is true.
- */
-export function useCountUp(
-  target: number,
-  options: { reduced?: boolean; durationMs?: number } = {},
-): number {
-  const { reduced = false, durationMs = 240 } = options
-  const safeTarget = Number.isFinite(target) ? target : 0
-  const [display, setDisplay] = useState(safeTarget)
-  const previousRef = useRef(safeTarget)
-
-  useEffect(() => {
-    const startValue = previousRef.current
-    if (reduced || durationMs <= 0 || startValue === safeTarget) {
-      previousRef.current = safeTarget
-      setDisplay(safeTarget)
-      return
-    }
-
-    let rafId = 0
-    const startTime = performance.now()
-    const delta = safeTarget - startValue
-
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - startTime) / durationMs)
-      const eased = 1 - (1 - progress) ** 3
-      const nextValue = Math.round(startValue + delta * eased)
-      setDisplay(nextValue)
-      if (progress < 1) {
-        rafId = requestAnimationFrame(tick)
-      } else {
-        previousRef.current = safeTarget
-      }
-    }
-
-    rafId = requestAnimationFrame(tick)
-    return () => {
-      cancelAnimationFrame(rafId)
-      previousRef.current = safeTarget
-    }
-  }, [safeTarget, reduced, durationMs])
-
-  return reduced ? safeTarget : display
 }

@@ -119,7 +119,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
         <div data-sheet-portal="true" className="fixed inset-0 z-50 flex items-end justify-center">
           <m.div
             data-testid="sheet-backdrop"
-            className="absolute inset-0 bg-ink/40 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-ink/40"
             {...backdropMotion}
             onClick={onClose}
           />
