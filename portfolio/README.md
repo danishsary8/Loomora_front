@@ -73,7 +73,7 @@ happened.
 - Quick add by typing, like "Gym tomorrow 6pm"
 - Export your plan, focus history and notes
 
-**Facts row:** Own project, full-stack · Live on Vercel · No sign-up needed · Offline · installable.
+**Facts row:** Solo project, full-stack · Live on Vercel · No sign-up needed · Offline · installable.
 
 ## Screens
 
@@ -130,8 +130,4 @@ Every screen has a laptop file (`name.webp`) and a phone file (`m-name.webp`).
     "Vercel · Render · Neon" from the backend README.
   - The stack now includes **TypeScript**, because the frontend is strict TypeScript.
     Portfolio rules keep TypeScript out of claims unless you say so, so remove it if you prefer.
-  - **Role.** The entry says "Own project, full-stack" and "I built the React frontend and
-    the Laravel API". It doesn't say "solo": the git history also has commits from
-    `nishthegreatest` and from Claude Code (AI coding agent). If `nishthegreatest` is your
-    second account, "Solo" is fine. You may also want to mention that you worked with AI
-    coding agents.
+  - **Role.** Solo, confirmed by the owner on 27 Nov 2026. AI coding agents (Claude Code) also helped; mention that if you like.

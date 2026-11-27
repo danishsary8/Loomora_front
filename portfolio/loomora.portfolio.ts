@@ -64,7 +64,7 @@ export const loomoraProject = {
       "Your to-dos and your weekly routine on one screen. Focus on what's next, then see how the week really went.",
 
     facts: [
-      { label: 'Role', value: 'Own project, full-stack' },
+      { label: 'Role', value: 'Solo project, full-stack' },
       { label: 'Status', value: 'Live on Vercel' },
       { label: 'Start', value: 'No sign-up needed' },
       { label: 'Works', value: 'Offline · installable' },
