@@ -1812,4 +1812,4 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Visual pass of every screen at 430 px and 1440 px with seeded demo data.
 - **Problems / Questions:**
   - Week, Focus and Notes on phones kept their existing (already concept-close) styling; not every control was hand-tested at both sizes.
-  - Portfolio role: git history includes `nishthegreatest` and Claude Code commits, so the entry does not say "solo". Please confirm.
+  - Portfolio role: owner confirmed "Solo" (27 Nov 2026); the entry and README say so.
