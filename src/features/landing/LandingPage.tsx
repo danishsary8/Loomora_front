@@ -46,7 +46,7 @@ export function LandingPage() {
           <div className="flex flex-col gap-7">
             <div className="flex items-center gap-3">
               <BrandMark className="size-10 shrink-0 rounded-md shadow-soft-sm" />
-              <h1 className="font-heading text-[1.75rem] font-bold leading-none tracking-[-0.03em] text-ink">
+              <h1 className="min-w-0 font-heading text-[1.75rem] font-bold leading-none tracking-[-0.03em] text-ink [overflow-wrap:anywhere]">
                 {t('common.appName')}
                 <span aria-hidden="true" className="text-accent">
                   .
@@ -221,11 +221,11 @@ function ProductPreview() {
             </li>
           ))}
         </ul>
-        <div className="ml-auto flex w-3/5 items-center gap-3 rounded-lg bg-paper p-3 shadow-soft-md">
+        <div className="ml-auto flex min-w-0 max-w-full items-center gap-3 rounded-lg bg-paper p-3 shadow-soft-md [overflow-wrap:anywhere]">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
             <FocusIcon className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="font-heading text-lg font-bold leading-none text-ink">
               {t('landing.preview.focusTime')}
             </p>
