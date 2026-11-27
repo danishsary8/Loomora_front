@@ -1,7 +1,7 @@
 # Portfolio kit: Loomora
 
 Everything needed to add Loomora to the portfolio (Danish_portfolio), in the same shape as
-the Bookly case study. Captured from the real app with demo data on 27 Nov 2026.
+the Bookly case study. Captured from the redesigned app (premium Concept v3 UI) with demo data on 27 Nov 2026.
 
 ![Cover](cover/card.jpg)
 
@@ -13,9 +13,10 @@ the Bookly case study. Captured from the real app with demo data on 27 Nov 2026.
 | `cover/banner.webp` | Wide banner for the top of the case study (2.4:1), no title | 3840×1600 |
 | `cover/*.jpg` | Same covers at half size, for LinkedIn, README or slides | |
 | `cover/cover.source.html` | Source of both covers, if a change is ever needed | |
-| `screens/*.webp` | 14 screens, each on laptop and phone | laptop 1440×900, phone 516×1118 |
+| `screens/*.webp` | 13 screens, each on laptop and phone | laptop 1440×900, phone 516×1118 |
+| `tools/*.mjs` | Demo seed, screen capture and cover render scripts (re-run steps below) | |
 | `loomora.portfolio.ts` | Ready-to-paste portfolio entry: pitch, problem, what I built, screens, numbers, future plan | |
-| `overview.jpg` | All 14 screens on one page, for a quick look | |
+| `overview.jpg` | All 13 screens on one page, for a quick look | |
 
 The sizes match the Bookly screenshots already in the portfolio, so the case studies line up.
 
@@ -27,13 +28,22 @@ portfolio's Loomora green from `ProjectCover.tsx` (`#3f7d6b → #1f4a3f → #0f2
 
 - The wordmark with the app's round orange dot.
 - The layered hills and low sun from the Profile screen, redrawn in the cover's greens.
-- A real laptop (Week view) and a phone (Today).
+- A real laptop (Week view) and a phone (Today), from the redesigned UI.
 - **The app detail:** a day ribbon. Friday's real demo schedule on an hour ruler, in the
   app's category colours, with a mint "Now 10:40" line. That is the same moment the Today
   screen shows in its Now / Next card.
 
-To re-render: open `cover.source.html?mode=card` at 1600×1000 or `?mode=banner` at 1920×800
-and take a screenshot at 2×.
+To re-render: `node portfolio/tools/cover.mjs` (opens `cover.source.html?mode=card` at 1600×1000
+and `?mode=banner` at 1920×800, screenshots at 2×), then save `.webp` and half-size `.jpg` copies.
+
+## Re-taking the screens
+
+1. `npx vite --port 5173` (guest mode, no API needed).
+2. `node portfolio/tools/shoot.mjs <outDir> phone,laptop today=/today "new-task=/today|btn:Add a to-do" …`
+   It seeds the made-up student week (`tools/seed.mjs`) into the `loomora-guest` IndexedDB,
+   fixes the date to Fri 27 Nov 2026 10:40 (Asia/Phnom_Penh), snoozes "Save your plan" with
+   `loomora.savePlanDismissedOn`, and shoots with reduced motion so every animation is at rest.
+3. Convert the PNGs to `.webp` (laptop 1440×900, phone 516×1118).
 
 ## The story (also in `loomora.portfolio.ts`)
 
@@ -52,7 +62,7 @@ happened.
 
 | Number | Where it comes from |
 | --- | --- |
-| 981 frontend tests | `npm test` in this repo (`v2-rebuild`, 2531e7b): 85 files, all passing |
+| 985 frontend tests | `npm test` on the redesign branch `claude/relaxed-mendel-4mzu1v`: 87 files, all passing |
 | 714 backend tests | GitHub Actions CI run 171 of `loomora_back` (`v2-rebuild`, 9a14b78), on PostgreSQL 16, all passing |
 | 56 API endpoints | 56 routes in `routes/api.php`, matching the 56 operations in `docs/openapi.yaml` |
 | 36 end-to-end specs | `e2e/*.spec.ts` in this repo (the staging suite is extra) |
@@ -77,7 +87,6 @@ Every screen has a laptop file (`name.webp`) and a phone file (`m-name.webp`).
 | Plan | Week: the fixed routine | `week` |
 | Plan | Edit a schedule block | `edit-block` |
 | Focus | Focus timer running, linked to a to-do | `focus` |
-| Focus | Full-screen timer | `focus-expanded` |
 | Focus | Focus history for one day | `focus-history` |
 | Review | Insights for the week | `insights` |
 | Review | Plan vs reality, weekly recap, daily breakdown | `insights-review` |

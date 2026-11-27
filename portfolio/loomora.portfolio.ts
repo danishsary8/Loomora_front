@@ -8,7 +8,7 @@
  * screens, the numbers and what comes next.
  *
  * Every number below was checked on 27 Nov 2026:
- *   981 frontend tests: `npm test` in Loomora_front (v2-rebuild, 2531e7b), 85 files, all passing.
+ *   985 frontend tests: `npm test` in Loomora_front (redesign branch claude/relaxed-mendel-4mzu1v), 87 files, all passing.
  *   714 backend tests: GitHub Actions CI run 171 for loomora_back v2-rebuild (9a14b78),
  *     on PostgreSQL 16, all passing (51,823 assertions).
  *   56 API endpoints: 56 routes in routes/api.php = 56 operations in docs/openapi.yaml (41 paths).
@@ -40,14 +40,14 @@
 export const loomoraProject = {
   id: 'loomora',
   title: 'Loomora',
-  coverLine: 'Plan your day, keep your routines',
-  kind: 'Routine & habit planner · PWA',
+  coverLine: 'Plan your day. Focus. See how it went.',
+  kind: 'Day & focus planner · PWA',
   summary:
     'A mobile-first planner that puts your to-dos and your weekly routine on one Today screen, with a focus timer, notes and insights that show how the week really went. It works offline and without an account. I built the React frontend and the Laravel API.',
   highlights: [
     'Laravel REST API with 56 endpoints on PostgreSQL',
     'Installable React app that works offline, no sign-up needed',
-    '981 frontend and 714 backend tests, all passing',
+    '985 frontend and 714 backend tests, all passing',
   ],
   stack: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Laravel', 'PostgreSQL'],
   hosting: 'Vercel · Render · Neon',
@@ -57,7 +57,7 @@ export const loomoraProject = {
     { label: 'Frontend', url: 'https://github.com/danishsary8/Loomora_front' },
     { label: 'Backend API', url: 'https://github.com/danishsary8/loomora_back' },
   ],
-  imageAlt: 'Loomora week view on a laptop and the Today screen on a phone',
+  imageAlt: 'Loomora week view on a laptop and the Today screen on a phone, over green hills',
 
   caseStudy: {
     pitch:
@@ -92,7 +92,7 @@ export const loomoraProject = {
       {
         group: 'Plan',
         title: 'To-dos',
-        text: "Overdue first, then today's list, with subtasks, repeats and priority.",
+        text: 'Clean rows with a category pill, subtasks, repeats and priority.',
         desktop: 'today-todos',
         phone: 'm-today-todos',
       },
@@ -120,16 +120,9 @@ export const loomoraProject = {
       {
         group: 'Focus',
         title: 'Focus timer',
-        text: "A countdown linked to today's to-do, in four focus rounds with breaks.",
+        text: 'A countdown with a leaf in the ring, pace chips and four focus rounds.',
         desktop: 'focus',
         phone: 'm-focus',
-      },
-      {
-        group: 'Focus',
-        title: 'Full-screen timer',
-        text: "Just the timer, for when you're in the zone.",
-        desktop: 'focus-expanded',
-        phone: 'm-focus-expanded',
       },
       {
         group: 'Focus',
@@ -155,35 +148,35 @@ export const loomoraProject = {
       {
         group: 'Review',
         title: 'Notes',
-        text: 'Pinned, coloured and tagged notes, on their own or attached to a block.',
+        text: 'Pinned, coloured and tagged cards, on their own or attached to a block.',
         desktop: 'notes',
         phone: 'm-notes',
       },
       {
         group: 'Account',
         title: 'Start',
-        text: 'Try it right away. No account needed.',
+        text: 'A calm hero with a preview built from real cards. No account needed.',
         desktop: 'landing',
         phone: 'm-landing',
       },
       {
         group: 'Account',
         title: 'Save your plan',
-        text: 'Sign up with email or Google, and the guest plan moves to the account.',
+        text: 'A split card with the green hills. The guest plan moves to the account.',
         desktop: 'sign-up',
         phone: 'm-sign-up',
       },
       {
         group: 'Account',
         title: 'Profile',
-        text: 'Streak, tasks done, and time and week settings in one place.',
+        text: 'Hills hero, streak and tasks done, then settings rows.',
         desktop: 'profile',
         phone: 'm-profile',
       },
     ],
 
     stats: [
-      { value: 981, label: 'frontend tests' },
+      { value: 985, label: 'frontend tests' },
       { value: 714, label: 'backend tests' },
       { value: 56, label: 'API endpoints' },
       { value: 36, label: 'end-to-end specs' },
