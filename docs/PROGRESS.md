@@ -1790,3 +1790,10 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Full Playwright `phone-375`: **128/128 passed**.
   - Fresh 375 px screenshots visually verified and saved to `docs/screenshots/ux030-{today,week,add-sheet,insights,profile}-375.png`.
 - **Problems / Questions:** None. PR #116 is open for review (stacked on PR #115).
+
+### 2026-11-27 Portfolio kit (owner request, outside TASKS.md)
+
+- **Branch:** `claude/gallant-brown-l3hcay`. Adds `portfolio/` only; no app code changed.
+- **What changed:** a kit for the owner's portfolio site: 14 screens on laptop (1440×900) and phone (430×932 at 1.2×), a card and banner cover with its own source HTML, `overview.jpg`, a ready-to-paste `loomora.portfolio.ts` entry and a README with the steps.
+- **How it was verified:** screens taken from `npm run dev` in guest mode with made-up demo data (no account, no real user data), each one checked by eye and retaken where a sheet was half open or a section was cut off. Numbers checked: `npm test` 85 files / 981 tests passed; backend CI run 171 (`v2-rebuild`, 9a14b78) 714 tests passed; 56 API routes = 56 OpenAPI operations; 36 e2e specs. `npm run lint`, `npm run knip`, `npm run format:check` and `npm run typecheck` pass.
+- **Problems / Questions:** The backend tests were not run in this session (Composer could not download packages through the session proxy), so the 714 comes from CI. Role wording, the TypeScript claim and the live URL are listed for the owner to confirm in `portfolio/README.md`.
