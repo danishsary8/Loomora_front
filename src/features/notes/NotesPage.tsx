@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { ActionToast, Button, Card, iconActionClass, Sheet } from '@/components/ui'
+import { CATEGORY_ICONS } from '@/components/ui/categoryIcons'
+import { CATEGORY_TONES } from '@/components/ui/categoryTones'
 import { fieldClasses } from '@/components/ui/fieldClasses'
 import { PencilIcon, PinIcon, SearchIcon, TrashIcon } from '@/components/ui/icons'
 import { pressSmAny } from '@/components/ui'
@@ -12,7 +14,7 @@ import { cn } from '@/lib/cn'
 import { NoteConflictError } from '@/lib/storage'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { NoteSheet } from './NoteSheet'
-import type { Note } from './types'
+import type { Note, NoteColor } from './types'
 import { useCreateNote, useDeleteNote, useNotes, useRestoreNote, useUpdateNote } from './useNotes'
 
 type NoteFilter = 'all' | 'pinned' | 'standalone' | 'attached'
@@ -305,7 +307,8 @@ function NotesPageSession() {
                     <Card tone={note.color ?? 'paper'}>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-start justify-between gap-2">
-                          <h2 className="flex min-w-0 flex-1 items-start justify-between gap-2 font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
+                          <NoteIcon color={note.color} />
+                          <h2 className="flex min-w-0 flex-1 items-start justify-between gap-2 self-center font-heading text-base font-semibold text-ink [overflow-wrap:anywhere]">
                             <span className="min-w-0">{headingText}</span>
                             {note.pinned && (
                               <PinIcon
@@ -352,9 +355,11 @@ function NotesPageSession() {
                                     type="button"
                                     onClick={() => setSearch(`#${tag}`)}
                                     aria-label={t('notes.filterByTag', { tag })}
-                                    className="inline-flex min-h-touch items-center rounded-full px-2 text-xs font-semibold text-primary underline-offset-2 hover:underline [overflow-wrap:anywhere]"
+                                    className="group/tag inline-flex min-h-touch items-center [overflow-wrap:anywhere]"
                                   >
-                                    #{tag}
+                                    <span className="rounded-full bg-paper/80 px-2.5 py-1 text-xs font-semibold text-primary shadow-soft-sm transition-colors duration-fast ease-elemental group-hover/tag:bg-paper">
+                                      #{tag}
+                                    </span>
                                   </button>
                                 </li>
                               ))}
@@ -451,5 +456,21 @@ function NotesPageSession() {
         }
       />
     </div>
+  )
+}
+
+/** Concept v3 note badge: the note colour's category icon on a soft paper tile. */
+function NoteIcon({ color }: { color: NoteColor | null }) {
+  const Icon = CATEGORY_ICONS[color ?? 'other']
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid size-9 shrink-0 place-items-center rounded-md bg-paper/85 shadow-soft-sm',
+        CATEGORY_TONES[color ?? 'other'].icon,
+      )}
+    >
+      <Icon className="h-icon-md w-icon-md" />
+    </span>
   )
 }

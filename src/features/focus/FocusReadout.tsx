@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
+import { Hills } from '@/components/ui/Hills'
 import { SproutIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import { colors } from '@/styles/tokens'
@@ -83,10 +84,18 @@ export function FocusReadout({ runtime, snapshot, mode, minutes, expanded }: Rea
         )}
       >
         <TimerRing ratio={ratio} onBreak={onBreak} />
+        <div
+          aria-hidden="true"
+          className="absolute inset-[9%] overflow-hidden rounded-full bg-gradient-to-b from-paper via-paper to-primary-soft"
+        >
+          <div className="absolute inset-x-0 bottom-0 h-[34%]">
+            <Hills ground={colors.category.health} className="[&_circle]:hidden" />
+          </div>
+        </div>
         <div className="absolute inset-0 flex min-w-0 flex-col items-center justify-center gap-1 px-[12%]">
           <SproutIcon
             className={cn(
-              'h-icon-lg w-icon-lg shrink-0',
+              'h-icon-xl w-icon-xl shrink-0',
               onBreak ? 'text-warning' : 'text-primary',
             )}
           />
