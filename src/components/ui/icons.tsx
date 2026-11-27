@@ -20,6 +20,14 @@ function IconBase({ children, ...props }: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function PlusIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </IconBase>
+  )
+}
+
 export function CheckIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>

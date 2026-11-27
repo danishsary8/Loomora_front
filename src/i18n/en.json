@@ -108,7 +108,36 @@
       "streak": {
         "title": "Keep your streak",
         "body": "Check things off and build a streak, one day at a time."
+      },
+      "focus": {
+        "title": "Focus on one thing",
+        "body": "A calm timer linked to the to-do or block you are working on."
+      },
+      "insights": {
+        "title": "See how it really went",
+        "body": "Plan versus reality, your rhythm across the week, and your streak."
+      },
+      "notes": {
+        "title": "Keep the good ideas",
+        "body": "Coloured, pinned and tagged notes, next to the plan they belong to."
       }
+    },
+    "eyebrow": "Plan · Focus · Reflect",
+    "heroTitle": "Make every day count, calmly.",
+    "heroBody": "Your to-dos and weekly routine on one screen. Focus on what is next, then see how the week really went.",
+    "previewLabel": "A look inside Loomora",
+    "preview": {
+      "progress": "Today's progress",
+      "progressValue": "3 of 5 done",
+      "now": "Now",
+      "nowValue": "Deep work · 10:00",
+      "next": "Next",
+      "nextValue": "Lunch · 12:30",
+      "todo1": "Check the PR review",
+      "todo2": "Write the API tests",
+      "todo3": "Upper-body workout",
+      "focus": "Deep work",
+      "focusTime": "24:36"
     }
   },
   "focus": {
@@ -751,6 +780,10 @@
       "sent": "We sent a new confirmation email. Check your inbox.",
       "wait_one": "Too many tries. Try again in {{count}} minute.",
       "wait_other": "Too many tries. Try again in {{count}} minutes."
+    },
+    "panel": {
+      "title": "Less noise. More meaningful days.",
+      "body": "Your to-dos, your weekly rhythm and your focus time, in one calm place."
     }
   },
   "errors": {

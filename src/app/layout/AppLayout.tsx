@@ -1,8 +1,9 @@
 import { m, useReducedMotion } from 'framer-motion'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
-import { cn } from '@/lib/cn'
+import { runWhenIdle } from '@/lib/lazyWithPreload'
+import { preloadTabPages } from '../pages'
 import { pageEnterMotion } from '@/styles/motion'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
@@ -19,8 +20,8 @@ export function AppLayout() {
     setHasNavigated(true)
   }
 
-  // The Week screen needs room for seven columns.
-  const wide = pathname === '/week'
+  useEffect(() => runWhenIdle(() => void preloadTabPages()), [])
+
   const enter = pageEnterMotion(Boolean(reduceMotion) || !hasNavigated)
 
   return (
@@ -31,10 +32,9 @@ export function AppLayout() {
         <main
           id="main"
           tabIndex={-1}
-          className={cn(
-            'mx-auto w-full flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-3 focus-visible:outline-none min-[375px]:pl-[max(1.25rem,env(safe-area-inset-left))] min-[375px]:pr-[max(1.25rem,env(safe-area-inset-right))] md:px-6 md:pb-12 md:pt-4',
-            wide ? 'max-w-6xl' : 'max-w-2xl',
-          )}
+          className={
+            'mx-auto w-full max-w-2xl flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-3 focus-visible:outline-none min-[375px]:pl-[max(1.25rem,env(safe-area-inset-left))] min-[375px]:pr-[max(1.25rem,env(safe-area-inset-right))] md:px-6 md:pb-12 md:max-w-6xl md:pt-4 lg:px-10'
+          }
         >
           <Suspense fallback={<LoadingState />}>
             <m.div key={pathname} {...enter}>

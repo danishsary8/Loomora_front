@@ -4,6 +4,7 @@ import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 import { LoadingState } from '@/components/states'
 import { usePwaUpdate } from '@/app/pwaUpdate'
 import { useServiceStatus, useSession } from '@/lib/api'
+import { runWhenIdle } from '@/lib/lazyWithPreload'
 import { OfflineBanner } from './OfflineBanner'
 
 const PwaUpdateBanner = lazy(() =>
@@ -31,12 +32,7 @@ export function RootLayout() {
   useEffect(() => {
     if (remindersReady) return
     // Defer reminder polling on the landing page until idle so first paint & LCP stay fast.
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(() => setIdleReady(true), { timeout: 1000 })
-      return () => window.cancelIdleCallback(id)
-    }
-    const id = globalThis.setTimeout(() => setIdleReady(true), 0)
-    return () => globalThis.clearTimeout(id)
+    return runWhenIdle(() => setIdleReady(true), 1000)
   }, [remindersReady])
 
   return (

@@ -1,6 +1,7 @@
 import { m, useReducedMotion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { progressDrawTransition, useCountUp } from '@/styles/motion'
+import { CountUp } from '@/components/reactbits/CountUp'
+import { progressDrawTransition } from '@/styles/motion'
 import { colors } from '@/styles/tokens'
 
 const SIZE = 64
@@ -13,7 +14,6 @@ export function TodayProgressCard({ done, total }: { done: number; total: number
   const reduced = Boolean(reduceMotion)
   const ratio = total > 0 ? Math.min(done, total) / total : 0
   const percent = Math.round(ratio * 100)
-  const displayedPercent = useCountUp(percent, { reduced })
   const label = t('progress.doneOfTotal', { done, total })
   const radius = SIZE / 2 - STROKE / 2
   const circumference = 2 * Math.PI * radius
@@ -71,8 +71,10 @@ export function TodayProgressCard({ done, total }: { done: number; total: number
             transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
           />
         </svg>
-        <span className="absolute inset-0 grid place-items-center text-sm font-bold tabular-nums">
-          {displayedPercent}%
+        <span className="absolute inset-0 grid place-items-center text-sm font-bold tabular-nums whitespace-nowrap">
+          <span>
+            <CountUp to={percent} />%
+          </span>
         </span>
       </div>
     </section>

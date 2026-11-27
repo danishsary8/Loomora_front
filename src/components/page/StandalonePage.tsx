@@ -3,21 +3,23 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 
+const WIDTHS = { narrow: 'max-w-lg', wide: 'max-w-5xl', full: 'max-w-6xl' } as const
+
 /** Pages outside the app shell (landing, auth, legal, 404): no nav, centered column. */
 export function StandalonePage({
   children,
-  wide = false,
+  width = 'narrow',
 }: {
   children: ReactNode
-  /** Room for a multi-column layout on wide screens (the landing page). */
-  wide?: boolean
+  /** `wide` for split auth cards, `full` for the multi-column landing page. */
+  width?: 'narrow' | 'wide' | 'full'
 }) {
   const { t } = useTranslation()
   return (
     <div
       className={cn(
         'mx-auto flex min-h-dvh w-full flex-col pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1.5rem,env(safe-area-inset-top))]',
-        wide ? 'max-w-4xl' : 'max-w-lg',
+        WIDTHS[width],
       )}
     >
       <main

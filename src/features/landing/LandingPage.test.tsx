@@ -58,7 +58,7 @@ describe('Landing page (S1)', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument()
   })
 
-  it('lists three feature highlights in their category tones with decorative icons', async () => {
+  it('lists six feature highlights in their category tones with decorative icons', async () => {
     renderRoute('/')
     const list = within(await screen.findByRole('region', { name: 'What you get' })).getByRole(
       'list',
@@ -66,10 +66,20 @@ describe('Landing page (S1)', () => {
     const items = within(list).getAllByRole('listitem')
     expect(
       items.map((item) => within(item).getByRole('heading', { level: 3 }).textContent),
-    ).toEqual(['Plan your day', 'Know what is next', 'Keep your streak'])
+    ).toEqual([
+      'Plan your day',
+      'Know what is next',
+      'Focus on one thing',
+      'See how it really went',
+      'Keep the good ideas',
+      'Keep your streak',
+    ])
     expect(items.map((item) => item.firstElementChild?.className)).toEqual([
       expect.stringContaining('bg-category-study'),
       expect.stringContaining('bg-category-work'),
+      expect.stringContaining('bg-category-health'),
+      expect.stringContaining('bg-category-rest'),
+      expect.stringContaining('bg-category-other'),
       expect.stringContaining('bg-category-life'),
     ])
     for (const item of items) {

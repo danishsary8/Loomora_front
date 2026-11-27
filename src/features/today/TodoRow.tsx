@@ -1,10 +1,13 @@
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Chip, iconActionClass } from '@/components/ui'
-import { PencilIcon, RepeatIcon, TrashIcon } from '@/components/ui/icons'
+import { ClickSpark } from '@/components/reactbits/ClickSpark'
+import { Checkbox, Chip, iconActionClass } from '@/components/ui'
+import { PencilIcon, PlusIcon, RepeatIcon, TrashIcon } from '@/components/ui/icons'
 import type { TodayTodo } from '@/features/todos/types'
 import { cn } from '@/lib/cn'
 import { listStaggerItem } from '@/styles/motion'
+import { colors } from '@/styles/tokens'
 import { DoneStamp } from './DoneStamp'
 
 interface TodoRowProps {
@@ -20,6 +23,7 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
   const { t, i18n } = useTranslation()
   const reduceMotion = useReducedMotion()
   const done = todo.done_at !== null
+  const [sparks, setSparks] = useState(0)
   const child = todo.parent_id !== null
   const canAddSubtask = !done || (todo.due_date !== null && !todo.overdue)
   const repeat = todo.repeat_rule
@@ -35,7 +39,7 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
         : null
   const total = todo.subtasks.length
   const completed = todo.subtasks.filter(({ done_at }) => done_at !== null).length
-  const hasMeta = todo.priority !== 'normal' || todo.overdue || todo.old || (!child && done)
+  const hasMeta = !child || todo.priority !== 'normal' || todo.overdue || todo.old
 
   return (
     <m.li
@@ -52,7 +56,11 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
         <Checkbox
           shape="circle"
           checked={done}
-          onChange={(e) => actions.onToggle(todo.id, e.target.checked)}
+          onChange={(e) => {
+            if (e.target.checked) setSparks((count) => count + 1)
+            actions.onToggle(todo.id, e.target.checked)
+          }}
+          overlay={<ClickSpark burst={sparks} color={colors.accent} className="left-3 top-1/2" />}
           aria-label={t('today.markDone', { title: todo.title })}
           className="min-w-[min(100%,10rem)] flex-1 py-0.5 [&>span:last-child]:min-w-0"
           label={
@@ -73,6 +81,9 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
               )}
               {hasMeta && (
                 <span className="flex flex-wrap items-center gap-1.5 text-xs">
+                  {!child && (
+                    <Chip category={todo.category} className="min-h-6 px-2.5 text-xs sm:hidden" />
+                  )}
                   {todo.priority !== 'normal' && (
                     <span
                       className={cn(
@@ -111,8 +122,23 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
           }
         />
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          {!child && <Chip category={todo.category} className="min-h-6 px-2.5 text-xs" />}
-          <div className="-mr-1.5 flex shrink-0 items-center">
+          {!child && (
+            <Chip
+              category={todo.category}
+              className="hidden min-h-6 px-2.5 text-xs sm:inline-flex"
+            />
+          )}
+          <div className="-mr-1.5 flex shrink-0 items-center text-muted">
+            {!child && canAddSubtask && (
+              <button
+                type="button"
+                onClick={() => actions.onAddSubtask(todo)}
+                aria-label={t('today.addSubtaskTo', { title: todo.title })}
+                className={iconActionClass}
+              >
+                <PlusIcon className="h-icon-sm w-icon-sm" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => actions.onEdit(todo)}
@@ -139,37 +165,18 @@ export function TodoRow({ todo, ...actions }: TodoRowProps) {
       )}
       {!child && (
         <>
-          {(canAddSubtask || total > 0) && (
-            <div
-              className={cn(
-                'flex flex-wrap items-center justify-between gap-2',
-                total > 0 ? 'mt-2 border-t-hairline border-border-subtle/70 pt-1.5' : 'mt-0.5 pl-7',
-              )}
+          {total > 0 && (
+            <p
+              className="mt-2 border-t-hairline border-border-subtle/70 pt-1.5 pr-1 text-right text-xs font-semibold tabular-nums text-muted"
+              role="status"
             >
-              {canAddSubtask && (
-                <Button
-                  variant="ghost"
-                  className="px-2 text-xs font-medium text-muted hover:text-ink"
-                  onClick={() => actions.onAddSubtask(todo)}
-                  aria-label={t('today.addSubtaskTo', { title: todo.title })}
-                >
-                  {t('today.addSubtask')}
-                </Button>
-              )}
-              {total > 0 && (
-                <p
-                  className="ml-auto pr-1 text-xs font-semibold tabular-nums text-muted"
-                  role="status"
-                >
-                  <span aria-hidden="true">
-                    {t('today.subtaskProgress', { done: completed, total })}
-                  </span>
-                  <span className="sr-only">
-                    {t('today.subtaskProgressLabel', { done: completed, total })}
-                  </span>
-                </p>
-              )}
-            </div>
+              <span aria-hidden="true">
+                {t('today.subtaskProgress', { done: completed, total })}
+              </span>
+              <span className="sr-only">
+                {t('today.subtaskProgressLabel', { done: completed, total })}
+              </span>
+            </p>
           )}
           {total > 0 && (
             <ul

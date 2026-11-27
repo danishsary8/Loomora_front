@@ -137,7 +137,7 @@ function ActiveReminderWatcher({ accountId }: { accountId: string | null }) {
   return (
     <div
       ref={banner}
-      className="sticky top-0 z-30"
+      className="relative z-30"
       onFocusCapture={(event) => {
         lastFocused.current = event.target
       }}

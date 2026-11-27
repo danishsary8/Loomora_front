@@ -275,7 +275,7 @@ function NotesPageSession() {
               </div>
             </Card>
           ) : (
-            <ul className="flex flex-col gap-3 pb-4">
+            <ul className="grid gap-3 pb-4 md:grid-cols-2 xl:grid-cols-3 md:items-start">
               {filteredNotes.map((note) => {
                 const headingText = note.title ?? t('notes.untitled')
                 const block = note.schedule_item_id

@@ -67,77 +67,81 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 pb-4">
-      <ProfileHero
-        title={t('pages.profile.title')}
-        headline={t('pages.profile.headline')}
-        subtitle={t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
-        initial={initial}
-      />
-
-      {isGuest && (
-        <DeviceDataNotice onSave={() => setSaveOpen(true)}>
-          <p className="font-semibold">{t('profile.deviceOnly')}</p>
-          <p className="text-sm">{t('profile.deviceWarning')}</p>
-        </DeviceDataNotice>
-      )}
-      {leftOnDevice && (
-        <DeviceDataNotice onSave={requestSave}>
-          <p className="text-sm">{t('profile.savePlanLeft')}</p>
-        </DeviceDataNotice>
-      )}
-
-      <StreakCard
-        today={toLocalDate(openedAt, user?.timezone)}
-        completedTodos={guestCompletedTodos}
-      />
-
-      {user && <AccountCard key={generation} user={user} />}
-      {isGuest && <GuestPreferencesCard />}
-
-      <SettingsGroup title={t('profile.supportTitle')}>
-        <SettingsRow
-          Icon={InsightsIcon}
-          label={t('profile.myActivity')}
-          onClick={() => navigate('/insights')}
+    <div className="flex flex-col gap-5 pb-4 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-5 lg:sticky lg:top-6">
+        <ProfileHero
+          title={t('pages.profile.title')}
+          headline={t('pages.profile.headline')}
+          subtitle={t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
+          initial={initial}
         />
-        <SettingsRow
-          Icon={NotesIcon}
-          label={t('profile.myNotes')}
-          onClick={() => navigate('/notes')}
-        />
-        <SettingsRow
-          Icon={ChatIcon}
-          label={t('profile.feedback')}
-          description={t('profile.feedbackRowHint')}
-          onClick={() => setFeedbackOpen(true)}
-        />
-      </SettingsGroup>
 
-      {user && (
-        <>
-          <SettingsGroup title={t('profile.accountActionsTitle')}>
-            <SettingsRow
-              Icon={TrashIcon}
-              label={t('profile.deleteAccount')}
-              description={t('profile.deleteHint')}
-              tone="danger"
-              onClick={() => setDeleteOpen(true)}
-            />
-          </SettingsGroup>
-          <div className="pt-1 text-center">
-            <button
-              type="button"
-              disabled={signingOut}
-              aria-busy={signingOut}
-              onClick={() => void leave()}
-              className="inline-flex min-h-touch items-center justify-center rounded-md px-5 text-sm font-semibold text-danger transition-colors duration-fast ease-elemental hover:bg-danger/5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('profile.signOut')}
-            </button>
-          </div>
-        </>
-      )}
+        {isGuest && (
+          <DeviceDataNotice onSave={() => setSaveOpen(true)}>
+            <p className="font-semibold">{t('profile.deviceOnly')}</p>
+            <p className="text-sm">{t('profile.deviceWarning')}</p>
+          </DeviceDataNotice>
+        )}
+        {leftOnDevice && (
+          <DeviceDataNotice onSave={requestSave}>
+            <p className="text-sm">{t('profile.savePlanLeft')}</p>
+          </DeviceDataNotice>
+        )}
+
+        <StreakCard
+          today={toLocalDate(openedAt, user?.timezone)}
+          completedTodos={guestCompletedTodos}
+        />
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-5">
+        {user && <AccountCard key={generation} user={user} />}
+        {isGuest && <GuestPreferencesCard />}
+
+        <SettingsGroup title={t('profile.supportTitle')}>
+          <SettingsRow
+            Icon={InsightsIcon}
+            label={t('profile.myActivity')}
+            onClick={() => navigate('/insights')}
+          />
+          <SettingsRow
+            Icon={NotesIcon}
+            label={t('profile.myNotes')}
+            onClick={() => navigate('/notes')}
+          />
+          <SettingsRow
+            Icon={ChatIcon}
+            label={t('profile.feedback')}
+            description={t('profile.feedbackRowHint')}
+            onClick={() => setFeedbackOpen(true)}
+          />
+        </SettingsGroup>
+
+        {user && (
+          <>
+            <SettingsGroup title={t('profile.accountActionsTitle')}>
+              <SettingsRow
+                Icon={TrashIcon}
+                label={t('profile.deleteAccount')}
+                description={t('profile.deleteHint')}
+                tone="danger"
+                onClick={() => setDeleteOpen(true)}
+              />
+            </SettingsGroup>
+            <div className="pt-1 text-center">
+              <button
+                type="button"
+                disabled={signingOut}
+                aria-busy={signingOut}
+                onClick={() => void leave()}
+                className="inline-flex min-h-touch items-center justify-center rounded-md px-5 text-sm font-semibold text-danger transition-colors duration-fast ease-elemental hover:bg-danger/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t('profile.signOut')}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
       {user && <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />}
       <FeedbackSheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <SavePlanSheet open={saveOpen} onClose={() => setSaveOpen(false)} />

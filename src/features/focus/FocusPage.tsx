@@ -51,7 +51,7 @@ export function FocusPage() {
   const runtime = useContext(FocusRuntimeContext)
   const generation = useSession((state) => state.generation)
   return (
-    <div className="mx-auto flex w-full max-w-xl min-w-0 flex-col gap-4 [overflow-wrap:anywhere]">
+    <div className="mx-auto flex w-full max-w-xl min-w-0 flex-col gap-4 [overflow-wrap:anywhere] lg:max-w-none">
       <AppPageHeader
         title={t('pages.focus.title')}
         headline={t('pages.focus.headline')}
@@ -66,19 +66,21 @@ export function FocusPage() {
           </a>
         }
       />
-      {runtime ? (
-        <FocusSession key={generation} runtime={runtime} />
-      ) : (
-        <Card>
-          {runtime === undefined ? (
-            <p role="status">{t('focus.loading')}</p>
-          ) : (
-            <p role="alert">{t('focus.unavailable')}</p>
-          )}
-        </Card>
-      )}
-      <div id="focus-history">
-        <FocusHistory />
+      <div className="flex min-w-0 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-8">
+        {runtime ? (
+          <FocusSession key={generation} runtime={runtime} />
+        ) : (
+          <Card>
+            {runtime === undefined ? (
+              <p role="status">{t('focus.loading')}</p>
+            ) : (
+              <p role="alert">{t('focus.unavailable')}</p>
+            )}
+          </Card>
+        )}
+        <div id="focus-history" className="min-w-0">
+          <FocusHistory />
+        </div>
       </div>
     </div>
   )

@@ -118,7 +118,7 @@ function LegalPage({ page }: { page: 'privacy' | 'terms' }) {
   const sectionId = (id: string) => `${page}-${id}`
 
   return (
-    <StandalonePage wide>
+    <StandalonePage width="wide">
       <Link
         to="/"
         className="-ml-2 inline-flex min-h-touch items-center gap-1.5 self-start rounded-md px-2 font-medium text-primary underline-offset-4 hover:underline"
