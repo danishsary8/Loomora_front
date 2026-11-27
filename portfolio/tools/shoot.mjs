@@ -1,5 +1,6 @@
 // Captures screens from the dev server with the seeded demo data.
-// Usage: node portfolio/tools/shoot.mjs <outDir> <name=path[|action]>...
+// Usage: node portfolio/tools/shoot.mjs <outDir> <phone,laptop> <name=path[|action]...>...
+// Actions: btn:<name> clicks a button, scroll:<px> scrolls, wait:<ms> advances the fixed clock.
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
@@ -35,15 +36,15 @@ for (const size of sizes.split(',')) {
   await page.evaluate(`(${seedSrc})()`)
   for (const shot of shots) {
     const [name, rest] = shot.split('=')
-    const [path, action] = rest.split('|')
+    const [path, ...actions] = rest.split('|')
     await page.goto(BASE + path)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(900)
-    if (action) {
-      await page
-        .getByRole('button', { name: new RegExp(action, 'i') })
-        .first()
-        .click()
+    for (const step of actions) {
+      const [kind, arg] = step.split(/:(.*)/s)
+      if (kind === 'btn') await page.getByRole('button', { name: arg, exact: true }).first().click()
+      if (kind === 'scroll') await page.mouse.wheel(0, Number(arg))
+      if (kind === 'wait') await page.clock.runFor(Number(arg))
       await page.waitForTimeout(900)
     }
     await page.screenshot({ path: `${outDir}/${prefix}${name}.png` })
