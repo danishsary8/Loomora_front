@@ -103,7 +103,7 @@ export function TodayPage() {
         aside={streak && <StreakBadge {...streak} />}
       />
 
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-x-8 lg:gap-y-5">
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-x-8 lg:gap-y-5">
         {!todos.isPending && !todos.isError && list.length > 0 && (
           <div className="lg:col-start-1 lg:row-start-1">
             <TodayProgressCard done={doneCount} total={list.length} />

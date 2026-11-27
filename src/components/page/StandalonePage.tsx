@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 
-const WIDTHS = { narrow: 'max-w-lg', wide: 'max-w-5xl', full: 'max-w-6xl' } as const
+const WIDTHS = { narrow: 'max-w-lg', wide: 'max-w-4xl', full: 'max-w-6xl' } as const
 
 /** Pages outside the app shell (landing, auth, legal, 404): no nav, centered column. */
 export function StandalonePage({
