@@ -1811,5 +1811,7 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
   - Playwright `phone-375`: full run 124/128; the 4 failures were fixed (Today rail overflow at 1024 px / 200% text, legal measure, auth tab order, a focus-import timing flake) and the affected specs re-run green. `legal.spec.ts` "failed screen load" flaked once and passed on re-run with and without these changes.
   - Visual pass of every screen at 430 px and 1440 px with seeded demo data.
 - **Problems / Questions:**
-  - Week, Focus and Notes on phones kept their existing (already concept-close) styling; not every control was hand-tested at both sizes.
+  - Follow-up on the same branch: hills inside the Focus ring with a larger sprout; note cards get a category-icon tile and tag pills; add-to-do sheet rows get forest icon tiles (incl. "More options"); desktop Week blocks show their category icon. `BlurText` no longer animates opacity (axe caught a mid-fade word), and the auth brand link wraps at 320 px / 200% text.
+  - Hand check (scripted Playwright click-through of every visible button on Today, Week, Focus, Insights, Notes, Profile, landing, sign-in, sign-up at 375 px and 1440 px with the demo seed): no page errors, no console errors, no target under 44 px. With a reminder due, the banner scrolls away and a to-do further down can be checked off.
+  - Full Playwright `phone-375` after the follow-up: 126/128 with the two failures above, both fixed and their specs re-run green (32/32).
   - Portfolio role: owner confirmed "Solo" (27 Nov 2026); the entry and README say so.

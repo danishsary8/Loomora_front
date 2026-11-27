@@ -50,10 +50,10 @@ function AuthPanel() {
       <div className="relative z-10 flex flex-col gap-3 p-5 sm:p-7 md:p-10">
         <Link
           to="/"
-          className="inline-flex min-h-touch items-center gap-2.5 self-start rounded-md font-heading text-xl font-bold"
+          className="inline-flex min-h-touch max-w-full items-center gap-2.5 self-start rounded-md font-heading text-xl font-bold [overflow-wrap:anywhere]"
         >
-          <BrandMark className="size-9 rounded-sm" />
-          <span>
+          <BrandMark className="size-9 shrink-0 rounded-sm" />
+          <span className="min-w-0">
             {t('common.appName')}
             <span aria-hidden="true" className="text-accent">
               .

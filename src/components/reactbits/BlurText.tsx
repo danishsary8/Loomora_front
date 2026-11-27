@@ -9,7 +9,7 @@ interface BlurTextProps {
   stagger?: number
 }
 
-/** Landing hero only: each word fades in from a soft blur. Plain text with reduced motion. */
+/** Landing hero only: each word sharpens from a soft blur (opacity stays 1 for contrast). Plain text with reduced motion. */
 export function BlurText({ text, className, stagger = 0.08 }: BlurTextProps) {
   const reduced = useReducedMotion()
   if (reduced) return <span className={className}>{text}</span>
@@ -21,9 +21,9 @@ export function BlurText({ text, className, stagger = 0.08 }: BlurTextProps) {
         {words.map((word, index) => (
           <m.span
             key={`${word}-${index}`}
-            className="inline-block will-change-[transform,filter,opacity]"
-            initial={{ opacity: 0, filter: 'blur(8px)', y: 10 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            className="inline-block will-change-[transform,filter]"
+            initial={{ filter: 'blur(10px)', y: 10 }}
+            animate={{ filter: 'blur(0px)', y: 0 }}
             transition={{ duration: 0.5, delay: index * stagger, ease: [0.22, 1, 0.36, 1] }}
           >
             {word}
