@@ -1,120 +1,151 @@
-# Loomora
+<p align="center">
+  <img src="portfolio/cover/banner.webp" alt="Loomora on a laptop and a phone, over green hills" width="100%">
+</p>
 
-**Craft your day, one routine at a time.**
+<h1 align="center">Loomora</h1>
 
-Loomora is a calm, beautifully designed daily routine planner — build your own schedule, track your streaks, and stay on top of what matters, one day at a time.
+<p align="center"><strong>Plan your day, focus on it, and see how it really went.</strong></p>
 
-## Product
+<p align="center">
+  <a href="https://loomora-craft.vercel.app/"><img alt="Live demo" src="https://img.shields.io/badge/Live%20demo-loomora--craft.vercel.app-1D5039?style=for-the-badge"></a>
+  <a href="https://loomora-api.onrender.com/docs"><img alt="API docs" src="https://img.shields.io/badge/API%20docs-live-E99A63?style=for-the-badge&labelColor=132A23"></a>
+</p>
 
-Loomora helps anyone shape a practical weekly rhythm, follow today’s plan, and keep daily habits visible without turning planning into another source of noise.
+<p align="center">
+  <img alt="React 18" src="https://img.shields.io/badge/React-18-20232a?logo=react&logoColor=61dafb">
+  <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
+  <img alt="Vite 7" src="https://img.shields.io/badge/Vite-7-646cff?logo=vite&logoColor=white">
+  <img alt="Tailwind CSS 3" src="https://img.shields.io/badge/Tailwind-3-06b6d4?logo=tailwindcss&logoColor=white">
+  <img alt="Laravel 12" src="https://img.shields.io/badge/Laravel-12-ff2d20?logo=laravel&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169e1?logo=postgresql&logoColor=white">
+  <img alt="PWA" src="https://img.shields.io/badge/PWA-installable%20%C2%B7%20offline-1D5039">
+</p>
 
-Current capabilities include:
+---
 
-- User-owned day groups assigned to any combination of weekdays.
-- A guided first-routine builder and live “happening now” view.
-- Daily checklists with progress saved per calendar date.
-- Editable schedule blocks and checklist labels.
-- Optional browser reminders and location-aware time information.
-- Account-backed sync through a Laravel API.
-- Email verification, secure password recovery, and additive Google sign-in.
-- Public Privacy Policy and Terms pages, consent timestamps, and permanent account deletion.
-- Responsive, keyboard-accessible UI with reduced-motion support.
-- First-party aggregate analytics without cookies, advertising IDs, or user content.
+Most planners make you choose between a task list and a calendar. **Loomora puts your to-dos and your weekly routine on one Today screen**, gives you a calm focus timer, and shows how the week really went. Start right away as a guest, no sign-up needed. Your plan moves to an account when you sign up.
 
-## Technology
+> **Branches.** The current app lives on [`v2-rebuild`](https://github.com/danishsary8/Loomora_front/tree/v2-rebuild) (deployed to the live demo). `main` keeps the original version and the [portfolio kit](portfolio/).
 
-- Frontend: Vite, React, Tailwind CSS, Framer Motion and Zustand.
-- Backend: Laravel, PostgreSQL and Sanctum bearer-token authentication.
-- API documentation: [`backend/API.md`](backend/API.md).
+## ✨ Highlights
 
-## Local development
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>🗓️ Plan</h3>
+      To-dos with categories, priority, subtasks, repeats and reminders, next to a fixed weekly schedule. A Now / Next card shows where you are in the day.
+    </td>
+    <td width="33%" valign="top">
+      <h3>⏱️ Focus</h3>
+      A countdown (25, 50, 90 min or custom) or a stopwatch, linked to a to-do or a schedule block. It keeps running across pages and reloads.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📈 Review</h3>
+      Insights for the week: completion, focus time, streak, completion rhythm and Plan vs reality. Plus coloured, pinned and tagged notes.
+    </td>
+  </tr>
+</table>
 
-Requirements: Node.js, PHP, Composer and PostgreSQL.
+## 📱 The app
+
+<table>
+  <tr>
+    <th>Today</th>
+    <th>Week</th>
+    <th>Focus</th>
+    <th>Insights</th>
+  </tr>
+  <tr>
+    <td><img src="portfolio/screens/m-today.webp" alt="Today: progress ring, intention, now and next, to-dos" width="200"></td>
+    <td><img src="portfolio/screens/m-week.webp" alt="Week: day strip and timeline blocks with category icons" width="200"></td>
+    <td><img src="portfolio/screens/m-focus.webp" alt="Focus: running countdown in a large ring with pace chips" width="200"></td>
+    <td><img src="portfolio/screens/m-insights.webp" alt="Insights: pastel KPI tiles and the completion rhythm chart" width="200"></td>
+  </tr>
+  <tr>
+    <th>Add a to-do</th>
+    <th>Notes</th>
+    <th>Profile</th>
+    <th>Sign up</th>
+  </tr>
+  <tr>
+    <td><img src="portfolio/screens/m-new-task.webp" alt="Add a to-do sheet with category chips and icon rows" width="200"></td>
+    <td><img src="portfolio/screens/m-notes.webp" alt="Notes: coloured, pinned and tagged cards" width="200"></td>
+    <td><img src="portfolio/screens/m-profile.webp" alt="Profile: hills hero, streak and tasks done, settings" width="200"></td>
+    <td><img src="portfolio/screens/m-sign-up.webp" alt="Sign up: split card with the green hills panel" width="200"></td>
+  </tr>
+</table>
+
+### On a laptop
+
+Wide screens get a sidebar and two-column layouts instead of a narrow column.
+
+<p align="center">
+  <img src="portfolio/screens/today.webp" alt="Today on a laptop: to-do list with a right rail for the intention and now and next" width="100%">
+</p>
+
+<table>
+  <tr>
+    <td><img src="portfolio/screens/week.webp" alt="Week overview with seven columns" width="100%"></td>
+    <td><img src="portfolio/screens/focus.webp" alt="Focus timer beside its history" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="portfolio/screens/insights.webp" alt="Insights grid" width="100%"></td>
+    <td><img src="portfolio/screens/landing.webp" alt="Landing page with a product preview built from cards" width="100%"></td>
+  </tr>
+</table>
+
+<sub>Screens use made-up demo data (a student's week) in guest mode. <a href="portfolio/overview.jpg">See all screens on one page</a>.</sub>
+
+## 🎨 Design
+
+**Elemental Edition**: warm ivory `#F7F5EF`, paper `#FCFBF8`, forest ink `#132A23`, deep forest primary `#1D5039`, a restrained peach accent `#E99A63`, and six pastel categories (study, work, health, life, rest, other). The signature motif is green hills under a low peach sun, on the landing page, sign-in, Profile and the Focus ring.
+
+- Mobile-first at 375 px, checked from 320 to 1440 px and with iOS safe areas.
+- WCAG 2.2 AA: 4.5:1 text contrast, 44 px touch targets, visible focus, and reduced motion respected everywhere.
+- Self-hosted Inter, one theme, and every string through i18n (English now, Khmer later).
+
+## 🧰 Tech stack
+
+| Area | Tools |
+|---|---|
+| Frontend | React 18, TypeScript (strict), Vite 7, Tailwind CSS 3, Framer Motion |
+| State and data | TanStack Query 5, Zustand 5, Dexie 4 (IndexedDB guest mode), React Router 7 |
+| PWA | vite-plugin-pwa and Workbox: installable, offline app shell |
+| Backend | [Laravel 12 API](https://github.com/danishsary8/loomora_back), PostgreSQL, Sanctum tokens, Google sign-in |
+| Quality | Vitest, Testing Library, Playwright, axe-core, ESLint, Prettier, Knip |
+| Hosting | Vercel (frontend), Render (API), Neon (PostgreSQL) |
+
+## 📊 By the numbers
+
+| 985 | 714 | 56 | 36 |
+|:---:|:---:|:---:|:---:|
+| frontend tests | backend tests | API endpoints | end-to-end specs |
+
+## 🚀 Run it locally
 
 ```bash
-npm install
-composer install --working-dir=backend
-cp backend/.env.example backend/.env
-php backend/artisan key:generate
-php backend/artisan migrate
+git clone https://github.com/danishsary8/Loomora_front.git
+cd Loomora_front
+git checkout v2-rebuild
+npm ci
 npm run dev
 ```
 
-Development URLs:
+Open `http://localhost:5173` and press **Try it now**. Guest mode needs no backend. To use accounts, set `VITE_API_URL` (see `.env.example`) to a running [loomora_back](https://github.com/danishsary8/loomora_back) API.
 
-- Loomora frontend: `http://127.0.0.1:5173`
-- Loomora API: `http://127.0.0.1:8000/api/v1`
-
-Production build:
+Checks used before every PR:
 
 ```bash
-npm run build
+npm run lint && npm run knip && npm run format:check && npm run typecheck && npm test && npm run build
 ```
 
-Frontend regression tests:
+## 🔗 Links
 
-```bash
-npm run test
-```
+- **Live app:** https://loomora-craft.vercel.app/
+- **API reference:** https://loomora-api.onrender.com/docs
+- **Backend repo:** [danishsary8/loomora_back](https://github.com/danishsary8/loomora_back)
+- **Full developer README:** [`v2-rebuild/README.md`](https://github.com/danishsary8/Loomora_front/blob/v2-rebuild/README.md)
 
-Environment selection requires no code edits:
+## 👤 Author
 
-- Local frontend: copy `.env.example` to `.env`; it points to
-  `http://127.0.0.1:8000/api/v1`.
-- Production frontend: set `VITE_API_URL` in Vercel to the Render API.
-- Local backend: copy `backend/.env.example` to `backend/.env`.
-- Production backend: set the values shown in
-  `backend/.env.production.example` in Render; never upload an `.env` file.
-
-Local mail uses Laravel’s `log` driver. Production uses Resend's HTTPS mail
-transport because Render's free service blocks SMTP. See
-[`DEPLOYMENT.md`](DEPLOYMENT.md) for the full Vercel + Render procedure, Google
-callback values, email setup, limitations, and future-domain checklist.
-
-Scalability safeguards, cache/rate-limit decisions, Sentry setup, uptime
-monitoring, reminder architecture limits, and the repeatable load-smoke script
-are documented in [`RELIABILITY.md`](RELIABILITY.md).
-
-Set `ANALYTICS_ENABLED=true` to collect first-party aggregate events. Set
-`ANALYTICS_ADMIN_EMAILS` to a comma-separated list of accounts allowed to open
-`/internal/analytics`; this list controls access only and is never written into
-analytics events.
-
-## Design system
-
-- Canvas: cream `#F5EDE6`.
-- Card tones: ink `#1A1A1A`, white `#FFFFFF`, and taupe `#8A8378`.
-- Category accents: teal (Career), sage (Health), rose (Language), warm gray (Life) and dusty blue (Rest).
-- Standalone notice accent: amber `#C9A227`, used by the offline and email-verification banners. It is not a category color.
-- Typography: Caveat for expressive display headings and Poppins for interface copy.
-
-`src/config/categories.js` is the single source of truth for category labels and
-accents; `CATEGORY_KEYS` drives every picker so the two cannot drift.
-
-## Project structure
-
-```text
-src/                    React application
-public/                 public metadata and brand placeholders
-backend/app/            Laravel application code
-backend/database/       user-owned schema migrations (no schedule seed data)
-backend/routes/api.php  versioned API routes
-backend/API.md           API reference
-DEPLOYMENT.md            free-tier preview deployment and operations guide
-RELIABILITY.md           caching, monitoring, rate limits and load checks
-CONTRIBUTING.md          architecture rules and verification workflow
-```
-
-## Architecture
-
-Laravel endpoints use a Controller → FormRequest → Service → Model → Resource pipeline and a shared JSON envelope. React pages compose feature components; reusable server-state and interaction behavior lives in hooks, global authentication lives in Zustand, and HTTP access stays in `src/api/`.
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) before adding endpoints or user flows.
-
-## Deployment status
-
-Vercel and Render configuration is present, but no live URL has been verified from this workspace. Set `VITE_API_URL`, `APP_URL`, and `FRONTEND_URL` to the platform-provided HTTPS URLs, then replace example sitemap and Open Graph origins. Placeholder hosts must not be represented as production.
-
-## Product roadmap boundaries
-
-Phase B replaced the global fixed schedule with authenticated, user-owned day groups and direct CRUD. New accounts intentionally start empty and build their own recurring routines.
+Built by **Sary Danish** ([@danishsary8](https://github.com/danishsary8)) · [Portfolio](https://danish-portfolio-nine.vercel.app/)
