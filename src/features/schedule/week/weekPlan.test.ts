@@ -1,5 +1,5 @@
 import type { ScheduleItem, Weekday } from '../types'
-import { copyDayChanges, itemsOnWeekday, todayWeekday } from './weekPlan'
+import { copyDayChanges, itemsOnWeekday, todayWeekday, weekDatesFor } from './weekPlan'
 
 function item(id: string, start: string, days: Weekday[], end = '23:00'): ScheduleItem {
   return {
@@ -68,5 +68,32 @@ describe('copyDayChanges', () => {
 
   it('does nothing for an empty source day', () => {
     expect(copyDayChanges([item('a', '08:00', [3])], 0, [1, 2])).toEqual([])
+  })
+})
+
+describe('weekDatesFor', () => {
+  it('computes calendar dates for Monday-first and Sunday-first weeks', () => {
+    // 2026-11-27 is Friday (weekday 4)
+    const friday = new Date('2026-11-27T12:00:00Z')
+    const monFirst = weekDatesFor([0, 1, 2, 3, 4, 5, 6], friday, 'UTC')
+    expect(monFirst[0].getUTCDate()).toBe(23)
+    expect(monFirst[4].getUTCDate()).toBe(27)
+    expect(monFirst[6].getUTCDate()).toBe(29)
+
+    const sunFirst = weekDatesFor([6, 0, 1, 2, 3, 4, 5], friday, 'UTC')
+    expect(sunFirst[6].getUTCDate()).toBe(22)
+    expect(sunFirst[0].getUTCDate()).toBe(23)
+    expect(sunFirst[5].getUTCDate()).toBe(28)
+  })
+
+  it('crosses month and year boundaries cleanly and handles empty weekdays', () => {
+    // 2026-12-31 is Thursday (weekday 3)
+    const newYearsEve = new Date('2026-12-31T12:00:00Z')
+    const dates = weekDatesFor([0, 1, 2, 3, 4, 5, 6], newYearsEve, 'UTC')
+    expect(dates[0].toISOString().slice(0, 10)).toBe('2026-12-28')
+    expect(dates[3].toISOString().slice(0, 10)).toBe('2026-12-31')
+    expect(dates[4].toISOString().slice(0, 10)).toBe('2027-01-01')
+    expect(dates[6].toISOString().slice(0, 10)).toBe('2027-01-03')
+    expect(weekDatesFor([], newYearsEve, 'UTC')).toEqual({})
   })
 })

@@ -1,5 +1,13 @@
 import type { Config } from 'tailwindcss'
-import { borderWidth, colors, elevation, fontFamily, motion, radius } from './src/styles/tokens'
+import {
+  borderWidth,
+  colors,
+  elevation,
+  fontFamily,
+  iconSize,
+  motion,
+  radius,
+} from './src/styles/tokens'
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -13,6 +21,7 @@ export default {
         ink: colors.ink,
         muted: colors.muted,
         primary: colors.primary,
+        'primary-light': colors.primaryLight,
         'primary-pressed': colors.primaryPressed,
         'primary-soft': colors.primarySoft,
         accent: colors.accent,
@@ -23,6 +32,7 @@ export default {
         'warning-surface': colors.warningSurface,
         danger: colors.danger,
         category: colors.category,
+        'category-accent': colors.categoryAccent,
       },
       borderWidth: {
         hairline: borderWidth.hairline,
@@ -37,6 +47,7 @@ export default {
         'soft-sm': elevation.sm,
         'soft-md': elevation.md,
         'soft-sheet': elevation.sheet,
+        fab: elevation.fab,
       },
       transitionDuration: {
         fast: motion.duration.fast,
@@ -55,6 +66,18 @@ export default {
       },
       minWidth: {
         touch: '44px',
+      },
+      width: {
+        'icon-sm': iconSize.sm,
+        'icon-md': iconSize.md,
+        'icon-lg': iconSize.lg,
+        'icon-xl': iconSize.xl,
+      },
+      height: {
+        'icon-sm': iconSize.sm,
+        'icon-md': iconSize.md,
+        'icon-lg': iconSize.lg,
+        'icon-xl': iconSize.xl,
       },
     },
   },

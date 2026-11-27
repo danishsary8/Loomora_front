@@ -1,5 +1,7 @@
+import { m, useReducedMotion } from 'framer-motion'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { EmptyState, LoadingState } from '@/components/states'
 import {
   Button,
   Card,
@@ -21,12 +23,14 @@ import {
   PencilIcon,
   ProfileIcon,
   RepeatIcon,
+  SproutIcon,
   StreakIcon,
   TodayIcon,
   TrashIcon,
   WeekIcon,
 } from '@/components/ui/icons'
 import { ScheduleItemSheet } from '@/features/schedule/ScheduleItemSheet'
+import { listStaggerContainer, listStaggerItem, pressTapProps, useCountUp } from '@/styles/motion'
 import { CATEGORIES, colors, type Category } from '@/styles/tokens'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -67,16 +71,22 @@ const ICON_SHOWCASE = [
   { name: 'Edit', Icon: PencilIcon },
   { name: 'Repeat', Icon: RepeatIcon },
   { name: 'Delete', Icon: TrashIcon },
+  { name: 'Sprout', Icon: SproutIcon },
 ] as const
 
 export function StyleguidePage() {
   const { t } = useTranslation()
+  const reduceMotion = useReducedMotion()
+  const reduced = Boolean(reduceMotion)
   const [picked, setPicked] = useState<Category>('study')
   const [clockFormat, setClockFormat] = useState<'12h' | '24h'>('24h')
   const [clockDraft, setClockDraft] = useState<string>()
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [scheduleSheetOpen, setScheduleSheetOpen] = useState(false)
+  const [kpiTarget, setKpiTarget] = useState(83)
+  const animatedKpi = useCountUp(kpiTarget, { reduced })
+  const tap = pressTapProps(reduced)
 
   return (
     <main className="mx-auto flex w-full max-w-[375px] flex-col gap-10 px-4 py-8">
@@ -278,6 +288,55 @@ export function StyleguidePage() {
           onClose={() => setScheduleSheetOpen(false)}
           target={{ type: 'create' }}
         />
+      </Section>
+
+      <Section title={t('styleguide.motionStates')}>
+        <Card className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-muted">{t('styleguide.motionCountLabel')}</p>
+            <p className="text-2xl font-bold tabular-nums text-ink">{animatedKpi}%</p>
+          </div>
+          <m.button
+            type="button"
+            {...tap}
+            onClick={() => setKpiTarget((v) => (v >= 100 ? 60 : v + 10))}
+            className="min-h-touch rounded-md border-control border-border-control bg-paper px-3.5 text-sm font-semibold text-ink shadow-soft-sm hover:bg-subtle"
+          >
+            {t('styleguide.motionStep')}
+          </m.button>
+        </Card>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted">{t('styleguide.motionStaggerLabel')}</h3>
+          <m.ul
+            variants={listStaggerContainer(reduced)}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col gap-2"
+          >
+            {CATEGORIES.slice(0, 3).map((c) => (
+              <m.li key={c} variants={listStaggerItem(reduced)}>
+                <Card tone={c} compact className="font-semibold">
+                  {t(`categories.${c}`)}
+                </Card>
+              </m.li>
+            ))}
+          </m.ul>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted">{t('styleguide.skeletonPreview')}</h3>
+          <LoadingState variant="list" />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted">{t('styleguide.emptyPreview')}</h3>
+          <EmptyState
+            title={t('styleguide.emptySampleTitle')}
+            message={t('styleguide.emptySampleBody')}
+            actions={<Button fullWidth>{t('styleguide.emptySampleCta')}</Button>}
+          />
+        </div>
       </Section>
     </main>
   )

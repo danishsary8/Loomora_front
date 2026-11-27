@@ -259,20 +259,81 @@ export function ChatIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-export function SignOutIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <IconBase {...props}>
-      <path d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" />
-      <path d="M10.5 12H20M16.5 8.5 20 12l-3.5 3.5" />
-    </IconBase>
-  )
-}
-
 export function PinIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>
       <path d="M9.5 3.5h5l-.8 5.2 3.3 3.3v1.5H7V12l3.3-3.3-.8-5.2Z" />
       <path d="M12 13.5v7" />
+    </IconBase>
+  )
+}
+
+export function SproutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 20V11" />
+      <path d="M12 12c0-4.2 3-7 7-7 0 4-2.8 7-7 7Z" />
+      <path d="M12 14c0-3.5-2.5-6-6-6 0 3.5 2.5 6 6 6Z" />
+    </IconBase>
+  )
+}
+
+export function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </IconBase>
+  )
+}
+
+export function ChevronRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </IconBase>
+  )
+}
+
+export function ArrowUpRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M7 17 17 7M8 7h9v9" />
+    </IconBase>
+  )
+}
+
+export function SparkleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6-5.6-1.9 5.6-1.9L12 3Z" />
+      <path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z" />
+    </IconBase>
+  )
+}
+
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8Z" />
+      <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+    </IconBase>
+  )
+}
+
+export function FlagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 4v16" />
+      <path d="M5 4h11l-2 4.5L16 13H5" />
+    </IconBase>
+  )
+}
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
     </IconBase>
   )
 }

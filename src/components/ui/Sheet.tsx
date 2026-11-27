@@ -2,6 +2,7 @@ import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { sheetBackdropMotion, sheetPanelMotion } from '@/styles/motion'
 import { CloseIcon } from './icons'
 import { pressSm } from './press'
 
@@ -108,9 +109,9 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
     }
   }, [open, initialFocusRef])
 
-  const panelMotion = reduceMotion
-    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
-    : { initial: { y: '100%' }, animate: { y: 0 }, exit: { y: '100%' } }
+  const reduced = Boolean(reduceMotion)
+  const backdropMotion = sheetBackdropMotion(reduced)
+  const panelMotion = sheetPanelMotion(reduced)
 
   return createPortal(
     <AnimatePresence>
@@ -119,10 +120,7 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
           <m.div
             data-testid="sheet-backdrop"
             className="absolute inset-0 bg-ink/40 backdrop-blur-[1px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.16 }}
+            {...backdropMotion}
             onClick={onClose}
           />
           <m.div
@@ -133,7 +131,6 @@ export function Sheet({ open, onClose, title, children, initialFocusRef }: Sheet
             tabIndex={-1}
             className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-lg border-t border-border-subtle bg-paper pb-[max(1.25rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-3 shadow-soft-sheet focus-visible:outline-none"
             {...panelMotion}
-            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.2, 0.8, 0.2, 1] }}
           >
             <div
               aria-hidden="true"

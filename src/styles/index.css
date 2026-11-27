@@ -25,17 +25,6 @@
   }
 }
 
-@layer components {
-  /* Press-down retained for existing primitives until UX-004 migrates them. */
-  .press-md {
-    @apply shadow-hard-md transition-[transform,box-shadow] duration-fast ease-elemental active:translate-x-press-md active:translate-y-press-md active:shadow-none;
-  }
-
-  .press-sm {
-    @apply shadow-hard-sm transition-[transform,box-shadow] duration-fast ease-elemental active:translate-x-press-sm active:translate-y-press-sm active:shadow-none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

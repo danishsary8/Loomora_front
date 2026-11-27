@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
+import { ArrowRightIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import { useClockDisplay } from '@/lib/time/useTimePreferences'
 import type { Occurrence } from '@/features/schedule'
@@ -47,7 +48,7 @@ export interface NowNextStripProps {
   onOpen: () => void
 }
 
-/** S3 schedule strip: NOW and NEXT cards. Tap opens the full day (S5). */
+/** S3 schedule strip: NOW → NEXT mini-cards with arrow between them. Tap opens the full day (S5). */
 export function NowNextStrip({ now, next, onOpen }: NowNextStripProps) {
   const { t } = useTranslation()
   const { wall } = useClockDisplay()
@@ -55,7 +56,7 @@ export function NowNextStrip({ now, next, onOpen }: NowNextStripProps) {
     <button
       type="button"
       onClick={onOpen}
-      className="group flex min-h-touch w-full gap-3 rounded-lg text-left transition-transform duration-fast ease-elemental active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100"
+      className="group flex min-h-touch w-full items-center gap-2 rounded-lg text-left transition-transform duration-fast ease-elemental active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
     >
       <Slot
         label={t('nowNext.now')}
@@ -63,6 +64,7 @@ export function NowNextStrip({ now, next, onOpen }: NowNextStripProps) {
         formatTime={wall}
         emptyText={t('nowNext.free')}
       />
+      <ArrowRightIcon className="h-icon-sm w-icon-sm shrink-0 text-muted" />
       <Slot
         label={t('nowNext.next')}
         occurrence={next}

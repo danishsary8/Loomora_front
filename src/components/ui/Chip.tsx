@@ -24,6 +24,15 @@ const fillClasses: Record<Category, string> = {
   other: 'bg-category-other',
 }
 
+const iconAccentClasses: Record<Category, string> = {
+  study: 'text-category-accent-study',
+  work: 'text-category-accent-work',
+  health: 'text-category-accent-health',
+  life: 'text-category-accent-life',
+  rest: 'text-category-accent-rest',
+  other: 'text-category-accent-other',
+}
+
 export function Chip({ category, label, onClick, selected = false, className }: ChipProps) {
   const { t } = useTranslation()
   const text = label ?? t(`categories.${category}`)
@@ -35,12 +44,12 @@ export function Chip({ category, label, onClick, selected = false, className }: 
       <span
         className={cn(
           base,
-          'min-h-7 border-hairline border-ink/15 px-2.5 text-sm',
+          'min-h-7 border-hairline border-ink/10 px-2.5 text-sm shadow-soft-sm',
           fillClasses[category],
           className,
         )}
       >
-        <Icon className="size-3.5 shrink-0" />
+        <Icon className={cn('size-3.5 shrink-0', iconAccentClasses[category])} />
         {text}
       </span>
     )
@@ -61,7 +70,11 @@ export function Chip({ category, label, onClick, selected = false, className }: 
         className,
       )}
     >
-      {selected ? <CheckIcon className="size-4" /> : <Icon className="size-4" />}
+      {selected ? (
+        <CheckIcon className="size-4 text-primary" />
+      ) : (
+        <Icon className={cn('size-4', iconAccentClasses[category])} />
+      )}
       {text}
     </button>
   )

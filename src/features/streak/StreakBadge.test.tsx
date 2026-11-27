@@ -37,14 +37,14 @@ describe('StreakBadge', () => {
     }
   })
 
-  it('shows the day count as a streak label on paper, then a warm accent once counted', () => {
+  it('shows the day count as a warm peach card, deepening once today is counted', () => {
     const { rerender } = render(<StreakBadge count={4} todayCounted={false} />)
     const badge = screen.getByTestId('streak-badge')
-    expect(badge).toHaveClass('bg-paper', 'text-ink')
+    expect(badge).toHaveClass('bg-warning-surface', 'text-ink')
     expect(badge).toHaveTextContent('4-day streak')
 
     rerender(<StreakBadge count={5} todayCounted />)
-    expect(badge).toHaveClass('bg-accent/40', 'text-ink')
+    expect(badge).toHaveClass('bg-accent/45', 'text-ink')
     expect(badge).toHaveTextContent('5-day streak')
   })
 })

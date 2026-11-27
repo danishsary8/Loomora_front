@@ -4,6 +4,7 @@ import {
   colors,
   contrastRatio,
   fontFamily,
+  iconSize,
   motion,
   radius,
 } from './tokens'
@@ -26,6 +27,7 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     ['muted on canvas (cream)', colors.muted, colors.cream],
     ['muted on paper', colors.muted, colors.paper],
     ['white on primary', colors.white, colors.primary],
+    ['white on primaryLight', colors.white, colors.primaryLight],
     ['white on primaryPressed', colors.white, colors.primaryPressed],
     ['primary on primarySoft', colors.primary, colors.primarySoft],
     ['primary on canvas', colors.primary, colors.cream],
@@ -57,6 +59,16 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     ['borderControl on paper', colors.borderControl, colors.paper],
     ['primary focus outline on canvas', colors.primary, colors.cream],
     ['primary focus outline on paper', colors.primary, colors.paper],
+    ...CATEGORIES.map((c): [string, string, string] => [
+      `categoryAccent.${c} on paper`,
+      colors.categoryAccent[c],
+      colors.paper,
+    ]),
+    ...CATEGORIES.map((c): [string, string, string] => [
+      `categoryAccent.${c} on category.${c}`,
+      colors.categoryAccent[c],
+      colors.category[c],
+    ]),
   ]
 
   it.each(controlBorderPairs)('%s meets WCAG 2.2 SC 1.4.11 non-text contrast (3:1)', (_n, a, b) => {
@@ -71,6 +83,7 @@ describe('Elemental Edition design tokens (DEC-003)', () => {
     expect(fontFamily.body[0]).toBe('"Inter Variable"')
     expect(fontFamily.heading).toEqual(fontFamily.body)
     expect(radius).toEqual({ sm: '8px', md: '14px', lg: '22px' })
+    expect(iconSize).toEqual({ sm: '16px', md: '20px', lg: '24px', xl: '32px' })
     expect(motion.duration).toEqual({ fast: '160ms', base: '200ms', slow: '240ms' })
   })
 

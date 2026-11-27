@@ -1,3 +1,5 @@
+import { m, useReducedMotion } from 'framer-motion'
+import { progressDrawTransition } from '@/styles/motion'
 import { colors } from '@/styles/tokens'
 
 export interface ProgressRingProps {
@@ -11,11 +13,14 @@ export interface ProgressRingProps {
 const STROKE = 8
 
 export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProps) {
+  const reduceMotion = useReducedMotion()
+  const reduced = Boolean(reduceMotion)
   const clamped = Math.min(Math.max(value, 0), Math.max(max, 0))
   const ratio = max > 0 ? clamped / max : 0
   const center = size / 2
   const radius = center - STROKE / 2 - 2
   const circumference = 2 * Math.PI * radius
+  const targetOffset = circumference * (1 - ratio)
 
   return (
     <figure className="inline-flex flex-col items-center gap-2">
@@ -38,7 +43,7 @@ export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProp
             stroke={colors.borderSubtle}
             strokeWidth={STROKE}
           />
-          <circle
+          <m.circle
             cx={center}
             cy={center}
             r={radius}
@@ -47,9 +52,10 @@ export function ProgressRing({ value, max, label, size = 112 }: ProgressRingProp
             strokeWidth={STROKE}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - ratio)}
+            initial={reduced ? false : { strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: targetOffset }}
+            transition={progressDrawTransition(reduced)}
             transform={`rotate(-90 ${center} ${center})`}
-            className="transition-[stroke-dashoffset] duration-slow ease-elemental"
           />
         </svg>
         <span

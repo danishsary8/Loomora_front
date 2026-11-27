@@ -1623,3 +1623,170 @@ The first GitHub browser run exposed two test assumptions. The midnight scenario
 - **What changed:** See TASKS F-R4-06. `CATEGORY_ICONS` moved from `icons.tsx` to `categoryIcons.ts` (clears a react-refresh lint warning from UX-018).
 - **How it was verified:** lint, typecheck, Knip, format check, Vitest 951/951, Redocly valid; `docs/openapi.yaml` is byte-identical to backend B-056. 320 and 375 px screenshots of the sheet and list. Playwright `phone-375` 126/128 in this sandbox; `focus-presentation` and `pwa` failed once and passed on rerun, and neither touches Notes.
 - **Depends on:** backend PR #62 (B-056), green in CI. Until it is deployed, the server ignores the new fields.
+
+### 2026-11-27 UX-020: Motion foundation + skeletons and empty states
+
+- **Branch:** `feat/UX-020-motion-skeletons-empty-states` from `origin/v2-rebuild` (`8398a20`).
+- **What changed:**
+  - **Tokens & cleanup:** Added `iconSize` tokens (`sm: 16px`, `md: 20px`, `lg: 24px`, `xl: 32px`) in `src/styles/tokens.ts` and wired `w-icon-*`/`h-icon-*` utilities in `tailwind.config.ts`. Removed unused legacy `.press-md`/`.press-sm` rules from `src/styles/index.css`.
+  - **Shared motion foundation (`src/styles/motion.ts`):** Added DEC-003 durations (`160/200/240 ms`), single easing (`[0.2, 0.8, 0.2, 1]`), and 7 Framer Motion / React presets with zero-movement reduced-motion fallbacks: `pageEnterMotion` (fade + 8 px rise), `listStaggerContainer` / `listStaggerItem` (30 ms stagger), `sheetPanelMotion` / `sheetBackdropMotion` (bottom-sheet spring), `pressTapProps` (scale `0.97`), `checkOffPopMotion`, `progressDrawTransition`, and `useCountUp` (KPI count-up).
+  - **Wired into shared UI primitives:** `Sheet.tsx` (sheet spring), `DoneStamp.tsx` (check-off pop), `ProgressRing.tsx` (`m.circle` mount draw-in), `press.ts` (unified `scale-[0.97]`, updated style-pinning assertion in `Button.test.tsx`), and `AppLayout.tsx` (client-side route transition skipping initial mount so LCP and first-paint a11y checks stay immediate).
+  - **Skeletons & empty states:** Added reusable `Skeleton` primitive and `list`/`cards`/`summary`/`inline` variants to `LoadingState.tsx`; replaced plain visible `"Loading…"` in `DailyIntention.tsx` with an accessible skeleton + `sr-only` status; added optional `icon` prop and default calm `SproutIcon` badge to `EmptyState.tsx`; added a "Motion & states" showcase section to `/styleguide` with i18n keys in `src/i18n/en.json`.
+- **How it was verified:**
+  - `npm run lint`: passed (0 errors, 0 warnings).
+  - `npm run typecheck`: passed (`tsc -b`).
+  - `npm run knip`: passed (0 unused files/exports/dependencies).
+  - `npm run format:check`: passed.
+  - `npm test`: passed (84 files / 961 tests, including 8 new motion tests and expanded state/token tests).
+  - `npm run build`: passed (PWA precache 38 entries, 1101.39 KiB).
+  - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 horizontal overflow across 320–1440 px and 200% text).
+  - Screenshots captured and visually inspected at 375 px and 1440 px (`docs/screenshots/ux020-styleguide-375.png`, `ux020-styleguide-1440.png`, `ux020-empty-notes-375.png`, `ux020-empty-notes-1440.png`); verified 0 px overflow and instant reduced-motion KPI update.
+- **Problems / Questions:** None. Ready for owner review before starting UX-021 (Today).
+
+### 2026-11-27 UX-021: Today screen concept v3 alignment
+
+- **Branch:** `feat/UX-021-today-polish` stacked on `feat/UX-020-motion-skeletons-empty-states` (PR #106 — merge #106 first).
+- **What changed:**
+  - **Tokens & UI primitives:** Added `primaryLight` (`#26684A`, WCAG AA contrast >= 4.5:1 with `#FFFFFF` verified in `tokens.test.ts`) and `elevation.fab` in `src/styles/tokens.ts` / `tailwind.config.ts`; added `ArrowRightIcon` in `src/components/ui/icons.tsx`; widened `AppPageHeader.headline` to `ReactNode`; added `shape="circle"` to `Checkbox`; applied `shadow-fab` to `FloatingAddButton`.
+  - **Today header & streak:** Styled Today headline as `"Make today "` + `"count."` in primary green via i18n keys (`pages.today.headlinePrefix` / `headlineAccent`); styled `StreakBadge` as a warm peach card (`bg-warning-surface` -> `bg-accent/45` when today is counted) with a circular flame badge.
+  - **Progress card & hierarchy:** Upgraded `TodayProgressCard` with `bg-gradient-to-br from-primary to-primary-light`, soft inner glow, `progressDrawTransition` bar/ring draw-in, and `useCountUp` percentage; placed the progress card above `DailyIntention` and `NowNextStrip` to match concept v3.
+  - **Now → Next & grouped to-dos:** Added a centered `ArrowRightIcon` between the two tinted mini-cards in `NowNextStrip`; grouped `TodoRow` items inside ONE hairline-divided `paper` card (`divide-y divide-border-subtle`) with round check circles (`shape="circle"`), right-aligned category pills, and a quiet `"See all →"` link to `/insights`.
+  - **Tests updated (style-pinning only):** Updated `TodayPage.test.tsx` (grouped list card classes) and `StreakBadge.test.tsx` (warm peach card classes).
+- **How it was verified:**
+  - `npm run lint`: passed (0 errors, 0 warnings).
+  - `npm run typecheck`: passed (`tsc -b`).
+  - `npm run knip`: passed (0 unused files/exports/dependencies).
+  - `npm run format:check`: passed.
+  - `npm test`: passed (84 files / 962 tests).
+  - `npm run build`: passed.
+  - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (known unrelated cold-load flake; all Today, a11y, overflow, 200% text, subtasks, repeat, reminders specs passed).
+  - Populated Today screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux021-today-375.png`, `ux021-today-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Ready for owner review before starting UX-022 (Week).
+
+### 2026-11-27 UX-022: Week screen concept v3 alignment
+
+- **Branch:** `feat/UX-022-week-polish` stacked on `feat/UX-021-today-polish` (PR #107 — merge #106, #107 first).
+- **What changed:**
+  - **Week date calculation (`weekPlan.ts` / `weekPlan.test.ts`):** Added `weekDatesFor(weekdays, date, zone)` pure helper respecting Monday-first and Sunday-first preferences and user time zone.
+  - **Day strip (`DayToggle.tsx` / `WeekPage.tsx`):** Added current week range label (`Intl.DateTimeFormat.formatRange`) and stacked weekday + calendar date number (`dayNumber`) in dark-green selected tiles while preserving 44×44 px touch targets.
+  - **Day rhythm & time gutter (`DayColumn.tsx` / `en.json`):** Phone single-day view now displays `"{{day}}’s rhythm"` + `"+ Add block"` pill, a left-aligned `tabular-nums` start-time gutter beside category-tinted block cards, and `"time · category"` detail rows, while preserving the 7-column desktop grid.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`: all passed.
+  - `npm test`: passed (84 files / 963 tests).
+  - `npm run build`: passed.
+  - `npx playwright test --project=phone-375 --trace off`: passed (128/128, 0 axe violations, 0 px overflow across 320–1440 px).
+  - Populated Week screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux022-week-375.png`, `ux022-week-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-023 (Focus).
+
+### 2026-11-27 UX-023: Focus screen concept v3 alignment
+
+- **Branch:** `feat/UX-023-focus-polish` stacked on `feat/UX-022-week-polish` (PR #108 — merge #106, #107, #108 first).
+- **What changed:**
+  - **Icons & i18n:** Added `ChevronRightIcon` and `ArrowUpRightIcon` in `src/components/ui/icons.tsx`; added `focus.historyLink` and `focus.setYourPace` in `src/i18n/en.json` (retaining `focus.duration` as the screen-reader `<legend>` for the preset fieldset).
+  - **Gradient ring & sprout (`FocusReadout.tsx`):** Upgraded the timer ring to a soft linear gradient stroke (`primaryLight` → `primary`, or `accent` → `warning` on break) with `SproutIcon` centered above the digits and phase label below.
+  - **Linked task card (`FocusAttachment.tsx`):** Upgraded the active linked task banner into a crisp paper card with a circular focus icon badge and trailing chevron.
+  - **Controls, presets & history shortcut (`FocusPage.tsx`):** Added top-right `"History ↗"` anchor jumping to `#focus-history`; placed primary (`Pause`/`Resume`) and secondary (`Finish`/`End early`) buttons side by side while active (keeping the primary button mounted across idle/active transitions so keyboard focus stays intact, with `min-w-[min(100%,120px)]` to prevent 768 px 200%-text overflow); styled `"Set your pace"` presets as tinted rounded pills.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - `npm test`: `FocusPage.test.tsx` (7/7), `NotesPage.test.tsx` (6/6), and full suite (84 files / 963 tests) passed.
+  - `npx playwright test --project=phone-375 --trace off`: all 128 specs passed (including all 19 Focus/alarm/history/laps/page-heading checks across 320–1440 px and 200% text scaling after fixing the 768 px 200%-text `min-w` overflow).
+  - Screenshots inspected at 375 px (idle + active) and 1440 px (active) (`docs/screenshots/ux023-focus-*.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-024 (Insights).
+
+### 2026-11-27 UX-024: Insights screen concept v3 alignment (with SVG bar chart)
+
+- **Branch:** `feat/UX-024-insights-polish` stacked on `feat/UX-023-focus-polish` (PR #109 — merge #106–#109 first).
+- **What changed:**
+  - Added `SparkleIcon` in `src/components/ui/icons.tsx` and `insights.metrics.completed` / `insights.rhythm.*` keys in `src/i18n/en.json`.
+  - Upgraded `OverviewSection` to 3 compact tinted KPI tiles (`Completed %`, `Focus time`, `Day streak`) with circular icon badges and `useCountUp` animation from real app data.
+  - Added accessible zero-dependency SVG `CompletionRhythmCard` (7 rounded bars scaled from real daily activity scores, weekday labels, mount draw-in respecting `prefers-reduced-motion`).
+  - Upgraded `PlanVsRealityCard` with two animated progress bars (Tasks + Focus attribution) and `WeeklyRecapCard` with an accent `SparkleIcon` badge and trailing chevron; wired `<LoadingState variant="summary" />`; preserved `StreakHistoryCard` and `DailyTrendsCard` intact.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`InsightsPage.test.tsx`, `computeStatsSummary.test.ts`): all passed.
+  - `npx playwright test --project=phone-375 --trace off`: 127/128 on full run + `e2e/legal.spec.ts` 7/7 passed on rerun (`e2e/insights.spec.ts` including offline, axe, 320–1440 px & 200% text passed).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux024-insights-375.png`, `ux024-insights-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-025 (Add/Edit task sheet).
+
+### 2026-11-27 UX-025: Add/Edit task sheet concept v3 alignment
+
+- **Branch:** `feat/UX-025-add-task-sheet` stacked on `feat/UX-024-insights-polish` (PR #110 — merge #106–#110 first).
+- **What changed:**
+  - Added `BellIcon` and `FlagIcon` in `src/components/ui/icons.tsx` and `todoForm.startSimple` in `src/i18n/en.json`.
+  - Upgraded `AddTodoSheet.tsx` with the `"Start simple."` display lead + subtitle when creating (keeping accessible dialog title `"Add a to-do"`), tinted category chips directly under title, a single hairline-divided paper card grouping Due date + expandable More options (Reminder, Repeat, Priority, Notes) with leading icons, and a full-width primary submit button with trailing `ArrowRightIcon`.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`AddTodoSheet.test.tsx`, `TodayPage.test.tsx`): all passed.
+  - Playwright `phone-375` (`a11y`, `today`, `subtasks`, `repeat`, `reminders` — 24/24 passed including 375 px 200% text scaling on `AddTodoSheet`).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux025-add-sheet-375.png`, `ux025-add-sheet-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-026 (Notes).
+
+### 2026-11-27 UX-026: Notes screen concept v3 alignment
+
+- **Branch:** `feat/UX-026-notes-polish` stacked on `feat/UX-025-add-task-sheet` (PR #111 — merge #106–#111 first).
+- **What changed:**
+  - Added `SearchIcon` in `src/components/ui/icons.tsx`.
+  - Upgraded `NotesPage.tsx` with an icon-prefixed search input, pill-shaped filter chips (`All` / `Pinned` / `Standalone` / `Attached`), tinted note cards with top-right `PinIcon` (inside `<h2>` to preserve accessible heading semantics), bottom `#tags` + date/badge footer, `<LoadingState variant="cards" />`, and a sticky bottom primary `"+ New note"` bar when notes exist.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`NotesPage.test.tsx`): 6/6 passed.
+  - Playwright `phone-375` (`notes`, `a11y`, `page-heading` — 20/20 passed across 320–1440 px & 200% text).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux026-notes-375.png`, `ux026-notes-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-027 (Profile + Preferences).
+
+### 2026-11-27 UX-027: Profile & Preferences concept v3 alignment
+
+- **Branch:** `feat/UX-027-profile-preferences` stacked on `feat/UX-026-notes-polish` (PR #112 — merge #106–#112 first).
+- **What changed:**
+  - Added a soft green CSS-gradient hero band with centered large initial avatar circle (or `ProfileIcon` for guests) in `ProfilePage.tsx`, keeping `Profile` as `h1` and `"Your space."` as `data-page-headline`.
+  - Upgraded `StreakCard.tsx` to a 2-tile stat row (`Your streak` + `Tasks completed` for guests / `Longest streak` for accounts — 100% real data, zero extra API calls).
+  - Updated `SettingsList.tsx` with uppercase section headers and `ChevronRightIcon`, added `My activity` (`/insights`) and `My notes` (`/notes`) quick rows, moved `Sign out` to centered danger text (updating the UX-009 layout-pinning test in `ProfilePage.test.tsx`), and removed unused `SignOutIcon` from `icons.tsx`.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Vitest (`ProfilePage.test.tsx`, `TimePreferences.test.tsx`): 50/50 passed.
+  - Playwright `phone-375` (`a11y`, `page-heading`, `delete-account`, `time-preferences` — 22/22 passed across 320–1440 px & 200% text).
+  - Screenshots inspected at 375 px and 1440 px (`docs/screenshots/ux027-profile-375.png`, `ux027-profile-1440.png`) with 0 px overflow.
+- **Problems / Questions:** None. Moving to UX-028 (Final consistency pass).
+
+### 2026-11-27 UX-028: Final consistency pass (Concept v3 polish series UX-020 through UX-028)
+
+- **Branch:** `feat/UX-028-final-consistency-pass` stacked on `feat/UX-027-profile-preferences` (PR #113 — merge #106–#113 in order).
+- **What changed:**
+  - Audited `src/` for raw hex colors (0 outside `tokens.ts`, `tokens.test.ts`, and official `icons.tsx` brand/Google SVGs), `console.log` (0), and `TODO`/`FIXME` (0).
+  - Harmonized `AppLayout.tsx` horizontal padding to `16 px` below 375 px (preventing 1 px overflow at 320 px / 200% text), `20 px` at 375 px+, and `24 px` on desktop (`md:px-6`).
+  - Updated `e2e/profile.spec.ts:155` to match UX-027's centered danger `Sign out` button placement.
+- **How it was verified:**
+  - `npm run lint`, `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build` (PWA precache 39 entries, `1119.81 KiB`, entry chunk `165.12 kB` gzip): all passed.
+  - Full Vitest (`npm test`): **84 files / 963 tests passed** (including all 36 DEC-003 contrast & token tests and 8 motion tests).
+  - Full Playwright `phone-375`: **128/128 passed** (126/128 on initial run + 4/4 on `page-heading` & `profile` after fixing the 320 px 1 px padding overflow and `profile.spec.ts` Sign out selector).
+  - Multi-viewport sweep across all 8 screens (`/`, `/today`, `/week`, `/focus`, `/insights`, `/notes`, `/profile`, `/styleguide`) at `320, 375, 390, 768, 1024, 1440 px`, `200%` text scaling, `prefers-reduced-motion: reduce`, and axe-core WCAG 2.2 AA: **`AUDIT_ISSUES_COUNT: 0`**.
+  - **Lighthouse note:** Lighthouse CLI is not installed in `devDependencies`; production bundle size stayed nearly flat (+0.6 kB gzip across the entire UX-020–UX-028 series with zero new chart or UI libraries added) and accessibility is verified at 0 axe violations across all screens.
+- **Problems / Questions:** None. All 9 Concept v3 PRs (UX-020 through UX-028) are open and ready for owner review in order (#106 → #114).
+
+### 2026-11-27 UX-029: Modularity, memoization, edge-case hardening, and unit tests
+
+- **Branch:** `refactor/UX-029-modular-hardening` stacked on `feat/UX-028-final-consistency-pass` (PR #114 — merge #106–#114 in order).
+- **What changed:**
+  - **Modularization:** Extracted `CompletionRhythmCard.tsx` and pure math/geometry helpers in `completionRhythm.ts` (`dayActivityScore`, `buildRhythmBars`, `RHYTHM_CHART_HEIGHT`) out of `InsightsPage.tsx` (keeping React Fast Refresh warning-free); extracted `ProfileHero.tsx` out of `ProfilePage.tsx`; deduplicated the 5 repeated icon-prefixed optional row blocks in `AddTodoSheet.tsx` into `OptionalFieldSection` with valid direct `<fieldset><legend>` semantics.
+  - **Performance (memoization):** Memoized `weekdays`, `weekDates`, `dayNumFmt`, and `weekRangeLabel` in `WeekPage.tsx`, and hoisted `Intl.DateTimeFormat` out of `filteredNotes.map(...)` in `NotesPage.tsx`.
+  - **Robust error handling & type safety:** Replaced unsafe `as [number, number, number]` cast in `weekPlan.ts` (`weekDatesFor`) with defensive length/finiteness validation and empty-array guard; guarded `new Date(iso)` against `NaN` in `NotesPage.tsx` (`formatUpdatedDate`) and `completionRhythm.ts` (`buildRhythmBars`); sanitized `NaN`/`Infinity` targets in `src/styles/motion.ts` (`useCountUp`).
+  - **Tests:** Added `src/features/insights/CompletionRhythmCard.test.tsx` (4 tests) and expanded `src/styles/motion.test.tsx` (non-finite targets + unmount `cancelAnimationFrame`) and `src/features/schedule/week/weekPlan.test.ts` (month/year boundary + empty weekdays).
+- **How it was verified:**
+  - `npm run lint` (0 errors, 0 warnings), `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Full Vitest (`npm test`): **85 files / 969 tests passed**.
+  - Full Playwright `phone-375` (`npx playwright test --project=phone-375 --trace off`): **128/128 passed**.
+- **Problems / Questions:** None. PR #115 is open for review (stacked on PR #114).
+
+### 2026-11-27 UX-030: Concept v3 vibrancy, colored category icons, and Profile hero hills
+
+- **Branch:** `feat/UX-030-concept-v3-vibrancy` stacked on `refactor/UX-029-modular-hardening` (PR #115 — merge #106–#115 in order).
+- **What changed:**
+  - Enriched the 6 WCAG-verified pastel category fills (`colors.category`) and added `colors.categoryAccent` jewel-toned icon/chart tokens in `src/styles/tokens.ts` and `tailwind.config.ts`, with 12 new automated WCAG 2.2 SC 1.4.11 contrast tests in `src/styles/tokens.test.ts`.
+  - Applied `category-accent-*` icon colors across `Chip.tsx`, Week `DayColumn.tsx` icon tiles, Insights `MetricTile` badges, and Profile `StreakCard.tsx` tiles, and switched `completionRhythm.ts` to the multi-category bar palette.
+  - Upgraded `ProfileHero.tsx` with decorative token-colored layered green hills + apricot sun behind the centered avatar circle (inline SVG, zero raster assets) and gave `DailyIntention.tsx` a crisper mint card surface.
+- **How it was verified:**
+  - `npm run lint` (0 errors, 0 warnings), `npm run typecheck`, `npm run knip`, `npm run format:check`, `npm run build`: all passed.
+  - Full Vitest (`npm test`): **85 files / 981 tests passed** (including all 48 token contrast & config assertions).
+  - Full Playwright `phone-375`: **128/128 passed**.
+  - Fresh 375 px screenshots visually verified and saved to `docs/screenshots/ux030-{today,week,add-sheet,insights,profile}-375.png`.
+- **Problems / Questions:** None. PR #116 is open for review (stacked on PR #115).

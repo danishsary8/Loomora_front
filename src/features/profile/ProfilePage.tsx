@@ -1,8 +1,8 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppPageHeader } from '@/components/page'
 import { Button } from '@/components/ui'
+import { ChatIcon, InsightsIcon, NotesIcon, TrashIcon } from '@/components/ui/icons'
 import { SavePlanSheet } from '@/features/auth/SavePlanSheet'
 import { useSavePlanIntent } from '@/features/auth/savePlanIntent'
 import { useGuestPlan } from '@/features/auth/useGuestPlan'
@@ -13,11 +13,11 @@ import { AccountCard } from './AccountCard'
 import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { FeedbackSheet } from './FeedbackSheet'
 import { GuestPreferencesCard } from './GuestPreferencesCard'
-import { ChatIcon, SignOutIcon, TrashIcon } from '@/components/ui/icons'
+import { ProfileHero } from './ProfileHero'
 import { SettingsGroup, SettingsRow } from './SettingsList'
 import { StreakCard } from './StreakCard'
 
-/** S9 Profile: account (name, time zone, sign out, delete), streak, Save your plan, feedback. */
+/** S9 Profile: hero avatar band, stat tiles, account/preferences, grouped links, feedback, sign out. */
 export function ProfilePage() {
   const { t } = useTranslation()
   const [openedAt] = useState(() => new Date())
@@ -34,6 +34,10 @@ export function ProfilePage() {
   const plan = useGuestPlan().data
   // After sign-in, a plan left on the device (a failed import) can be sent again from here.
   const leftOnDevice = !isGuest && plan !== undefined && !isEmptyPlan(plan)
+  const guestCompletedTodos = isGuest
+    ? (plan?.todos.filter((todo) => todo.done_at !== null).length ?? 0)
+    : undefined
+  const initial = user?.name?.trim().charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()
 
   useEffect(() => {
     return useSession.subscribe((state) => {
@@ -64,10 +68,11 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-5 pb-4">
-      <AppPageHeader
+      <ProfileHero
         title={t('pages.profile.title')}
         headline={t('pages.profile.headline')}
         subtitle={t(isGuest ? 'profile.subtitleGuest' : 'profile.subtitle')}
+        initial={initial}
       />
 
       {isGuest && (
@@ -82,12 +87,25 @@ export function ProfilePage() {
         </DeviceDataNotice>
       )}
 
-      <StreakCard today={toLocalDate(openedAt, user?.timezone)} />
+      <StreakCard
+        today={toLocalDate(openedAt, user?.timezone)}
+        completedTodos={guestCompletedTodos}
+      />
 
       {user && <AccountCard key={generation} user={user} />}
       {isGuest && <GuestPreferencesCard />}
 
       <SettingsGroup title={t('profile.supportTitle')}>
+        <SettingsRow
+          Icon={InsightsIcon}
+          label={t('profile.myActivity')}
+          onClick={() => navigate('/insights')}
+        />
+        <SettingsRow
+          Icon={NotesIcon}
+          label={t('profile.myNotes')}
+          onClick={() => navigate('/notes')}
+        />
         <SettingsRow
           Icon={ChatIcon}
           label={t('profile.feedback')}
@@ -97,22 +115,28 @@ export function ProfilePage() {
       </SettingsGroup>
 
       {user && (
-        <SettingsGroup title={t('profile.accountActionsTitle')}>
-          <SettingsRow
-            Icon={SignOutIcon}
-            label={t('profile.signOut')}
-            disabled={signingOut}
-            aria-busy={signingOut}
-            onClick={() => void leave()}
-          />
-          <SettingsRow
-            Icon={TrashIcon}
-            label={t('profile.deleteAccount')}
-            description={t('profile.deleteHint')}
-            tone="danger"
-            onClick={() => setDeleteOpen(true)}
-          />
-        </SettingsGroup>
+        <>
+          <SettingsGroup title={t('profile.accountActionsTitle')}>
+            <SettingsRow
+              Icon={TrashIcon}
+              label={t('profile.deleteAccount')}
+              description={t('profile.deleteHint')}
+              tone="danger"
+              onClick={() => setDeleteOpen(true)}
+            />
+          </SettingsGroup>
+          <div className="pt-1 text-center">
+            <button
+              type="button"
+              disabled={signingOut}
+              aria-busy={signingOut}
+              onClick={() => void leave()}
+              className="inline-flex min-h-touch items-center justify-center rounded-md px-5 text-sm font-semibold text-danger transition-colors duration-fast ease-elemental hover:bg-danger/5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t('profile.signOut')}
+            </button>
+          </div>
+        </>
       )}
       {user && <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />}
       <FeedbackSheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />

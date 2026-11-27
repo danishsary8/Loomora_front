@@ -71,7 +71,16 @@
     "sheetBody": "Sheets slide up from the bottom. Press Escape or tap outside to close.",
     "progressRing": "Progress ring",
     "scheduleSheet": "Schedule item sheet",
-    "openScheduleSheet": "Open the schedule sheet"
+    "openScheduleSheet": "Open the schedule sheet",
+    "motionStates": "Motion & states",
+    "motionCountLabel": "KPI count-up",
+    "motionStep": "Step +10",
+    "motionStaggerLabel": "Staggered list",
+    "skeletonPreview": "Skeleton loaders",
+    "emptyPreview": "Empty state",
+    "emptySampleTitle": "A quiet space to start",
+    "emptySampleBody": "Add one small thing to set the rhythm for your day.",
+    "emptySampleCta": "Add first item"
   },
   "nav": {
     "label": "Main",
@@ -173,6 +182,8 @@
     "countdown": "Countdown",
     "stopwatch": "Stopwatch",
     "duration": "Countdown duration",
+    "setYourPace": "Set your pace",
+    "historyLink": "History",
     "preset": "{{minutes}} min",
     "custom": "Custom",
     "minutes": "Duration in minutes",
@@ -232,7 +243,9 @@
   "pages": {
     "today": {
       "title": "Today",
-      "headline": "Make today count."
+      "headline": "Make today count.",
+      "headlinePrefix": "Make today",
+      "headlineAccent": "count."
     },
     "week": {
       "title": "Week",
@@ -312,6 +325,7 @@
     "emptyTitle": "What do you have to do today?",
     "emptyMessage": "Start with one thing.",
     "list": "Your to-dos",
+    "seeAll": "See all",
     "repeatsDaily": "Repeats daily",
     "repeatsWeekly": "Repeats weekly: {{days}}",
     "overdue": "Overdue",
@@ -377,7 +391,8 @@
     "category": "Category (optional)",
     "submit": "Add",
     "submitting": "Adding…",
-    "lead": "Capture the thought. Details can come later."
+    "lead": "Capture the thought. Details can come later.",
+    "startSimple": "Start simple."
   },
   "weekdays": {
     "short": {
@@ -436,6 +451,8 @@
     "overview": "Week overview",
     "singleDay": "Single day",
     "addItem": "Add to my schedule",
+    "addBlock": "Add block",
+    "dayRhythm": "{{day}}’s rhythm",
     "dayStrip": "Days of the week",
     "columns": "Week schedule, scroll sideways for more days",
     "nothingPlanned": "Nothing planned.",
@@ -569,6 +586,10 @@
   },
   "profile": {
     "streakTitle": "Your streak",
+    "tasksCompletedTitle": "Tasks completed",
+    "longestStreakTitle": "Longest streak",
+    "myActivity": "My activity",
+    "myNotes": "My notes",
     "subtitle": "Your streak, settings and account.",
     "subtitleGuest": "You are using Loomora as a guest on this device.",
     "streakLoadError": "Could not load your streak.",
@@ -782,6 +803,7 @@
     "emptyBody": "Check off a to-do, complete a schedule block, or finish a Focus session to see your progress here.",
     "overviewLabel": "Summary totals",
     "metrics": {
+      "completed": "Completed",
       "focusTime": "Focus time",
       "sessions_one": "{{count}} session",
       "sessions_other": "{{count}} sessions",
@@ -822,6 +844,10 @@
       "lowerBound_one": "At least {{count}} day",
       "lowerBound_other": "At least {{count}} days",
       "lowerBoundHint": "The lookback covers up to 400 preceding days. Earlier completions may make a streak longer."
+    },
+    "rhythm": {
+      "title": "Completion rhythm",
+      "ariaLabel": "Completion rhythm across the last {{count}} days"
     },
     "trends": {
       "title": "Daily breakdown",

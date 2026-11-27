@@ -1,8 +1,11 @@
+import { m, useReducedMotion } from 'framer-motion'
 import { lazy, Suspense, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { AppPageHeader } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/states'
 import { FloatingAddButton } from '@/components/ui'
+import { ArrowRightIcon } from '@/components/ui/icons'
 import { SavePlanPrompt } from '@/features/auth/SavePlanPrompt'
 import { StreakBadge, useStreak } from '@/features/streak'
 import { nowAndNext, useScheduleDay } from '@/features/schedule'
@@ -15,6 +18,7 @@ import { useSetTodoDone, useTodayTodos } from '@/features/todos/useTodos'
 import { toLocalDate } from '@/lib/date'
 import { useSession } from '@/lib/api'
 import { formatInstantTime } from '@/lib/time/time'
+import { listStaggerContainer } from '@/styles/motion'
 import type { TodoSheetTarget } from './AddTodoSheet'
 import { DailyIntention } from './DailyIntention'
 import { NowNextStrip } from './NowNextStrip'
@@ -34,6 +38,7 @@ type SchedulePanel = { type: 'day' } | { type: 'editor'; target: ScheduleTarget 
 /** S2/S3 Today, v1: guest to-dos only (F-006). */
 export function TodayPage() {
   const { t, i18n } = useTranslation()
+  const reduceMotion = useReducedMotion()
   const now = useNow()
   const [openedAt] = useState(() => now)
   const zone = useSession((state) => (state.token ? state.user?.timezone : undefined))
@@ -80,10 +85,19 @@ export function TodayPage() {
     <div className="flex flex-col gap-5">
       <AppPageHeader
         title={t('pages.today.title')}
-        headline={t('pages.today.headline')}
+        headline={
+          <>
+            {t('pages.today.headlinePrefix')}{' '}
+            <span className="text-primary">{t('pages.today.headlineAccent')}</span>
+          </>
+        }
         subtitle={formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}
         aside={streak && <StreakBadge {...streak} />}
       />
+
+      {!todos.isPending && !todos.isError && list.length > 0 && (
+        <TodayProgressCard done={doneCount} total={list.length} />
+      )}
 
       <DailyIntention
         date={intentionDate}
@@ -107,13 +121,27 @@ export function TodayPage() {
         />
       ) : (
         <>
-          <TodayProgressCard done={doneCount} total={list.length} />
           {/* pb-20: room to scroll the last row clear of the floating + */}
           <section aria-labelledby="todo-list-heading" className="flex flex-col gap-3 pb-20">
-            <h2 id="todo-list-heading" className="text-base font-bold text-ink">
-              {t('today.list')}
-            </h2>
-            <ul className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="todo-list-heading" className="text-base font-bold text-ink">
+                {t('today.list')}
+              </h2>
+              <Link
+                to="/insights"
+                className="inline-flex min-h-touch items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary transition-colors duration-fast ease-elemental hover:bg-primary-soft"
+              >
+                <span>{t('today.seeAll')}</span>
+                <ArrowRightIcon className="h-icon-sm w-icon-sm" />
+              </Link>
+            </div>
+            <m.ul
+              data-testid="todo-list-card"
+              variants={listStaggerContainer(Boolean(reduceMotion))}
+              initial={false}
+              animate="visible"
+              className="divide-y divide-border-subtle overflow-hidden rounded-lg border-hairline border-border-subtle bg-paper shadow-soft-sm"
+            >
               {list.map((todo) => (
                 <TodoRow
                   key={todo.id}
@@ -125,7 +153,7 @@ export function TodayPage() {
                   onDelete={(target) => void del.deleteTodo(target)}
                 />
               ))}
-            </ul>
+            </m.ul>
             {setDone.isError && (
               <p
                 role="alert"

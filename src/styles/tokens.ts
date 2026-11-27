@@ -14,6 +14,7 @@ export const colors = {
   muted: '#54685B',
   // Deep forest brand primary and soft tint.
   primary: '#1D5039',
+  primaryLight: '#26684A',
   primaryPressed: '#194631',
   primarySoft: '#E6F0EB',
   // Restrained terracotta accent — pair ONLY with `ink` (#132A23) foreground.
@@ -26,15 +27,23 @@ export const colors = {
   warning: '#9A5B04',
   warningSurface: '#FEF4E4',
   danger: '#C62F36',
-  // Provisional WCAG-verified Elemental pastel category fills (DEC-003),
-  // pending final reconciliation if raw reference assets are added later.
+  // WCAG-verified Elemental pastel category fills aligned with Concept v3 (DEC-003).
   category: {
-    study: '#E3F0FC',
-    work: '#FBF0D9',
-    health: '#E2F5EA',
-    life: '#FDE8EE',
-    rest: '#EEE9FC',
-    other: '#ECE8DF',
+    study: '#D4E7FB',
+    work: '#FBE6B8',
+    health: '#CEEFDB',
+    life: '#FADBE3',
+    rest: '#E5DCFA',
+    other: '#E7E3DA',
+  } satisfies Record<Category, string>,
+  // Jewel-toned icon and chart accents paired with category pastels (>= 3:1 WCAG SC 1.4.11).
+  categoryAccent: {
+    study: '#2563A6',
+    work: '#9A6304',
+    health: '#1B7A49',
+    life: '#BE345B',
+    rest: '#6341B8',
+    other: '#54685B',
   } satisfies Record<Category, string>,
 } as const
 
@@ -49,11 +58,19 @@ export const radius = {
   lg: '22px',
 } as const
 
+export const iconSize = {
+  sm: '16px',
+  md: '20px',
+  lg: '24px',
+  xl: '32px',
+} as const
+
 // Soft ambient elevation for Elemental Edition surfaces (DEC-003).
 export const elevation = {
   sm: '0 1px 2px rgba(19, 42, 35, 0.06)',
   md: '0 4px 12px rgba(19, 42, 35, 0.08)',
   sheet: '0 -8px 24px rgba(19, 42, 35, 0.12)',
+  fab: '0 6px 18px rgba(233, 154, 99, 0.42), 0 2px 6px rgba(19, 42, 35, 0.12)',
 } as const
 
 export const motion = {

@@ -1,9 +1,16 @@
+import { m, useReducedMotion } from 'framer-motion'
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppPageHeader } from '@/components/page'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Button, Card, SegmentedControl } from '@/components/ui'
-import { CheckIcon, FocusIcon, StreakIcon, WeekIcon } from '@/components/ui/icons'
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  FocusIcon,
+  SparkleIcon,
+  StreakIcon,
+} from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import { useStreak } from '@/features/streak/useStreak'
 import { useNow } from '@/features/today/useNow'
@@ -12,6 +19,9 @@ import { errorMessageKey, useSession, type StatsDayRow, type StatsSummary } from
 import { addDaysLocalDate, daysBetweenLocalDates, toLocalDate } from '@/lib/date'
 import { useTimePreferences } from '@/lib/time/useTimePreferences'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
+import { progressDrawTransition, useCountUp } from '@/styles/motion'
+import { CompletionRhythmCard } from './CompletionRhythmCard'
+import { dayActivityScore } from './completionRhythm'
 import { isEmptyStatsSummary, weekBoundsForDate } from './computeStatsSummary'
 import { StreakHistoryCard } from './StreakHistoryCard'
 import { useStatsSummary } from './useStatsSummary'
@@ -60,11 +70,7 @@ function isActiveDay(day: StatsDayRow): boolean {
   return day.focus_ms > 0 || day.todos_done > 0 || day.blocks_checked > 0
 }
 
-function dayActivityScore(day: StatsDayRow): number {
-  return day.focus_ms + day.todos_done * 300_000 + day.blocks_checked * 300_000
-}
-
-/** R4 Insights dashboard: analytics, Weekly Recap, and Plan vs Reality (B-047). */
+/** R4 Insights dashboard: analytics, Completion Rhythm chart, Weekly Recap, and Plan vs Reality. */
 export function InsightsPage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.resolvedLanguage ?? 'en'
@@ -153,7 +159,7 @@ export function InsightsPage() {
       </section>
 
       {isOfflineAccountWithoutData ? (
-        <Card className="bg-warning-surface border-warning/30">
+        <Card className="border-warning/30 bg-warning-surface">
           <div className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-ink">
               {t('insights.offlineTitle')}
@@ -167,7 +173,7 @@ export function InsightsPage() {
           </div>
         </Card>
       ) : stats.isPending ? (
-        <LoadingState />
+        <LoadingState variant="summary" />
       ) : stats.isError ? (
         <ErrorState
           message={t(errorMessageKey(stats.error))}
@@ -183,6 +189,8 @@ export function InsightsPage() {
             longestStreak={streak.data?.longest}
             locale={locale}
           />
+          <CompletionRhythmCard summary={stats.data} locale={locale} />
+          <PlanVsRealityCard summary={stats.data} locale={locale} />
           {preset === 'week' && (
             <WeeklyRecapCard
               summary={stats.data}
@@ -192,7 +200,6 @@ export function InsightsPage() {
               locale={locale}
             />
           )}
-          <PlanVsRealityCard summary={stats.data} locale={locale} />
           <DailyTrendsCard summary={stats.data} locale={locale} />
         </div>
       )}
@@ -213,10 +220,30 @@ function OverviewSection({
   locale: string
 }) {
   const { t } = useTranslation()
+  const reduceMotion = useReducedMotion()
+  const reduced = Boolean(reduceMotion)
   const { totals } = summary
+  const completionPct =
+    totals.todos_due > 0
+      ? Math.min(100, Math.round((totals.todos_done / totals.todos_due) * 100))
+      : totals.todos_done > 0
+        ? 100
+        : 0
+  const displayedCompletion = useCountUp(completionPct, { reduced })
+  const displayedStreak = useCountUp(streakCount ?? 0, { reduced })
 
   return (
-    <section aria-label={t('insights.overviewLabel')} className="grid grid-cols-2 gap-3">
+    <section
+      aria-label={t('insights.overviewLabel')}
+      className="grid grid-cols-1 gap-3 min-[340px]:grid-cols-3"
+    >
+      <MetricTile
+        tone="health"
+        Icon={CheckIcon}
+        label={t('insights.metrics.completed')}
+        value={`${displayedCompletion}%`}
+        detail={t('insights.metrics.todosDue', { count: totals.todos_due })}
+      />
       <MetricTile
         tone="study"
         Icon={FocusIcon}
@@ -225,27 +252,13 @@ function OverviewSection({
         detail={t('insights.metrics.sessions', { count: totals.sessions })}
       />
       <MetricTile
-        tone="health"
-        Icon={CheckIcon}
-        label={t('insights.metrics.todosDone')}
-        value={totals.todos_done}
-        detail={t('insights.metrics.todosDue', { count: totals.todos_due })}
-      />
-      <MetricTile
-        tone="work"
-        Icon={WeekIcon}
-        label={t('insights.metrics.blocksChecked')}
-        value={totals.blocks_checked}
-        detail={t('insights.metrics.plannedMinutes', {
-          time: formatMinutes(totals.planned_block_minutes, locale),
-        })}
-      />
-      <MetricTile
         tone="life"
         Icon={StreakIcon}
         label={t('insights.metrics.currentStreak')}
         value={
-          streakCount !== undefined ? t('insights.metrics.streakDays', { count: streakCount }) : '—'
+          streakCount !== undefined
+            ? t('insights.metrics.streakDays', { count: displayedStreak })
+            : '—'
         }
         detail={
           longestStreak !== undefined
@@ -281,34 +294,43 @@ function WeeklyRecapCard({
 
   return (
     <Card>
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-heading text-lg font-semibold text-ink">
-            {t('insights.recap.title')}
-          </h2>
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-warning-surface text-warning"
+        >
+          <SparkleIcon className="h-icon-md w-icon-md" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-heading text-lg font-semibold text-ink">
+              {t('insights.recap.title')}
+            </h2>
+            {isPartialWeek && (
+              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
+                {t('insights.weekNav.inProgress')}
+              </span>
+            )}
+          </div>
           {isPartialWeek && (
-            <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
-              {t('insights.weekNav.inProgress')}
-            </span>
+            <p className="text-sm text-muted">
+              {t('insights.recap.partialNote', { elapsed: elapsedDays })}
+            </p>
+          )}
+          <p className="text-sm font-medium tabular-nums text-ink">
+            {t('insights.recap.activeDays', { active: activeDays.length, total: elapsedDays })}
+          </p>
+          {bestDay ? (
+            <p className="text-sm text-muted">
+              {t('insights.recap.bestDay', {
+                day: formatWeekdayShort(bestDay.local_date, locale),
+              })}
+            </p>
+          ) : (
+            <p className="text-sm text-muted">{t('insights.recap.empty')}</p>
           )}
         </div>
-        {isPartialWeek && (
-          <p className="text-sm text-muted">
-            {t('insights.recap.partialNote', { elapsed: elapsedDays })}
-          </p>
-        )}
-        <p className="text-sm font-medium tabular-nums text-ink">
-          {t('insights.recap.activeDays', { active: activeDays.length, total: elapsedDays })}
-        </p>
-        {bestDay ? (
-          <p className="text-sm text-muted">
-            {t('insights.recap.bestDay', {
-              day: formatWeekdayShort(bestDay.local_date, locale),
-            })}
-          </p>
-        ) : (
-          <p className="text-sm text-muted">{t('insights.recap.empty')}</p>
-        )}
+        <ChevronRightIcon className="mt-1 h-icon-sm w-icon-sm shrink-0 text-muted" />
       </div>
     </Card>
   )
@@ -316,7 +338,16 @@ function WeeklyRecapCard({
 
 function PlanVsRealityCard({ summary, locale }: { summary: StatsSummary; locale: string }) {
   const { t } = useTranslation()
+  const reduceMotion = useReducedMotion()
+  const reduced = Boolean(reduceMotion)
+  const drawTransition = progressDrawTransition(reduced)
   const { totals, by_mode: byMode } = summary
+  const tasksShare =
+    totals.todos_due > 0
+      ? Math.min(100, Math.round((totals.todos_done / totals.todos_due) * 100))
+      : totals.todos_done > 0
+        ? 100
+        : 0
   const linkedShare =
     totals.focus_ms > 0 ? Math.round((totals.focus_ms_linked / totals.focus_ms) * 100) : 0
 
@@ -330,74 +361,83 @@ function PlanVsRealityCard({ summary, locale }: { summary: StatsSummary; locale:
           <p className="text-sm text-muted">{t('insights.planVsReality.subtitle')}</p>
         </div>
 
-        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-md border border-border-subtle bg-subtle/40 p-3">
-            <dt className="text-xs font-semibold text-muted">
-              {t('insights.planVsReality.todosLabel')}
-            </dt>
-            <dd className="mt-1 text-base font-semibold tabular-nums text-ink">
-              {t('insights.planVsReality.todosValue', {
-                done: totals.todos_done,
-                due: totals.todos_due,
-              })}
-            </dd>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+              <span className="font-semibold text-ink">
+                {t('insights.planVsReality.todosLabel')}
+              </span>
+              <span className="font-semibold tabular-nums text-ink">
+                {t('insights.planVsReality.todosValue', {
+                  done: totals.todos_done,
+                  due: totals.todos_due,
+                })}
+              </span>
+            </div>
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-subtle" aria-hidden="true">
+              <m.div
+                className="h-full rounded-full bg-primary"
+                initial={reduced ? false : { width: 0 }}
+                animate={{ width: `${tasksShare}%` }}
+                transition={drawTransition}
+              />
+            </div>
           </div>
-          <div className="rounded-md border border-border-subtle bg-subtle/40 p-3">
-            <dt className="text-xs font-semibold text-muted">
-              {t('insights.planVsReality.scheduleLabel')}
-            </dt>
-            <dd className="mt-1 text-base font-semibold tabular-nums text-ink">
-              {t('insights.planVsReality.scheduleValue', {
-                checked: totals.blocks_checked,
-                planned: formatMinutes(totals.planned_block_minutes, locale),
-              })}
-            </dd>
-          </div>
-        </dl>
 
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-ink">
-            {t('insights.planVsReality.focusAttributionLabel')}
-          </h3>
-          {totals.focus_ms > 0 ? (
-            <>
-              <div
-                className="h-2.5 w-full overflow-hidden rounded-full bg-subtle"
-                aria-hidden="true"
-              >
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+              <span className="font-semibold text-ink">
+                {t('insights.planVsReality.focusAttributionLabel')}
+              </span>
+              <span className="font-semibold tabular-nums text-ink">
+                {t('insights.planVsReality.scheduleValue', {
+                  checked: totals.blocks_checked,
+                  planned: formatMinutes(totals.planned_block_minutes, locale),
+                })}
+              </span>
+            </div>
+            {totals.focus_ms > 0 ? (
+              <>
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-normal ease-elemental motion-reduce:transition-none"
-                  style={{ width: `${linkedShare}%` }}
-                />
-              </div>
-              <div className="flex flex-wrap justify-between gap-2 text-sm tabular-nums text-muted">
-                <span>
-                  {t('insights.planVsReality.linkedFocus', {
-                    time: formatDurationMs(totals.focus_ms_linked, locale),
-                  })}
-                </span>
-                <span>
-                  {t('insights.planVsReality.unplannedFocus', {
-                    time: formatDurationMs(totals.focus_ms_unplanned, locale),
-                  })}
-                </span>
-              </div>
-              <div className="flex flex-wrap justify-between gap-2 border-t border-border-subtle pt-2 text-xs tabular-nums text-muted">
-                <span>
-                  {t('insights.planVsReality.countdown', {
-                    time: formatDurationMs(byMode.countdown, locale),
-                  })}
-                </span>
-                <span>
-                  {t('insights.planVsReality.stopwatch', {
-                    time: formatDurationMs(byMode.stopwatch, locale),
-                  })}
-                </span>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted">{t('insights.planVsReality.noFocus')}</p>
-          )}
+                  className="h-2.5 w-full overflow-hidden rounded-full bg-subtle"
+                  aria-hidden="true"
+                >
+                  <m.div
+                    className="h-full rounded-full bg-primary-light"
+                    initial={reduced ? false : { width: 0 }}
+                    animate={{ width: `${linkedShare}%` }}
+                    transition={drawTransition}
+                  />
+                </div>
+                <div className="flex flex-wrap justify-between gap-2 text-sm tabular-nums text-muted">
+                  <span>
+                    {t('insights.planVsReality.linkedFocus', {
+                      time: formatDurationMs(totals.focus_ms_linked, locale),
+                    })}
+                  </span>
+                  <span>
+                    {t('insights.planVsReality.unplannedFocus', {
+                      time: formatDurationMs(totals.focus_ms_unplanned, locale),
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-wrap justify-between gap-2 border-t border-border-subtle pt-2 text-xs tabular-nums text-muted">
+                  <span>
+                    {t('insights.planVsReality.countdown', {
+                      time: formatDurationMs(byMode.countdown, locale),
+                    })}
+                  </span>
+                  <span>
+                    {t('insights.planVsReality.stopwatch', {
+                      time: formatDurationMs(byMode.stopwatch, locale),
+                    })}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted">{t('insights.planVsReality.noFocus')}</p>
+            )}
+          </div>
         </div>
       </div>
     </Card>
@@ -419,7 +459,7 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
           </h2>
           <p className="text-sm text-muted">{t('insights.trends.subtitle')}</p>
           {compactMode && (
-            <p className="mt-0.5 text-xs text-muted tabular-nums">
+            <p className="mt-0.5 text-xs tabular-nums text-muted">
               {t('insights.trends.showingActiveOnly', {
                 count: rows.length,
                 total: summary.days.length,
@@ -458,7 +498,7 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
                     aria-hidden="true"
                   >
                     <div
-                      className="h-full rounded-full bg-primary/80 transition-[width] duration-normal ease-elemental motion-reduce:transition-none"
+                      className="h-full rounded-full bg-primary/80 transition-[width] duration-slow ease-elemental motion-reduce:transition-none"
                       style={{ width: `${widthPct}%` }}
                     />
                   </div>
@@ -473,13 +513,12 @@ function DailyTrendsCard({ summary, locale }: { summary: StatsSummary; locale: s
 }
 
 const tileTones = {
-  study: 'bg-category-study',
-  health: 'bg-category-health',
-  work: 'bg-category-work',
-  life: 'bg-category-life',
+  study: { surface: 'bg-category-study', icon: 'text-category-accent-study' },
+  health: { surface: 'bg-category-health', icon: 'text-category-accent-health' },
+  life: { surface: 'bg-category-life', icon: 'text-category-accent-life' },
 } as const
 
-/** Concept v3 KPI tile: tinted surface, icon, value, and the sentence-case label that explains it. */
+/** Concept v3 KPI tile: tinted surface, colored icon badge, value, and sentence-case label. */
 function MetricTile({
   tone,
   Icon,
@@ -496,16 +535,26 @@ function MetricTile({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-1 rounded-lg border-hairline border-ink/10 p-3.5 text-ink',
-        tileTones[tone],
+        'flex min-w-0 flex-col items-center gap-1 rounded-lg border-hairline border-ink/10 p-3 text-center text-ink shadow-soft-sm',
+        tileTones[tone].surface,
       )}
     >
-      <Icon className="size-5 shrink-0" />
-      <p className="mt-1 font-heading text-xl font-bold tabular-nums leading-tight sm:text-2xl">
+      <span
+        aria-hidden="true"
+        className={cn(
+          'grid size-8 shrink-0 place-items-center rounded-full bg-paper/90 shadow-soft-sm',
+          tileTones[tone].icon,
+        )}
+      >
+        <Icon className="h-icon-sm w-icon-sm" />
+      </span>
+      <p className="mt-0.5 font-heading text-lg font-bold tabular-nums leading-tight sm:text-xl [overflow-wrap:anywhere]">
         {value}
       </p>
-      <p className="text-sm font-semibold">{label}</p>
-      {detail && <p className="text-xs tabular-nums text-ink/75">{detail}</p>}
+      <p className="text-xs font-semibold [overflow-wrap:anywhere]">{label}</p>
+      {detail && (
+        <p className="text-[11px] tabular-nums text-ink/75 [overflow-wrap:anywhere]">{detail}</p>
+      )}
     </div>
   )
 }
